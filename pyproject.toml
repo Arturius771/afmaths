@@ -1,0 +1,23 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "afmath"
+version = "0.0.1"
+authors = [
+  { name="Artúr Foden", email="fodena@tcd.ie" },
+]
+description = "A suite of mathematical functions with outputs to help revise math"
+readme = "README.md"
+license = { file="LICENSE" }
+requires-python = ">=3.7"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+"Homepage" = "http://www.arturfoden.ie/"
+"Bug Tracker" = "https://github.com/Arturius771/afmath/issues"
