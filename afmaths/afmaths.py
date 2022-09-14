@@ -1,3 +1,4 @@
+from audioop import mul
 import math #for rounding int up
 import statistics #for median
 
@@ -258,3 +259,13 @@ def ml_precision(tp, fp):
 def ml_recall(tp, fn):
   "Fraction of total positives out of both true and false positives - TM358"
   return divide(tp,add(tp, fn))
+
+def ml_weighted_inputs(inputs: list[float], weights: list[float]):
+  "Multiply the inputs by the weights - TM358 Block 1"
+  weighted_inputs = []
+  if(len(inputs) != len(weights)):
+    print('The inputs list must be the same length as the weights list')
+    return None
+  for x in inputs:
+    weighted_inputs.append(multiply(x, weights[inputs.index[x]]))
+  return weighted_inputs
