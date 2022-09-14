@@ -263,9 +263,11 @@ def ml_recall(tp, fn):
 def ml_weighted_inputs(inputs: list[float], weights: list[float]):
   "Multiply the inputs by the weights - TM358 Block 1"
   weighted_inputs = []
+  loop_count = 0
   if(len(inputs) != len(weights)):
     print('The inputs list must be the same length as the weights list')
     return None
   for x in inputs:
-    weighted_inputs.append(multiply(x, weights[inputs.index[x]]))
+    weighted_inputs.append(multiply(x, weights[inputs.index(x, loop_count)]))
+    loop_count += 1
   return weighted_inputs
