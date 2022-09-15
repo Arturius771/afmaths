@@ -31,22 +31,22 @@ def dataplotter(number_list):
   list_median(number_list)
   list_quartiles(number_list)
 
-def add(num1, num2):
+def add(num1: float, num2: float):
   result = num1 + num2
   print("Add: {} + {} = {}".format(num1, num2, result))
   return result
 
-def subtract(num1, num2):
+def subtract(num1: float, num2: float):
   result = num1 - num2
   print("Subtract: {} - {} = {}".format(num1, num2, result))
   return result
 
-def multiply(num1, num2):
+def multiply(num1: float, num2: float):
   result = num1 * num2
   print("Multiply: {} * {} = {}".format(num1, num2, result))
   return result
 
-def divide(num1, num2):
+def divide(num1: float, num2: float):
   if num2 != 0:
     result = num1 / num2
     print("Divide: {} / {} = {}".format(num1, num2, result))
@@ -54,17 +54,17 @@ def divide(num1, num2):
   else:
     print("Divide: You tried to divide by 0")
 
-def exponentiate(number, exponent):
+def exponentiate(number: float, exponent: float):
   result = number ** exponent
   print("Exponent: {} to the power of {} = {}".format(number, exponent, result))
   return result
 
-def square_root(number):
+def square_root(number: float):
   result = math.sqrt(number)
   print("Square root: {} is {}".format(number, result))
   return result
 
-def factorial(number):
+def factorial(number: int):
   working_string = ""
   result = 1
 
@@ -78,7 +78,7 @@ def factorial(number):
   print(working_string)
   return result
 
-def euclid(m,n):
+def euclid(m: int, n: int):
     """Given two positive integers, m and n, find their greatest common divisor which is the largest positive integer that divides both evenly."""
 
     remainder = m % n
