@@ -91,6 +91,10 @@ def euclid(m: int, n: int):
       print("m {} n {}".format(m, n))
       euclid(m,n) 
 
+def sigmoid(input, bias:float = 0):
+  "TM358 Section Block 1 section 5"
+  return (divide(1,add(1,exponentiate(math.e, add(-input, bias)))))
+
 def cs_file_compression_ratio(uncompressed_file_size, compressed_file_size):
   result = divide(uncompressed_file_size, compressed_file_size)
   print("Compression Ratio: {}/{}={}".format(uncompressed_file_size, compressed_file_size, result))
