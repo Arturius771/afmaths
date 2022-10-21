@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "afmaths"
-version = "1.0.1"
+version = "1.0.2"
 authors = [
   { name="Artúr Foden", email="fodena@tcd.ie" },
 ]
@@ -21,3 +21,5 @@ classifiers = [
 [project.urls]
 "Homepage" = "http://www.arturfoden.ie/"
 "Bug Tracker" = "https://github.com/Arturius771/afmaths/issues"
+
+dependencies = []
