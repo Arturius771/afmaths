@@ -22,4 +22,4 @@ classifiers = [
 "Homepage" = "http://www.arturfoden.ie/"
 "Bug Tracker" = "https://github.com/Arturius771/afmaths/issues"
 
-dependencies = []
+dependencies = ""
