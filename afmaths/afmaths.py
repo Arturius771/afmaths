@@ -89,7 +89,12 @@ def euclid(m: int, n: int):
       m = n
       n = remainder
       print("m {} n {}".format(m, n))
-      euclid(m,n) 
+      euclid(m,n)
+
+def pythagoras(a,b):
+  result = square_root(add(exponentiate(a, 2), exponentiate(b, 2)))
+  print("Pythagoras = {}".format(result))
+  return result
 
 def sigmoid(input, bias:float = 0):
   "TM358 Section Block 1 section 5"
@@ -107,10 +112,7 @@ def cs_compressed_file_size(uncompressed_file_size, compression_ratio, unit_stri
 
 def cs_diagonal_pixel_length(length_in_pixels, width_in_pixels):
   ##TM255 Block 1 part 5
-  length_squared = exponentiate(length_in_pixels, 2)
-  width_squared = exponentiate(width_in_pixels, 2)
-  pythagoras = add(length_squared, width_squared)
-  result = math.floor(square_root(pythagoras)) ##round down to nearest int according to source material
+  result = math.floor(pythagoras(length_in_pixels, width_in_pixels)) ##round down to nearest int according to source material
   print("The diagonal length is {} pixels".format(result))
   return result
 
@@ -140,7 +142,7 @@ def cs_ml_recall(tp, fn):
 def cs_ml_false_positive_rate(fp, tn):
   return divide(fp, add(fp, tn))
 
-def cs_ml_f1_score(precision, recall):
+def cs_ml_f1_score(precision: float, recall: float):
   """F1 score: related to the harmonic mean of precision and recall. Calculated as F1 = 2/[(1/Precision) + (1/Recall)] = 2/[(TP + FP)/TP + (TP + FN)/TP] = 2/[(2TP + FP + FN)/TP] = 2TP/[2TP +FP + FN] . A high F1 score implies the system has low numbers of false positives and false negatives. - TM358"""
   f1 = divide(2, add(divide(1, precision), divide(1, recall)))
   print('Your F1 score = {}'.format(f1))
