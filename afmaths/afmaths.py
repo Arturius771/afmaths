@@ -130,12 +130,18 @@ def cs_check_clusters(sectors_per_cluster, sector_size_bytes, physical_file_size
   return(clusters, slack_space_bytes)
 
 def cs_ml_precision(tp, fp):
-  "Fraction of positive results that are actually truly positive - TM358"
+  """Fraction of positive results that are actually truly positive - TM358"""
   return divide(tp,add(tp, fp))
 
 def cs_ml_recall(tp, fn):
-  "Fraction of total positives out of both true and false positives - TM358"
+  """Fraction of total positives out of both true and false positives - TM358"""
   return divide(tp,add(tp, fn))
+
+def cs_ml_f1_score(precision, recall):
+  """F1 score: related to the harmonic mean of precision and recall. Calculated as F1 = 2/[(1/Precision) + (1/Recall)] = 2/[(TP + FP)/TP + (TP + FN)/TP] = 2/[(2TP + FP + FN)/TP] = 2TP/[2TP +FP + FN] . A high F1 score implies the system has low numbers of false positives and false negatives. - TM358"""
+  f1 = divide(2, add(divide(1, precision), divide(1, recall)))
+  print('Your F1 score = {}'.format(f1))
+  return f1
 
 def cs_ml_weighted_inputs(inputs: list[float], weights: list[float]):
   "Multiply the inputs by the weights - TM358 Block 1"
