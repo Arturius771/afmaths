@@ -134,8 +134,11 @@ def cs_ml_precision(tp, fp):
   return divide(tp,add(tp, fp))
 
 def cs_ml_recall(tp, fn):
-  """Fraction of total positives out of both true and false positives - TM358"""
+  """Fraction of total positives out of both true and false positives - also known as the true positive rate. TM358"""
   return divide(tp,add(tp, fn))
+
+def cs_ml_false_positive_rate(fp, tn):
+  return divide(fp, add(fp, tn))
 
 def cs_ml_f1_score(precision, recall):
   """F1 score: related to the harmonic mean of precision and recall. Calculated as F1 = 2/[(1/Precision) + (1/Recall)] = 2/[(TP + FP)/TP + (TP + FN)/TP] = 2/[(2TP + FP + FN)/TP] = 2TP/[2TP +FP + FN] . A high F1 score implies the system has low numbers of false positives and false negatives. - TM358"""
