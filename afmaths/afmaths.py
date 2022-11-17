@@ -1,5 +1,8 @@
 import math
 import statistics
+import numpy as np
+from sympy import *
+from matplotlib import pyplot as plt
 
 
 def test(num1, num2):
@@ -100,6 +103,12 @@ def sigmoid(input, bias:float = 0):
   "TM358 Section Block 1 section 5"
   return (divide(1,add(1,exponentiate(math.e, add(-input, bias)))))
 
+def derivative_exponentiated(exponent_value: float):
+  # Other types of derivatives can be calculated using differentiating from first principles
+  x = Symbol('x')
+  f = x**exponent_value
+  return f.diff(x)
+  
 def cs_file_compression_ratio(uncompressed_file_size, compressed_file_size):
   result = divide(uncompressed_file_size, compressed_file_size)
   print("Compression Ratio: {}/{}={}".format(uncompressed_file_size, compressed_file_size, result))
@@ -196,6 +205,11 @@ def graph_equation_of_line(x1, y1, x2, y2):
     return b
   except TypeError:
     print("Equation of Line: You probably have a vertical line")
+
+def graph_plot_function(function_expression: list):
+  plt.figure()
+  plt.axis(False)
+  plt.plot(function_expression)
 
 def list_sorted(number_list: list):
   result = sorted(number_list)
