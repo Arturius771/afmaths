@@ -1,3 +1,4 @@
+import math
 import operation
 
 def physics_radiowave_power_distances(distance1, distance2):
@@ -6,7 +7,7 @@ def physics_radiowave_power_distances(distance1, distance2):
   distance1_strength = operation.exponentiate(distance_ratio, 4)
   distance2_strength = operation.divide(1, distance1_strength)
   print("The strength of the signal at distance: {} is {} times greater than distance {}".format(distance1, distance1_strength, distance2))
-  print("The strength of the signal at distance: {} is {} times as strong than distance {}".format(distance2, distance2_strength, distance1))
+  print("The strength of the signal at distance: {} is {} times as strong as distance {}".format(distance2, distance2_strength, distance1))
   return distance_ratio, distance1_strength, distance2_strength
 
 def physics_radiowave_recieved_power(watts, distance_metres):
@@ -19,7 +20,14 @@ def physics_radiowave_recieved_power(watts, distance_metres):
   print("Received power: {} W/m^2".format(result))
   return result
 
-def physics_speed_of_light_metres_per_second():
+def physics_radiowave_received_power_difference_by_distance(power_in_watts_at_distance1, distance1, distance2):
+  # https://www.youtube.com/watch?v=BF73QaY1aEg
+  cross_multiply = operation.multiply(power_in_watts_at_distance1, operation.exponentiate(distance1, 2))
+  i2 = operation.divide(cross_multiply, operation.exponentiate(distance2, 2))
+  print(f"Received power: {i2} W/m^2")
+  return i2
+
+def physics_speed_of_light_metres_per_second() -> int:
   print("Speed of light = 299792458 m/s")
   return 299792458
 
@@ -39,7 +47,7 @@ def physics_photon_energy_from_frequency(frequency_in_hertz):
 
 def physics_frequency_to_wavelength(frequency_in_hertz):
   wavelength_in_metres = operation.divide(physics_speed_of_light_metres_per_second(), frequency_in_hertz)
-  print("Wavelength of a wave with {} Hz = {} m".format(frequency_in_hertz, wavelength_in_metres))
+  print(f"Wavelength of a frequency with {frequency_in_hertz} Hz = {wavelength_in_metres} m")
   return wavelength_in_metres
     
 def physics_wavelength_to_frequency(wavelength_in_metres):

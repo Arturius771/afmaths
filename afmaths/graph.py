@@ -4,7 +4,7 @@ from matplotlib import pyplot as plt
 def graph_gradient(x1, y1, x2, y2):
   ##https://www.bbc.co.uk/bitesize/topics/zvhs34j/articles/z4ctng8
   try:
-    result = divide(subtract(y2, y1), subtract(x2, x1))
+    result = operation.divide(operation.subtract(y2, y1), operation.subtract(x2, x1))
     print("The gradient of line with coordinates ({}, {}) and ({}, {}) is: {}".format(x1, y1, x2, y2, result))
     return result
   except TypeError:
