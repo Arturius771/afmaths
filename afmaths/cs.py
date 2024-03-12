@@ -70,6 +70,25 @@ def cs_ml_activation_function(input: float, threshold: float = 0):
     return 1
   else:
     return 0
+  
+def cs_byte_to_ascii_text(input: int) -> str:
+  # https://www.rapidtables.com/convert/number/binary-to-ascii.html
+  value = cs_byte_to_decimal(input)
+  print (f"{value} as ascii text is {chr(value)}")
+  return chr(value)
+
+def cs_byte_to_decimal(input: int) -> int:
+  value = 0
+  tracker = len(str(input)) - 1 # Leading 0s are not allowed in Python, so we cannot assume there will be 8 bits in the byte
+  
+  for bit in str(input):
+    if(int(bit) != 0):
+      value += operation.exponentiate(2, tracker)    
+    tracker -= 1
+
+  print(f"{input} in decimal is: {value}")
+  return value
+
 
 ##def cs_convert_denary_to_base(denary):
     ##todo
