@@ -58,3 +58,22 @@ def euclid(m: int, n: int):
       n = remainder
       print("m {} n {}".format(m, n))
       euclid(m,n)
+
+def sieve_of_eratosthenes(n: int):
+  """Finds prime numbers up to n"""
+  # https://www.youtube.com/watch?v=fwxjMKBMR7s
+  numbers = [True] * n 
+  primes = []
+  
+  for index in range(2, n):
+    if numbers[index]:
+      primes.append(index)
+      for multiple in range(index*index,n,index):
+        numbers[multiple] = False
+
+  if n < 500:
+    print(f"All primes up to {n} = {primes}")
+  else:
+    print(f"There are {len(primes)} primes up to {n}. The last prime is {primes[-1]}") # Printing all primes is not practical above a certain amount
+
+  return primes

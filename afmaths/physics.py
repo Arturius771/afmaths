@@ -1,7 +1,7 @@
 import math
 import operation
 
-def physics_radiowave_power_distances(distance1, distance2):
+def physics_radiowave_relative_power_distances(distance1, distance2):
   ##TM255 Block 1
   distance_ratio = operation.divide(distance2, distance1) 
   distance1_strength = operation.exponentiate(distance_ratio, 4)
@@ -24,7 +24,7 @@ def physics_radiowave_received_power_difference_by_distance(power_in_watts_at_di
   # https://www.youtube.com/watch?v=BF73QaY1aEg
   cross_multiply = operation.multiply(power_in_watts_at_distance1, operation.exponentiate(distance1, 2))
   i2 = operation.divide(cross_multiply, operation.exponentiate(distance2, 2))
-  print(f"Received power: {i2} W/m^2")
+  print(f"Received power at distance 2: {i2} W/m^2")
   return i2
 
 def physics_speed_of_light_metres_per_second() -> int:
