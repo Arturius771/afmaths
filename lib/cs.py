@@ -4,34 +4,34 @@ import formula
 
 def cs_file_compression_ratio(uncompressed_file_size, compressed_file_size):
   result = operation.divide(uncompressed_file_size, compressed_file_size)
-  print("Compression Ratio: {}/{}={}".format(uncompressed_file_size, compressed_file_size, result))
+  print(f"Compression Ratio: {uncompressed_file_size}/{compressed_file_size}={result}")
   return result
 
 def cs_compressed_file_size(uncompressed_file_size, compression_ratio, unit_string):
   result = operation.divide(uncompressed_file_size, compression_ratio)
-  print("Compressed File Size: {} / {} = {} {}".format(uncompressed_file_size, compression_ratio, result, unit_string))
+  print(f"Compressed File Size: {uncompressed_file_size} / {compression_ratio} = {result} {unit_string}")
   return result
 
 def cs_diagonal_pixel_length(length_in_pixels, width_in_pixels):
   ##TM255 Block 1 part 5
   result = math.floor(formula.pythagoras(length_in_pixels, width_in_pixels)) ##round down to nearest int according to source material
-  print("The diagonal length is {} pixels".format(result))
+  print(f"The diagonal length is {result} pixels")
   return result
 
 def cs_travelling_salesman_problem_total_routes(number_of_cities):
   ##(n - 1)!/2
   total_routes = operation.divide(operation.factorial(operation.subtract(number_of_cities, 1)), 2)
-  print("The total number of routes: {}".format(total_routes))
+  print(f"The total number of routes: {total_routes}")
   return total_routes
 
-def cs_check_clusters(sectors_per_cluster, sector_size_bytes, physical_file_size_bytes):    
+def cs_check_drive_clusters(sectors_per_cluster, sector_size_bytes, physical_file_size_bytes):    
   if physical_file_size_bytes % (operation.multiply(sectors_per_cluster, sector_size_bytes)) == 0:
-     clusters = physical_file_size_bytes // operation.multiply(sectors_per_cluster, sector_size_bytes)
+     number_of_clusters = physical_file_size_bytes // operation.multiply(sectors_per_cluster, sector_size_bytes)
   else:
-    clusters = (physical_file_size_bytes // (sectors_per_cluster * sector_size_bytes)) + 1
-  slack_space_bytes = operation.subtract(operation.multiply(operation.multiply(clusters, sectors_per_cluster), sector_size_bytes), physical_file_size_bytes)        
-  print('You will need {} cluster(s) and you will have {} bytes of slack space'.format(clusters, slack_space_bytes))
-  return(clusters, slack_space_bytes)
+    number_of_clusters = (physical_file_size_bytes // (sectors_per_cluster * sector_size_bytes)) + 1
+  slack_space_bytes = operation.subtract(operation.multiply(operation.multiply(number_of_clusters, sectors_per_cluster), sector_size_bytes), physical_file_size_bytes)        
+  print(f'You will need {number_of_clusters} cluster(s) and you will have {slack_space_bytes} bytes of slack space')
+  return(number_of_clusters, slack_space_bytes)
 
 def cs_ml_precision(tp, fp):
   """Fraction of positive results that are actually truly positive - TM358"""
@@ -47,7 +47,7 @@ def cs_ml_false_positive_rate(fp, tn):
 def cs_ml_f1_score(precision: float, recall: float):
   """F1 score: related to the harmonic mean of precision and recall. Calculated as F1 = 2/[(1/Precision) + (1/Recall)] = 2/[(TP + FP)/TP + (TP + FN)/TP] = 2/[(2TP + FP + FN)/TP] = 2TP/[2TP +FP + FN] . A high F1 score implies the system has low numbers of false positives and false negatives. - TM358"""
   f1 = operation.divide(2, operation.add(operation.divide(1, precision), operation.divide(1, recall)))
-  print('Your F1 score = {}'.format(f1))
+  print(f'Your F1 score = {f1}')
   return f1
 
 def cs_ml_weighted_inputs(inputs: list[float], weights: list[float]):

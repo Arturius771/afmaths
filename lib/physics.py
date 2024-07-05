@@ -6,8 +6,8 @@ def physics_radiowave_relative_power_distances(distance1, distance2):
   distance_ratio = operation.divide(distance2, distance1) 
   distance1_strength = operation.exponentiate(distance_ratio, 4)
   distance2_strength = operation.divide(1, distance1_strength)
-  print("The strength of the signal at distance: {} is {} times greater than distance {}".format(distance1, distance1_strength, distance2))
-  print("The strength of the signal at distance: {} is {} times as strong as distance {}".format(distance2, distance2_strength, distance1))
+  print(f"The strength of the signal at distance: {distance1} is {distance1_strength} times greater than distance {distance2}")
+  print(f"The strength of the signal at distance: {distance2} is {distance2_strength} times as strong as distance {distance1}")
   return distance_ratio, distance1_strength, distance2_strength
 
 def physics_radiowave_recieved_power(watts, distance_metres):
@@ -17,7 +17,7 @@ def physics_radiowave_recieved_power(watts, distance_metres):
   pi_times_four = operation.multiply(4, math.pi)
   denominator = operation.multiply(squared_distance, pi_times_four)
   result = operation.divide(watts, denominator)
-  print("Received power: {} W/m^2".format(result))
+  print(f"Received power: {result} W/m^2")
   return result
 
 def physics_radiowave_received_power_difference_by_distance(power_in_watts_at_distance1, distance1, distance2):
@@ -37,12 +37,12 @@ def physics_planck_constant():
 
 def physics_photon_energy_from_wavelength(wavelength_in_micrometer):
   photon_energy_in_electrovolts = operation.divide(1.2398, wavelength_in_micrometer)
-  print("The photon energy is {} eV (electronvolts)".format(photon_energy_in_electrovolts))
+  print(f"The photon energy is {photon_energy_in_electrovolts} eV (electronvolts)")
   return photon_energy_in_electrovolts
 
 def physics_photon_energy_from_frequency(frequency_in_hertz):
   photon_energy_in_joules = operation.multiply(physics_planck_constant(), frequency_in_hertz)
-  print("The energy of a wave with {} Hz = {} J".format(frequency_in_hertz, photon_energy_in_joules))
+  print(f"The energy of a wave with {frequency_in_hertz} Hz = {photon_energy_in_joules} J")
   return photon_energy_in_joules
 
 def physics_frequency_to_wavelength(frequency_in_hertz):
@@ -52,5 +52,5 @@ def physics_frequency_to_wavelength(frequency_in_hertz):
     
 def physics_wavelength_to_frequency(wavelength_in_metres):
   frequency_in_hertz = operation.divide(physics_speed_of_light_metres_per_second(), wavelength_in_metres)
-  print("Frequency of a wave with {} m wavelength = {} Hz".format(wavelength_in_metres, frequency_in_hertz))
+  print(f"Frequency of a wave with {wavelength_in_metres} m wavelength = {frequency_in_hertz} Hz")
   return frequency_in_hertz

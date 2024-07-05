@@ -3,7 +3,7 @@ import math
 
 def pythagoras(a,b):
   result = operation.square_root(operation.add(operation.exponentiate(a, 2), operation.exponentiate(b, 2)))
-  print("Pythagoras = {}".format(result))
+  print(f"Pythagoras = {result}")
   return result
 
 def sigmoid(input, bias:float = 0):

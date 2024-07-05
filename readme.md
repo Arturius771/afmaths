@@ -7,7 +7,7 @@ A simple package of math functions. Many of these will display output to the con
 - General
   - add(), subtract(), multiply(), divide(), exponentiate(), square_root(), factorial(), euclid()
 - Computer Science
-  - cs_file_compression_ratio(), cs_compressed_file_size(), cs_diagonal_pixel_length(), cs_travelling_salesman_problem_total_routes(), cs_check_clusters(), cs_ml_precision(), cs_ml_recall(), cs_ml_weighted_inputs()
+  - cs_file_compression_ratio(), cs_compressed_file_size(), cs_diagonal_pixel_length(), cs_travelling_salesman_problem_total_routes(), cs_check_drive_clusters(), cs_ml_precision(), cs_ml_recall(), cs_ml_weighted_inputs()
 - Graphs
   - graph_gradient(), graph_equation_of_line()
 - Lists (todo: rename to collections?)
