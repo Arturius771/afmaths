@@ -12,7 +12,7 @@ def physics_radiowave_relative_power_distances(distance1, distance2):
 
 def physics_radiowave_recieved_power(watts, distance_metres):
   ##inverse square law
-  ##tm255 block 1
+  ##TM255 block 1
   squared_distance = operation.exponentiate(distance_metres, 2)
   pi_times_four = operation.multiply(4, math.pi)
   denominator = operation.multiply(squared_distance, pi_times_four)
