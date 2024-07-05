@@ -1,3 +1,5 @@
 test.ipynb
 dist/
 afmaths.egg-info/
+*.pyc
+__pycache__/

@@ -1,5 +1,4 @@
 import operation
-from matplotlib import pyplot as plt
 
 def graph_gradient(x1, y1, x2, y2):
   ##https://www.bbc.co.uk/bitesize/topics/zvhs34j/articles/z4ctng8
@@ -25,8 +24,3 @@ def graph_equation_of_line(x1, y1, x2, y2):
     return b
   except TypeError:
     print("Equation of Line: You probably have a vertical line")
-
-def graph_plot_function(function_expression: list):
-  plt.figure()
-  plt.axis(False)
-  plt.plot(function_expression)
