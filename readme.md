@@ -11,4 +11,4 @@ This project uses semantic versioning. Major versions will be breaking changes.
   - Probably remove operations file as a result
 - Doc comments
 - Document how to build/run
-- Document how to upgrade npm
+- Document how to upgrade the npm package
