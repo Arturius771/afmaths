@@ -21,7 +21,7 @@ def test(num1, num2):
 
 def dataplotter(number_list):
   ##MU123
-  list.sorted(number_list)
+  list.sort(number_list)
   list.length(number_list)
   list.sum(number_list)    
   list.minimum(number_list)
