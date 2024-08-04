@@ -30,16 +30,3 @@ def dataplotter(number_list):
   list.mean(number_list)
   list.median(number_list)
   list.quartiles(number_list)
-
-
-
-
-
-
-  
-
-
-
-
-
-
