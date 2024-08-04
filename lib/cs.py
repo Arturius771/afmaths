@@ -94,40 +94,6 @@ def byte_to_hex(input: int):
 
   str_input = str(input)
 
-  def find_hex(input: str): 
-    if(int(input) == 0):
-      return('0')
-    if(int(input) == 1):
-      return('1')
-    if(int(input) == 10):
-      return('2')
-    if(int(input) == 11):
-      return('3')
-    if(int(input) == 100):
-      return('4') 
-    if(int(input) == 101):
-      return('5')
-    if(int(input) == 110):
-      return('6')
-    if(int(input) == 111):
-      return('7')
-    if(int(input) == 1000):
-      return('8')
-    if(int(input) == 1001):
-      return('9')
-    if(int(input) == 1010):
-      return('A')
-    if(int(input) == 1011):
-      return('B')
-    if(int(input) == 1100):
-      return('C')
-    if(int(input) == 1101):
-      return('D')
-    if(int(input) == 1110):
-      return('E')
-    if(int(input) == 1111): 
-      return('F')   
-    
   if(length == 8):
     result = f"{find_hex(str_input[:4])}{find_hex(str_input[4:])}"
     print(result)
@@ -149,8 +115,39 @@ def byte_to_hex(input: int):
     print(result)
     return result
 
-    
-
+def find_hex(input: str): 
+  if(int(input) == 0):
+      return('0')
+  if(int(input) == 1):
+      return('1')
+  if(int(input) == 10):
+      return('2')
+  if(int(input) == 11):
+      return('3')
+  if(int(input) == 100):
+      return('4') 
+  if(int(input) == 101):
+      return('5')
+  if(int(input) == 110):
+      return('6')
+  if(int(input) == 111):
+      return('7')
+  if(int(input) == 1000):
+      return('8')
+  if(int(input) == 1001):
+      return('9')
+  if(int(input) == 1010):
+      return('A')
+  if(int(input) == 1011):
+      return('B')
+  if(int(input) == 1100):
+      return('C')
+  if(int(input) == 1101):
+      return('D')
+  if(int(input) == 1110):
+      return('E')
+  if(int(input) == 1111): 
+      return('F')  
 
 ##def convert_denary_to_base(denary):
     ##todo
