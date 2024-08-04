@@ -52,3 +52,9 @@ def wavelength_to_frequency(wavelength_in_metres):
 
 def dynamic_pressure(fluid_mass_density, flow_speed):
   return (fluid_mass_density * .5) * flow_speed^2
+
+def gravitational_constant():
+  return 6.67430e-11
+
+def univesal_gravitation(mass1, mass2, distance):
+  return gravitational_constant() * ((mass1 * mass2) / distance**2)
