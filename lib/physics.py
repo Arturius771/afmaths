@@ -10,7 +10,7 @@ def radiowave_relative_power_distances(distance1, distance2):
   return distance_ratio, distance1_strength, distance2_strength
 
 def radiowave_recieved_power(watts, distance_metres):
-  ##inverse square law
+  ##inverse square law - should have its own function in formula?
   ##TM255 block 1
   squared_distance = operation.exponentiate(distance_metres, 2)
   pi_times_four = operation.multiply(4, math.pi)
