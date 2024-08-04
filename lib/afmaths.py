@@ -21,15 +21,15 @@ def test(num1, num2):
 
 def dataplotter(number_list):
   ##MU123
-  list.list_sorted(number_list)
-  list.list_length(number_list)
-  list.list_sum(number_list)    
-  list.list_minimum(number_list)
-  list.list_maximum(number_list)
-  list.list_range((number_list))
-  list.list_mean(number_list)
-  list.list_median(number_list)
-  list.list_quartiles(number_list)
+  list.sorted(number_list)
+  list.length(number_list)
+  list.sum(number_list)    
+  list.minimum(number_list)
+  list.maximum(number_list)
+  list.range((number_list))
+  list.mean(number_list)
+  list.median(number_list)
+  list.quartiles(number_list)
 
 
 
