@@ -10,3 +10,5 @@ This project uses semantic versioning. Major versions will be breaking changes.
 - Create output functionality, which prints (in a user friendly way) the steps required
   - Probably remove operations file as a result
 - Doc comments
+- Document how to build/run
+- Document how to upgrade npm
