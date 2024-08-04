@@ -1,33 +1,27 @@
 import math
 def add(num1: float, num2: float):
-  result = num1 + num2
-  
-  return result
+    
+  return num1 + num2
 
 def subtract(num1: float, num2: float):
-  result = num1 - num2
-  
-  return result
+    
+  return num1 - num2
 
 def multiply(num1: float, num2: float):
-  result = num1 * num2
-  
-  return result
+    
+  return num1 * num2
 
 def divide(num1: float, num2: float):
-  result = num1 / num2
-    
-  return result
+      
+  return num1 / num2
     
 def exponentiate(number: float, exponent: float):
-  result = number ** exponent
-  
-  return result
+    
+  return number ** exponent
 
 def square_root(number: float):
-  result = math.sqrt(number)
-  
-  return result
+    
+  return math.sqrt(number)
 
 def factorial(number: int):
   working_string = ""
@@ -48,12 +42,10 @@ def euclid(m: int, n: int):
 
     remainder = m % n
     if remainder == 0:
-      
       return n
     else:
       m = n
       n = remainder
-      
       euclid(m,n)
 
 def sieve_of_eratosthenes(n: int):
