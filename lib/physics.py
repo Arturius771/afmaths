@@ -43,12 +43,12 @@ def photon_energy_from_frequency(frequency_in_hertz):
 
 def frequency_to_wavelength(frequency_in_hertz):
   """Returns wavelength in metres"""
-  return operation.divide(speed_of_light_metres_per_second(), frequency_in_hertz)
+  return operation.divide(speed_of_light_metres_per_second, frequency_in_hertz)
     
 def wavelength_to_frequency(wavelength_in_metres):
   """Returns frequency in hertz"""
   
-  return operation.divide(speed_of_light_metres_per_second(), wavelength_in_metres)
+  return operation.divide(speed_of_light_metres_per_second, wavelength_in_metres)
 
 def dynamic_pressure(fluid_mass_density, flow_speed):
   return (fluid_mass_density * .5) * flow_speed^2
@@ -57,4 +57,4 @@ def gravitational_constant():
   return 6.67430e-11
 
 def univesal_gravitation(mass1, mass2, distance):
-  return gravitational_constant() * ((mass1 * mass2) / distance**2)
+  return gravitational_constant * ((mass1 * mass2) / distance**2)
