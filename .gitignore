@@ -3,3 +3,4 @@ dist/
 afmaths.egg-info/
 *.pyc
 __pycache__/
+.idea/
