@@ -1,5 +1,5 @@
-import math
 import operation
+import formula
 
 def radiowave_relative_power_distances(distance1, distance2):
   ##TM255 Block 1
@@ -33,7 +33,7 @@ def photon_energy_from_wavelength(wavelength_in_micrometer):
 def photon_energy_from_frequency(frequency_in_hertz):
   """Returns photon energy in joules"""
   
-  return operation.multiply(planck_constant(), frequency_in_hertz)
+  return operation.multiply(planck_constant, frequency_in_hertz)
 
 def frequency_to_wavelength(frequency_in_hertz):
   """Returns wavelength in metres"""

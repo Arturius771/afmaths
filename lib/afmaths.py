@@ -5,13 +5,6 @@ import operation
 def test(num1, num2):
   """
   Tests the basic operations
-
-  Other functions called:
-  :add (num1 + num2)
-  :subtract (num1 - num2)
-  :multiply( num1 * num2)
-  :divide( num1 / num2)
-  :exponentiate( num1 ^ num2)
   """
   operation.add(num1, num2)
   operation.subtract(num1, num2)    
@@ -21,6 +14,9 @@ def test(num1, num2):
 
 def dataplotter(number_list):
   ##MU123
+  """
+  Runs some useful functions on a provided list
+  """
   list.sort(number_list)
   list.length(number_list)
   list.sum(number_list)    
