@@ -96,23 +96,19 @@ def byte_to_hex(input: int):
   if(length == 8):
     result = f"{find_hex(str_input[:4])}{find_hex(str_input[4:])}"
     
-    return result
   if(length == 7):
     result = f"{find_hex(str_input[:3])}{find_hex(str_input[3:])}"
     
-    return result
   if(length == 6):
     result = f"{find_hex(str_input[:2])}{find_hex(str_input[2:])}"
     
-    return result
   if(length == 5):
     result = f"{find_hex(str_input[:1])}{find_hex(str_input[1:])}"
     
-    return result
   if(length <= 4):
     result = f"{find_hex(str_input)}"
     
-    return result
+  return result
 
 def find_hex(input: str): 
   if(int(input) == 0):
