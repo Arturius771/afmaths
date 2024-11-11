@@ -1,52 +1,53 @@
-import operation
 import math
-import formula
+from geometry import pythagoras
+from operation import add, divide, exponentiate, factorial, multiply, subtract
+
 
 def file_compression_ratio(uncompressed_file_size, compressed_file_size):
-  result = operation.divide(uncompressed_file_size, compressed_file_size)
+  result = divide(uncompressed_file_size, compressed_file_size)
   
   return result
 
 def compressed_file_size(uncompressed_file_size, compression_ratio, unit_string):
-  result = operation.divide(uncompressed_file_size, compression_ratio)
+  result = divide(uncompressed_file_size, compression_ratio)
   
   return result
 
 def diagonal_pixel_length(length_in_pixels, width_in_pixels):
   ##TM255 Block 1 part 5
-  result = math.floor(formula.pythagoras(length_in_pixels, width_in_pixels)) ##round down to nearest int according to source material
+  result = math.floor(pythagoras(length_in_pixels, width_in_pixels)) ##round down to nearest int according to source material
   
   return result
 
 def travelling_salesman_problem_total_routes(number_of_cities):
   ##(n - 1)!/2
-  total_routes = operation.divide(operation.factorial(operation.subtract(number_of_cities, 1)), 2)
+  total_routes = divide(factorial(subtract(number_of_cities, 1)), 2)
   
   return total_routes
 
 def check_drive_clusters(sectors_per_cluster, sector_size_bytes, physical_file_size_bytes):    
-  if physical_file_size_bytes % (operation.multiply(sectors_per_cluster, sector_size_bytes)) == 0:
-     number_of_clusters = physical_file_size_bytes // operation.multiply(sectors_per_cluster, sector_size_bytes)
+  if physical_file_size_bytes % (multiply(sectors_per_cluster, sector_size_bytes)) == 0:
+     number_of_clusters = physical_file_size_bytes // multiply(sectors_per_cluster, sector_size_bytes)
   else:
     number_of_clusters = (physical_file_size_bytes // (sectors_per_cluster * sector_size_bytes)) + 1
-  slack_space_bytes = operation.subtract(operation.multiply(operation.multiply(number_of_clusters, sectors_per_cluster), sector_size_bytes), physical_file_size_bytes)        
+  slack_space_bytes = subtract(multiply(multiply(number_of_clusters, sectors_per_cluster), sector_size_bytes), physical_file_size_bytes)        
   
   return(number_of_clusters, slack_space_bytes)
 
 def ml_precision(tp, fp):
   """Fraction of positive results that are actually truly positive - TM358"""
-  return operation.divide(tp,operation.add(tp, fp))
+  return divide(tp,add(tp, fp))
 
 def ml_recall(tp, fn):
   """Fraction of total positives out of both true and false positives - also known as the true positive rate. TM358"""
-  return operation.divide(tp,operation.add(tp, fn))
+  return divide(tp,add(tp, fn))
 
 def ml_false_positive_rate(fp, tn):
-  return operation.divide(fp, operation.add(fp, tn))
+  return divide(fp, add(fp, tn))
 
 def ml_f1_score(precision: float, recall: float):
   """F1 score: related to the harmonic mean of precision and recall. Calculated as F1 = 2/[(1/Precision) + (1/Recall)] = 2/[(TP + FP)/TP + (TP + FN)/TP] = 2/[(2TP + FP + FN)/TP] = 2TP/[2TP + FP + FN] . A high F1 score implies the system has low numbers of false positives and false negatives. - TM358"""
-  f1 = operation.divide(2, operation.add(operation.divide(1, precision), operation.divide(1, recall)))
+  f1 = divide(2, add(divide(1, precision), divide(1, recall)))
   
   return f1
 
@@ -57,13 +58,13 @@ def ml_weighted_inputs(inputs: list[float], weights: list[float]):
   if(len(inputs) != len(weights)):
     return None
   for x in inputs:
-    weighted_inputs.append(operation.multiply(x, weights[inputs.index(x, loop_count)]))
+    weighted_inputs.append(multiply(x, weights[inputs.index(x, loop_count)]))
     loop_count += 1
 
   return weighted_inputs
 
 def ml_perceptron(inputs: list, weights: list, bias: float = 0):
-  return ml_activation_function(operation.add(operation.sum(ml_weighted_inputs(inputs, weights)), bias))
+  return ml_activation_function(add(sum(ml_weighted_inputs(inputs, weights)), bias))
 
 def ml_activation_function(input: float, threshold: float = 0):
   if input > threshold:
@@ -83,7 +84,7 @@ def byte_to_decimal(input: int) -> int:
   
   for bit in str(input):
     if(int(bit) != 0):
-      value += operation.exponentiate(2, tracker)    
+      value += exponentiate(2, tracker)    
     tracker -= 1
 
   return value

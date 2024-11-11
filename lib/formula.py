@@ -1,14 +1,17 @@
-import operation
+
+
 import math
+from operation import add, divide, exponentiate, multiply
+
 
 def sigmoid(input, bias:float = 0):
   #TM358 Section Block 1 section 5
-  return (operation.divide(1,operation.add(1,operation.exponentiate(math.e, operation.add(-input, bias)))))
+  return (divide(1,add(1,exponentiate(math.e, add(-input, bias)))))
 
 def inverse_square_law(source_strength, distance_metres):
   ##TM255 block 1
-  denominator = operation.multiply(operation.exponentiate(distance_metres, 2), operation.multiply(4, math.pi))
-  return operation.divide(source_strength, denominator)
+  denominator = multiply(exponentiate(distance_metres, 2), multiply(4, math.pi))
+  return divide(source_strength, denominator)
 
 
 # def derivative_exponentiated(exponent_value: float):
