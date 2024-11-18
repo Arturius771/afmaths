@@ -10,3 +10,4 @@ A simple package of math functions. Many of these will display output to the con
 - Document how to build/run
 - Document how to upgrade the npm package
 - Document and implement semantic versioning
+- Use currying for functions

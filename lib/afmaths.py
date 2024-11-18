@@ -7,11 +7,11 @@ def test(num1, num2):
   """
   Tests the basic operations
   """
-  add(num1, num2)
-  subtract(num1, num2)    
-  multiply(num1, num2)
-  divide(num1, num2)
-  exponentiate(num1, num2)
+  add(num1)(num2)
+  subtract(num2)(num1)    
+  multiply(num1)(num2)
+  divide(num2)(num1)
+  exponentiate(num2)(num1)
 
 def dataplotter(number_list):
   ##MU123

@@ -1,10 +1,10 @@
 
-from operation import add, exponentiate, square_root
+from operation import add, square, square_root
 
 
 def pythagoras(a,b):
     
-  return square_root(add(exponentiate(a, 2), exponentiate(b, 2)))
+  return square_root(add(square(a))(square(b)))
 
 def euclid(m: int, n: int):
     """Given two positive integers, m and n, find their greatest common divisor which is the largest positive integer that divides both evenly."""
