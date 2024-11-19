@@ -1,23 +1,14 @@
 import math
 from geometry import pythagoras
-from operation import add, divide, exponentiate, factorial, multiply, subtract
+from operation import add, divide, exponentiate, factorial, multiply, subtract, ratio
 
 
-def file_compression_ratio(uncompressed_file_size, compressed_file_size):
-  result = divide(compressed_file_size)(uncompressed_file_size)
-  
-  return result
-
-def compressed_file_size(uncompressed_file_size, compression_ratio, unit_string):
-  result = divide(compression_ratio)(uncompressed_file_size)
-  
-  return result
-
-def diagonal_pixel_length(length_in_pixels, width_in_pixels):
-  ##TM255 Block 1 part 5
-  result = math.floor(pythagoras(length_in_pixels, width_in_pixels)) ##round down to nearest int according to source material
-  
-  return result
+file_compression_ratio = lambda uncompressed_size: lambda compressed_size: ratio(compressed_size)(uncompressed_size)
+compressed_file_size = lambda uncompressed_size: lambda compression_ratio: divide(compression_ratio)(uncompressed_size)
+diagonal_pixel_length = lambda length_in_pixels: lambda width_in_pixels: math.floor(pythagoras(length_in_pixels, width_in_pixels))
+ml_precision = lambda tp: lambda fp: divide(add(tp)(fp))(tp)
+ml_recall = lambda tp: lambda fn: divide(add(tp)(fn))(tp) #Fraction of total positives out of both true and false positives - also known as the true positive rate. TM358
+ml_false_positive_rate = lambda fp: lambda tn: divide(add(fp)(tn))(fp)
 
 def travelling_salesman_problem_total_routes(number_of_cities):
   ##(n - 1)!/2
@@ -37,17 +28,6 @@ def check_drive_clusters(sectors_per_cluster, sector_size_bytes, physical_file_s
   slack_space_bytes = subtract(physical_file_size_bytes)(multiply_number_of_clusters_by_sectors_per_cluster(sector_size_bytes))      
   
   return(number_of_clusters, slack_space_bytes)
-
-def ml_precision(tp, fp):
-  """Fraction of positive results that are actually truly positive - TM358"""
-  return divide(add(tp)(fp))(tp)
-
-def ml_recall(tp, fn):
-  """Fraction of total positives out of both true and false positives - also known as the true positive rate. TM358"""
-  return divide(add(tp)(fn))(tp)
-
-def ml_false_positive_rate(fp, tn):
-  return divide(add(fp)(tn))(fp)
 
 def ml_f1_score(precision: float, recall: float):
   """F1 score: related to the harmonic mean of precision and recall. Calculated as F1 = 2/[(1/Precision) + (1/Recall)] = 2/[(TP + FP)/TP + (TP + FN)/TP] = 2/[(2TP + FP + FN)/TP] = 2TP/[2TP + FP + FN] . A high F1 score implies the system has low numbers of false positives and false negatives. - TM358"""
@@ -88,7 +68,8 @@ def byte_to_decimal(input: int) -> int:
   
   for bit in str(input):
     if(int(bit) != 0):
-      value += exponentiate(tracker)(2)   
+      exponentiateByTracker = exponentiate(tracker)
+      value += exponentiateByTracker(2)   
     tracker -= 1
 
   return value

@@ -7,37 +7,14 @@ import statistics
 from operation import divide, subtract
 
 
-def sort(number_list: list):
-    
-  return sorted(number_list)
-
-def length(number_list: list):
-    
-  return len(number_list)
-
-def sum(number_list: list):
-    
-  return math.sum(number_list)
-
-def minimum(number_list: list):
-    
-  return min(number_list)
-
-def maximum(number_list: list):
-    
-  return max(number_list)
-
-def range(number_list: list):
-    
-  return subtract(minimum(number_list))(maximum(number_list))
-
-def mean(number_list: list):
-    
-  return divide(length(number_list))(sum(number_list))
-
-def median(number_list: list):
-    
-  return statistics.median(number_list)
+sort = lambda number_list: sorted(number_list)
+length = lambda number_list: len(number_list)
+sum = lambda number_list: math.sum(number_list)
+minimum = lambda number_list: min(number_list)
+maximum = lambda number_list: max(number_list)
+range = lambda number_list: subtract(minimum(number_list))(maximum(number_list))
+mean = lambda number_list: divide(length(number_list))(sum(number_list))
+median = lambda number_list: statistics.median(number_list)
 
 def quartiles(number_list: list):
   number_list = sorted(number_list)

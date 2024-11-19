@@ -1,6 +1,8 @@
 from formula import inverse_square_law
 from operation import square_root
 
+GRAVITATIONAL_CONSTANT = 6.67430e-11
+
 
 def hohmann_transfer(initial_altitude_metres: int, target_altitude_metres: int, initial_body_radius: int = 6378000):
     # www.braeunig.us/space/problem.htm#4.19
@@ -23,8 +25,5 @@ def hohmann_transfer(initial_altitude_metres: int, target_altitude_metres: int, 
 def flux_density(luminosity, distance_metres):
   return inverse_square_law(luminosity, distance_metres)
 
-def gravitational_constant():
-  return 6.67430e-11
-
 def univesal_gravitation(mass1, mass2, distance):
-  return gravitational_constant * ((mass1 * mass2) / distance**2)
+  return GRAVITATIONAL_CONSTANT * ((mass1 * mass2) / distance**2)

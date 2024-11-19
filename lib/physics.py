@@ -3,6 +3,9 @@
 import math
 from operation import divide, exponentiate, multiply, square
 
+SPEED_OF_LIGHT_METRES_PER_SECONDS = 299792458
+PLANCK_CONSTANT = lambda: multiply(6.62607004)(exponentiate(-34)(10))  
+
 
 def radiowave_relative_power_distances(distance1, distance2):
   ##TM255 Block 1
@@ -18,15 +21,7 @@ def radiowave_received_power_difference_by_distance(power_in_watts_at_distance1,
   # https://www.youtube.com/watch?v=BF73QaY1aEg
   cross_multiply = multiply(power_in_watts_at_distance1)(square(distance1))
   
-  return divide(square(distance2))(cross_multiply)
-
-def speed_of_light_metres_per_second() -> int:
-  
-  return 299792458
-
-def planck_constant():
-  
-  return multiply(6.62607004)(exponentiate(-34)(10))  
+  return divide(square(distance2))(cross_multiply) 
 
 def photon_energy_from_wavelength(wavelength_in_micrometer):
   """Returns photon energy in electrovolts"""
@@ -36,19 +31,19 @@ def photon_energy_from_wavelength(wavelength_in_micrometer):
 def photon_energy_from_frequency(frequency_in_hertz):
   """Returns photon energy in joules"""
   
-  return multiply(planck_constant)(frequency_in_hertz)
+  return multiply(PLANCK_CONSTANT)(frequency_in_hertz)
 
 def frequency_to_wavelength(frequency_in_hertz):
   """Returns wavelength in metres"""
   divide_by_frequency = divide(frequency_in_hertz)
-  return divide_by_frequency(speed_of_light_metres_per_second)
+  return divide_by_frequency(SPEED_OF_LIGHT_METRES_PER_SECONDS)
     
 def wavelength_to_frequency(wavelength_in_metres):
   """Returns frequency in hertz"""
 
   divide_by_wavelength = divide(wavelength_in_metres)
   
-  return divide_by_wavelength(speed_of_light_metres_per_second)
+  return divide_by_wavelength(SPEED_OF_LIGHT_METRES_PER_SECONDS)
 
 def dynamic_pressure(fluid_mass_density, flow_speed):
   return (fluid_mass_density * .5) * flow_speed^2
