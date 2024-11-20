@@ -1,5 +1,5 @@
 
-from list import length, maximum, mean, median, minimum, quartiles, sort
+from list import length, maximum, mean, median, minimum, quartiles, sort, range
 from operation import add, divide, exponentiate, multiply, subtract
 
 
@@ -23,7 +23,7 @@ def dataplotter(number_list):
   sum(number_list)    
   minimum(number_list)
   maximum(number_list)
-  range((number_list))
+  range(number_list)
   mean(number_list)
   median(number_list)
   quartiles(number_list)

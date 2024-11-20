@@ -20,7 +20,6 @@ def radiowave_relative_power_distances(distance1, distance2):
 def radiowave_received_power_difference_by_distance(power_in_watts_at_distance1, distance1, distance2):
   # https://www.youtube.com/watch?v=BF73QaY1aEg
   cross_multiply = multiply(power_in_watts_at_distance1)(square(distance1))
-  
   return divide(square(distance2))(cross_multiply) 
 
 def photon_energy_from_wavelength(wavelength_in_micrometer):
@@ -30,7 +29,6 @@ def photon_energy_from_wavelength(wavelength_in_micrometer):
 
 def photon_energy_from_frequency(frequency_in_hertz):
   """Returns photon energy in joules"""
-  
   return multiply(PLANCK_CONSTANT)(frequency_in_hertz)
 
 def frequency_to_wavelength(frequency_in_hertz):
@@ -40,16 +38,11 @@ def frequency_to_wavelength(frequency_in_hertz):
     
 def wavelength_to_frequency(wavelength_in_metres):
   """Returns frequency in hertz"""
-
   divide_by_wavelength = divide(wavelength_in_metres)
-  
   return divide_by_wavelength(SPEED_OF_LIGHT_METRES_PER_SECONDS)
 
-def dynamic_pressure(fluid_mass_density, flow_speed):
-  return (fluid_mass_density * .5) * flow_speed^2
+def dynamic_pressure(fluid_mass_density, flow_speed): return (fluid_mass_density * .5) * flow_speed^2
 
-def watts_to_decibel_milliwatts(power_in_watts: float) -> float:
-  return decibels(power_in_watts, .001)
+def watts_to_decibel_milliwatts(power_in_watts: float) -> float: return decibels(power_in_watts)(.001)
 
-def decibels(power1: float, power2: float) -> float:
-  return math.log(power1/power2, 10)
+def decibels(power1: float) -> function: return lambda power2: math.log(power1/power2, 10)

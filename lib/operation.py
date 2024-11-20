@@ -1,13 +1,13 @@
 import math
 
-add = lambda num1: lambda num2: num1 + num2
-subtract = lambda num2: lambda num1: num1 - num2
-multiply = lambda num1: lambda num2: num1 * num2
-divide = lambda denominator: lambda numerator: numerator / denominator
-exponentiate = lambda exponent: lambda num: num ** exponent
-square_root = lambda num: math.sqrt(num)
-square = exponentiate(2)
-ratio = lambda num1: lambda num2: divide(num1)(num2)
+def add(num1): return lambda num2: num1 + num2
+def subtract(num2): return lambda num1: num1 - num2
+def multiply(num1): return lambda num2: num1 * num2
+def divide(denominator): return lambda numerator: numerator / denominator
+def exponentiate(exponent): return  lambda num: num ** exponent
+def square_root(num): return  math.sqrt(num)
+def square(): return  exponentiate(2)
+def ratio(num1): return  lambda num2: divide(num1)(num2)
 
 def factorial(number: int):
   working_string = ""

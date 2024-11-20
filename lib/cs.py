@@ -2,13 +2,11 @@ import math
 from geometry import pythagoras
 from operation import add, divide, exponentiate, factorial, multiply, subtract, ratio
 
+def file_compression_ratio(uncompressed_size): return lambda compressed_size: ratio(compressed_size)(uncompressed_size)
 
-file_compression_ratio = lambda uncompressed_size: lambda compressed_size: ratio(compressed_size)(uncompressed_size)
-compressed_file_size = lambda uncompressed_size: lambda compression_ratio: divide(compression_ratio)(uncompressed_size)
-diagonal_pixel_length = lambda length_in_pixels: lambda width_in_pixels: math.floor(pythagoras(length_in_pixels, width_in_pixels))
-ml_precision = lambda tp: lambda fp: divide(add(tp)(fp))(tp)
-ml_recall = lambda tp: lambda fn: divide(add(tp)(fn))(tp) #Fraction of total positives out of both true and false positives - also known as the true positive rate. TM358
-ml_false_positive_rate = lambda fp: lambda tn: divide(add(fp)(tn))(fp)
+def compressed_file_size(uncompressed_size): return lambda compression_ratio: divide(compression_ratio)(uncompressed_size) 
+
+def diagonal_pixel_length(length_in_pixels): return lambda width_in_pixels: math.floor(pythagoras(length_in_pixels, width_in_pixels))
 
 def travelling_salesman_problem_total_routes(number_of_cities):
   ##(n - 1)!/2
@@ -34,6 +32,14 @@ def ml_f1_score(precision: float, recall: float):
   f1 = divide(add(divide(precision)(1))(divide(recall)(1)))(2)
   
   return f1
+
+def ml_precesion(tp): return lambda fp: divide(add(tp)(fp))(tp)
+
+def ml_recall(tp): 
+   """Fraction of total positives out of both true and false positives - also known as the true positive rate."""
+   return lambda fn: divide(add(tp)(fn))(tp) #TM358
+
+def ml_false_positive_rate(fp): return lambda tn: divide(add(fp)(tn))(fp)
 
 def ml_weighted_inputs(inputs: list[float], weights: list[float]):
   "Multiply the inputs by the weights - TM358 Block 1"
