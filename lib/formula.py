@@ -11,9 +11,8 @@ def sigmoid(input, bias:float = 0):
 
 def inverse_square_law(source_strength, distance_metres):
   ##TM255 block 1
-  distance_squared = multiply(square(distance_metres))
   four_times_pi = multiply(4)(math.pi)
-  denominator = distance_squared(four_times_pi)
+  denominator =  multiply(square(distance_metres))(four_times_pi)
   return divide(denominator)(source_strength)
 
 
