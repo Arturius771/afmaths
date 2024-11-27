@@ -5,7 +5,7 @@ from formula import inverse_square_law
 from operation import divide, exponentiate, multiply, square, square_root
 
 SPEED_OF_LIGHT_METRES_PER_SECONDS = 299792458
-PLANCK_CONSTANT = lambda: multiply(6.62607004)(exponentiate(-34)(10))  
+PLANCK_CONSTANT = multiply(6.62607004)(exponentiate(-34)(10))  
 GRAVITATIONAL_CONSTANT = 6.67430e-11
 
 

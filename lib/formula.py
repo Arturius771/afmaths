@@ -14,10 +14,3 @@ def inverse_square_law(source_strength, distance_metres):
   four_times_pi = multiply(4)(math.pi)
   denominator =  multiply(square(distance_metres))(four_times_pi)
   return divide(denominator)(source_strength)
-
-
-# def derivative_exponentiated(exponent_value: float):
-#   # Other types of derivatives can be calculated using differentiating from first principles
-#   # x = Symbol('x')
-#   f = x**exponent_value
-#   return f.diff(x)

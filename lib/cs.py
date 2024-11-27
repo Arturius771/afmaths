@@ -69,9 +69,10 @@ def byte_to_ascii_text(input: int) -> str:
   return chr(value)
 
 def byte_to_decimal(input: int) -> int:
+  """Takes an 8 bit value and returns its value in decimal form."""
   value = 0
-  tracker = len(str(input)) - 1 # Leading 0s are not allowed in Python, so we cannot assume there will be 8 bits in the byte
-  
+  tracker = len(str(input)) - 1 
+
   for bit in str(input):
     if(int(bit) != 0):
       exponentiateByTracker = exponentiate(tracker)
@@ -81,9 +82,8 @@ def byte_to_decimal(input: int) -> int:
   return value
 
 def byte_to_hex(input: int):
-  length = len(str(input))
-
   str_input = str(input)
+  length = len(str_input)
 
   if(length == 8):
     result = f"{find_hex(str_input[:4])}{find_hex(str_input[4:])}"
@@ -102,39 +102,37 @@ def byte_to_hex(input: int):
     
   return result
 
-def find_hex(input: str): 
-  if(int(input) == 0):
+def find_hex(bits: str): 
+  bits = int(bits)
+  if(bits == 0):
       return('0')
-  if(int(input) == 1):
+  if(bits == 1):
       return('1')
-  if(int(input) == 10):
+  if(bits == 10):
       return('2')
-  if(int(input) == 11):
+  if(bits == 11):
       return('3')
-  if(int(input) == 100):
+  if(bits == 100):
       return('4') 
-  if(int(input) == 101):
+  if(bits == 101):
       return('5')
-  if(int(input) == 110):
+  if(bits == 110):
       return('6')
-  if(int(input) == 111):
+  if(bits == 111):
       return('7')
-  if(int(input) == 1000):
+  if(bits == 1000):
       return('8')
-  if(int(input) == 1001):
+  if(bits == 1001):
       return('9')
-  if(int(input) == 1010):
+  if(bits == 1010):
       return('A')
-  if(int(input) == 1011):
+  if(bits == 1011):
       return('B')
-  if(int(input) == 1100):
+  if(bits == 1100):
       return('C')
-  if(int(input) == 1101):
+  if(bits == 1101):
       return('D')
-  if(int(input) == 1110):
+  if(bits == 1110):
       return('E')
-  if(int(input) == 1111): 
+  if(bits == 1111): 
       return('F')  
-
-##def convert_denary_to_base(denary):
-    ##todo
