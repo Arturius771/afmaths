@@ -1,5 +1,7 @@
 
-from operation import add, square, square_root
+from operation import add, divide, square
+import math
+from formula import taylor_series
 
 pythagoras = lambda a: lambda b: add(square(a))(square(b))
 
@@ -27,3 +29,17 @@ def sieve_of_eratosthenes(n: int):
         numbers[multiple] = False
 
   return primes
+
+def tangent(angle_degrees):
+  """Returns a value in radians"""
+  return divide(cosine(angle_degrees))(sine(angle_degrees))
+
+def arctangent(radians): return math.degrees(math.atan(radians))
+
+def sine(angle_degrees):
+  """Returns a value in radians"""
+  return taylor_series(math.radians(angle_degrees))(math.radians(angle_degrees),2,3)
+
+def cosine(angle_degrees):
+  """Returns a value in radians"""
+  return taylor_series(math.radians(angle_degrees))(1,2,2)

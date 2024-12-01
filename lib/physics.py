@@ -47,7 +47,7 @@ def dynamic_pressure(fluid_mass_density, flow_speed): return (fluid_mass_density
 
 def watts_to_decibel_milliwatts(power_in_watts: float) -> float: return decibels(power_in_watts)(.001)
 
-def decibels(power1: float) -> function: return lambda power2: math.log(power1/power2, 10)
+def decibels(power1: float): return lambda power2: math.log(power1/power2, 10)
 
 def hohmann_transfer(initial_altitude_metres: int, target_altitude_metres: int, initial_body_radius: int = 6378000):
     # www.braeunig.us/space/problem.htm#4.19
@@ -71,3 +71,11 @@ def flux_density(luminosity, distance_metres):
   return inverse_square_law(luminosity, distance_metres)
 
 def univesal_gravitation(mass1, mass2, distance): return multiply(GRAVITATIONAL_CONSTANT)(multiply(mass1)(mass2) / square(distance))
+
+def angular_diameter_degrees(distance: float, diameter: float):
+  return math.degrees(diameter / distance)
+
+def diameter_of_distant_object(distance, angular_diameter_degrees) -> float:
+  """Returns a diameter of an object if the distance"""
+  # Rearranges the equation in angular_diameter_degrees()
+  return math.tan(math.radians(angular_diameter_degrees)) * distance
