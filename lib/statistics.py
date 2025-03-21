@@ -6,5 +6,5 @@ def probability_of_outcome_percentage(number_of_flips: int, chance_of_result: fl
     return divide(exponentiate(number_of_flips)(denominator))(1)
 
 
-if __name__ == '__main__':
-    print(probability_of_outcome_percentage(1000, .5))
+# if __name__ == '__main__':
+#     print(probability_of_outcome_percentage(1000, .5))
