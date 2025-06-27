@@ -20,3 +20,7 @@ def factorial(number: int):
   working_string = f"{number}! = {working_string[:-1]} = {result}"
 
   return result
+
+
+# def normalize_vector()
+# TODO
