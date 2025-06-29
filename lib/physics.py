@@ -53,8 +53,8 @@ def hohmann_transfer(initial_altitude_metres: int, target_altitude_metres: int, 
     # www.braeunig.us/space/problem.htm#4.19
 
     r_a = initial_altitude_metres + initial_body_radius
-    r_b = target_altitude_metres
-    G_M = 3.986005e+14
+    r_b = target_altitude_metres + initial_body_radius
+    G_M = 3.986005e+14 # for Earth
 
     semi_major_axis_transfer_ellipse = (r_a + r_b) / 2
     initial_velocity = square_root(G_M / r_a)
@@ -79,3 +79,8 @@ def diameter_of_distant_object(distance, angular_diameter_degrees) -> float:
   """Returns a diameter of an object if the distance"""
   # Rearranges the equation in angular_diameter_degrees()
   return math.tan(math.radians(angular_diameter_degrees)) * distance
+
+
+def calculate_gravitional_parameter(mass1, mass2) -> float:
+  # Mu
+  return GRAVITATIONAL_CONSTANT(mass1 + mass2)
