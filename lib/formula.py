@@ -17,7 +17,7 @@ def inverse_square_law(source_strength, distance_metres):
   return divide(denominator)(source_strength)
 
 def taylor_series(value): 
-  """Written for sin and cos functions so may not be generic for pure Taylor Series functions."""
+  # Written for sin and cos functions so may not be generic for pure Taylor Series functions.
   def steps(initial_value_in_series, increment = 1, initial_denmoninator = 1, steps = 3, sign = -1):
     taylor = [initial_value_in_series]
     for _ in range(steps):
@@ -33,3 +33,20 @@ def taylor_series(value):
 
     return reduce(lambda a,b: a+b, taylor)
   return steps
+
+def herons_method(value: float):
+  """
+  O(log precision) method for calculating square roots. The square roots of two values (eg. 25, 2982186) will be calculated in the same number of cycles to the same precision
+  """
+  # www.youtube.com/watch?v=l2TCgS_eLwA
+  initial_estimate = value / 2
+  current_step = initial_estimate
+  epsilon = value * exponentiate(-9)(10)
+
+  while(True):
+    next_step = (1/2 * (current_step + (value / current_step)))
+    if(next_step < epsilon):
+      break
+    current_step = next_step
+
+  return current_step
