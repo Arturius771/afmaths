@@ -1,5 +1,5 @@
 
-from operation import add, divide, multiply, square
+from operation import add, divide, multiply, square, subtract
 import math
 from formula import taylor_series
 
@@ -47,3 +47,7 @@ def cosine(angle_degrees):
 def area_of_right_triangle(base_length, height_length):
   """Area = base * height / 2"""
   return divide(2)(multiply(base_length)(height_length))
+
+def area_of_quarter_circle(side_length, radius): 
+  """Area = s^2 - ((1/4)*pi*r^2)"""
+  return subtract((1/4)*math.pi*square(radius))(square(side_length))
