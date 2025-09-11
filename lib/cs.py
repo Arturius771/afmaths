@@ -1,8 +1,8 @@
 import math
 from geometry import pythagoras
-from operation import add, divide, exponentiate, factorial, multiply, subtract, ratio
+from operation import add, divide, exponentiate, factorial, multiply, subtract
 
-def file_compression_ratio(uncompressed_size): return lambda compressed_size: ratio(compressed_size)(uncompressed_size)
+def file_compression_ratio(uncompressed_size): return lambda compressed_size: divide(compressed_size)(uncompressed_size)
 
 def compressed_file_size(uncompressed_size): return lambda compression_ratio: divide(compression_ratio)(uncompressed_size) 
 
@@ -15,7 +15,8 @@ def travelling_salesman_problem_total_routes(number_of_cities):
   
   return total_routes
 
-def check_drive_clusters(sectors_per_cluster, sector_size_bytes, physical_file_size_bytes):    
+def check_drive_clusters(sectors_per_cluster, sector_size_bytes, physical_file_size_bytes):
+  ## TM255    
   if physical_file_size_bytes % (multiply(sectors_per_cluster)(sector_size_bytes)) == 0:
      number_of_clusters = physical_file_size_bytes // multiply(sectors_per_cluster)(sector_size_bytes)
   else:
@@ -33,13 +34,13 @@ def ml_f1_score(precision: float, recall: float):
   
   return f1
 
-def ml_precesion(tp): return lambda fp: divide(add(tp)(fp))(tp)
+def ml_precesion(true_positives): return lambda false_positives: divide(add(true_positives)(false_positives))(true_positives)
 
-def ml_recall(tp): 
-   """Fraction of total positives out of both true and false positives - also known as the true positive rate."""
-   return lambda fn: divide(add(tp)(fn))(tp) #TM358
+def ml_recall(true_positives): 
+  """Fraction of total positives out of both true and false positives - also known as the true positive rate."""
+  return lambda false_negatives: divide(add(true_positives)(false_negatives))(true_positives) #TM358
 
-def ml_false_positive_rate(fp): return lambda tn: divide(add(fp)(tn))(fp)
+def ml_false_positive_rate(false_positives): return lambda true_negatives: divide(add(false_positives)(true_negatives))(false_positives)
 
 def ml_weighted_inputs(inputs: list[float], weights: list[float]):
   "Multiply the inputs by the weights - TM358 Block 1"
@@ -78,7 +79,6 @@ def byte_to_decimal(input: int) -> int:
       exponentiateByTracker = exponentiate(tracker)
       value += exponentiateByTracker(2)   
     tracker -= 1
-
   return value
 
 def byte_to_hex(input: int):
@@ -86,53 +86,47 @@ def byte_to_hex(input: int):
   length = len(str_input)
 
   if(length == 8):
-    result = f"{find_hex(str_input[:4])}{find_hex(str_input[4:])}"
-    
+    return f"{find_hex(str_input[:4])}{find_hex(str_input[4:])}"
   if(length == 7):
-    result = f"{find_hex(str_input[:3])}{find_hex(str_input[3:])}"
-    
+    return f"{find_hex(str_input[:3])}{find_hex(str_input[3:])}"
   if(length == 6):
-    result = f"{find_hex(str_input[:2])}{find_hex(str_input[2:])}"
-    
+    return f"{find_hex(str_input[:2])}{find_hex(str_input[2:])}"
   if(length == 5):
-    result = f"{find_hex(str_input[:1])}{find_hex(str_input[1:])}"
-    
+    return f"{find_hex(str_input[:1])}{find_hex(str_input[1:])}"
   if(length <= 4):
-    result = f"{find_hex(str_input)}"
-    
-  return result
+    return f"{find_hex(str_input)}"
 
-def find_hex(bits: str): 
-  bits = int(bits)
-  if(bits == 0):
+def find_hex(bit_string: str): 
+  bit_string = int(bit_string)
+  if(bit_string == 0):
       return('0')
-  if(bits == 1):
+  if(bit_string == 1):
       return('1')
-  if(bits == 10):
+  if(bit_string == 10):
       return('2')
-  if(bits == 11):
+  if(bit_string == 11):
       return('3')
-  if(bits == 100):
+  if(bit_string == 100):
       return('4') 
-  if(bits == 101):
+  if(bit_string == 101):
       return('5')
-  if(bits == 110):
+  if(bit_string == 110):
       return('6')
-  if(bits == 111):
+  if(bit_string == 111):
       return('7')
-  if(bits == 1000):
+  if(bit_string == 1000):
       return('8')
-  if(bits == 1001):
+  if(bit_string == 1001):
       return('9')
-  if(bits == 1010):
+  if(bit_string == 1010):
       return('A')
-  if(bits == 1011):
+  if(bit_string == 1011):
       return('B')
-  if(bits == 1100):
+  if(bit_string == 1100):
       return('C')
-  if(bits == 1101):
+  if(bit_string == 1101):
       return('D')
-  if(bits == 1110):
+  if(bit_string == 1110):
       return('E')
-  if(bits == 1111): 
+  if(bit_string == 1111): 
       return('F')  

@@ -9,7 +9,7 @@ def square_root(num): return  math.sqrt(num) # TODO: use herons_method()
 def square(): 
   """Squares a number"""
   return  exponentiate(2)
-def ratio(num1): return  lambda num2: divide(num1)(num2)
+# def ratio(num1): return  lambda num2: divide(num1)(num2) # TODO: provide as {numerator and denominator object?}
 
 def factorial(number: int):
   working_string = ""

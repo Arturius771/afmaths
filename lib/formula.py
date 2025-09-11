@@ -1,9 +1,6 @@
-
-
 from functools import reduce
 import math
 from operation import add, divide, exponentiate, multiply, square, factorial
-
 
 def sigmoid(input, bias:float = 0):
   #TM358 Section Block 1 section 5
