@@ -1,5 +1,3 @@
-
-
 import math
 from formula import inverse_square_law
 from operation import divide, exponentiate, multiply, square, square_root

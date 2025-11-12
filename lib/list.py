@@ -1,11 +1,6 @@
-
-
-
 import math
 import statistics
-
 from operation import divide, subtract
-
 
 def sort(number_list): return sorted(number_list)
 def length(number_list): return len(number_list)
@@ -25,3 +20,18 @@ def quartiles(number_list: list):
   iqr_result = subtract(q1_result)(q3_result)
   
   return q1_result, q3_result, iqr_result
+
+def dataplotter(number_list):
+  ##MU123
+  """
+  Runs some useful functions on a provided list
+  """
+  sort(number_list)
+  length(number_list)
+  sum(number_list)    
+  minimum(number_list)
+  maximum(number_list)
+  range(number_list)
+  mean(number_list)
+  median(number_list)
+  quartiles(number_list)

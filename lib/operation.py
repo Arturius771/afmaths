@@ -5,9 +5,11 @@ def subtract(num2): return lambda num1: num1 - num2
 def multiply(num1): return lambda num2: num1 * num2
 def divide(denominator): return lambda numerator: numerator / denominator
 def exponentiate(exponent): return  lambda num: num ** exponent
-def square_root(num): return  math.sqrt(num)
-def square(): return  exponentiate(2)
-def ratio(num1): return  lambda num2: divide(num1)(num2)
+def square_root(num): return  math.sqrt(num) # TODO: use herons_method()
+def square(): 
+  """Squares a number"""
+  return  exponentiate(2)
+# def ratio(num1): return  lambda num2: divide(num1)(num2) # TODO: provide as {numerator and denominator object?}
 
 def factorial(number: int):
   working_string = ""
@@ -23,4 +25,4 @@ def factorial(number: int):
 
 
 # def normalize_vector()
-# TODO
+# TODO - see TUB MSE Numerical Simulation assignment for method
