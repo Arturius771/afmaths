@@ -57,7 +57,7 @@ def hohmann_transfer(initial_altitude_metres: int, target_altitude_metres: int, 
     G_M = 3.986005e+14 # for Earth
 
     semi_major_axis_transfer_ellipse = (r_a + r_b) / 2
-    initial_velocity = square_root(G_M / r_a)
+    initial_velocity = square_root(G_M / r_a) # TODO extract into a Vis Viva equation. 
     final_velocity = square_root(G_M / r_b)
     velocity_on_orbit_at_initial_orbit = square_root(G_M * ((2/r_a) - (1/semi_major_axis_transfer_ellipse)))
     velocity_on_orbit_at_final_orbit = square_root(G_M * ((2/r_b) - (1/semi_major_axis_transfer_ellipse)))
