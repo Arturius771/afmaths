@@ -1,11 +1,11 @@
 import math
 
-def add(num1): return lambda num2: num1 + num2
-def subtract(num2): return lambda num1: num1 - num2
-def multiply(num1): return lambda num2: num1 * num2
-def divide(denominator): return lambda numerator: numerator / denominator
-def exponentiate(exponent): return  lambda num: num ** exponent
-def square_root(num): return  math.sqrt(num) # TODO: use herons_method()
+def add(num1: float) -> float: return lambda num2: num1 + num2
+def subtract(num2: float) -> float: return lambda num1: num1 - num2
+def multiply(num1: float) -> float: return lambda num2: num1 * num2
+def divide(denominator: float) -> float: return lambda numerator: numerator / denominator
+def exponentiate(exponent: float) -> float: return  lambda num: num ** exponent
+def square_root(num: float) -> float: return  math.sqrt(num) # TODO: use herons_method()
 def square(): 
   """Squares a number"""
   return  exponentiate(2)
