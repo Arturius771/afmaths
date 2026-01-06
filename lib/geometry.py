@@ -5,7 +5,7 @@ from formula import taylor_series
 
 pythagoras = lambda a: lambda b: add(square(a))(square(b))
 
-def euclid(m: int, n: int):
+def euclid(m: int, n: int) -> int:
     """Given two positive integers, m and n, find their greatest common divisor which is the largest positive integer that divides both evenly."""
 
     remainder = m % n
@@ -15,8 +15,9 @@ def euclid(m: int, n: int):
       m = n
       n = remainder
       euclid(m,n)
+    return n
 
-def sieve_of_eratosthenes(n: int):
+def sieve_of_eratosthenes(n: int) -> list[int]:
   """Finds prime numbers up to n"""
   # https://www.youtube.com/watch?v=fwxjMKBMR7s
   numbers = [True] * n 
@@ -30,24 +31,24 @@ def sieve_of_eratosthenes(n: int):
 
   return primes
 
-def tangent(angle_degrees):
+def tangent(angle_degrees: float) -> float:
   """Returns a value in radians"""
   return divide(cosine(angle_degrees))(sine(angle_degrees))
 
 def arctangent(radians): return math.degrees(math.atan(radians))
 
-def sine(angle_degrees):
+def sine(angle_degrees: float) -> float:
   """Returns a value in radians"""
   return taylor_series(math.radians(angle_degrees))(math.radians(angle_degrees),2,3)
 
-def cosine(angle_degrees):
+def cosine(angle_degrees: float) -> float:
   """Returns a value in radians"""
   return taylor_series(math.radians(angle_degrees))(1,2,2)
 
-def area_of_right_triangle(base_length, height_length):
+def area_of_right_triangle(base_length: float, height_length: float) -> float:
   """Area = base * height / 2"""
   return divide(2)(multiply(base_length)(height_length))
 
-def area_of_quarter_circle(side_length, radius): 
+def area_of_quarter_circle(side_length: float, radius: float) -> float: 
   """Area = s^2 - ((1/4)*pi*r^2)"""
   return subtract((1/4)*math.pi*square(radius))(square(side_length))

@@ -2,20 +2,20 @@ import math
 from geometry import pythagoras
 from operation import add, divide, exponentiate, factorial, multiply, subtract
 
-def file_compression_ratio(uncompressed_size): return lambda compressed_size: divide(compressed_size)(uncompressed_size)
+def file_compression_ratio(uncompressed_size: float) -> float: return lambda compressed_size: divide(compressed_size)(uncompressed_size)
 
-def compressed_file_size(uncompressed_size): return lambda compression_ratio: divide(compression_ratio)(uncompressed_size) 
+def compressed_file_size(uncompressed_size) -> float: return lambda compression_ratio: divide(compression_ratio)(uncompressed_size) 
 
-def diagonal_pixel_length(length_in_pixels): return lambda width_in_pixels: math.floor(pythagoras(length_in_pixels, width_in_pixels))
+def diagonal_pixel_length(length_in_pixels) -> float: return lambda width_in_pixels: math.floor(pythagoras(length_in_pixels, width_in_pixels))
 
-def travelling_salesman_problem_total_routes(number_of_cities):
+def travelling_salesman_problem_total_routes(number_of_cities) -> float:
   ##(n - 1)!/2
   subtract1 = subtract(1)
   total_routes = divide(2)(factorial(subtract1(number_of_cities)))
   
   return total_routes
 
-def check_drive_clusters(sectors_per_cluster, sector_size_bytes, physical_file_size_bytes):
+def check_drive_clusters(sectors_per_cluster, sector_size_bytes, physical_file_size_bytes) -> float:
   ## TM255    
   if physical_file_size_bytes % (multiply(sectors_per_cluster)(sector_size_bytes)) == 0:
      number_of_clusters = physical_file_size_bytes // multiply(sectors_per_cluster)(sector_size_bytes)
@@ -28,21 +28,21 @@ def check_drive_clusters(sectors_per_cluster, sector_size_bytes, physical_file_s
   
   return(number_of_clusters, slack_space_bytes)
 
-def ml_f1_score(precision: float, recall: float):
+def ml_f1_score(precision: float, recall: float) -> float:
   """F1 score: related to the harmonic mean of precision and recall. Calculated as F1 = 2/[(1/Precision) + (1/Recall)] = 2/[(TP + FP)/TP + (TP + FN)/TP] = 2/[(2TP + FP + FN)/TP] = 2TP/[2TP + FP + FN] . A high F1 score implies the system has low numbers of false positives and false negatives. - TM358"""
   f1 = divide(add(divide(precision)(1))(divide(recall)(1)))(2)
   
   return f1
 
-def ml_precesion(true_positives): return lambda false_positives: divide(add(true_positives)(false_positives))(true_positives)
+def ml_precesion(true_positives) -> float: return lambda false_positives: divide(add(true_positives)(false_positives))(true_positives)
 
 def ml_recall(true_positives): 
   """Fraction of total positives out of both true and false positives - also known as the true positive rate."""
   return lambda false_negatives: divide(add(true_positives)(false_negatives))(true_positives) #TM358
 
-def ml_false_positive_rate(false_positives): return lambda true_negatives: divide(add(false_positives)(true_negatives))(false_positives)
+def ml_false_positive_rate(false_positives) -> float: return lambda true_negatives: divide(add(false_positives)(true_negatives))(false_positives)
 
-def ml_weighted_inputs(inputs: list[float], weights: list[float]):
+def ml_weighted_inputs(inputs: list[float], weights: list[float]) -> float:
   "Multiply the inputs by the weights - TM358 Block 1"
   weighted_inputs = []
   loop_count = 0
@@ -54,7 +54,7 @@ def ml_weighted_inputs(inputs: list[float], weights: list[float]):
 
   return weighted_inputs
 
-def ml_perceptron(inputs: list, weights: list, bias: float = 0):
+def ml_perceptron(inputs: list, weights: list, bias: float = 0) -> float:
   return ml_activation_function(add(sum(ml_weighted_inputs(inputs, weights)))(bias))
 
 def ml_activation_function(input: float, threshold: float = 0):
@@ -81,52 +81,56 @@ def byte_to_decimal(input: int) -> int:
     tracker -= 1
   return value
 
-def byte_to_hex(input: int):
+def byte_to_hex(input: int) -> str:
   str_input = str(input)
   length = len(str_input)
 
   if(length == 8):
-    return f"{find_hex(str_input[:4])}{find_hex(str_input[4:])}"
+    return f"{bit_to_hex(str_input[:4])}{bit_to_hex(str_input[4:])}"
   if(length == 7):
-    return f"{find_hex(str_input[:3])}{find_hex(str_input[3:])}"
+    return f"{bit_to_hex(str_input[:3])}{bit_to_hex(str_input[3:])}"
   if(length == 6):
-    return f"{find_hex(str_input[:2])}{find_hex(str_input[2:])}"
+    return f"{bit_to_hex(str_input[:2])}{bit_to_hex(str_input[2:])}"
   if(length == 5):
-    return f"{find_hex(str_input[:1])}{find_hex(str_input[1:])}"
+    return f"{bit_to_hex(str_input[:1])}{bit_to_hex(str_input[1:])}"
   if(length <= 4):
-    return f"{find_hex(str_input)}"
+    return f"{bit_to_hex(str_input)}"
+  
+  return str_input
 
-def find_hex(bit_string: str): 
-  bit_string = int(bit_string)
-  if(bit_string == 0):
+def bit_to_hex(bit_string: str) -> str: 
+  bit_string = bit_string
+  if(bit_string == '0'):
       return('0')
-  if(bit_string == 1):
+  if(bit_string == '1'):
       return('1')
-  if(bit_string == 10):
+  if(bit_string == '10'):
       return('2')
-  if(bit_string == 11):
+  if(bit_string == '11'):
       return('3')
-  if(bit_string == 100):
+  if(bit_string == '100'):
       return('4') 
-  if(bit_string == 101):
+  if(bit_string == '101'):
       return('5')
-  if(bit_string == 110):
+  if(bit_string == '110'):
       return('6')
-  if(bit_string == 111):
+  if(bit_string == '111'):
       return('7')
-  if(bit_string == 1000):
+  if(bit_string == '1000'):
       return('8')
-  if(bit_string == 1001):
+  if(bit_string == '1001'):
       return('9')
-  if(bit_string == 1010):
+  if(bit_string == '1010'):
       return('A')
-  if(bit_string == 1011):
+  if(bit_string == '1011'):
       return('B')
-  if(bit_string == 1100):
+  if(bit_string == '1100'):
       return('C')
-  if(bit_string == 1101):
+  if(bit_string == '1101'):
       return('D')
-  if(bit_string == 1110):
+  if(bit_string == '1110'):
       return('E')
-  if(bit_string == 1111): 
+  if(bit_string == '1111'): 
       return('F')  
+  
+  return bit_string
