@@ -22,3 +22,4 @@ def hohmann_transfer(initial_altitude_metres: int, target_altitude_metres: int, 
 # TODO: Vis Viva
 # TODO: Orbital velocity
 # TODO: FST 1 equations
+# TODO: Increment of velocity
