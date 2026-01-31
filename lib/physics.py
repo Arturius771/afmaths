@@ -33,13 +33,11 @@ def photon_energy_from_frequency(frequency_in_hertz: float) -> float:
 
 def frequency_to_wavelength(frequency_in_hertz: float) -> float:
   """Returns wavelength in metres"""
-  divide_by_frequency = divide(frequency_in_hertz)
-  return divide_by_frequency(SPEED_OF_LIGHT_METRES_PER_SECONDS)
+  return divide(frequency_in_hertz)(SPEED_OF_LIGHT_METRES_PER_SECONDS)
     
 def wavelength_to_frequency(wavelength_in_metres: float) -> float:
   """Returns frequency in hertz"""
-  divide_by_wavelength = divide(wavelength_in_metres)
-  return divide_by_wavelength(SPEED_OF_LIGHT_METRES_PER_SECONDS)
+  return divide(wavelength_in_metres)(SPEED_OF_LIGHT_METRES_PER_SECONDS)
 
 def dynamic_pressure(fluid_mass_density: float, flow_speed: float) -> float: 
   return (fluid_mass_density * .5) * flow_speed^2
@@ -53,8 +51,20 @@ def decibels(power1: float) -> function:
 def flux_density(luminosity: float, distance_metres: float) -> float:
   return inverse_square_law(luminosity, distance_metres)
 
-def univesal_gravitation(mass1: float, mass2: float, distance: float) -> float: 
-  return multiply(GRAVITATIONAL_CONSTANT)(multiply(mass1)(mass2) / square(distance))
+def univesal_gravitation(mass1: float, mass2: float, distance_metres: float) -> float: 
+  """
+  Calculate the strength of the gravitational "force" between two objects. 
+  
+  :param mass1: The first object's mass
+  :type mass1: float
+  :param mass2: The second object's mass
+  :type mass2: float
+  :param distance_metres: The distance between the two objects 
+  :type distance_metres: float
+  :return: Description
+  :rtype: float
+  """
+  return multiply(GRAVITATIONAL_CONSTANT)(multiply(mass1)(mass2) / square(distance_metres))
 
 def angular_diameter_degrees(distance: float, diameter: float) -> float:
   return math.degrees(diameter / distance)
@@ -64,7 +74,26 @@ def diameter_of_distant_object(distance: float, angular_diameter_degrees: float)
   # Rearranges the equation in angular_diameter_degrees()
   return math.tan(math.radians(angular_diameter_degrees)) * distance
 
-
 def calculate_gravitional_parameter(mass1: float, mass2: float) -> float:
-  # Mu
-  return GRAVITATIONAL_CONSTANT(mass1 + mass2)
+  """
+  Calculates the graviational parameter (Mu) of two objects in m^3/s^2
+  
+  :param mass1: The first bodies mass
+  :type mass1: float
+  :param mass2: The second bodies mass
+  :type mass2: float
+  :return: Mu = G * (mass1 + mass2)
+  :rtype: float
+  """
+  return multiply(GRAVITATIONAL_CONSTANT)(mass1 + mass2)
+
+def calculate_schwarzschild_radius(mass: float) -> float:
+  """
+  Calculates the size an object would have to be shrunk down to to become a black hole.
+  
+  :param mass: The mass of the object d
+  :type mass: float
+  :return: The radius in metres 
+  :rtype: float
+  """
+  return divide(square(SPEED_OF_LIGHT_METRES_PER_SECONDS))(multiply(multiply(2)(GRAVITATIONAL_CONSTANT))(mass))
