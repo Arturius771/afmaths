@@ -13,3 +13,11 @@ def equation_of_line(x1: float, y1: float, x2: float, y2: float) -> tuple[float,
   b = subtract(rhs)(y1)
   ##y = mx + b
   return (m,b)
+
+def interpolations_for_bezier_curve(points: int) -> int:
+  """Calculates the number of interpolations needed for a bezier curve with a given number of control points
+    interpolations = n(n+1)/2 
+  """
+  if points < 2:
+    return 0
+  return points - 1 + interpolations_for_bezier_curve(points - 1)
