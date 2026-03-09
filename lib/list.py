@@ -12,6 +12,7 @@ def mean(number_list: list[float]) -> float: return divide(length(number_list))(
 def median(number_list: list[float]) -> float: return statistics.median(number_list)
 
 def quartiles(number_list: list[float]) -> tuple[float, float, float]:
+  """Calculates the quartiles of a list of numbers"""
   number_list = sorted(number_list)
   q1_index = int(math.ceil(length(number_list) * 0.25))
   q1_result = number_list[q1_index - 1]

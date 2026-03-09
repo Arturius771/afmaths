@@ -8,6 +8,7 @@ GRAVITATIONAL_CONSTANT = 6.67430e-11
 
 ### PHYSICS FORMULAS
 def radiowave_relative_power_distances(distance1: float, distance2: float) -> tuple:
+  """Calculates the relative power distances of two radio waves"""
   ##TM255 Block 1
   distance_ratio = divide(distance1)(distance2)
   quartic = exponentiate(4)
@@ -18,6 +19,7 @@ def radiowave_relative_power_distances(distance1: float, distance2: float) -> tu
   return distance_ratio, distance1_strength, distance2_strength
 
 def radiowave_received_power_difference_by_distance(power_in_watts_at_distance1: float, distance1: float, distance2: float) -> float:
+  """Calculates the difference in received power between two distances"""
   # https://www.youtube.com/watch?v=BF73QaY1aEg
   cross_multiply = multiply(power_in_watts_at_distance1)(square(distance1))
   return divide(square(distance2))(cross_multiply) 
@@ -39,16 +41,20 @@ def wavelength_to_frequency(wavelength_in_metres: float) -> float:
   """Returns frequency in hertz"""
   return divide(wavelength_in_metres)(SPEED_OF_LIGHT_METRES_PER_SECONDS)
 
-def dynamic_pressure(fluid_mass_density: float, flow_speed: float) -> float: 
+def dynamic_pressure(fluid_mass_density: float, flow_speed: float) -> float:
+  """Calculates the dynamic pressure of a fluid"""
   return (fluid_mass_density * .5) * flow_speed^2
 
 def watts_to_decibel_milliwatts(power_in_watts: float) -> float: 
+  """Converts watts to decibels relative to one milliwatt"""
   return decibels(power_in_watts)(.001)
 
 def decibels(power1: float) -> function: 
+  """Returns a function that calculates the decibels between two powers"""
   return lambda power2: math.log(power1/power2, 10)
 
 def flux_density(luminosity: float, distance_metres: float) -> float:
+  """Calculates the flux density of a light source"""
   return inverse_square_law(luminosity, distance_metres)
 
 def univesal_gravitation(mass1: float, mass2: float, distance_metres: float) -> float: 
@@ -67,10 +73,11 @@ def univesal_gravitation(mass1: float, mass2: float, distance_metres: float) -> 
   return multiply(GRAVITATIONAL_CONSTANT)(multiply(mass1)(mass2) / square(distance_metres))
 
 def angular_diameter_degrees(distance: float, diameter: float) -> float:
+  """Calculates the angular diameter of an object in degrees"""
   return math.degrees(diameter / distance)
 
 def diameter_of_distant_object(distance: float, angular_diameter_degrees: float) -> float:
-  """Returns a diameter of an object if the distance"""
+  """Returns the diameter of an object if the distance and angular diameter are known"""
   # Rearranges the equation in angular_diameter_degrees()
   return math.tan(math.radians(angular_diameter_degrees)) * distance
 

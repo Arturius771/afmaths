@@ -3,17 +3,20 @@ import math
 from operation import add, divide, exponentiate, multiply, square, factorial
 
 def sigmoid(input: float, bias:float = 0) -> float:
+  """Calculates the sigmoid of a value"""
   #TM358 Section Block 1 section 5
   add_bias = add(bias)
   return divide(add(1)(exponentiate(add_bias(-input))(math.e)))(1)
 
 def inverse_square_law(source_strength: float, distance_metres: float) -> float:
+  """Calculates the inverse square law"""
   ##TM255 block 1
   four_times_pi = multiply(4)(math.pi)
   denominator =  multiply(square(distance_metres))(four_times_pi)
   return divide(denominator)(source_strength)
 
 def taylor_series(value): 
+  """Calculates the Taylor series of a value"""
   # Written for sin and cos functions so may not be generic for pure Taylor Series functions.
   def steps(initial_value_in_series, increment = 1, initial_denmoninator = 1, steps = 3, sign = -1):
     taylor = [initial_value_in_series]

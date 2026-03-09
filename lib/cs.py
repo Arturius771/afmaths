@@ -1,6 +1,6 @@
 import math
 from geometry import pythagoras
-from operation import add, divide, exponentiate, factorial, multiply, subtract
+from operation import add, divide, exponentiate, factorial, half, multiply, subtract
 
 def file_compression_ratio(uncompressed_size: float) -> float: return lambda compressed_size: divide(compressed_size)(uncompressed_size)
 
@@ -11,7 +11,7 @@ def diagonal_pixel_length(length_in_pixels) -> float: return lambda width_in_pix
 def travelling_salesman_problem_total_routes(number_of_cities) -> float:
   ##(n - 1)!/2
   subtract1 = subtract(1)
-  total_routes = divide(2)(factorial(subtract1(number_of_cities)))
+  total_routes = half(factorial(subtract1(number_of_cities)))
   
   return total_routes
 

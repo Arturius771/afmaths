@@ -11,7 +11,12 @@ def square():
   return  exponentiate(2)
 # def ratio(num1): return  lambda num2: divide(num1)(num2) # TODO: provide as {numerator and denominator object?}
 
+def half() -> float: return divide(2)
+
 def factorial(number: int) -> int:
+  """
+  Calculates the factorial of a number.
+  """
   working_string = ""
   result = 1
 
@@ -22,6 +27,13 @@ def factorial(number: int) -> int:
   working_string = f"{number}! = {working_string[:-1]} = {result}"
 
   return result
+
+def termial(number: int) -> int:
+  """
+  Calculates the termial of a number (sum of all positive integers up to that number).
+  """
+
+  return half(multiply(number)(add(number)(1)))
 
 
 # def normalize_vector()
@@ -35,34 +47,34 @@ def vector_multiplication(vector: list[float], scalar: float) -> list[float]:
   
   return result_vector
 
-def matrix_multiplication(matrix_a: list[list[float]], matrix_b: list[list[float]]): 
-  result = []
+# def matrix_multiplication(matrix_a: list[list[float]], matrix_b: list[list[float]]): 
+#   result = []
 
-  if(range(len(matrix_a[0])) != range(len(matrix_b))):
-    return None
+#   if(range(len(matrix_a[0])) != range(len(matrix_b))):
+#     return None
 
-  # a = [[1,2], 
-  #      [3,4]]
-  # b = [[3,4], 
-  #      [5,6]]
+#   # a = [[1,2], 
+#   #      [3,4]]
+#   # b = [[3,4], 
+#   #      [5,6]]
   
-  for row_index in range(len(matrix_a)):
-    result_row = []
-    for column_index in range(len(matrix_b[0])):
-      sum = 0 
-      for element_index in range(len(matrix_b)):
-        # We go horizontally across matrix_a and vertically down matrix_b
-        # Eg. 1*3 + 2*5
-        sum = add(sum)(multiply( matrix_a[row_index][element_index])(matrix_b[element_index][column_index]))
-      result_row.append(sum)
-    result.append(result_row)
+#   for row_index in range(len(matrix_a)):
+#     result_row = []
+#     for column_index in range(len(matrix_b[0])):
+#       sum = 0 
+#       for element_index in range(len(matrix_b)):
+#         # We go horizontally across matrix_a and vertically down matrix_b
+#         # Eg. 1*3 + 2*5
+#         sum = add(sum)(multiply( matrix_a[row_index][element_index])(matrix_b[element_index][column_index]))
+#       result_row.append(sum)
+#     result.append(result_row)
 
-  return result
+#   return result
 
-if __name__ == "__main__":
-  a = [[1,2], 
-       [3,4]]
-  b = [[3,4], 
-       [5,6]]
+# if __name__ == "__main__":
+#   a = [[1,2], 
+#        [3,4]]
+#   b = [[3,4], 
+#        [5,6]]
   
-  print(matrix_multiplication(a,b))
+#   print(matrix_multiplication(a,b))
