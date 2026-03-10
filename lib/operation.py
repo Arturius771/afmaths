@@ -33,7 +33,7 @@ def termial(number: int) -> int:
   Calculates the termial of a number (sum of all positive integers up to that number).
   """
 
-  return half(multiply(number)(add(number)(1)))
+  return half()(multiply(number)(add(number)(1)))
 
 
 # def normalize_vector()

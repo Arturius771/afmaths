@@ -1,6 +1,6 @@
 from functools import reduce
 import math
-from operation import add, divide, exponentiate, multiply, square, factorial
+from lib.operation import add, divide, exponentiate, multiply, square, factorial
 
 def sigmoid(input: float, bias:float = 0) -> float:
   """Calculates the sigmoid of a value"""

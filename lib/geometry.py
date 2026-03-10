@@ -1,7 +1,7 @@
 
-from operation import add, divide, half, multiply, square, subtract
+from lib.operation import add, divide, half, multiply, square, subtract
 import math
-from formula import taylor_series
+from lib.formula import taylor_series
 
 pythagoras = lambda a: lambda b: add(square(a))(square(b))
 
@@ -47,11 +47,11 @@ def cosine(angle_degrees: float) -> float:
 
 def area_of_right_triangle(base_length: float, height_length: float) -> float:
   """Area = base * height / 2"""
-  return half(multiply(base_length)(height_length))
+  return half()(multiply(base_length)(height_length))
 
 def area_of_quarter_circle(side_length: float, radius: float) -> float: 
   """Area = s^2 - ((1/4)*pi*r^2)"""
   return subtract((1/4)*math.pi*square(radius))(square(side_length))
 
 def calculate_semi_major_axis_ellipse(a: float, b: float) -> float:
-  return half(add(a)(b))
+  return half()(add(a)(b))
