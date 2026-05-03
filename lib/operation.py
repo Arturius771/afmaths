@@ -36,9 +36,19 @@ def termial(number: int) -> int:
   return half()(multiply(number)(add(number)(1)))
 
 
-# def normalize_vector()
-# TODO - see TUB MSE Numerical Simulation assignment for method
+def dot_product(vector_a: list[float], vector_b: list[float]) -> float:
+  """Returns the dot product of two vectors"""
+  sum = 0
+  for index in range(len(vector_a)):
+    sum = add(sum)(multiply(vector_a[index])(vector_b[index]))
+  
+  return sum
 
+# TODO: check naming
+def vector_magnitude(vector: list[float]) -> list[float]:
+  """Normalises a vector to a unit vector"""
+  sum = add(square()(vector[0]))(add(square()(vector[1]))(square()(vector[2])))
+  return square_root(sum)
 
 def vector_multiplication(vector: list[float], scalar: float) -> list[float]:
   result_vector: list[float] = []
@@ -46,6 +56,26 @@ def vector_multiplication(vector: list[float], scalar: float) -> list[float]:
     result_vector.append(multiply(value)(scalar))
   
   return result_vector
+
+def vector_cross_multiplication(vector_a: list[float], vector_b: list[float]) -> list[float]:
+  """Returns the cross product of two vectors"""
+  # i = subtract(multiply(vector_a[1])(vector_b[2]))(multiply(vector_a[2])(vector_b[1]))
+  # j = subtract(multiply(vector_a[2])(vector_b[0]))(multiply(vector_a[0])(vector_b[2]))
+  # k = subtract(multiply(vector_a[0])(vector_b[1]))(multiply(vector_a[1])(vector_b[0]))
+
+  # (a_{2}b_{3}-a_{3}b_{2}),(a_{3}b_{1}-a_{1}b_{3}),(a_{1}b_{2}-a_{2}b_{1})
+  a = multiply(vector_a[1])(vector_b[2])
+  b = multiply(vector_a[2])(vector_b[1])
+  c = multiply(vector_a[2])(vector_b[0])
+  d = multiply(vector_a[0])(vector_b[2])
+  e = multiply(vector_a[0])(vector_b[1])
+  f = multiply(vector_a[1])(vector_b[0])
+
+  i = subtract(b)(a)
+  j = subtract(d)(c)
+  k = subtract(f)(e)
+
+  return [i, j, k]
 
 # def matrix_multiplication(matrix_a: list[list[float]], matrix_b: list[list[float]]): 
 #   result = []

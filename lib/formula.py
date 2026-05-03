@@ -1,6 +1,6 @@
 from functools import reduce
 import math
-from lib.operation import add, divide, exponentiate, multiply, square, factorial
+from operation import add, divide, exponentiate, multiply, square, factorial, square_root
 
 def sigmoid(input: float, bias:float = 0) -> float:
   """Calculates the sigmoid of a value"""
@@ -12,7 +12,7 @@ def inverse_square_law(source_strength: float, distance_metres: float) -> float:
   """Calculates the inverse square law"""
   ##TM255 block 1
   four_times_pi = multiply(4)(math.pi)
-  denominator =  multiply(square(distance_metres))(four_times_pi)
+  denominator =  multiply(square()(distance_metres))(four_times_pi)
   return divide(denominator)(source_strength)
 
 def taylor_series(value): 
@@ -50,3 +50,4 @@ def herons_method(value: float):
     current_step = next_step
 
   return current_step
+

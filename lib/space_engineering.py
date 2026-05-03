@@ -1,5 +1,8 @@
-from lib.geometry import calculate_semi_major_axis_ellipse
-from lib.operation import add, divide, half, multiply, square_root, subtract
+from math import atan
+import math
+
+from geometry import calculate_semi_major_axis_ellipse
+from operation import add, divide, dot_product, exponentiate, multiply, square, square_root, subtract, vector_cross_multiplication, vector_magnitude
 
 def calculate_orbit_radius(altitude: float, initial_body_radius: int = 6378000) -> float:
     return add(altitude)(initial_body_radius)
@@ -36,8 +39,118 @@ def hohmann_transfer(initial_altitude_metres: int, target_altitude_metres: int, 
         final_velocity_change = divide(1000)(final_velocity_change)
     return (delta_v, initial_velocity_change, final_velocity_change)
 
+def inclination_from_angular_momentum_vector(angular_momentum_vector: list[float]) -> float:
+    """Calculates the inclination of an orbit from the angular momentum vector"""
+    x = square()(angular_momentum_vector[0])
+    y = square()(angular_momentum_vector[1])
+    numerator = square_root(add(x)(y))
+    denominator = angular_momentum_vector[2]
+    return atan(divide(denominator)(numerator))
+
+def right_ascension_from_angular_momentum_vector(angular_momentum_vector: list[float]) -> float:
+    """Calculates the right ascension of an orbit from the angular momentum vector"""
+    return add(atan(divide(-angular_momentum_vector[1])(angular_momentum_vector[0])))(math.pi)
+
+def semi_major_axis_from_position_and_velocity(position_vector: list[float], velocity_vector: list[float], gravitational_parameter: float = 3.986005e+14) -> float:
+    """Calculates the semi major axis of an orbit from the position and velocity vectors"""
+    r = vector_magnitude(position_vector)
+    v = vector_magnitude(velocity_vector)
+    # This is a rearranged vis-viva equation
+    a = subtract(divide(gravitational_parameter)(square()(v)))(divide(r)(2))
+    return exponentiate(-1)(a)
+
+def calculate_eccentricity_from_angular_momentum_vector(angular_momentum_vector: list[float], semi_major_axis: float, gravitational_parameter: float = 398600) -> float:
+    """Calculates the eccentricity of an orbit from the angular momentum vector"""
+    h = vector_magnitude(angular_momentum_vector)
+    denominator = multiply(gravitational_parameter)(semi_major_axis)
+    division = divide(denominator)(square()(h))
+    return square_root(subtract(division)(1))
+
+def mean_motion_from_semi_major_axis(semi_major_axis: float, gravitational_parameter: float = 398600) -> float:
+    """Calculates the mean motion of an orbit from the semi major axis"""
+    return square_root(divide(exponentiate(3)(semi_major_axis))(gravitational_parameter))
+
+def eccentric_anomaly(position_vector: list[float], velocity_vector: list[float], semi_major_axis: float, mean_motion: float) -> float:
+    first_term = dot_product(position_vector, velocity_vector)
+    second_term = multiply(square()(semi_major_axis))(mean_motion)
+    third_term = subtract(divide(semi_major_axis)(vector_magnitude(position_vector)))(1)
+
+    numerator = divide(second_term)(first_term)
+    brackets = divide(third_term)(numerator)
+    
+    return add(atan(brackets))(math.pi)
+
+def true_anomaly_from_eccentric_anomaly(E: float, e: float) -> float:
+    sin_E = math.sin(E)
+    cos_E = math.cos(E)
+
+    sqrt_term = square_root(subtract(square()(e))(1)) 
+
+    y = multiply(sqrt_term)(sin_E)        # √(1 - e²) * sin(E)
+    x = subtract(e)(cos_E)        
+    
+    theta = math.atan(y / x)
+
+    if x > 0:
+        if y < 0:
+            theta += 2 * math.pi
+    elif x < 0:
+        theta += math.pi
+    else:  # x == 0
+        if y > 0:
+            theta = math.pi / 2
+        elif y < 0:
+            theta = 3 * math.pi / 2
+        else:
+            theta = 0  
+
+    return theta
+
+def argument_of_latitude(right_ascension_of_ascending_node: float, inclination: float, position_vector: list[float]) -> float:
+    numerator = divide(math.sin(inclination))(position_vector[2])
+    second_term = add(multiply(position_vector[0])(math.cos(right_ascension_of_ascending_node)))(multiply(position_vector[1])(math.sin(right_ascension_of_ascending_node)))
+
+    x = numerator
+    y = second_term
+    u = atan(divide(second_term)(numerator))
+
+    # Account for the correct quadrant of the latitude
+    if x > 0:
+        if y < 0:
+            u += 2 * math.pi
+    elif x < 0:
+        u += math.pi
+    else:  # x == 0
+        if y > 0:
+            u = math.pi / 2
+        elif y < 0:
+            u = 3 * math.pi / 2
+        else:
+            u = 0  
+
+    return u
+
+def orbital_elements_from_state_vectors(position_vector: list[float], velocity_vector: list[float], gravitational_parameter: float = 398600) -> dict:
+    """Calculates the orbital elements of an orbit from the state vectors (position and velocity)"""
+    # From TUB MSE SFM Exercise 2 solution
+    angular_momentum_vector = vector_cross_multiplication(position_vector, velocity_vector)
+    inclination = inclination_from_angular_momentum_vector(angular_momentum_vector)
+    right_ascension = right_ascension_from_angular_momentum_vector(angular_momentum_vector)
+    semi_major_axis = semi_major_axis_from_position_and_velocity(position_vector, velocity_vector, gravitational_parameter)
+    eccentricity = calculate_eccentricity_from_angular_momentum_vector(angular_momentum_vector, semi_major_axis, gravitational_parameter)
+    mean_motion = mean_motion_from_semi_major_axis(semi_major_axis, gravitational_parameter)
+    eccentric_an = eccentric_anomaly(position_vector, velocity_vector, semi_major_axis, mean_motion)
+    true_anomaly = true_anomaly_from_eccentric_anomaly(eccentric_an, eccentricity)
+    latitude = argument_of_latitude(right_ascension, inclination, position_vector)
+    argument_of_perigee = subtract(true_anomaly)(latitude)
+    
+
+    return {"inclination": inclination, "right_ascension": right_ascension, "argument_of_perigee": argument_of_perigee, "semi_major_axis": semi_major_axis, "eccentricity": eccentricity, "true_anomaly": true_anomaly}
+
+
 # TODO: FST 1 equations
 # TODO: Increment of velocity
 
 if __name__ == '__main__':
     print(hohmann_transfer(300000, 1000000)) # (0.37539955175032447, 0.19003921507073027, 0.18536033667959417)
+    print(orbital_elements_from_state_vectors([10000,40000,-5000], [-1.5, 1, -0.1]))

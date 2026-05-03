@@ -21,8 +21,8 @@ def radiowave_relative_power_distances(distance1: float, distance2: float) -> tu
 def radiowave_received_power_difference_by_distance(power_in_watts_at_distance1: float, distance1: float, distance2: float) -> float:
   """Calculates the difference in received power between two distances"""
   # https://www.youtube.com/watch?v=BF73QaY1aEg
-  cross_multiply = multiply(power_in_watts_at_distance1)(square(distance1))
-  return divide(square(distance2))(cross_multiply) 
+  cross_multiply = multiply(power_in_watts_at_distance1)(square()(distance1))
+  return divide(square()(distance2))(cross_multiply) 
 
 def photon_energy_from_wavelength(wavelength_in_micrometer: float) -> float:
   """Returns photon energy in electrovolts"""
@@ -70,7 +70,7 @@ def univesal_gravitation(mass1: float, mass2: float, distance_metres: float) -> 
   :return: Description
   :rtype: float
   """
-  return multiply(GRAVITATIONAL_CONSTANT)(multiply(mass1)(mass2) / square(distance_metres))
+  return multiply(GRAVITATIONAL_CONSTANT)(multiply(mass1)(mass2) / square()(distance_metres))
 
 def angular_diameter_degrees(distance: float, diameter: float) -> float:
   """Calculates the angular diameter of an object in degrees"""
@@ -103,4 +103,4 @@ def calculate_schwarzschild_radius(mass: float) -> float:
   :return: The radius in metres 
   :rtype: float
   """
-  return divide(square(SPEED_OF_LIGHT_METRES_PER_SECONDS))(multiply(multiply(2)(GRAVITATIONAL_CONSTANT))(mass))
+  return divide(square()(SPEED_OF_LIGHT_METRES_PER_SECONDS))(multiply(multiply(2)(GRAVITATIONAL_CONSTANT))(mass))
