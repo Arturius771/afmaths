@@ -4,3 +4,5 @@ afmaths.egg-info/
 *.pyc
 __pycache__/
 .idea/
+.DS_Store
+RFM_02.ipynb

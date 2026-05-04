@@ -53,5 +53,6 @@ def area_of_quarter_circle(side_length: float, radius: float) -> float:
   """Area = s^2 - ((1/4)*pi*r^2)"""
   return subtract((1/4)*math.pi*SQUARE(radius))(SQUARE(side_length))
 
-def calculate_semi_major_axis_ellipse(a: float, b: float) -> float:
+def semi_major_axis_from_axes(a: float, b: float) -> float:
+  """Returns the semi major axis of an ellipse given the lengths of the two axes"""
   return HALF(add(a)(b))
