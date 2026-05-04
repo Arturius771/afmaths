@@ -1,58 +1,67 @@
-
 from operation import HALF, SQUARE, add, divide, half, multiply, square, subtract
 import math
 from formula import taylor_series
 
 pythagoras = lambda a: lambda b: add(SQUARE(a))(SQUARE(b))
 
+
 def euclid(m: int, n: int) -> int:
     """Given two positive integers, m and n, find their greatest common divisor which is the largest positive integer that divides both evenly."""
 
     remainder = m % n
     if remainder == 0:
-      return n
+        return n
     else:
-      m = n
-      n = remainder
-      euclid(m,n)
+        m = n
+        n = remainder
+        euclid(m, n)
     return n
 
-def sieve_of_eratosthenes(n: int) -> list[int]:
-  """Finds prime numbers up to n"""
-  # https://www.youtube.com/watch?v=fwxjMKBMR7s
-  numbers = [True] * n 
-  primes = []
-  
-  for index in range(2, n):
-    if numbers[index]:
-      primes.append(index)
-      for multiple in range(index*index,n,index):
-        numbers[multiple] = False
 
-  return primes
+def sieve_of_eratosthenes(n: int) -> list[int]:
+    """Finds prime numbers up to n"""
+    # https://www.youtube.com/watch?v=fwxjMKBMR7s
+    numbers = [True] * n
+    primes = []
+
+    for index in range(2, n):
+        if numbers[index]:
+            primes.append(index)
+            for multiple in range(index * index, n, index):
+                numbers[multiple] = False
+
+    return primes
+
 
 def tangent(angle_degrees: float) -> float:
-  """Returns a value in radians"""
-  return divide(cosine(angle_degrees))(sine(angle_degrees))
+    """Returns a value in radians"""
+    return divide(cosine(angle_degrees))(sine(angle_degrees))
 
-def arctangent(radians): return math.degrees(math.atan(radians))
+
+def arctangent(radians):
+    return math.degrees(math.atan(radians))
+
 
 def sine(angle_degrees: float) -> float:
-  """Returns a value in radians"""
-  return taylor_series(math.radians(angle_degrees))(math.radians(angle_degrees),2,3)
+    """Returns a value in radians"""
+    return taylor_series(math.radians(angle_degrees))(math.radians(angle_degrees), 2, 3)
+
 
 def cosine(angle_degrees: float) -> float:
-  """Returns a value in radians"""
-  return taylor_series(math.radians(angle_degrees))(1,2,2)
+    """Returns a value in radians"""
+    return taylor_series(math.radians(angle_degrees))(1, 2, 2)
+
 
 def area_of_right_triangle(base_length: float, height_length: float) -> float:
-  """Area = base * height / 2"""
-  return HALF(multiply(base_length)(height_length))
+    """Area = base * height / 2"""
+    return HALF(multiply(base_length)(height_length))
 
-def area_of_quarter_circle(side_length: float, radius: float) -> float: 
-  """Area = s^2 - ((1/4)*pi*r^2)"""
-  return subtract((1/4)*math.pi*SQUARE(radius))(SQUARE(side_length))
+
+def area_of_quarter_circle(side_length: float, radius: float) -> float:
+    """Area = s^2 - ((1/4)*pi*r^2)"""
+    return subtract((1 / 4) * math.pi * SQUARE(radius))(SQUARE(side_length))
+
 
 def semi_major_axis_from_axes(a: float, b: float) -> float:
-  """Returns the semi major axis of an ellipse given the lengths of the two axes"""
-  return HALF(add(a)(b))
+    """Returns the semi major axis of an ellipse given the lengths of the two axes"""
+    return HALF(add(a)(b))
