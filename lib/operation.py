@@ -13,6 +13,11 @@ def square():
 
 def half() -> float: return divide(2)
 
+SQUARE = square()
+CUBE = exponentiate(3)
+HALF = half()
+
+
 def factorial(number: int) -> int:
   """
   Calculates the factorial of a number.
@@ -33,7 +38,7 @@ def termial(number: int) -> int:
   Calculates the termial of a number (sum of all positive integers up to that number).
   """
 
-  return half()(multiply(number)(add(number)(1)))
+  return HALF(multiply(number)(add(number)(1)))
 
 
 def dot_product_3d(vector_a: list[float], vector_b: list[float]) -> float:
@@ -45,10 +50,9 @@ def dot_product_3d(vector_a: list[float], vector_b: list[float]) -> float:
   return add(a)(add(b)(c))
 
 # TODO: check naming
-def vector_magnitude_3d(vector: list[float]) -> list[float]:
-  """Normalises a vector to a unit vector"""
-  sum = add(square()(vector[0]))(add(square()(vector[1]))(square()(vector[2])))
-  return square_root(sum)
+def vector_magnitude_3d(vector: list[float]) -> float:
+  """Returns the magnitude of a vector"""
+  return square_root(add(SQUARE(vector[0]))(add(SQUARE(vector[1]))(SQUARE(vector[2]))))
 
 def vector_multiplication_3d(vector: list[float], scalar: float) -> list[float]:  
   scalar_multiply = multiply(scalar)

@@ -2,7 +2,7 @@ from math import atan
 import math
 
 from geometry import calculate_semi_major_axis_ellipse
-from operation import add, divide, dot_product_3d, exponentiate, multiply, square, square_root, subtract, vector_cross_multiplication_3d, vector_magnitude_3d
+from operation import CUBE, SQUARE, add, divide, dot_product_3d, exponentiate, multiply, square, square_root, subtract, vector_cross_multiplication_3d, vector_magnitude_3d
 
 def calculate_orbit_radius(altitude: float, initial_body_radius: int = 6378000) -> float:
     return add(altitude)(initial_body_radius)
@@ -41,8 +41,8 @@ def hohmann_transfer(initial_altitude_metres: int, target_altitude_metres: int, 
 
 def inclination_from_angular_momentum_vector(angular_momentum_vector: list[float]) -> float:
     """Calculates the inclination of an orbit from the angular momentum vector"""
-    x = square()(angular_momentum_vector[0])
-    y = square()(angular_momentum_vector[1])
+    x = SQUARE(angular_momentum_vector[0])
+    y = SQUARE(angular_momentum_vector[1])
     numerator = square_root(add(x)(y))
     denominator = angular_momentum_vector[2]
     return atan(divide(denominator)(numerator))
@@ -56,23 +56,23 @@ def semi_major_axis_from_position_and_velocity(position_vector: list[float], vel
     r = vector_magnitude_3d(position_vector)
     v = vector_magnitude_3d(velocity_vector)
     # This is a rearranged vis-viva equation
-    a = subtract(divide(gravitational_parameter)(square()(v)))(divide(r)(2))
+    a = subtract(divide(gravitational_parameter)(SQUARE(v)))(divide(r)(2))
     return exponentiate(-1)(a)
 
 def calculate_eccentricity_from_angular_momentum_vector(angular_momentum_vector: list[float], semi_major_axis: float, gravitational_parameter: float = 398600) -> float:
     """Calculates the eccentricity of an orbit from the angular momentum vector"""
     h = vector_magnitude_3d(angular_momentum_vector)
     denominator = multiply(gravitational_parameter)(semi_major_axis)
-    division = divide(denominator)(square()(h))
+    division = divide(denominator)(SQUARE(h))
     return square_root(subtract(division)(1))
 
 def mean_motion_from_semi_major_axis(semi_major_axis: float, gravitational_parameter: float = 398600) -> float:
     """Calculates the mean motion of an orbit from the semi major axis"""
-    return square_root(divide(exponentiate(3)(semi_major_axis))(gravitational_parameter))
+    return square_root(divide(CUBE(semi_major_axis))(gravitational_parameter))
 
 def eccentric_anomaly(position_vector: list[float], velocity_vector: list[float], semi_major_axis: float, mean_motion: float) -> float:
     first_term = dot_product_3d(position_vector, velocity_vector)
-    second_term = multiply(square()(semi_major_axis))(mean_motion)
+    second_term = multiply(SQUARE(semi_major_axis))(mean_motion)
     third_term = subtract(divide(semi_major_axis)(vector_magnitude_3d(position_vector)))(1)
 
     numerator = divide(second_term)(first_term)
@@ -84,7 +84,7 @@ def true_anomaly_from_eccentric_anomaly(E: float, e: float) -> float:
     sin_E = math.sin(E)
     cos_E = math.cos(E)
 
-    sqrt_term = square_root(subtract(square()(e))(1)) 
+    sqrt_term = square_root(subtract(SQUARE(e))(1)) 
 
     y = multiply(sqrt_term)(sin_E)        # √(1 - e²) * sin(E)
     x = subtract(e)(cos_E)        
@@ -152,5 +152,7 @@ def orbital_elements_from_state_vectors(position_vector: list[float], velocity_v
 # TODO: Increment of velocity
 
 if __name__ == '__main__':
-    print(hohmann_transfer(300000, 1000000)) # (0.37539955175032447, 0.19003921507073027, 0.18536033667959417)
+    # (0.37539955175032447, 0.19003921507073027, 0.18536033667959417)
+    print(hohmann_transfer(300000, 1000000)) 
+    # {'inclination': 0.12166217595729033, 'right_ascension': 3.024483909022929, 'argument_of_perigee': 1.5978995641224425, 'semi_major_axis': 25015.186690979368, 'eccentricity': 0.7079768603248032, 'true_anomaly': 2.987554518980773}
     print(orbital_elements_from_state_vectors([10000,40000,-5000], [-1.5, 1, -0.1]))

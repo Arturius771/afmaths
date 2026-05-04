@@ -12,7 +12,7 @@ def inverse_square_law(source_strength: float, distance_metres: float) -> float:
   """Calculates the inverse square law"""
   ##TM255 block 1
   four_times_pi = multiply(4)(math.pi)
-  denominator =  multiply(square()(distance_metres))(four_times_pi)
+  denominator =  multiply(SQUARE(distance_metres))(four_times_pi)
   return divide(denominator)(source_strength)
 
 def taylor_series(value): 

@@ -1,6 +1,6 @@
 # afmaths
 
-A simple package of math functions. Many of these will display output to the console to help understand what steps are required.
+A simple package of math functions. Originally this was written to enable logging out each step in the console in a pretty way, but that is too difficult to maintain. For now it just a reference repo and a means of documenting algorithms. 
 
 # Todo
 
