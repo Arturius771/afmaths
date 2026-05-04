@@ -2,7 +2,7 @@ from math import atan
 import math
 
 from geometry import calculate_semi_major_axis_ellipse
-from operation import add, divide, dot_product, exponentiate, multiply, square, square_root, subtract, vector_cross_multiplication, vector_magnitude
+from operation import add, divide, dot_product_3d, exponentiate, multiply, square, square_root, subtract, vector_cross_multiplication_3d, vector_magnitude_3d
 
 def calculate_orbit_radius(altitude: float, initial_body_radius: int = 6378000) -> float:
     return add(altitude)(initial_body_radius)
@@ -53,15 +53,15 @@ def right_ascension_from_angular_momentum_vector(angular_momentum_vector: list[f
 
 def semi_major_axis_from_position_and_velocity(position_vector: list[float], velocity_vector: list[float], gravitational_parameter: float = 3.986005e+14) -> float:
     """Calculates the semi major axis of an orbit from the position and velocity vectors"""
-    r = vector_magnitude(position_vector)
-    v = vector_magnitude(velocity_vector)
+    r = vector_magnitude_3d(position_vector)
+    v = vector_magnitude_3d(velocity_vector)
     # This is a rearranged vis-viva equation
     a = subtract(divide(gravitational_parameter)(square()(v)))(divide(r)(2))
     return exponentiate(-1)(a)
 
 def calculate_eccentricity_from_angular_momentum_vector(angular_momentum_vector: list[float], semi_major_axis: float, gravitational_parameter: float = 398600) -> float:
     """Calculates the eccentricity of an orbit from the angular momentum vector"""
-    h = vector_magnitude(angular_momentum_vector)
+    h = vector_magnitude_3d(angular_momentum_vector)
     denominator = multiply(gravitational_parameter)(semi_major_axis)
     division = divide(denominator)(square()(h))
     return square_root(subtract(division)(1))
@@ -71,9 +71,9 @@ def mean_motion_from_semi_major_axis(semi_major_axis: float, gravitational_param
     return square_root(divide(exponentiate(3)(semi_major_axis))(gravitational_parameter))
 
 def eccentric_anomaly(position_vector: list[float], velocity_vector: list[float], semi_major_axis: float, mean_motion: float) -> float:
-    first_term = dot_product(position_vector, velocity_vector)
+    first_term = dot_product_3d(position_vector, velocity_vector)
     second_term = multiply(square()(semi_major_axis))(mean_motion)
-    third_term = subtract(divide(semi_major_axis)(vector_magnitude(position_vector)))(1)
+    third_term = subtract(divide(semi_major_axis)(vector_magnitude_3d(position_vector)))(1)
 
     numerator = divide(second_term)(first_term)
     brackets = divide(third_term)(numerator)
@@ -133,7 +133,7 @@ def argument_of_latitude(right_ascension_of_ascending_node: float, inclination: 
 def orbital_elements_from_state_vectors(position_vector: list[float], velocity_vector: list[float], gravitational_parameter: float = 398600) -> dict:
     """Calculates the orbital elements of an orbit from the state vectors (position and velocity)"""
     # From TUB MSE SFM Exercise 2 solution
-    angular_momentum_vector = vector_cross_multiplication(position_vector, velocity_vector)
+    angular_momentum_vector = vector_cross_multiplication_3d(position_vector, velocity_vector)
     inclination = inclination_from_angular_momentum_vector(angular_momentum_vector)
     right_ascension = right_ascension_from_angular_momentum_vector(angular_momentum_vector)
     semi_major_axis = semi_major_axis_from_position_and_velocity(position_vector, velocity_vector, gravitational_parameter)

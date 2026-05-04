@@ -36,28 +36,29 @@ def termial(number: int) -> int:
   return half()(multiply(number)(add(number)(1)))
 
 
-def dot_product(vector_a: list[float], vector_b: list[float]) -> float:
+def dot_product_3d(vector_a: list[float], vector_b: list[float]) -> float:
   """Returns the dot product of two vectors"""
-  sum = 0
-  for index in range(len(vector_a)):
-    sum = add(sum)(multiply(vector_a[index])(vector_b[index]))
-  
-  return sum
+  a = multiply(vector_a[0])(vector_b[0])
+  b = multiply(vector_a[1])(vector_b[1])
+  c = multiply(vector_a[2])(vector_b[2])
+
+  return add(a)(add(b)(c))
 
 # TODO: check naming
-def vector_magnitude(vector: list[float]) -> list[float]:
+def vector_magnitude_3d(vector: list[float]) -> list[float]:
   """Normalises a vector to a unit vector"""
   sum = add(square()(vector[0]))(add(square()(vector[1]))(square()(vector[2])))
   return square_root(sum)
 
-def vector_multiplication(vector: list[float], scalar: float) -> list[float]:
-  result_vector: list[float] = []
-  for value in vector:
-    result_vector.append(multiply(value)(scalar))
-  
-  return result_vector
+def vector_multiplication_3d(vector: list[float], scalar: float) -> list[float]:  
+  scalar_multiply = multiply(scalar)
+  i = scalar_multiply(vector[0])
+  j = scalar_multiply(vector[1])
+  k = scalar_multiply(vector[2])
 
-def vector_cross_multiplication(vector_a: list[float], vector_b: list[float]) -> list[float]:
+  return [i,j,k]
+
+def vector_cross_multiplication_3d(vector_a: list[float], vector_b: list[float]) -> list[float]:
   """Returns the cross product of two vectors"""
   # i = subtract(multiply(vector_a[1])(vector_b[2]))(multiply(vector_a[2])(vector_b[1]))
   # j = subtract(multiply(vector_a[2])(vector_b[0]))(multiply(vector_a[0])(vector_b[2]))
@@ -76,35 +77,3 @@ def vector_cross_multiplication(vector_a: list[float], vector_b: list[float]) ->
   k = subtract(f)(e)
 
   return [i, j, k]
-
-# def matrix_multiplication(matrix_a: list[list[float]], matrix_b: list[list[float]]): 
-#   result = []
-
-#   if(range(len(matrix_a[0])) != range(len(matrix_b))):
-#     return None
-
-#   # a = [[1,2], 
-#   #      [3,4]]
-#   # b = [[3,4], 
-#   #      [5,6]]
-  
-#   for row_index in range(len(matrix_a)):
-#     result_row = []
-#     for column_index in range(len(matrix_b[0])):
-#       sum = 0 
-#       for element_index in range(len(matrix_b)):
-#         # We go horizontally across matrix_a and vertically down matrix_b
-#         # Eg. 1*3 + 2*5
-#         sum = add(sum)(multiply( matrix_a[row_index][element_index])(matrix_b[element_index][column_index]))
-#       result_row.append(sum)
-#     result.append(result_row)
-
-#   return result
-
-# if __name__ == "__main__":
-#   a = [[1,2], 
-#        [3,4]]
-#   b = [[3,4], 
-#        [5,6]]
-  
-#   print(matrix_multiplication(a,b))
