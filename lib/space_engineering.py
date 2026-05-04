@@ -33,10 +33,12 @@ def hohmann_transfer(initial_altitude_metres: int, target_altitude_metres: int, 
     final_velocity_change = velocity_difference(velocity_on_orbit_at_final_orbit, final_velocity)
     delta_v = add(initial_velocity_change)(final_velocity_change)
 
+    divide_by_thousand = divide(1000)
+
     if(result_in_km):
-        delta_v = divide(1000)(delta_v)
-        initial_velocity_change = divide(1000)(initial_velocity_change)
-        final_velocity_change = divide(1000)(final_velocity_change)
+        delta_v = divide_by_thousand(delta_v)
+        initial_velocity_change = divide_by_thousand(initial_velocity_change)
+        final_velocity_change = divide_by_thousand(final_velocity_change)
     return (delta_v, initial_velocity_change, final_velocity_change)
 
 def inclination_from_angular_momentum_vector(angular_momentum_vector: list[float]) -> float:

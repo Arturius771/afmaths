@@ -1,17 +1,17 @@
 import math
 
-def add(num1: float) -> float: return lambda num2: num1 + num2
-def subtract(num2: float) -> float: return lambda num1: num1 - num2
-def multiply(num1: float) -> float: return lambda num2: num1 * num2
-def divide(denominator: float) -> float: return lambda numerator: numerator / denominator
-def exponentiate(exponent: float) -> float: return  lambda num: num ** exponent
-def square_root(num: float) -> float: return  math.sqrt(num) # TODO: use herons_method()
+def add(num1: float): return lambda num2: num1 + num2
+def subtract(num2: float): return lambda num1: num1 - num2
+def multiply(num1: float): return lambda num2: num1 * num2
+def divide(denominator: float): return lambda numerator: numerator / denominator
+def exponentiate(exponent: float): return  lambda num: num ** exponent
+def square_root(num: float): return  math.sqrt(num) # TODO: use herons_method()
 def square(): 
   """Squares a number"""
   return  exponentiate(2)
 # def ratio(num1): return  lambda num2: divide(num1)(num2) # TODO: provide as {numerator and denominator object?}
 
-def half() -> float: return divide(2)
+def half(): return divide(2)
 
 SQUARE = square()
 CUBE = exponentiate(3)
@@ -76,7 +76,7 @@ def vector_cross_multiplication_3d(vector_a: list[float], vector_b: list[float])
   e = multiply(vector_a[0])(vector_b[1])
   f = multiply(vector_a[1])(vector_b[0])
 
-  i = subtract(b)(a)
+  i = subtract(b)(a) 
   j = subtract(d)(c)
   k = subtract(f)(e)
 

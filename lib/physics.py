@@ -1,10 +1,10 @@
 import math
 from formula import inverse_square_law
-from operation import divide, exponentiate, multiply, square
+from operation import HALF, SQUARE, divide, exponentiate, multiply, square
 
 SPEED_OF_LIGHT_METRES_PER_SECONDS = 299792458
 PLANCK_CONSTANT = multiply(6.62607004)(exponentiate(-34)(10))  
-GRAVITATIONAL_CONSTANT = 6.67430e-11
+GRAVITATIONAL_CONSTANT = multiply(6.67430)(exponentiate(-11)(10))   # 6.67430e-11
 
 ### PHYSICS FORMULAS
 def radiowave_relative_power_distances(distance1: float, distance2: float) -> tuple:
@@ -31,7 +31,7 @@ def photon_energy_from_wavelength(wavelength_in_micrometer: float) -> float:
 
 def photon_energy_from_frequency(frequency_in_hertz: float) -> float:
   """Returns photon energy in joules"""
-  return multiply(PLANCK_CONSTANT)(frequency_in_hertz: float)
+  return multiply(PLANCK_CONSTANT)(frequency_in_hertz)
 
 def frequency_to_wavelength(frequency_in_hertz: float) -> float:
   """Returns wavelength in metres"""
@@ -43,13 +43,13 @@ def wavelength_to_frequency(wavelength_in_metres: float) -> float:
 
 def dynamic_pressure(fluid_mass_density: float, flow_speed: float) -> float:
   """Calculates the dynamic pressure of a fluid"""
-  return (fluid_mass_density * .5) * flow_speed^2
+  return multiply(HALF(fluid_mass_density))(SQUARE(flow_speed))
 
 def watts_to_decibel_milliwatts(power_in_watts: float) -> float: 
   """Converts watts to decibels relative to one milliwatt"""
   return decibels(power_in_watts)(.001)
 
-def decibels(power1: float) -> function: 
+def decibels(power1: float): 
   """Returns a function that calculates the decibels between two powers"""
   return lambda power2: math.log(power1/power2, 10)
 
