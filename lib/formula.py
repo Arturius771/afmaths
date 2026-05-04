@@ -1,13 +1,12 @@
 from functools import reduce
 import math
 from operation import (
+    SQUARE,
     add,
     divide,
     exponentiate,
     multiply,
-    square,
     factorial,
-    square_root,
 )
 
 
@@ -36,8 +35,7 @@ def taylor_series(value):
         taylor = [initial_value_in_series]
         for _ in range(steps):
             exponent = exponentiate(initial_denmoninator)
-            fact = factorial(initial_denmoninator)
-            division = divide(fact)
+            division = divide(factorial(initial_denmoninator))
             taylor.append(division(exponent(value)))
             initial_denmoninator += increment
 

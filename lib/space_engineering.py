@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from math import atan
 import math
 
@@ -16,6 +17,16 @@ from operation import (
     vector_magnitude_3d,
     vector_multiplication_3d,
 )
+
+
+@dataclass
+class OrbitalElements:
+    inclination: float  # radians
+    right_ascension: float  # radians
+    argument_of_perigee: float  # radians
+    semi_major_axis: float  # km
+    eccentricity: float
+    true_anomaly: float  # radians
 
 
 def orbit_radius(altitude: float, initial_body_radius: int = 6378000) -> float:
@@ -262,7 +273,7 @@ def orbital_elements_from_state_vectors(
     position_vector: list[float],
     velocity_vector: list[float],
     gravitational_parameter: float = 398600,
-) -> dict:
+) -> OrbitalElements:
     """Calculates the orbital elements of an orbit from the state vectors (position and velocity)"""
     # From TUB MSE SFM Exercise 2 solution
     angular_momentum_vector = vector_cross_multiplication_3d(
@@ -288,14 +299,14 @@ def orbital_elements_from_state_vectors(
     latitude = argument_of_latitude(right_ascension, inclination, position_vector)
     argument_of_perigee = subtract(true_anomaly)(latitude)
 
-    return {
-        "inclination": inclination,
-        "right_ascension": right_ascension,
-        "argument_of_perigee": argument_of_perigee,
-        "semi_major_axis": semi_major_axis,
-        "eccentricity": eccentricity,
-        "true_anomaly": true_anomaly,
-    }
+    return OrbitalElements(
+        inclination=inclination,
+        right_ascension=right_ascension,
+        argument_of_perigee=argument_of_perigee,
+        semi_major_axis=semi_major_axis,
+        eccentricity=eccentricity,
+        true_anomaly=true_anomaly,
+    )
 
 
 def newton_iteration(E_i, eccentricity, mean_anomaly):
@@ -304,55 +315,25 @@ def newton_iteration(E_i, eccentricity, mean_anomaly):
     )
 
 
-def orbit_state_vector_prediction_from_orbital_elements(
-    orbital_elements_radians: dict,
-    time_offset_s: float,
-    initial_mean_anomaly_radians: float | None = None,  # Shortcut
-    gravitational_parameter: float = 398600,
-) -> dict:
-    """Calculates the state vectors (position and velocity) of an orbit from the orbital elements at a given time offset from the current position in the orbit"""
-    inclination = orbital_elements_radians["inclination"]
-    right_ascension = orbital_elements_radians["right_ascension"]
-    argument_of_perigee = orbital_elements_radians["argument_of_perigee"]
-    semi_major_axis = orbital_elements_radians["semi_major_axis"]
-    eccentricity = orbital_elements_radians["eccentricity"]
-    true_anomaly = orbital_elements_radians["true_anomaly"]
-
-    mean_motion = mean_motion_from_semi_major_axis(
-        semi_major_axis, gravitational_parameter
+def perifocal_position_vector(radius: float, true_anomaly: float) -> list[float]:
+    """Calculates the position vector in the perifocal coordinate system"""
+    return vector_multiplication_3d(
+        [math.cos(true_anomaly), math.sin(true_anomaly), 0],
+        radius,
     )
 
-    if initial_mean_anomaly_radians is None:
-        initial_mean_anomaly_radians = mean_anomaly_from_eccentric_anomaly(
-            eccentric_anomaly_from_true_anomaly(true_anomaly, eccentricity),
-            eccentricity,
-        )
 
-    mean_anomaly_at_offset = mean_anomaly_at_time_offset(
-        initial_mean_anomaly_radians, time_offset_s, mean_motion
-    )
-
-    eccentric_anomaly_at_offset, _ = eccentric_anomaly_solved(
-        newton_iteration, eccentricity, mean_anomaly_at_offset
-    )
-
-    true_anomaly_at_offset = true_anomaly_from_eccentric_anomaly(
-        eccentric_anomaly_at_offset, eccentricity
-    )
-
-    radius_at_offset = divide(
-        add(1)(multiply(eccentricity)(math.cos(true_anomaly_at_offset)))
-    )(multiply(semi_major_axis)(subtract(SQUARE(eccentricity))(1)))
-
-    perifocal_position_vector = vector_multiplication_3d(
-        [math.cos(true_anomaly_at_offset), math.sin(true_anomaly_at_offset), 0],
-        radius_at_offset,
-    )
-
-    perifocal_velocity_vector = vector_multiplication_3d(
+def perifocal_velocity_vector(
+    true_anomaly: float,
+    eccentricity: float,
+    gravitational_parameter: float,
+    semi_major_axis: float,
+) -> list[float]:
+    """Calculates the velocity vector in the perifocal coordinate system"""
+    return vector_multiplication_3d(
         [
-            -math.sin(true_anomaly_at_offset),
-            add(eccentricity)(math.cos(true_anomaly_at_offset)),
+            -math.sin(true_anomaly),
+            add(eccentricity)(math.cos(true_anomaly)),
             0,
         ],
         square_root(
@@ -362,6 +343,21 @@ def orbit_state_vector_prediction_from_orbital_elements(
         ),
     )
 
+
+def radius_at_true_anomaly(
+    semi_major_axis: float, eccentricity: float, true_anomaly: float
+) -> float:
+    """Calculates the radius of an orbit at a given true anomaly"""
+    return divide(add(1)(multiply(eccentricity)(math.cos(true_anomaly))))(
+        multiply(semi_major_axis)(subtract(SQUARE(eccentricity))(1))
+    )
+
+
+def perifocal_to_eci_matrix(
+    inclination,
+    right_ascension,
+    argument_of_perigee,
+) -> list[list[float]]:
     p = [
         math.cos(argument_of_perigee) * math.cos(right_ascension)
         - math.sin(argument_of_perigee)
@@ -392,19 +388,91 @@ def orbit_state_vector_prediction_from_orbital_elements(
         math.cos(inclination),
     ]
 
-    transposed_PQW = [[p[0], q[0], w[0]], [p[1], q[1], w[1]], [p[2], q[2], w[2]]]
+    return [[p[0], q[0], w[0]], [p[1], q[1], w[1]], [p[2], q[2], w[2]]]
 
-    position_vector = [
-        dot_product_3d(transposed_PQW[0], perifocal_position_vector),
-        dot_product_3d(transposed_PQW[1], perifocal_position_vector),
-        dot_product_3d(transposed_PQW[2], perifocal_position_vector),
+
+def transform_perifocal_to_eci(transposed_PQW, perifocal_vector) -> list[float]:
+    """Transforms a vector from the perifocal coordinate system to the ECI coordinate system using the provided transformation matrix"""
+    return [
+        dot_product_3d(transposed_PQW[0], perifocal_vector),
+        dot_product_3d(transposed_PQW[1], perifocal_vector),
+        dot_product_3d(transposed_PQW[2], perifocal_vector),
     ]
 
-    velocity_vector = [
-        dot_product_3d(transposed_PQW[0], perifocal_velocity_vector),
-        dot_product_3d(transposed_PQW[1], perifocal_velocity_vector),
-        dot_product_3d(transposed_PQW[2], perifocal_velocity_vector),
-    ]
+
+def true_anomaly_at_time_offset(
+    eccentricity: float,
+    mean_anomaly: float,
+    time_offset_s: float,
+    mean_motion: float,
+    semi_major_axis: float,
+    gravitational_parameter: float,
+) -> float:
+    mean_motion = mean_motion_from_semi_major_axis(
+        semi_major_axis, gravitational_parameter
+    )
+
+    mean_anomaly_at_offset = mean_anomaly_at_time_offset(
+        mean_anomaly, time_offset_s, mean_motion
+    )
+
+    eccentric_anomaly_at_offset, _ = eccentric_anomaly_solved(
+        newton_iteration, eccentricity, mean_anomaly_at_offset
+    )
+
+    return true_anomaly_from_eccentric_anomaly(
+        eccentric_anomaly_at_offset, eccentricity
+    )
+
+
+def orbit_state_vector_prediction_from_orbital_elements(
+    orbital_elements_radians: OrbitalElements,
+    time_offset_s: float,
+    initial_mean_anomaly_radians: float | None = None,  # Shortcut
+    gravitational_parameter: float = 398600,
+) -> dict:
+    """Calculates the state vectors (position and velocity) of an orbit from the orbital elements at a given time offset from the current position in the orbit"""
+    inclination = orbital_elements_radians.inclination
+    right_ascension = orbital_elements_radians.right_ascension
+    argument_of_perigee = orbital_elements_radians.argument_of_perigee
+    semi_major_axis = orbital_elements_radians.semi_major_axis
+    eccentricity = orbital_elements_radians.eccentricity
+    true_anomaly = orbital_elements_radians.true_anomaly
+
+    if initial_mean_anomaly_radians is None:
+        initial_mean_anomaly_radians = mean_anomaly_from_eccentric_anomaly(
+            eccentric_anomaly_from_true_anomaly(true_anomaly, eccentricity),
+            eccentricity,
+        )
+
+    true_anomaly_at_offset = true_anomaly_at_time_offset(
+        eccentricity,
+        initial_mean_anomaly_radians,
+        time_offset_s,
+        mean_motion_from_semi_major_axis(semi_major_axis, gravitational_parameter),
+        semi_major_axis,
+        gravitational_parameter,
+    )
+
+    radius_at_offset = radius_at_true_anomaly(
+        semi_major_axis, eccentricity, true_anomaly_at_offset
+    )
+
+    perifocal_position = perifocal_position_vector(
+        radius_at_offset, true_anomaly_at_offset
+    )
+
+    perifocal_velocity = perifocal_velocity_vector(
+        true_anomaly_at_offset, eccentricity, gravitational_parameter, semi_major_axis
+    )
+
+    transposed_PQW = perifocal_to_eci_matrix(
+        inclination, right_ascension, argument_of_perigee
+    )
+
+    position_vector = transform_perifocal_to_eci(transposed_PQW, perifocal_position)
+
+    velocity_vector = transform_perifocal_to_eci(transposed_PQW, perifocal_velocity)
 
     return {"position_vector": position_vector, "velocity_vector": velocity_vector}
 
@@ -422,14 +490,14 @@ if __name__ == "__main__":
     # {'position_vector': [-1753.131769017119, 1070.9950241554125, -6564.0676605044755], 'velocity_vector': [-3.478980009547892, 6.473396036204375, 1.986162313733967]}
     print(
         orbit_state_vector_prediction_from_orbital_elements(
-            {
-                "inclination": math.radians(98.371),
-                "right_ascension": math.radians(120.534),
-                "argument_of_perigee": math.radians(10.598),
-                "semi_major_axis": 6878.1,
-                "eccentricity": 10e-5,
-                "true_anomaly": 2.8022276030554347,
-            },
+            OrbitalElements(
+                inclination=math.radians(98.371),
+                right_ascension=math.radians(120.534),
+                argument_of_perigee=math.radians(10.598),
+                semi_major_axis=6878.1,
+                eccentricity=10e-5,
+                true_anomaly=2.8022276030554347,
+            ),
             1800,
             None,
         )
