@@ -97,6 +97,12 @@ def inclination_from_angular_momentum_vector(
     angular_momentum_vector: list[float],
 ) -> float:
     """Calculates the inclination of an orbit from the angular momentum vector"""
+
+    # # First formulation
+    # i1 = np.arctan2(np.sqrt(np.square(h[0]) + np.square(h[1])), h[2])
+    # # Second formulation
+    # i2 = np.arccos(h[2] / np.linalg.norm(h))
+
     x = SQUARE(angular_momentum_vector[0])
     y = SQUARE(angular_momentum_vector[1])
     numerator = square_root(add(x)(y))
@@ -108,17 +114,27 @@ def right_ascension_from_angular_momentum_vector(
     angular_momentum_vector: list[float],
 ) -> float:
     """Calculates the right ascension of an orbit from the angular momentum vector"""
-    return add(atan(divide(-angular_momentum_vector[1])(angular_momentum_vector[0])))(
-        math.pi
-    )
+
+    # # But it's better to use arctan2 which handles the quadrants for you
+    # Omega = np.arctan2(h[0], -h[1])
+    # # Note: equivalent to np.arctan(h[0] / -h[1]) + np.pi
+
+    return add(
+        math.atan(divide(-angular_momentum_vector[1])(angular_momentum_vector[0]))
+    )(math.pi)
 
 
-def semi_major_axis_from_position_and_velocity(
+def semi_major_axis_from_state_vectors(
     position_vector: list[float],
     velocity_vector: list[float],
     gravitational_parameter: float = 3.986005e14,
 ) -> float:
     """Calculates the semi major axis of an orbit from the position and velocity vectors"""
+    # r_norm = np.linalg.norm(r)
+    # v_norm = np.linalg.norm(v)
+    # print("Position norm: ", 1e-3 * r_norm, "Velocity norm: ", 1e-3 * v_norm)
+    # a = 1 / (2 / r_norm - np.square(v_norm) / mu)
+    # 1e-3 * a
     r = vector_magnitude_3d(position_vector)
     v = vector_magnitude_3d(velocity_vector)
     # This is a rearranged vis-viva equation
@@ -126,26 +142,31 @@ def semi_major_axis_from_position_and_velocity(
     return exponentiate(-1)(a)
 
 
-def eccentricity_from_angular_momentum_vector(
+def eccentricity_from_ellipse_equation(
     angular_momentum_vector: list[float],
     semi_major_axis: float,
     gravitational_parameter: float = 398600,
 ) -> float:
     """Calculates the eccentricity of an orbit from the angular momentum vector"""
+    # p = np.square(h_norm) / mu
+    # e = np.sqrt(1 - p / a)
+    # e
     h = vector_magnitude_3d(angular_momentum_vector)
     denominator = multiply(gravitational_parameter)(semi_major_axis)
     division = divide(denominator)(SQUARE(h))
     return square_root(subtract(division)(1))
 
 
-def mean_motion_from_semi_major_axis(
+def mean_motion(
     semi_major_axis: float, gravitational_parameter: float = 398600
 ) -> float:
     """Calculates the mean motion of an orbit from the semi major axis in radians per second"""
+    # n = np.sqrt(mu / np.power(a, 3))
     return square_root(divide(CUBE(semi_major_axis))(gravitational_parameter))
 
 
-def mean_anomaly_from_eccentric_anomaly(E_rad: float, eccentricity: float) -> float:
+def mean_anomaly(E_rad: float, eccentricity: float) -> float:
+    # M = E - e * np.sin(E)
     return subtract(multiply(eccentricity)(math.sin(E_rad)))(E_rad)
 
 
@@ -163,11 +184,12 @@ def eccentric_anomaly(
     semi_major_axis: float,
     mean_motion: float,
 ) -> float:
+    # E = np.arctan2(np.dot(r, v) / (np.square(a) * n), 1 - r_norm / a)
     r = vector_magnitude_3d(position_vector)
     r_dot_v = dot_product_3d(position_vector, velocity_vector)
 
     y = r_dot_v
-    x = semi_major_axis**2 * mean_motion * (1 - r / semi_major_axis)
+    x = SQUARE(semi_major_axis) * mean_motion * (1 - r / semi_major_axis)
 
     return math.atan2(y, x) % (2 * math.pi)
 
@@ -204,6 +226,7 @@ def eccentric_anomaly_solved(
 
 
 def true_anomaly_from_eccentric_anomaly(E_rad: float, e: float) -> float:
+    # theta = np.arctan2(np.sqrt(1 - np.square(e)) * np.sin(E), np.cos(E) - e)
     sin_E = math.sin(E_rad)
     cos_E = math.cos(E_rad)
 
@@ -243,6 +266,9 @@ def argument_of_latitude(
     inclination: float,
     position_vector: list[float],
 ) -> float:
+    # u = np.arctan2(r[2] / np.sin(i), r[0] * np.cos(Omega) + r[1] * np.sin(Omega))
+    # if u < 0:
+    #     u += 2 * np.pi
     numerator = divide(math.sin(inclination))(position_vector[2])
     second_term = add(
         multiply(position_vector[0])(math.cos(right_ascension_of_ascending_node))
@@ -279,21 +305,20 @@ def orbital_elements_from_state_vectors(
     angular_momentum_vector = vector_cross_multiplication_3d(
         position_vector, velocity_vector
     )
+
     inclination = inclination_from_angular_momentum_vector(angular_momentum_vector)
     right_ascension = right_ascension_from_angular_momentum_vector(
         angular_momentum_vector
     )
-    semi_major_axis = semi_major_axis_from_position_and_velocity(
+    semi_major_axis = semi_major_axis_from_state_vectors(
         position_vector, velocity_vector, gravitational_parameter
     )
-    eccentricity = eccentricity_from_angular_momentum_vector(
+    eccentricity = eccentricity_from_ellipse_equation(
         angular_momentum_vector, semi_major_axis, gravitational_parameter
     )
-    mean_motion = mean_motion_from_semi_major_axis(
-        semi_major_axis, gravitational_parameter
-    )
+    n = mean_motion(semi_major_axis, gravitational_parameter)
     eccentric_an = eccentric_anomaly(
-        position_vector, velocity_vector, semi_major_axis, mean_motion
+        position_vector, velocity_vector, semi_major_axis, n
     )
     true_anomaly = true_anomaly_from_eccentric_anomaly(eccentric_an, eccentricity)
     latitude = argument_of_latitude(right_ascension, inclination, position_vector)
@@ -310,6 +335,7 @@ def orbital_elements_from_state_vectors(
 
 
 def newton_iteration(E_i, eccentricity, mean_anomaly):
+    # E_i - (E_i - e * np.sin(E_i) - M) / (1 - e * np.cos(E_i))
     return E_i - (E_i - eccentricity * math.sin(E_i) - mean_anomaly) / (
         1 - eccentricity * math.cos(E_i)
     )
@@ -404,25 +430,21 @@ def true_anomaly_at_time_offset(
     eccentricity: float,
     mean_anomaly: float,
     time_offset_s: float,
-    mean_motion: float,
-    semi_major_axis: float,
-    gravitational_parameter: float,
+    mean_motion_n: float,
 ) -> float:
-    mean_motion = mean_motion_from_semi_major_axis(
-        semi_major_axis, gravitational_parameter
-    )
 
     mean_anomaly_at_offset = mean_anomaly_at_time_offset(
-        mean_anomaly, time_offset_s, mean_motion
+        mean_anomaly, time_offset_s, mean_motion_n
     )
 
-    eccentric_anomaly_at_offset, _ = eccentric_anomaly_solved(
-        newton_iteration, eccentricity, mean_anomaly_at_offset
-    )
+    # eccentric_anomaly_at_offset, _ = eccentric_anomaly_solved(
+    #     newton_iteration, eccentricity, mean_anomaly_at_offset
+    # )
+    # return true_anomaly_from_eccentric_anomaly(
+    #     eccentric_anomaly_at_offset, eccentricity
+    # )
 
-    return true_anomaly_from_eccentric_anomaly(
-        eccentric_anomaly_at_offset, eccentricity
-    )
+    return true_anomaly_from_mean_anomaly(eccentricity, mean_anomaly_at_offset)
 
 
 def orbit_state_vector_prediction_from_orbital_elements(
@@ -440,7 +462,7 @@ def orbit_state_vector_prediction_from_orbital_elements(
     true_anomaly = orbital_elements_radians.true_anomaly
 
     if initial_mean_anomaly_radians is None:
-        initial_mean_anomaly_radians = mean_anomaly_from_eccentric_anomaly(
+        initial_mean_anomaly_radians = mean_anomaly(
             eccentric_anomaly_from_true_anomaly(true_anomaly, eccentricity),
             eccentricity,
         )
@@ -449,9 +471,7 @@ def orbit_state_vector_prediction_from_orbital_elements(
         eccentricity,
         initial_mean_anomaly_radians,
         time_offset_s,
-        mean_motion_from_semi_major_axis(semi_major_axis, gravitational_parameter),
-        semi_major_axis,
-        gravitational_parameter,
+        mean_motion(semi_major_axis, gravitational_parameter),
     )
 
     radius_at_offset = radius_at_true_anomaly(
@@ -507,6 +527,6 @@ if __name__ == "__main__":
     print(
         orbit_state_vector_prediction_from_orbital_elements(
             orbital_elements_from_state_vectors([10000, 40000, -5000], [-1.5, 1, -0.1]),
-            1000000,
+            0,
         )
     )

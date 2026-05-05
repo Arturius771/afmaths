@@ -95,7 +95,7 @@ def vector_multiplication_3d(vector: list[float], scalar: float) -> list[float]:
 def vector_cross_multiplication_3d(
     vector_a: list[float], vector_b: list[float]
 ) -> list[float]:
-    """Returns the cross product of two vectors"""
+    """Returns the cross product of two 3D vectors"""
     # i = subtract(multiply(vector_a[1])(vector_b[2]))(multiply(vector_a[2])(vector_b[1]))
     # j = subtract(multiply(vector_a[2])(vector_b[0]))(multiply(vector_a[0])(vector_b[2]))
     # k = subtract(multiply(vector_a[0])(vector_b[1]))(multiply(vector_a[1])(vector_b[0]))
