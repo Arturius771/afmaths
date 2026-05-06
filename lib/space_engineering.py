@@ -17,6 +17,7 @@ from operation import (
     vector_multiplication_3d,
 )
 from astronomy_types import (
+    GravitationalParameter,
     OrbitalElements,
     Radians,
     RightAscension,
@@ -29,12 +30,14 @@ from astronomy_types import (
 )
 
 
-def orbit_radius(altitude: float, initial_body_radius: int = 6378000) -> float:
+def orbit_radius(altitude: float, initial_body_radius: float = 6378000) -> float:
     return add(altitude)(initial_body_radius)
 
 
 def vis_viva(
-    gravitational_parameter: float, orbit_radius: float, semi_major_axis: float
+    gravitational_parameter: GravitationalParameter,
+    orbit_radius: float,
+    semi_major_axis: SemiMajorAxis,
 ) -> float:
     """Calculates the velocity of an object in an elliptical orbit using the vis-viva equation."""
     return square_root(
@@ -45,7 +48,10 @@ def vis_viva(
 
 
 def velocity_for_altitude(
-    orbit_radius: float, gravitational_parameter: float = 3.986005e14
+    orbit_radius: float,
+    gravitational_parameter: GravitationalParameter = GravitationalParameter(
+        3.986005e14
+    ),
 ) -> float:
     return square_root(divide(orbit_radius)(gravitational_parameter))
 
@@ -55,10 +61,12 @@ def velocity_difference(initial_velocity: float, final_velocity: float) -> float
 
 
 def hohmann_transfer(
-    initial_altitude_metres: int,
-    target_altitude_metres: int,
-    initial_body_radius: int = 6378000,
-    gravitational_parameter: float = 3.986005e14,
+    initial_altitude_metres: float,
+    target_altitude_metres: float,
+    initial_body_radius: float = 6378000,
+    gravitational_parameter: GravitationalParameter = GravitationalParameter(
+        3.986005e14
+    ),
     result_in_km: bool = True,
 ) -> tuple[float, float, float]:
     """Calculates the delta-v required for a Hohmann transfer"""
@@ -133,7 +141,9 @@ def right_ascension_from_angular_momentum_vector(
 def semi_major_axis_from_state_vectors(
     position_vector: list[float],
     velocity_vector: list[float],
-    gravitational_parameter: float = 3.986005e14,
+    gravitational_parameter: GravitationalParameter = GravitationalParameter(
+        3.986005e14
+    ),
 ) -> SemiMajorAxis:
     """Calculates the semi major axis of an orbit from the position and velocity vectors"""
     # r_norm = np.linalg.norm(r)
@@ -150,8 +160,10 @@ def semi_major_axis_from_state_vectors(
 
 def eccentricity_from_ellipse_equation(
     angular_momentum_vector: list[float],
-    semi_major_axis: float,
-    gravitational_parameter: float = 398600,
+    semi_major_axis: SemiMajorAxis,
+    gravitational_parameter: GravitationalParameter = GravitationalParameter(
+        3.986005e14
+    ),
 ) -> Eccentricity:
     """Calculates the eccentricity of an orbit from the angular momentum vector"""
     # p = np.square(h_norm) / mu
@@ -164,14 +176,17 @@ def eccentricity_from_ellipse_equation(
 
 
 def mean_motion(
-    semi_major_axis: float, gravitational_parameter: float = 398600
+    semi_major_axis: SemiMajorAxis,
+    gravitational_parameter: GravitationalParameter = GravitationalParameter(
+        3.986005e14
+    ),
 ) -> float:
     """Calculates the mean motion of an orbit from the semi major axis in radians per second"""
     # n = np.sqrt(mu / np.power(a, 3))
     return square_root(divide(CUBE(semi_major_axis))(gravitational_parameter))
 
 
-def mean_anomaly(E_rad: float, eccentricity: float) -> float:
+def mean_anomaly(E_rad: float, eccentricity: Eccentricity) -> float:
     # M = E - e * np.sin(E)
     return subtract(multiply(eccentricity)(math.sin(E_rad)))(E_rad)
 
@@ -201,7 +216,7 @@ def eccentric_anomaly(
 
 
 def eccentric_anomaly_from_true_anomaly(
-    true_anomaly: float, eccentricity: float
+    true_anomaly: float, eccentricity: Eccentricity
 ) -> float:
     return 2 * math.atan2(
         math.sqrt(1 - eccentricity) * math.sin(true_anomaly / 2),
@@ -210,7 +225,11 @@ def eccentric_anomaly_from_true_anomaly(
 
 
 def eccentric_anomaly_solved(
-    iteration_func, eccentricity, mean_anomaly, tol=1e-6, max_iter=100
+    iteration_func,
+    eccentricity: Eccentricity,
+    mean_anomaly: float,
+    tol=1e-6,
+    max_iter=100,
 ):
     history = []
 
@@ -231,15 +250,17 @@ def eccentric_anomaly_solved(
     return E_i, history
 
 
-def true_anomaly_from_eccentric_anomaly(E_rad: float, e: float) -> TrueAnomaly:
+def true_anomaly_from_eccentric_anomaly(
+    E_rad: float, eccentricity: Eccentricity
+) -> TrueAnomaly:
     # theta = np.arctan2(np.sqrt(1 - np.square(e)) * np.sin(E), np.cos(E) - e)
     sin_E = math.sin(E_rad)
     cos_E = math.cos(E_rad)
 
-    sqrt_term = square_root(subtract(SQUARE(e))(1))
+    sqrt_term = square_root(subtract(SQUARE(eccentricity))(1))
 
     y = multiply(sqrt_term)(sin_E)  # √(1 - e²) * sin(E)
-    x = subtract(e)(cos_E)
+    x = subtract(eccentricity)(cos_E)
 
     theta = math.atan(y / x)
 
@@ -259,7 +280,9 @@ def true_anomaly_from_eccentric_anomaly(E_rad: float, e: float) -> TrueAnomaly:
     return TrueAnomaly(Radians(theta))
 
 
-def true_anomaly_from_mean_anomaly(eccentricity: float, mean_anomaly: float) -> float:
+def true_anomaly_from_mean_anomaly(
+    eccentricity: Eccentricity, mean_anomaly: float
+) -> TrueAnomaly:
     eccentric_anomaly, _ = eccentric_anomaly_solved(
         newton_iteration, eccentricity, mean_anomaly
     )
@@ -268,8 +291,8 @@ def true_anomaly_from_mean_anomaly(eccentricity: float, mean_anomaly: float) -> 
 
 
 def argument_of_latitude(
-    right_ascension_of_ascending_node: float,
-    inclination: float,
+    right_ascension_of_ascending_node: RightAscension,
+    inclination: Inclination,
     position_vector: list[float],
 ) -> float:
     # u = np.arctan2(r[2] / np.sin(i), r[0] * np.cos(Omega) + r[1] * np.sin(Omega))
@@ -304,7 +327,9 @@ def argument_of_latitude(
 def orbital_elements_from_state_vectors(
     position_vector: list[float],
     velocity_vector: list[float],
-    gravitational_parameter: float = 398600,
+    gravitational_parameter: GravitationalParameter = GravitationalParameter(
+        3.986005e14
+    ),
 ) -> OrbitalElements:
     """Calculates the orbital elements of an orbit from the state vectors (position and velocity)"""
     # From TUB MSE SFM Exercise 2 solution
@@ -340,7 +365,7 @@ def orbital_elements_from_state_vectors(
     )
 
 
-def newton_iteration(E_i, eccentricity, mean_anomaly):
+def newton_iteration(E_i: float, eccentricity: Eccentricity, mean_anomaly: float):
     # E_i - (E_i - e * np.sin(E_i) - M) / (1 - e * np.cos(E_i))
     return E_i - (E_i - eccentricity * math.sin(E_i) - mean_anomaly) / (
         1 - eccentricity * math.cos(E_i)
@@ -357,9 +382,9 @@ def perifocal_position_vector(radius: float, true_anomaly: float) -> list[float]
 
 def perifocal_velocity_vector(
     true_anomaly: float,
-    eccentricity: float,
-    gravitational_parameter: float,
-    semi_major_axis: float,
+    eccentricity: Eccentricity,
+    gravitational_parameter: GravitationalParameter,
+    semi_major_axis: SemiMajorAxis,
 ) -> list[float]:
     """Calculates the velocity vector in the perifocal coordinate system"""
     return vector_multiplication_3d(
@@ -377,7 +402,9 @@ def perifocal_velocity_vector(
 
 
 def radius_at_true_anomaly(
-    semi_major_axis: float, eccentricity: float, true_anomaly: float
+    semi_major_axis: SemiMajorAxis,
+    eccentricity: Eccentricity,
+    true_anomaly: TrueAnomaly,
 ) -> float:
     """Calculates the radius of an orbit at a given true anomaly"""
     return divide(add(1)(multiply(eccentricity)(math.cos(true_anomaly))))(
@@ -386,44 +413,46 @@ def radius_at_true_anomaly(
 
 
 def eci_matrix_from_perifocal(
-    inclination,
-    right_ascension,
-    argument_of_perigee,
+    inclination: Inclination,
+    right_ascension_of_ascening_node: RightAscension,
+    argument_of_perigee: ArgumentOfPerigee,
 ) -> list[list[float]]:
     p = [
-        math.cos(argument_of_perigee) * math.cos(right_ascension)
+        math.cos(argument_of_perigee) * math.cos(right_ascension_of_ascening_node)
         - math.sin(argument_of_perigee)
         * math.cos(inclination)
-        * math.sin(right_ascension),
-        math.cos(argument_of_perigee) * math.sin(right_ascension)
+        * math.sin(right_ascension_of_ascening_node),
+        math.cos(argument_of_perigee) * math.sin(right_ascension_of_ascening_node)
         + math.sin(argument_of_perigee)
         * math.cos(inclination)
-        * math.cos(right_ascension),
+        * math.cos(right_ascension_of_ascening_node),
         math.sin(argument_of_perigee) * math.sin(inclination),
     ]
 
     q = [
-        -math.sin(argument_of_perigee) * math.cos(right_ascension)
+        -math.sin(argument_of_perigee) * math.cos(right_ascension_of_ascening_node)
         - math.cos(argument_of_perigee)
         * math.cos(inclination)
-        * math.sin(right_ascension),
-        -math.sin(argument_of_perigee) * math.sin(right_ascension)
+        * math.sin(right_ascension_of_ascening_node),
+        -math.sin(argument_of_perigee) * math.sin(right_ascension_of_ascening_node)
         + math.cos(argument_of_perigee)
         * math.cos(inclination)
-        * math.cos(right_ascension),
+        * math.cos(right_ascension_of_ascening_node),
         math.cos(argument_of_perigee) * math.sin(inclination),
     ]
 
     w = [
-        math.sin(inclination) * math.sin(right_ascension),
-        -math.sin(inclination) * math.cos(right_ascension),
+        math.sin(inclination) * math.sin(right_ascension_of_ascening_node),
+        -math.sin(inclination) * math.cos(right_ascension_of_ascening_node),
         math.cos(inclination),
     ]
 
     return [[p[0], q[0], w[0]], [p[1], q[1], w[1]], [p[2], q[2], w[2]]]
 
 
-def transform_perifocal_to_eci(transposed_PQW, perifocal_vector) -> list[float]:
+def transform_perifocal_to_eci(
+    transposed_PQW: list[list[float]], perifocal_vector: list[float]
+) -> list[float]:
     """Transforms a vector from the perifocal coordinate system to the ECI coordinate system using the provided transformation matrix"""
     return [
         dot_product_3d(transposed_PQW[0], perifocal_vector),
@@ -433,11 +462,11 @@ def transform_perifocal_to_eci(transposed_PQW, perifocal_vector) -> list[float]:
 
 
 def true_anomaly_at_time_offset(
-    eccentricity: float,
+    eccentricity: Eccentricity,
     mean_anomaly: float,
     time_offset_s: float,
     mean_motion_n: float,
-) -> float:
+) -> TrueAnomaly:
 
     mean_anomaly_at_offset = mean_anomaly_at_time_offset(
         mean_anomaly, time_offset_s, mean_motion_n
@@ -457,7 +486,9 @@ def orbit_state_vector_prediction_from_orbital_elements(
     orbital_elements_radians: OrbitalElements,
     time_offset_s: float,
     initial_mean_anomaly_radians: float | None = None,  # Shortcut
-    gravitational_parameter: float = 398600,
+    gravitational_parameter: GravitationalParameter = GravitationalParameter(
+        3.986005e14
+    ),
 ) -> dict:
     """Calculates the state vectors (position and velocity) of an orbit from the orbital elements at a given time offset from the current position in the orbit"""
     semi_major_axis = orbital_elements_radians.semi_major_axis

@@ -1,3 +1,5 @@
+from astronomy_types import SemiMajorAxis
+
 from operation import HALF, SQUARE, add, divide, half, multiply, square, subtract
 import math
 from formula import taylor_series
@@ -62,6 +64,6 @@ def area_of_quarter_circle(side_length: float, radius: float) -> float:
     return subtract((1 / 4) * math.pi * SQUARE(radius))(SQUARE(side_length))
 
 
-def semi_major_axis_from_axes(a: float, b: float) -> float:
+def semi_major_axis_from_axes(a: float, b: float) -> SemiMajorAxis:
     """Returns the semi major axis of an ellipse given the lengths of the two axes"""
     return HALF(add(a)(b))
