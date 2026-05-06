@@ -1,0 +1,5 @@
+setuptools>=42 
+wheel 
+twine 
+build
+astronomy-types

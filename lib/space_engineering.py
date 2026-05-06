@@ -1,4 +1,3 @@
-from dataclasses import dataclass
 from math import atan
 import math
 
@@ -17,16 +16,17 @@ from operation import (
     vector_magnitude_3d,
     vector_multiplication_3d,
 )
-
-
-@dataclass
-class OrbitalElements:
-    inclination: float  # radians
-    right_ascension: float  # radians
-    argument_of_perigee: float  # radians
-    semi_major_axis: float  # km
-    eccentricity: float
-    true_anomaly: float  # radians
+from astronomy_types import (
+    OrbitalElements,
+    Radians,
+    RightAscension,
+    Inclination,
+    ArgumentOfPerigee,
+    SemiMajorAxis,
+    Eccentricity,
+    TrueAnomaly,
+    radians,
+)
 
 
 def orbit_radius(altitude: float, initial_body_radius: int = 6378000) -> float:
@@ -95,7 +95,7 @@ def hohmann_transfer(
 
 def inclination_from_angular_momentum_vector(
     angular_momentum_vector: list[float],
-) -> float:
+) -> Inclination:
     """Calculates the inclination of an orbit from the angular momentum vector"""
 
     # # First formulation
@@ -107,28 +107,34 @@ def inclination_from_angular_momentum_vector(
     y = SQUARE(angular_momentum_vector[1])
     numerator = square_root(add(x)(y))
     denominator = angular_momentum_vector[2]
-    return atan(divide(denominator)(numerator))
+    return Inclination(Radians(atan(divide(denominator)(numerator))))
 
 
 def right_ascension_from_angular_momentum_vector(
     angular_momentum_vector: list[float],
-) -> float:
+) -> RightAscension:
     """Calculates the right ascension of an orbit from the angular momentum vector"""
 
     # # But it's better to use arctan2 which handles the quadrants for you
     # Omega = np.arctan2(h[0], -h[1])
     # # Note: equivalent to np.arctan(h[0] / -h[1]) + np.pi
 
-    return add(
-        math.atan(divide(-angular_momentum_vector[1])(angular_momentum_vector[0]))
-    )(math.pi)
+    return RightAscension(
+        Radians(
+            add(
+                math.atan(
+                    divide(-angular_momentum_vector[1])(angular_momentum_vector[0])
+                )
+            )(math.pi)
+        )
+    )
 
 
 def semi_major_axis_from_state_vectors(
     position_vector: list[float],
     velocity_vector: list[float],
     gravitational_parameter: float = 3.986005e14,
-) -> float:
+) -> SemiMajorAxis:
     """Calculates the semi major axis of an orbit from the position and velocity vectors"""
     # r_norm = np.linalg.norm(r)
     # v_norm = np.linalg.norm(v)
@@ -139,14 +145,14 @@ def semi_major_axis_from_state_vectors(
     v = vector_magnitude_3d(velocity_vector)
     # This is a rearranged vis-viva equation
     a = subtract(divide(gravitational_parameter)(SQUARE(v)))(divide(r)(2))
-    return exponentiate(-1)(a)
+    return SemiMajorAxis(exponentiate(-1)(a))
 
 
 def eccentricity_from_ellipse_equation(
     angular_momentum_vector: list[float],
     semi_major_axis: float,
     gravitational_parameter: float = 398600,
-) -> float:
+) -> Eccentricity:
     """Calculates the eccentricity of an orbit from the angular momentum vector"""
     # p = np.square(h_norm) / mu
     # e = np.sqrt(1 - p / a)
@@ -154,7 +160,7 @@ def eccentricity_from_ellipse_equation(
     h = vector_magnitude_3d(angular_momentum_vector)
     denominator = multiply(gravitational_parameter)(semi_major_axis)
     division = divide(denominator)(SQUARE(h))
-    return square_root(subtract(division)(1))
+    return Eccentricity(square_root(subtract(division)(1)))
 
 
 def mean_motion(
@@ -174,7 +180,7 @@ def mean_anomaly_at_time_offset(
     mean_anomaly: float, time_offset_s: float, mean_motion: float
 ) -> float:
     """Calculates the mean anomaly at a given time offset from the current mean anomaly"""
-    # return add(math.radians(mean_anomaly))(multiply(mean_motion)(time_offset_s))
+    # return add(radians(mean_anomaly))(multiply(mean_motion)(time_offset_s))
     return add(mean_anomaly)(multiply(mean_motion)(time_offset_s))
 
 
@@ -225,7 +231,7 @@ def eccentric_anomaly_solved(
     return E_i, history
 
 
-def true_anomaly_from_eccentric_anomaly(E_rad: float, e: float) -> float:
+def true_anomaly_from_eccentric_anomaly(E_rad: float, e: float) -> TrueAnomaly:
     # theta = np.arctan2(np.sqrt(1 - np.square(e)) * np.sin(E), np.cos(E) - e)
     sin_E = math.sin(E_rad)
     cos_E = math.cos(E_rad)
@@ -250,7 +256,7 @@ def true_anomaly_from_eccentric_anomaly(E_rad: float, e: float) -> float:
         else:
             theta = 0
 
-    return theta
+    return TrueAnomaly(Radians(theta))
 
 
 def true_anomaly_from_mean_anomaly(eccentricity: float, mean_anomaly: float) -> float:
@@ -326,7 +332,7 @@ def orbital_elements_from_state_vectors(
 
     return OrbitalElements(
         inclination=inclination,
-        right_ascension=right_ascension,
+        right_ascension_of_ascending_node=right_ascension,
         argument_of_perigee=argument_of_perigee,
         semi_major_axis=semi_major_axis,
         eccentricity=eccentricity,
@@ -379,7 +385,7 @@ def radius_at_true_anomaly(
     )
 
 
-def perifocal_to_eci_matrix(
+def eci_matrix_from_perifocal(
     inclination,
     right_ascension,
     argument_of_perigee,
@@ -454,16 +460,14 @@ def orbit_state_vector_prediction_from_orbital_elements(
     gravitational_parameter: float = 398600,
 ) -> dict:
     """Calculates the state vectors (position and velocity) of an orbit from the orbital elements at a given time offset from the current position in the orbit"""
-    inclination = orbital_elements_radians.inclination
-    right_ascension = orbital_elements_radians.right_ascension
-    argument_of_perigee = orbital_elements_radians.argument_of_perigee
     semi_major_axis = orbital_elements_radians.semi_major_axis
     eccentricity = orbital_elements_radians.eccentricity
-    true_anomaly = orbital_elements_radians.true_anomaly
 
     if initial_mean_anomaly_radians is None:
         initial_mean_anomaly_radians = mean_anomaly(
-            eccentric_anomaly_from_true_anomaly(true_anomaly, eccentricity),
+            eccentric_anomaly_from_true_anomaly(
+                orbital_elements_radians.true_anomaly, eccentricity
+            ),
             eccentricity,
         )
 
@@ -471,7 +475,7 @@ def orbit_state_vector_prediction_from_orbital_elements(
         eccentricity,
         initial_mean_anomaly_radians,
         time_offset_s,
-        mean_motion(semi_major_axis, gravitational_parameter),
+        mean_motion(orbital_elements_radians.semi_major_axis, gravitational_parameter),
     )
 
     radius_at_offset = radius_at_true_anomaly(
@@ -486,13 +490,15 @@ def orbit_state_vector_prediction_from_orbital_elements(
         true_anomaly_at_offset, eccentricity, gravitational_parameter, semi_major_axis
     )
 
-    transposed_PQW = perifocal_to_eci_matrix(
-        inclination, right_ascension, argument_of_perigee
+    eci_matrix = eci_matrix_from_perifocal(
+        orbital_elements_radians.inclination,
+        orbital_elements_radians.right_ascension_of_ascending_node,
+        orbital_elements_radians.argument_of_perigee,
     )
 
-    position_vector = transform_perifocal_to_eci(transposed_PQW, perifocal_position)
+    position_vector = transform_perifocal_to_eci(eci_matrix, perifocal_position)
 
-    velocity_vector = transform_perifocal_to_eci(transposed_PQW, perifocal_velocity)
+    velocity_vector = transform_perifocal_to_eci(eci_matrix, perifocal_velocity)
 
     return {"position_vector": position_vector, "velocity_vector": velocity_vector}
 
@@ -511,12 +517,14 @@ if __name__ == "__main__":
     print(
         orbit_state_vector_prediction_from_orbital_elements(
             OrbitalElements(
-                inclination=math.radians(98.371),
-                right_ascension=math.radians(120.534),
-                argument_of_perigee=math.radians(10.598),
-                semi_major_axis=6878.1,
-                eccentricity=10e-5,
-                true_anomaly=2.8022276030554347,
+                inclination=Inclination(Radians(radians(98.371))),
+                right_ascension_of_ascending_node=RightAscension(
+                    Radians(radians(120.534))
+                ),
+                argument_of_perigee=ArgumentOfPerigee(Radians(radians(10.598))),
+                semi_major_axis=SemiMajorAxis(6878.1),
+                eccentricity=Eccentricity(10e-5),
+                true_anomaly=TrueAnomaly(Radians(2.8022276030554347)),
             ),
             1800,
             None,
