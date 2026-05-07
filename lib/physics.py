@@ -1,6 +1,8 @@
 import math
 from formula import inverse_square_law
-from operation import HALF, SQUARE, divide, exponentiate, multiply, square
+from geometry import area_of_right_triangle
+from graph import GraphCoordinates, slope_gradiant
+from operation import HALF, SQUARE, add, divide, exponentiate, multiply, subtract
 
 SPEED_OF_LIGHT_METRES_PER_SECONDS = 299792458
 PLANCK_CONSTANT = multiply(6.62607004)(exponentiate(-34)(10))
@@ -127,3 +129,131 @@ def calculate_schwarzschild_radius(mass: float) -> float:
     return divide(SQUARE(SPEED_OF_LIGHT_METRES_PER_SECONDS))(
         multiply(multiply(2)(GRAVITATIONAL_CONSTANT))(mass)
     )
+
+
+def displacement_from_velocity_curve(
+    slope_component_start: GraphCoordinates,
+    slope_component_end: GraphCoordinates,
+    slope_component_peak: GraphCoordinates,
+    flat_component_start: GraphCoordinates = GraphCoordinates(0, 0),
+    flat_component_end: GraphCoordinates = GraphCoordinates(0, 0),
+) -> float:
+    """Assumes a straight line slope."""
+    # Credit: https://www.khanacademy.org/science/ap-college-physics-1/xf557a762645cccc5:kinematics/xf557a762645cccc5:visual-models-of-motion/a/what-are-velocity-vs-time-graphs
+
+    slope_speed = area_of_right_triangle(
+        slope_component_end.x - slope_component_start.x, slope_component_peak.y
+    )
+
+    return add(
+        multiply(flat_component_start.y)(flat_component_end.x - flat_component_start.x)
+    )(slope_speed)
+
+
+def displacement_of_velocity_curve_section(
+    complete_curve_start: GraphCoordinates,
+    complete_curve_end: GraphCoordinates,
+    complete_curve_peak: GraphCoordinates,
+    first_slice_start: GraphCoordinates,
+    first_slice_end: GraphCoordinates,
+    first_slice_peak: GraphCoordinates,
+    second_slice_start: GraphCoordinates,
+    second_slice_end: GraphCoordinates,
+    second_slice_peak: GraphCoordinates,
+) -> float:
+    """Calculate a sectional area under a triangular curve of a velocity over time graph."""
+    return subtract(
+        (
+            add(
+                displacement_from_velocity_curve(
+                    first_slice_start,
+                    first_slice_end,
+                    first_slice_peak,
+                )
+            )(
+                displacement_from_velocity_curve(
+                    second_slice_start,
+                    second_slice_end,
+                    second_slice_peak,
+                )
+            )
+        )
+    )(
+        displacement_from_velocity_curve(
+            complete_curve_start,
+            complete_curve_end,
+            complete_curve_peak,
+        )
+    )
+
+
+def average_acceleration_from_slope(
+    time_and_velocity1: GraphCoordinates, time_and_velocity2: GraphCoordinates
+) -> float:
+    return slope_gradiant(time_and_velocity1, time_and_velocity2)
+
+
+if __name__ == "__main__":
+    print(
+        displacement_from_velocity_curve(
+            GraphCoordinates(3, 6),
+            GraphCoordinates(7, 0),
+            GraphCoordinates(5, 6),
+            GraphCoordinates(0, 6),
+            GraphCoordinates(3, 6),
+        )
+    )  # 30
+    print(
+        average_acceleration_from_slope(GraphCoordinates(0, 3), GraphCoordinates(6, 0))
+    )  # -0.5
+    print(
+        displacement_from_velocity_curve(
+            GraphCoordinates(2, 0),
+            GraphCoordinates(3, -5),
+            GraphCoordinates(2.5, -5),
+        )
+    )  # -2.5
+    print(
+        displacement_from_velocity_curve(
+            GraphCoordinates(0, 0),
+            GraphCoordinates(2, 0),
+            GraphCoordinates(1, 5),
+        )
+        + displacement_from_velocity_curve(
+            GraphCoordinates(2, 0),
+            GraphCoordinates(3, -5),
+            GraphCoordinates(3, -5),
+        )
+    )  # 2.5
+
+    print(
+        displacement_of_velocity_curve_section(
+            GraphCoordinates(0, 0),
+            GraphCoordinates(2, 0),
+            GraphCoordinates(1, 5),
+            GraphCoordinates(0, 0),
+            GraphCoordinates(0.5, 2.5),
+            GraphCoordinates(0.5, 2.5),
+            GraphCoordinates(1.5, 2.5),
+            GraphCoordinates(2, 0),
+            GraphCoordinates(1.5, 2.5),
+        )
+    )  # 3.75
+
+    print(
+        displacement_from_velocity_curve(
+            GraphCoordinates(1, 0),
+            GraphCoordinates(3, 4),
+            GraphCoordinates(3, 4),
+            GraphCoordinates(3, 4),
+            GraphCoordinates(4, 4),
+        )
+    )  # 8
+
+    print(
+        displacement_from_velocity_curve(
+            GraphCoordinates(1, 5),
+            GraphCoordinates(2, 9),
+            GraphCoordinates(1, 5),
+        )
+    )  # 2.5

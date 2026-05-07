@@ -54,6 +54,7 @@ def cosine(angle_degrees: float) -> float:
     return taylor_series(math.radians(angle_degrees))(1, 2, 2)
 
 
+# TODO: Check naming, this may be valid for more than just right triangles
 def area_of_right_triangle(base_length: float, height_length: float) -> float:
     """Area = base * height / 2"""
     return HALF(multiply(base_length)(height_length))

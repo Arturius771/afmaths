@@ -87,7 +87,7 @@ def ml_false_positive_rate(false_positives):
     )
 
 
-def ml_weighted_inputs(inputs: list, weights: list) -> float:
+def ml_weighted_inputs(inputs: list[float], weights: list[float]) -> list[float] | None:
     "Multiply the inputs by the weights - TM358 Block 1"
     weighted_inputs = []
     loop_count = 0
@@ -100,8 +100,11 @@ def ml_weighted_inputs(inputs: list, weights: list) -> float:
     return weighted_inputs
 
 
-def ml_perceptron(inputs: list, weights: list, bias: float = 0) -> float:
-    return ml_activation_function(add(sum(ml_weighted_inputs(inputs, weights)))(bias))
+def ml_perceptron(inputs: list[float], weights: list[float], bias: float = 0) -> float:
+    x = ml_weighted_inputs(inputs, weights)
+    if x == None:
+        return 0  # TODO: this is dangerous
+    return ml_activation_function(add(sum(x))(bias))
 
 
 def ml_activation_function(input: float, threshold: float = 0):
