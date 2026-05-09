@@ -33,8 +33,13 @@ from astronomy_types import (
     Distance,
 )
 
+EARTH_MU_KM_CUBED = GravitationalParameter(Scalar(398600.5))  # km^3 / s^2
+EARTH_RADIUS_KM = 6378.0  # km
 
-def orbit_radius(altitude: float, initial_body_radius: float = 6378000) -> float:
+
+def orbit_radius(
+    altitude: float, initial_body_radius: float = EARTH_RADIUS_KM
+) -> float:
     return add(altitude)(initial_body_radius)
 
 
@@ -53,9 +58,7 @@ def vis_viva(
 
 def velocity_for_altitude(
     orbit_radius: float,
-    gravitational_parameter: GravitationalParameter = GravitationalParameter(
-        Scalar(3.986005e14)
-    ),
+    gravitational_parameter: GravitationalParameter = EARTH_MU_KM_CUBED,
 ) -> float:
     return square_root(divide(orbit_radius)(gravitational_parameter))
 
@@ -65,19 +68,16 @@ def velocity_difference(initial_velocity: float, final_velocity: float) -> float
 
 
 def hohmann_transfer(
-    initial_altitude_metres: float,
-    target_altitude_metres: float,
-    initial_body_radius: float = 6378000,
-    gravitational_parameter: GravitationalParameter = GravitationalParameter(
-        Scalar(3.986005e14)
-    ),
-    result_in_km: bool = True,
+    initial_altitude_km: float,
+    target_altitude_km: float,
+    initial_body_radius: float = EARTH_RADIUS_KM,
+    gravitational_parameter: GravitationalParameter = EARTH_MU_KM_CUBED,
 ) -> tuple[float, float, float]:
     """Calculates the delta-v required for a Hohmann transfer"""
     # www.braeunig.us/space/problem.htm#4.19
 
-    r_a = orbit_radius(initial_altitude_metres, initial_body_radius)
-    r_b = orbit_radius(target_altitude_metres, initial_body_radius)
+    r_a = orbit_radius(initial_altitude_km, initial_body_radius)
+    r_b = orbit_radius(target_altitude_km, initial_body_radius)
 
     semi_major_axis_transfer_ellipse = semi_major_axis_from_axes(r_a, r_b)
     initial_velocity = velocity_for_altitude(r_a, gravitational_parameter)
@@ -95,13 +95,6 @@ def hohmann_transfer(
         velocity_on_orbit_at_final_orbit, final_velocity
     )
     delta_v = add(initial_velocity_change)(final_velocity_change)
-
-    divide_by_thousand = divide(1000)
-
-    if result_in_km:
-        delta_v = divide_by_thousand(delta_v)
-        initial_velocity_change = divide_by_thousand(initial_velocity_change)
-        final_velocity_change = divide_by_thousand(final_velocity_change)
     return (delta_v, initial_velocity_change, final_velocity_change)
 
 
@@ -145,9 +138,7 @@ def right_ascension_from_angular_momentum_vector(
 def semi_major_axis_from_state_vectors(
     position_vector: list[float],
     velocity_vector: list[float],
-    gravitational_parameter: GravitationalParameter = GravitationalParameter(
-        Scalar(3.986005e14)
-    ),
+    gravitational_parameter: GravitationalParameter = EARTH_MU_KM_CUBED,
 ) -> SemiMajorAxis:
     """Calculates the semi major axis of an orbit from the position and velocity vectors"""
     # r_norm = np.linalg.norm(r)
@@ -165,9 +156,7 @@ def semi_major_axis_from_state_vectors(
 def eccentricity_from_ellipse_equation(
     angular_momentum_vector: list[float],
     semi_major_axis: SemiMajorAxis,
-    gravitational_parameter: GravitationalParameter = GravitationalParameter(
-        Scalar(3.986005e14)
-    ),
+    gravitational_parameter: GravitationalParameter = EARTH_MU_KM_CUBED,
 ) -> Eccentricity:
     """Calculates the eccentricity of an orbit from the angular momentum vector"""
     # p = np.square(h_norm) / mu
@@ -181,9 +170,7 @@ def eccentricity_from_ellipse_equation(
 
 def mean_motion(
     semi_major_axis: SemiMajorAxis,
-    gravitational_parameter: GravitationalParameter = GravitationalParameter(
-        Scalar(3.986005e14)
-    ),
+    gravitational_parameter: GravitationalParameter = EARTH_MU_KM_CUBED,
 ) -> float:
     """Calculates the mean motion of an orbit from the semi major axis in radians per second"""
     # n = np.sqrt(mu / np.power(a, 3))
@@ -331,9 +318,7 @@ def argument_of_latitude(
 def orbital_elements_from_state_vectors(
     position_vector: list[float],
     velocity_vector: list[float],
-    gravitational_parameter: GravitationalParameter = GravitationalParameter(
-        Scalar(3.986005e14)
-    ),
+    gravitational_parameter: GravitationalParameter = EARTH_MU_KM_CUBED,
 ) -> OrbitalElements:
     """Calculates the orbital elements of an orbit from the state vectors (position and velocity)"""
     # From TUB MSE SFM Exercise 2 solution
@@ -490,9 +475,7 @@ def orbit_state_vector_prediction_from_orbital_elements(
     orbital_elements_radians: OrbitalElements,
     time_offset_s: float,
     initial_mean_anomaly_radians: float | None = None,  # Shortcut
-    gravitational_parameter: GravitationalParameter = GravitationalParameter(
-        Scalar(3.986005e14)
-    ),
+    gravitational_parameter: GravitationalParameter = EARTH_MU_KM_CUBED,
 ) -> dict:
     """Calculates the state vectors (position and velocity) of an orbit from the orbital elements at a given time offset from the current position in the orbit"""
     semi_major_axis = orbital_elements_radians.semi_major_axis
@@ -543,7 +526,7 @@ def orbit_state_vector_prediction_from_orbital_elements(
 
 if __name__ == "__main__":
     # (0.37539955175032447, 0.19003921507073027, 0.18536033667959417)
-    print(hohmann_transfer(300000, 1000000))
+    print(hohmann_transfer(300, 1000))
 
     # {'inclination': 0.12166217595729033, 'right_ascension': 3.024483909022929, 'argument_of_perigee': 1.5978995641224425, 'semi_major_axis': 25015.186690979368, 'eccentricity': 0.7079768603248032, 'true_anomaly': 2.987554518980773}
     print(orbital_elements_from_state_vectors([10000, 40000, -5000], [-1.5, 1, -0.1]))
