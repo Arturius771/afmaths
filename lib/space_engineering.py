@@ -26,7 +26,11 @@ from astronomy_types import (
     SemiMajorAxis,
     Eccentricity,
     TrueAnomaly,
-    radians,
+    Scalar,
+    Ratio,
+    degrees_to_radians,
+    Degrees,
+    Distance,
 )
 
 
@@ -50,7 +54,7 @@ def vis_viva(
 def velocity_for_altitude(
     orbit_radius: float,
     gravitational_parameter: GravitationalParameter = GravitationalParameter(
-        3.986005e14
+        Scalar(3.986005e14)
     ),
 ) -> float:
     return square_root(divide(orbit_radius)(gravitational_parameter))
@@ -65,7 +69,7 @@ def hohmann_transfer(
     target_altitude_metres: float,
     initial_body_radius: float = 6378000,
     gravitational_parameter: GravitationalParameter = GravitationalParameter(
-        3.986005e14
+        Scalar(3.986005e14)
     ),
     result_in_km: bool = True,
 ) -> tuple[float, float, float]:
@@ -115,7 +119,7 @@ def inclination_from_angular_momentum_vector(
     y = SQUARE(angular_momentum_vector[1])
     numerator = square_root(add(x)(y))
     denominator = angular_momentum_vector[2]
-    return Inclination(Radians(atan(divide(denominator)(numerator))))
+    return Inclination(Radians(Scalar(atan(divide(denominator)(numerator)))))
 
 
 def right_ascension_from_angular_momentum_vector(
@@ -142,7 +146,7 @@ def semi_major_axis_from_state_vectors(
     position_vector: list[float],
     velocity_vector: list[float],
     gravitational_parameter: GravitationalParameter = GravitationalParameter(
-        3.986005e14
+        Scalar(3.986005e14)
     ),
 ) -> SemiMajorAxis:
     """Calculates the semi major axis of an orbit from the position and velocity vectors"""
@@ -162,7 +166,7 @@ def eccentricity_from_ellipse_equation(
     angular_momentum_vector: list[float],
     semi_major_axis: SemiMajorAxis,
     gravitational_parameter: GravitationalParameter = GravitationalParameter(
-        3.986005e14
+        Scalar(3.986005e14)
     ),
 ) -> Eccentricity:
     """Calculates the eccentricity of an orbit from the angular momentum vector"""
@@ -172,13 +176,13 @@ def eccentricity_from_ellipse_equation(
     h = vector_magnitude_3d(angular_momentum_vector)
     denominator = multiply(gravitational_parameter)(semi_major_axis)
     division = divide(denominator)(SQUARE(h))
-    return Eccentricity(square_root(subtract(division)(1)))
+    return Eccentricity(Ratio(Scalar(square_root(subtract(division)(1)))))
 
 
 def mean_motion(
     semi_major_axis: SemiMajorAxis,
     gravitational_parameter: GravitationalParameter = GravitationalParameter(
-        3.986005e14
+        Scalar(3.986005e14)
     ),
 ) -> float:
     """Calculates the mean motion of an orbit from the semi major axis in radians per second"""
@@ -277,7 +281,7 @@ def true_anomaly_from_eccentric_anomaly(
         else:
             theta = 0
 
-    return TrueAnomaly(Radians(theta))
+    return TrueAnomaly(Radians(Scalar(theta)))
 
 
 def true_anomaly_from_mean_anomaly(
@@ -328,7 +332,7 @@ def orbital_elements_from_state_vectors(
     position_vector: list[float],
     velocity_vector: list[float],
     gravitational_parameter: GravitationalParameter = GravitationalParameter(
-        3.986005e14
+        Scalar(3.986005e14)
     ),
 ) -> OrbitalElements:
     """Calculates the orbital elements of an orbit from the state vectors (position and velocity)"""
@@ -487,7 +491,7 @@ def orbit_state_vector_prediction_from_orbital_elements(
     time_offset_s: float,
     initial_mean_anomaly_radians: float | None = None,  # Shortcut
     gravitational_parameter: GravitationalParameter = GravitationalParameter(
-        3.986005e14
+        Scalar(3.986005e14)
     ),
 ) -> dict:
     """Calculates the state vectors (position and velocity) of an orbit from the orbital elements at a given time offset from the current position in the orbit"""
@@ -548,14 +552,16 @@ if __name__ == "__main__":
     print(
         orbit_state_vector_prediction_from_orbital_elements(
             OrbitalElements(
-                inclination=Inclination(Radians(radians(98.371))),
+                inclination=Inclination(degrees_to_radians(Degrees(Scalar(98.371)))),
                 right_ascension_of_ascending_node=RightAscension(
-                    Radians(radians(120.534))
+                    degrees_to_radians(Degrees(Scalar(120.534)))
                 ),
-                argument_of_perigee=ArgumentOfPerigee(Radians(radians(10.598))),
-                semi_major_axis=SemiMajorAxis(6878.1),
-                eccentricity=Eccentricity(10e-5),
-                true_anomaly=TrueAnomaly(Radians(2.8022276030554347)),
+                argument_of_perigee=ArgumentOfPerigee(
+                    degrees_to_radians(Degrees(Scalar(10.598)))
+                ),
+                semi_major_axis=SemiMajorAxis(Distance(Scalar(6878.1))),
+                eccentricity=Eccentricity(Ratio(Scalar(10e-5))),
+                true_anomaly=TrueAnomaly(Radians(Scalar(2.8022276030554347))),
             ),
             1800,
             None,
