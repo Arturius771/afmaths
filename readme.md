@@ -32,12 +32,6 @@ source venv/bin/activate
 Ensure that setuptools and wheel are installed in your environment:
 
 ```bash
-pip install setuptools wheel twine
-```
-
-or
-
-```bash
 pip install -r requirements.txt
 ```
 
