@@ -86,7 +86,7 @@ def semi_major_axis_from_axes(a: float, b: float) -> SemiMajorAxis:
     return HALF(add(a)(b))
 
 
-def circle_bounding_box_from_coordinates(
+def draw_circle_bounding_box(
     coordinates: Coordinate2D, radius: float
 ) -> tuple[Coordinate2D, Coordinate2D]:
     """
@@ -100,12 +100,10 @@ def circle_bounding_box_from_coordinates(
     Returns:
     tuple: A tuple containing the coordinates of the bounding box in the format (x0, y0, x1, y1).
     """
-    return draw_circle_with_eccentricity(
-        coordinates, radius, Eccentricity(Ratio(Scalar(0)))
-    )
+    return draw_ellipse(coordinates, radius, Eccentricity(Ratio(Scalar(0))))
 
 
-def draw_circle_with_eccentricity(
+def draw_ellipse(
     coordinates: Coordinate2D, radius: float, eccentricity: Eccentricity
 ) -> tuple[Coordinate2D, Coordinate2D]:
     """
