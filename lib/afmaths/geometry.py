@@ -2,11 +2,9 @@ from astronomy_types import (
     Coordinate2D,
     Distance,
     Eccentricity,
-    Radians,
     Ratio,
     Scalar,
     SemiMajorAxis,
-    TrueAnomaly,
 )
 
 from .operation import (
@@ -14,6 +12,7 @@ from .operation import (
     SQUARE,
     add,
     divide,
+    exponentiate,
     multiply,
     subtract,
 )
@@ -78,7 +77,7 @@ def area_of_right_triangle(base_length: float, height_length: float) -> float:
 
 def area_of_quarter_circle(side_length: float, radius: float) -> float:
     """Area = s^2 - ((1/4)*pi*r^2)"""
-    return subtract((1 / 4) * math.pi * SQUARE(radius))(SQUARE(side_length))
+    return subtract((divide(4)(1)) * math.pi * SQUARE(radius))(SQUARE(side_length))
 
 
 def semi_major_axis_from_axes(a: float, b: float) -> SemiMajorAxis:
@@ -121,12 +120,12 @@ def draw_ellipse(
     if eccentricity < 0 or eccentricity >= 1:
         raise ValueError("Eccentricity must be in the range [0, 1).")
 
-    semi_minor_axis = radius * (1 - eccentricity**2) ** 0.5
-    x0 = coordinates.x - radius
-    y0 = coordinates.y - semi_minor_axis
-    x1 = coordinates.x + radius
-    y1 = coordinates.y + semi_minor_axis
-    return (Coordinate2D(x0, y0), Coordinate2D(x1, y1))
+    semi_minor_axis = exponentiate(0.5)(multiply(radius)(1 - SQUARE(eccentricity)))
+
+    return (
+        Coordinate2D(coordinates.x - radius, coordinates.y - semi_minor_axis),
+        Coordinate2D(coordinates.x + radius, coordinates.y + semi_minor_axis),
+    )
 
 
 def calculate_distance(

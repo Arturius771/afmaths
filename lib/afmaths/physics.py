@@ -1,8 +1,8 @@
 import math
-from formula import inverse_square_law
-from geometry import area_of_right_triangle
-from graph import GraphCoordinates, slope_gradiant
-from operation import (
+from .formula import inverse_square_law
+from .geometry import area_of_right_triangle
+from .graph import GraphCoordinates, slope_gradiant
+from .operation import (
     HALF,
     SQUARE,
     add,

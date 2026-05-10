@@ -13,11 +13,7 @@ A simple package of math functions. Originally this was written to enable loggin
 - Use currying for functions
 - Adapt hohmann transfer style to be closer to the repo's
 
-## 1. Install or Activate the Virtual Environment
-
-It's recommended to use a virtual environment for isolation. If you don't already have a virtual environment, create and activate one:
-
-### Create and start virtual environment:
+# Create and start virtual environment:
 
 ```bash
 python3 -m venv venv
@@ -27,7 +23,7 @@ python3 -m venv venv
 source venv/bin/activate
 ```
 
-## 2. Install Required Dependencies
+# Install Required Dependencies
 
 Ensure that setuptools and wheel are installed in your environment:
 
@@ -36,7 +32,13 @@ pip install -r requirements.txt
 pip install -e .
 ```
 
-## 3. Update version number
+# Run files
+
+```bash
+python -m afmaths.space_engineering
+```
+
+# Update version number
 
 ```bash
 setup(
@@ -46,13 +48,13 @@ setup(
 )
 ```
 
-## 4. Build the dist
+# Build the dist
 
 ```bash
 python setup.py sdist bdist_wheel
 ```
 
-## 5. Upload with `twine`
+# Upload with `twine`
 
 ```bash
 twine upload dist/*

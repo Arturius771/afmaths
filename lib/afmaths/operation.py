@@ -1,12 +1,21 @@
 import math
 
+from astronomy_types import (
+    Position,
+    PositionVector,
+    Scalar,
+    Vector3D,
+    Velocity,
+    VelocityVector,
+)
+
 
 def add(num1: float):
     return lambda num2: num1 + num2
 
 
-def subtract(num2: float):
-    return lambda num1: num1 - num2
+def subtract(value: float):
+    return lambda from_value: from_value - value
 
 
 def multiply(num1: float):
@@ -66,50 +75,53 @@ def termial(number: int) -> int:
     return HALF(multiply(number)(add(number)(1)))
 
 
-def dot_product_3d(vector_a: list[float], vector_b: list[float]) -> float:
+def dot_product_3d(vector_a: Vector3D[Scalar], vector_b: Vector3D[Scalar]) -> Scalar:
     """Returns the dot product of two vectors"""
-    a = multiply(vector_a[0])(vector_b[0])
-    b = multiply(vector_a[1])(vector_b[1])
-    c = multiply(vector_a[2])(vector_b[2])
+    a = multiply(vector_a.x)(vector_b.x)
+    b = multiply(vector_a.y)(vector_b.y)
+    c = multiply(vector_a.z)(vector_b.z)
 
     return add(a)(add(b)(c))
 
 
 # TODO: check naming
-def vector_magnitude_3d(vector: list[float]) -> float:
+def vector_magnitude_3d(vector: Vector3D[Scalar]) -> Scalar:
     """Returns the magnitude of a vector"""
-    return square_root(
-        add(SQUARE(vector[0]))(add(SQUARE(vector[1]))(SQUARE(vector[2])))
+    return Scalar(
+        square_root(add(SQUARE(vector.x))(add(SQUARE(vector.y))(SQUARE(vector.z))))
     )
 
 
-def vector_multiplication_3d(vector: list[float], scalar: float) -> list[float]:
+def vector_multiplication_3d(
+    vector: Vector3D[Scalar], scalar: float
+) -> Vector3D[Scalar]:
     scalar_multiply = multiply(scalar)
-    i = scalar_multiply(vector[0])
-    j = scalar_multiply(vector[1])
-    k = scalar_multiply(vector[2])
+    i = scalar_multiply(vector.x)
+    j = scalar_multiply(vector.y)
+    k = scalar_multiply(vector.z)
 
-    return [i, j, k]
+    return Vector3D(i, j, k)
 
 
 def vector_cross_multiplication_3d(
-    vector_a: list[float], vector_b: list[float]
-) -> list[float]:
+    vector_a: Vector3D[Scalar] | Vector3D[Position] | Vector3D[Velocity],
+    vector_b: Vector3D[Scalar] | Vector3D[Position] | Vector3D[Velocity],
+) -> Vector3D[Scalar]:
     """Returns the cross product of two 3D vectors"""
     # i = subtract(multiply(vector_a[1])(vector_b[2]))(multiply(vector_a[2])(vector_b[1]))
     # j = subtract(multiply(vector_a[2])(vector_b[0]))(multiply(vector_a[0])(vector_b[2]))
     # k = subtract(multiply(vector_a[0])(vector_b[1]))(multiply(vector_a[1])(vector_b[0]))
 
     # (a_{2}b_{3}-a_{3}b_{2}),(a_{3}b_{1}-a_{1}b_{3}),(a_{1}b_{2}-a_{2}b_{1})
-    a = multiply(vector_a[1])(vector_b[2])
-    b = multiply(vector_a[2])(vector_b[1])
-    c = multiply(vector_a[2])(vector_b[0])
-    d = multiply(vector_a[0])(vector_b[2])
-    e = multiply(vector_a[0])(vector_b[1])
-    f = multiply(vector_a[1])(vector_b[0])
+    a = multiply(vector_a.y)(vector_b.z)
+    b = multiply(vector_a.z)(vector_b.y)
+    c = multiply(vector_a.z)(vector_b.x)
+    d = multiply(vector_a.x)(vector_b.z)
+    e = multiply(vector_a.x)(vector_b.y)
+    f = multiply(vector_a.y)(vector_b.x)
 
     i = subtract(b)(a)
     j = subtract(d)(c)
     k = subtract(f)(e)
 
-    return [i, j, k]
+    return Vector3D(i, j, k)

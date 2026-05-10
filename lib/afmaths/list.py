@@ -1,6 +1,6 @@
 import math
 import statistics
-from operation import divide, subtract
+from .operation import divide, subtract
 
 
 def sort(number_list: list[float]) -> list[float]:
@@ -12,7 +12,7 @@ def length(number_list: list[float]) -> int:
 
 
 def sum(number_list: list[float]) -> float:
-    return math.sum(number_list)
+    return math.fsum(number_list)
 
 
 def minimum(number_list: list[float]) -> float:

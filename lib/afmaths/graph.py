@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from operation import divide, multiply, subtract, termial
+from .operation import divide, multiply, subtract, termial
 
 
 @dataclass(frozen=True)

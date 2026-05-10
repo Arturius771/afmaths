@@ -1,6 +1,6 @@
 import math
-from geometry import pythagoras
-from operation import (
+from .geometry import pythagoras
+from .operation import (
     HALF,
     add,
     divide,
@@ -9,7 +9,7 @@ from operation import (
     multiply,
     subtract,
 )
-from list import sum
+from .list import sum
 
 
 def file_compression_ratio(uncompressed_size: float):
