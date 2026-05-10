@@ -3,6 +3,7 @@ from formula import inverse_square_law
 from geometry import area_of_right_triangle
 from graph import GraphCoordinates, slope_gradiant
 from operation import HALF, SQUARE, add, divide, exponentiate, multiply, subtract
+from astronomy_types import Scalar, Distance
 
 SPEED_OF_LIGHT_METRES_PER_SECONDS = 299792458
 PLANCK_CONSTANT = multiply(6.62607004)(exponentiate(-34)(10))
@@ -72,7 +73,9 @@ def flux_density(luminosity: float, distance_metres: float) -> float:
     return inverse_square_law(luminosity, distance_metres)
 
 
-def univesal_gravitation(mass1: float, mass2: float, distance_metres: float) -> float:
+def univesal_gravitation(
+    mass1: Scalar, mass2: Scalar, distance_metres: Distance
+) -> float:
     """
     Calculate the strength of the gravitational "force" between two objects.
 
