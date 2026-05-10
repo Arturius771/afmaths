@@ -33,6 +33,7 @@ Ensure that setuptools and wheel are installed in your environment:
 
 ```bash
 pip install -r requirements.txt
+pip install -e .
 ```
 
 ## 3. Update version number

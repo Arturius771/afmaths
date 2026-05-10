@@ -1,8 +1,8 @@
 from math import atan
 import math
 
-from geometry import semi_major_axis_from_axes
-from operation import (
+from .geometry import semi_major_axis_from_axes
+from .operation import (
     CUBE,
     SQUARE,
     add,
@@ -239,6 +239,36 @@ def eccentric_anomaly_solved(
         E_i = E_next
 
     return E_i, history
+
+
+## Check if this belongs in geometry.py
+# def true_anomaly_from_eccentric_anomaly(
+#     eccentric_anomaly: float, eccentricity: Eccentricity
+# ) -> TrueAnomaly:
+#     """
+#     Calculate the true anomaly from the eccentric anomaly and eccentricity.
+
+#     Parameters:
+#     E (float): The eccentric anomaly in radians.
+#     e (float): The eccentricity of the orbit (0 <= eccentricity < 1).
+
+#     Returns:
+#     float: The true anomaly in radians.
+#     """
+#     if eccentricity < 0 or eccentricity >= 1:
+#         raise ValueError("Eccentricity must be in the range [0, 1).")
+
+#     return TrueAnomaly(
+#         Radians(
+#             Scalar(
+#                 2
+#                 * math.atan2(
+#                     math.sqrt(1 + eccentricity) * math.sin(eccentric_anomaly / 2),
+#                     math.sqrt(1 - eccentricity) * math.cos(eccentric_anomaly / 2),
+#                 )
+#             )
+#         )
+#     )
 
 
 def true_anomaly_from_eccentric_anomaly(

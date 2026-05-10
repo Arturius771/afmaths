@@ -9,9 +9,16 @@ from astronomy_types import (
     TrueAnomaly,
 )
 
-from operation import HALF, SQUARE, add, divide, half, multiply, square, subtract
+from .operation import (
+    HALF,
+    SQUARE,
+    add,
+    divide,
+    multiply,
+    subtract,
+)
 import math
-from formula import taylor_series
+from .formula import taylor_series
 
 pythagoras = lambda a: lambda b: add(SQUARE(a))(SQUARE(b))
 
@@ -79,7 +86,9 @@ def semi_major_axis_from_axes(a: float, b: float) -> SemiMajorAxis:
     return HALF(add(a)(b))
 
 
-def circle_bounding_box_from_coordinates(coordinates: Coordinate2D, radius: float):
+def circle_bounding_box_from_coordinates(
+    coordinates: Coordinate2D, radius: float
+) -> tuple[Coordinate2D, Coordinate2D]:
     """
     Calculate the bounding box of a circle given its center coordinates and radius.
 
@@ -199,32 +208,3 @@ def calculate_semi_minor_axis(
         raise ValueError("Eccentricity must be in the range [0, 1).")
 
     return semi_major_axis * (1 - eccentricity**2) ** 0.5
-
-
-def true_anomaly_from_eccentric_anomaly(
-    eccentric_anomaly, eccentricity: Eccentricity
-) -> TrueAnomaly:
-    """
-    Calculate the true anomaly from the eccentric anomaly and eccentricity.
-
-    Parameters:
-    E (float): The eccentric anomaly in radians.
-    e (float): The eccentricity of the orbit (0 <= eccentricity < 1).
-
-    Returns:
-    float: The true anomaly in radians.
-    """
-    if eccentricity < 0 or eccentricity >= 1:
-        raise ValueError("Eccentricity must be in the range [0, 1).")
-
-    return TrueAnomaly(
-        Radians(
-            Scalar(
-                2
-                * math.atan2(
-                    math.sqrt(1 + eccentricity) * math.sin(eccentric_anomaly / 2),
-                    math.sqrt(1 - eccentricity) * math.cos(eccentric_anomaly / 2),
-                )
-            )
-        )
-    )

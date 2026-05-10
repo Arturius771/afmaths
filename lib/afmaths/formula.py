@@ -1,6 +1,6 @@
 from functools import reduce
 import math
-from operation import (
+from .operation import (
     SQUARE,
     add,
     divide,
