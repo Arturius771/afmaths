@@ -1,5 +1,13 @@
+from dataclasses import replace
 from math import atan
 import math
+
+from .tensors import (
+    dot_product_3d,
+    vector_cross_multiplication_3d,
+    vector_magnitude_3d,
+    vector_multiplication_3d,
+)
 
 from .geometry import semi_major_axis_from_axes
 from .operation import (
@@ -7,16 +15,14 @@ from .operation import (
     SQUARE,
     add,
     divide,
-    dot_product_3d,
     exponentiate,
+    interval,
     multiply,
     square_root,
     subtract,
-    vector_cross_multiplication_3d,
-    vector_magnitude_3d,
-    vector_multiplication_3d,
 )
 from astronomy_types import (
+    Coordinate2D,
     GravitationalParameter,
     Latitude,
     OrbitalElements,
@@ -28,6 +34,7 @@ from astronomy_types import (
     ArgumentOfPerigee,
     SemiMajorAxis,
     Eccentricity,
+    SemiMinorAxis,
     StateVectors,
     TrueAnomaly,
     Scalar,
@@ -539,7 +546,7 @@ def true_anomaly_at_time_offset(
 
 def orbit_state_vector_prediction_from_orbital_elements(
     orbital_elements_radians: OrbitalElements,
-    time_offset_s: float,
+    time_offset_s: float = 0,
     initial_mean_anomaly_radians: float | None = None,  # Shortcut
     gravitational_parameter: GravitationalParameter = EARTH_MU_KM_CUBED,
 ) -> StateVectors:
@@ -598,6 +605,43 @@ def orbit_state_vector_prediction_from_orbital_elements(
     )
 
 
+def generate_eccentric_anomalies(resolution: int) -> list[float]:
+    return interval(0, 2 * math.pi, resolution)
+
+
+def generate_all_orbit_positions(
+    orbital_elements: OrbitalElements, resolution: int
+) -> list[PositionVector]:
+    if resolution < 50:
+        raise ValueError("Resolution must be greater than 50.")
+    position_list = []
+    for true_anomaly in generate_eccentric_anomalies(resolution):
+        position_list.append(
+            orbit_state_vector_prediction_from_orbital_elements(
+                replace(
+                    orbital_elements,
+                    true_anomaly=true_anomaly,
+                ),
+            ).position
+        )
+    return position_list
+
+
+def generate_relative_coordinate_from_true_anomaly(
+    reference_central_body: Coordinate2D,
+    semi_major_axis: SemiMajorAxis,
+    semi_minor_axis: SemiMinorAxis,
+    eccentric_anomaly: float,  # TODO add typing
+) -> Coordinate2D:
+
+    # secondary_x = CENTER_X + a * np.cos(theta)
+    # secondary_y = CENTER_Y + b * np.sin(theta)
+    return Coordinate2D(
+        x=reference_central_body.x + semi_major_axis * math.cos(eccentric_anomaly),
+        y=reference_central_body.y + semi_minor_axis * math.sin(eccentric_anomaly),
+    )
+
+
 # TODO: FST 1 equations
 # TODO: Increment of velocity
 
@@ -653,7 +697,6 @@ if __name__ == "__main__":
                         Velocity(Scalar(-0.1)),
                     ),
                 )
-            ),
-            0,
+            )
         )
     )

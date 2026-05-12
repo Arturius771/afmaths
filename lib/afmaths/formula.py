@@ -1,4 +1,3 @@
-from functools import reduce
 import math
 from .operation import (
     SQUARE,
@@ -7,6 +6,7 @@ from .operation import (
     exponentiate,
     multiply,
     factorial,
+    reduce,
 )
 
 
@@ -43,7 +43,8 @@ def taylor_series(value):
             sign = -1 if sign == +1 else +1
             taylor[index] = taylor[index] * sign
 
-        return reduce(lambda a, b: a + b, taylor)
+        # from functools import reduce
+        return reduce(lambda a, b: a + b)(taylor)
 
     return steps
 

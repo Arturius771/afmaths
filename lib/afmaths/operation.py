@@ -1,14 +1,5 @@
 import math
 
-from astronomy_types import (
-    Position,
-    PositionVector,
-    Scalar,
-    Vector3D,
-    Velocity,
-    VelocityVector,
-)
-
 
 def add(num1: float):
     return lambda num2: num1 + num2
@@ -75,53 +66,34 @@ def termial(number: int) -> int:
     return HALF(multiply(number)(add(number)(1)))
 
 
-def dot_product_3d(vector_a: Vector3D[Scalar], vector_b: Vector3D[Scalar]) -> Scalar:
-    """Returns the dot product of two vectors"""
-    a = multiply(vector_a.x)(vector_b.x)
-    b = multiply(vector_a.y)(vector_b.y)
-    c = multiply(vector_a.z)(vector_b.z)
-
-    return add(a)(add(b)(c))
-
-
-# TODO: check naming
-def vector_magnitude_3d(vector: Vector3D[Scalar]) -> Scalar:
-    """Returns the magnitude of a vector"""
-    return Scalar(
-        square_root(add(SQUARE(vector.x))(add(SQUARE(vector.y))(SQUARE(vector.z))))
-    )
+def interval(start: float, end: float, n: int) -> list[float]:
+    """Creates n evenly spaced points between a and b."""
+    if n < 2:
+        return [start]
+    step = (end - start) / (n - 1)
+    return [start + i * step for i in range(n)]
 
 
-def vector_multiplication_3d(
-    vector: Vector3D[Scalar], scalar: float
-) -> Vector3D[Scalar]:
-    scalar_multiply = multiply(scalar)
-    i = scalar_multiply(vector.x)
-    j = scalar_multiply(vector.y)
-    k = scalar_multiply(vector.z)
+# Apply a function of two arguments cumulatively to the items of an iterable, from left to right.
 
-    return Vector3D(i, j, k)
+# This effectively reduces the iterable to a single value. If initial is present,
+# it is placed before the items of the iterable in the calculation, and serves as
+# a default when the iterable is empty.
 
 
-def vector_cross_multiplication_3d(
-    vector_a: Vector3D[Scalar] | Vector3D[Position] | Vector3D[Velocity],
-    vector_b: Vector3D[Scalar] | Vector3D[Position] | Vector3D[Velocity],
-) -> Vector3D[Scalar]:
-    """Returns the cross product of two 3D vectors"""
-    # i = subtract(multiply(vector_a[1])(vector_b[2]))(multiply(vector_a[2])(vector_b[1]))
-    # j = subtract(multiply(vector_a[2])(vector_b[0]))(multiply(vector_a[0])(vector_b[2]))
-    # k = subtract(multiply(vector_a[0])(vector_b[1]))(multiply(vector_a[1])(vector_b[0]))
+def reduce(
+    reduce_function,
+):
+    def reduction(sequence: list[float]) -> float:
+        # For example, reduce(lambda x, y: x+y, [1, 2, 3, 4, 5])
+        # calculates ((((1 + 2) + 3) + 4) + 5).
+        final_value = sequence[0]
+        for item in sequence:
+            final_value = reduce_function(final_value, item)
+        return final_value
 
-    # (a_{2}b_{3}-a_{3}b_{2}),(a_{3}b_{1}-a_{1}b_{3}),(a_{1}b_{2}-a_{2}b_{1})
-    a = multiply(vector_a.y)(vector_b.z)
-    b = multiply(vector_a.z)(vector_b.y)
-    c = multiply(vector_a.z)(vector_b.x)
-    d = multiply(vector_a.x)(vector_b.z)
-    e = multiply(vector_a.x)(vector_b.y)
-    f = multiply(vector_a.y)(vector_b.x)
+    return reduction
 
-    i = subtract(b)(a)
-    j = subtract(d)(c)
-    k = subtract(f)(e)
 
-    return Vector3D(i, j, k)
+if __name__ == "__main__":
+    print(reduce(lambda a, b: a * b)([1, 2, 3, 4, 5]))

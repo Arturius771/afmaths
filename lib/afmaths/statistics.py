@@ -1,4 +1,4 @@
-from operation import divide, exponentiate, multiply
+from .operation import divide, exponentiate, multiply
 
 
 def probability_of_outcome_percentage(

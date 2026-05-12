@@ -5,6 +5,7 @@ from astronomy_types import (
     Ratio,
     Scalar,
     SemiMajorAxis,
+    SemiMinorAxis,
 )
 
 from .operation import (
@@ -86,7 +87,7 @@ def semi_major_axis_from_axes(a: float, b: float) -> SemiMajorAxis:
 
 
 def draw_circle_bounding_box(
-    coordinates: Coordinate2D, radius: float
+    coordinates: Coordinate2D, radius: Distance
 ) -> tuple[Coordinate2D, Coordinate2D]:
     """
     Calculate the bounding box of a circle given its center coordinates and radius.
@@ -99,33 +100,52 @@ def draw_circle_bounding_box(
     Returns:
     tuple: A tuple containing the coordinates of the bounding box in the format (x0, y0, x1, y1).
     """
-    return draw_ellipse(coordinates, radius, Eccentricity(Ratio(Scalar(0))))
+    return draw_ellipse(
+        coordinates, SemiMajorAxis(radius), Eccentricity(Ratio(Scalar(0)))
+    )
 
 
 def draw_ellipse(
-    coordinates: Coordinate2D, radius: float, eccentricity: Eccentricity
+    coordinates: Coordinate2D, radius: SemiMajorAxis, eccentricity: Eccentricity
 ) -> tuple[Coordinate2D, Coordinate2D]:
     """
-    Calculate the bounding box of an ellipse given its center coordinates, radius, and eccentricity.
-
-    Parameters:
-    x (float): The x-coordinate of the ellipse's center.
-    y (float): The y-coordinate of the ellipse's center.
-    radius (float): The semi-major axis of the ellipse.
-    eccentricity (float): The eccentricity of the ellipse (0 <= eccentricity < 1).
-
     Returns:
     tuple: A tuple containing the coordinates of the bounding box in the format (x0, y0, x1, y1).
     """
     if eccentricity < 0 or eccentricity >= 1:
         raise ValueError("Eccentricity must be in the range [0, 1).")
 
-    semi_minor_axis = exponentiate(0.5)(multiply(radius)(1 - SQUARE(eccentricity)))
+    semi_minor_axis = calculate_semi_minor_axis(SemiMajorAxis(radius), eccentricity)
 
     return (
         Coordinate2D(coordinates.x - radius, coordinates.y - semi_minor_axis),
         Coordinate2D(coordinates.x + radius, coordinates.y + semi_minor_axis),
     )
+
+
+def calculate_semi_minor_axis(
+    semi_major_axis: SemiMajorAxis, eccentricity: Eccentricity
+) -> SemiMinorAxis:
+    return exponentiate(0.5)(multiply(semi_major_axis)(1 - SQUARE(eccentricity)))
+
+
+# def calculate_semi_minor_axis(
+#     semi_major_axis: SemiMajorAxis, eccentricity: Eccentricity
+# ) -> float:
+#     """
+#     Calculate the semi-minor axis of an ellipse given its semi-major axis and eccentricity.
+
+#     Parameters:
+#     a (float): The semi-major axis of the ellipse.
+#     e (float): The eccentricity of the ellipse (0 <= eccentricity < 1).
+
+#     Returns:
+#     float: The semi-minor axis of the ellipse.
+#     """
+#     if eccentricity < 0 or eccentricity >= 1:
+#         raise ValueError("Eccentricity must be in the range [0, 1).")
+
+#     return semi_major_axis * (1 - eccentricity**2) ** 0.5
 
 
 def calculate_distance(
@@ -186,22 +206,3 @@ def calculate_semi_major_axis(
         raise ValueError("Eccentricity must be in the range [0, 1).")
 
     return SemiMajorAxis(Distance(Scalar(radius / (1 - eccentricity))))
-
-
-def calculate_semi_minor_axis(
-    semi_major_axis: SemiMajorAxis, eccentricity: Eccentricity
-) -> float:
-    """
-    Calculate the semi-minor axis of an ellipse given its semi-major axis and eccentricity.
-
-    Parameters:
-    a (float): The semi-major axis of the ellipse.
-    e (float): The eccentricity of the ellipse (0 <= eccentricity < 1).
-
-    Returns:
-    float: The semi-minor axis of the ellipse.
-    """
-    if eccentricity < 0 or eccentricity >= 1:
-        raise ValueError("Eccentricity must be in the range [0, 1).")
-
-    return semi_major_axis * (1 - eccentricity**2) ** 0.5
