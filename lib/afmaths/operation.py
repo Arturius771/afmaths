@@ -87,7 +87,7 @@ def reduce(
     def reduction(sequence: list[float]) -> float:
         # For example, reduce(lambda x, y: x+y, [1, 2, 3, 4, 5])
         # calculates ((((1 + 2) + 3) + 4) + 5).
-        final_value = sequence[0]
+        final_value = sequence.pop(0)
         for item in sequence:
             final_value = reduce_function(final_value, item)
         return final_value
@@ -96,4 +96,4 @@ def reduce(
 
 
 if __name__ == "__main__":
-    print(reduce(lambda a, b: a * b)([1, 2, 3, 4, 5]))
+    print(reduce(lambda a, b: subtract(b)(a))([1, 2, 3, 5, 6]))

@@ -23,6 +23,7 @@ from .operation import (
 )
 from astronomy_types import (
     Coordinate2D,
+    EccentricAnomaly,
     GravitationalParameter,
     Latitude,
     OrbitalElements,
@@ -605,8 +606,12 @@ def orbit_state_vector_prediction_from_orbital_elements(
     )
 
 
-def generate_eccentric_anomalies(resolution: int) -> list[float]:
-    return interval(0, 2 * math.pi, resolution)
+def generate_angles_on_circle(resolution: int) -> list[Radians]:
+    typed = []
+    for val in interval(0, 2 * math.pi, resolution):
+        typed.append(Radians(Scalar(val)))
+
+    return typed
 
 
 def generate_all_orbit_positions(
@@ -615,7 +620,7 @@ def generate_all_orbit_positions(
     if resolution < 50:
         raise ValueError("Resolution must be greater than 50.")
     position_list = []
-    for true_anomaly in generate_eccentric_anomalies(resolution):
+    for true_anomaly in generate_angles_on_circle(resolution):
         position_list.append(
             orbit_state_vector_prediction_from_orbital_elements(
                 replace(
@@ -627,11 +632,11 @@ def generate_all_orbit_positions(
     return position_list
 
 
-def generate_relative_coordinate_from_true_anomaly(
+def generate_relative_coordinate_from_eccentric_anomaly(
     reference_central_body: Coordinate2D,
     semi_major_axis: SemiMajorAxis,
     semi_minor_axis: SemiMinorAxis,
-    eccentric_anomaly: float,  # TODO add typing
+    eccentric_anomaly: EccentricAnomaly,
 ) -> Coordinate2D:
 
     # secondary_x = CENTER_X + a * np.cos(theta)
