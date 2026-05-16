@@ -15,6 +15,7 @@ from .operation import (
     divide,
     exponentiate,
     multiply,
+    square_root,
     subtract,
 )
 import math
@@ -126,7 +127,8 @@ def draw_ellipse(
 def calculate_semi_minor_axis(
     semi_major_axis: SemiMajorAxis, eccentricity: Eccentricity
 ) -> SemiMinorAxis:
-    return exponentiate(0.5)(multiply(semi_major_axis)(1 - SQUARE(eccentricity)))
+    # a * sqrt(1 - e**2)
+    return multiply(semi_major_axis)(square_root(subtract(SQUARE(eccentricity))(1)))
 
 
 # def calculate_semi_minor_axis(
