@@ -266,7 +266,7 @@ def eccentric_anomaly_solved(
     tolerance=1e-6,
     max_iterations=100,
 ) -> tuple[EccentricAnomaly, list]:
-    history = []
+    history = []  # TODO: make this more structured
 
     E_i = mean_anomaly
     delta_E = float("inf")
