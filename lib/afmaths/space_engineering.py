@@ -581,38 +581,6 @@ def transform_perifocal_to_eci(
     )
 
 
-def orbit_coordinate_prediction(
-    orbital_elements: OrbitalElements,
-    target_time: Second,
-) -> Coordinate2D:
-
-    M = mean_anomaly_at_time_offset(
-        mean_anomaly_from_kepler_equation(
-            eccentric_anomaly_from_true_anomaly(
-                TrueAnomaly(Anomaly(Radians(Scalar(0)))), orbital_elements.eccentricity
-            ),
-            orbital_elements.eccentricity,
-        ),
-        target_time,
-        mean_motion(
-            orbital_elements.semi_major_axis,
-        ),
-    )
-
-    E, _ = eccentric_anomaly_solved(newton_iteration, orbital_elements.eccentricity, M)
-
-    x = multiply(orbital_elements.semi_major_axis)(
-        math.cos(E) - orbital_elements.eccentricity
-    )
-    y = multiply(
-        calculate_semi_minor_axis(
-            orbital_elements.semi_major_axis, orbital_elements.eccentricity
-        )
-    )(math.sin(E))
-
-    return Coordinate2D(x, y)
-
-
 def orbit_state_vector_prediction_from_orbital_elements(
     orbital_elements: OrbitalElements,
     time_offset_s: Second = Second(Scalar(0)),
@@ -702,6 +670,47 @@ def generate_all_orbit_positions(
     return position_list
 
 
+def coordinate_from_eccentric_anomaly(
+    semi_major_axis: SemiMajorAxis,
+    semi_minor_axis: SemiMinorAxis,
+    eccentric_anomaly: EccentricAnomaly,
+) -> Coordinate2D:
+    return Coordinate2D(
+        x=multiply(semi_major_axis)(math.cos(eccentric_anomaly)),
+        y=multiply(semi_minor_axis)(math.sin(eccentric_anomaly)),
+    )
+
+
+def orbit_coordinate_prediction(
+    orbital_elements: OrbitalElements,
+    target_time: Second,
+) -> Coordinate2D:
+
+    M = mean_anomaly_at_time_offset(
+        mean_anomaly_from_kepler_equation(
+            eccentric_anomaly_from_true_anomaly(
+                TrueAnomaly(Anomaly(Radians(Scalar(0)))), orbital_elements.eccentricity
+            ),
+            orbital_elements.eccentricity,
+        ),
+        target_time,
+        mean_motion(
+            orbital_elements.semi_major_axis,
+        ),
+    )
+
+    E, _ = eccentric_anomaly_solved(newton_iteration, orbital_elements.eccentricity, M)
+
+    return coordinate_from_eccentric_anomaly(
+        orbital_elements.semi_major_axis,
+        calculate_semi_minor_axis(
+            orbital_elements.semi_major_axis,
+            orbital_elements.eccentricity,
+        ),
+        E,
+    )
+
+
 def generate_relative_coordinate_from_eccentric_anomaly(
     reference_central_body: Coordinate2D,
     semi_major_axis: SemiMajorAxis,
@@ -709,11 +718,15 @@ def generate_relative_coordinate_from_eccentric_anomaly(
     eccentric_anomaly: EccentricAnomaly,
 ) -> Coordinate2D:
 
-    # secondary_x = CENTER_X + a * np.cos(theta)
-    # secondary_y = CENTER_Y + b * np.sin(theta)
+    relative = coordinate_from_eccentric_anomaly(
+        semi_major_axis,
+        semi_minor_axis,
+        eccentric_anomaly,
+    )
+
     return Coordinate2D(
-        x=reference_central_body.x + semi_major_axis * math.cos(eccentric_anomaly),
-        y=reference_central_body.y + semi_minor_axis * math.sin(eccentric_anomaly),
+        x=reference_central_body.x + relative.x,
+        y=reference_central_body.y + relative.y,
     )
 
 
