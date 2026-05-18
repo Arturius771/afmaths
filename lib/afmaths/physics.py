@@ -1,8 +1,8 @@
 import math
-from .formula import inverse_square_law
-from .geometry import area_of_right_triangle
-from .graph import GraphCoordinates, slope_gradiant
-from .operation import (
+from afmaths.formula import inverse_square_law
+from afmaths.geometry import area_of_right_triangle
+from afmaths.graph import slope_gradiant
+from afmaths.operation import (
     HALF,
     SQUARE,
     add,
@@ -11,7 +11,23 @@ from .operation import (
     multiply,
     subtract,
 )
-from astronomy_types import Scalar, Distance
+from astronomy_types import (
+    Acceleration,
+    Coordinate2D,
+    Scalar,
+    Distance,
+    Second,
+    Velocity,
+    dataclass,
+)
+
+
+@dataclass(frozen=True)
+class TriangleDescription:
+    start: Coordinate2D
+    peak: Coordinate2D
+    end: Coordinate2D
+
 
 SPEED_OF_LIGHT_METRES_PER_SECONDS = 299792458
 PLANCK_CONSTANT = multiply(6.62607004)(exponentiate(-34)(10))
@@ -42,8 +58,7 @@ def radiowave_received_power_difference_by_distance(
 
 def photon_energy_from_wavelength(wavelength_in_micrometer: float) -> float:
     """Returns photon energy in electrovolts"""
-    divide_by_wavelength = divide(wavelength_in_micrometer)
-    return divide_by_wavelength(1.2398)
+    return divide(wavelength_in_micrometer)(1.2398)
 
 
 def photon_energy_from_frequency(frequency_in_hertz: float) -> float:
@@ -143,17 +158,15 @@ def calculate_schwarzschild_radius(mass: float) -> float:
 
 
 def displacement_from_velocity_curve(
-    slope_component_start: GraphCoordinates,
-    slope_component_end: GraphCoordinates,
-    slope_component_peak: GraphCoordinates,
-    flat_component_start: GraphCoordinates = GraphCoordinates(0, 0),
-    flat_component_end: GraphCoordinates = GraphCoordinates(0, 0),
+    triangle_on_graph: TriangleDescription,
+    flat_component_start: Coordinate2D = Coordinate2D(0, 0),
+    flat_component_end: Coordinate2D = Coordinate2D(0, 0),
 ) -> float:
     """Assumes a straight line slope."""
     # Credit: https://www.khanacademy.org/science/ap-college-physics-1/xf557a762645cccc5:kinematics/xf557a762645cccc5:visual-models-of-motion/a/what-are-velocity-vs-time-graphs
 
     slope_speed = area_of_right_triangle(
-        slope_component_end.x - slope_component_start.x, slope_component_peak.y
+        triangle_on_graph.end.x - triangle_on_graph.start.x, triangle_on_graph.peak.y
     )
 
     return add(
@@ -162,109 +175,117 @@ def displacement_from_velocity_curve(
 
 
 def displacement_of_velocity_curve_section(
-    complete_curve_start: GraphCoordinates,
-    complete_curve_end: GraphCoordinates,
-    complete_curve_peak: GraphCoordinates,
-    first_slice_start: GraphCoordinates,
-    first_slice_end: GraphCoordinates,
-    first_slice_peak: GraphCoordinates,
-    second_slice_start: GraphCoordinates,
-    second_slice_end: GraphCoordinates,
-    second_slice_peak: GraphCoordinates,
+    triangle_on_graph: TriangleDescription,
+    first_slice: TriangleDescription,
+    second_slice: TriangleDescription,
 ) -> float:
     """Calculate a sectional area under a triangular curve of a velocity over time graph."""
     return subtract(
         (
-            add(
-                displacement_from_velocity_curve(
-                    first_slice_start,
-                    first_slice_end,
-                    first_slice_peak,
-                )
-            )(
-                displacement_from_velocity_curve(
-                    second_slice_start,
-                    second_slice_end,
-                    second_slice_peak,
-                )
+            add(displacement_from_velocity_curve(first_slice))(
+                displacement_from_velocity_curve(second_slice)
             )
         )
-    )(
-        displacement_from_velocity_curve(
-            complete_curve_start,
-            complete_curve_end,
-            complete_curve_peak,
-        )
-    )
+    )(displacement_from_velocity_curve(triangle_on_graph))
 
 
 def average_acceleration_from_slope(
-    time_and_velocity1: GraphCoordinates, time_and_velocity2: GraphCoordinates
-) -> float:
-    return slope_gradiant(time_and_velocity1, time_and_velocity2)
+    time_and_velocity1: Coordinate2D, time_and_velocity2: Coordinate2D
+) -> Acceleration:
+    return Acceleration(Scalar(slope_gradiant(time_and_velocity1, time_and_velocity2)))
+
+
+def velocity_after_duration(
+    acceleration: Acceleration, initial_velocity: Velocity, duration: Second
+) -> Velocity:
+    return add(initial_velocity)(multiply(acceleration)(duration))
 
 
 if __name__ == "__main__":
     print(
         displacement_from_velocity_curve(
-            GraphCoordinates(3, 6),
-            GraphCoordinates(7, 0),
-            GraphCoordinates(5, 6),
-            GraphCoordinates(0, 6),
-            GraphCoordinates(3, 6),
+            TriangleDescription(
+                Coordinate2D(3, 6),
+                Coordinate2D(5, 6),
+                Coordinate2D(7, 0),
+            ),
+            Coordinate2D(0, 6),
+            Coordinate2D(3, 6),
         )
     )  # 30
     print(
-        average_acceleration_from_slope(GraphCoordinates(0, 3), GraphCoordinates(6, 0))
+        average_acceleration_from_slope(Coordinate2D(0, 3), Coordinate2D(6, 0))
     )  # -0.5
     print(
         displacement_from_velocity_curve(
-            GraphCoordinates(2, 0),
-            GraphCoordinates(3, -5),
-            GraphCoordinates(2.5, -5),
+            TriangleDescription(
+                Coordinate2D(2, 0),
+                Coordinate2D(2.5, -5),
+                Coordinate2D(3, -5),
+            )
         )
     )  # -2.5
     print(
         displacement_from_velocity_curve(
-            GraphCoordinates(0, 0),
-            GraphCoordinates(2, 0),
-            GraphCoordinates(1, 5),
+            TriangleDescription(
+                Coordinate2D(0, 0),
+                Coordinate2D(1, 5),
+                Coordinate2D(2, 0),
+            )
         )
         + displacement_from_velocity_curve(
-            GraphCoordinates(2, 0),
-            GraphCoordinates(3, -5),
-            GraphCoordinates(3, -5),
+            TriangleDescription(
+                Coordinate2D(2, 0),
+                Coordinate2D(3, -5),
+                Coordinate2D(3, -5),
+            )
         )
     )  # 2.5
 
     print(
         displacement_of_velocity_curve_section(
-            GraphCoordinates(0, 0),
-            GraphCoordinates(2, 0),
-            GraphCoordinates(1, 5),
-            GraphCoordinates(0, 0),
-            GraphCoordinates(0.5, 2.5),
-            GraphCoordinates(0.5, 2.5),
-            GraphCoordinates(1.5, 2.5),
-            GraphCoordinates(2, 0),
-            GraphCoordinates(1.5, 2.5),
+            TriangleDescription(
+                Coordinate2D(0, 0),
+                Coordinate2D(1, 5),
+                Coordinate2D(2, 0),
+            ),
+            TriangleDescription(
+                Coordinate2D(0, 0),
+                Coordinate2D(0.5, 2.5),
+                Coordinate2D(0.5, 2.5),
+            ),
+            TriangleDescription(
+                Coordinate2D(1.5, 2.5),
+                Coordinate2D(1.5, 2.5),
+                Coordinate2D(2, 0),
+            ),
         )
     )  # 3.75
 
     print(
         displacement_from_velocity_curve(
-            GraphCoordinates(1, 0),
-            GraphCoordinates(3, 4),
-            GraphCoordinates(3, 4),
-            GraphCoordinates(3, 4),
-            GraphCoordinates(4, 4),
+            TriangleDescription(
+                Coordinate2D(1, 0),
+                Coordinate2D(3, 4),
+                Coordinate2D(3, 4),
+            ),
+            Coordinate2D(3, 4),
+            Coordinate2D(4, 4),
         )
     )  # 8
 
     print(
         displacement_from_velocity_curve(
-            GraphCoordinates(1, 5),
-            GraphCoordinates(2, 9),
-            GraphCoordinates(1, 5),
+            TriangleDescription(
+                Coordinate2D(1, 5),
+                Coordinate2D(1, 5),
+                Coordinate2D(2, 9),
+            )
         )
     )  # 2.5
+
+    print(
+        velocity_after_duration(
+            Acceleration(Scalar(1)), Velocity(Scalar(0)), Second(Scalar(5))
+        )
+    )

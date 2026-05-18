@@ -1,23 +1,15 @@
-from dataclasses import dataclass
+from afmaths.operation import divide, multiply, subtract, termial
 
-from .operation import divide, multiply, subtract, termial
-
-
-@dataclass(frozen=True)
-class GraphCoordinates:
-    x: float
-    y: float
+from astronomy_types import Coordinate2D
 
 
-def slope_gradiant(point1: GraphCoordinates, point2: GraphCoordinates) -> float:
+def slope_gradiant(point1: Coordinate2D, point2: Coordinate2D) -> float:
     """Calculates the slope between two points"""
     ##https://www.bbc.co.uk/bitesize/topics/zvhs34j/articles/z4ctng8
     return divide(subtract(point1.x)(point2.x))(subtract(point1.y)(point2.y))
 
 
-def equation_of_line(
-    point1: GraphCoordinates, point2: GraphCoordinates
-) -> tuple[float, float]:
+def equation_of_line(point1: Coordinate2D, point2: Coordinate2D) -> tuple[float, float]:
     """Returns the slope and y-intercept of the line passing through two points"""
     ##m = gradient
     m = slope_gradiant(point1, point2)

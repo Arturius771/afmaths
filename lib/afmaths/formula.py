@@ -13,8 +13,7 @@ from .operation import (
 def sigmoid(input: float, bias: float = 0) -> float:
     """Calculates the sigmoid of a value"""
     # TM358 Section Block 1 section 5
-    add_bias = add(bias)
-    return divide(add(1)(exponentiate(add_bias(-input))(math.e)))(1)
+    return divide(add(1)(exponentiate(add(bias)(-input))(math.e)))(1)
 
 
 def inverse_square_law(source_strength: float, distance_metres: float) -> float:
