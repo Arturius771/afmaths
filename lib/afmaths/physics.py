@@ -1,5 +1,5 @@
 import math
-from afmaths.formula import inverse_square_law
+from afmaths.formula import inverse_square_law, trapezoidal_rule
 from afmaths.geometry import area_of_right_triangle
 from afmaths.graph import slope_gradiant
 from afmaths.operation import (
@@ -14,6 +14,7 @@ from afmaths.operation import (
 from astronomy_types import (
     Acceleration,
     Coordinate2D,
+    Displacement,
     Scalar,
     Distance,
     Second,
@@ -157,36 +158,59 @@ def calculate_schwarzschild_radius(mass: float) -> float:
     )
 
 
-def displacement_from_velocity_curve(
-    triangle_on_graph: TriangleDescription,
+def displacement_from_velocity_flat(
     flat_component_start: Coordinate2D = Coordinate2D(0, 0),
     flat_component_end: Coordinate2D = Coordinate2D(0, 0),
-) -> float:
-    """Assumes a straight line slope."""
-    # Credit: https://www.khanacademy.org/science/ap-college-physics-1/xf557a762645cccc5:kinematics/xf557a762645cccc5:visual-models-of-motion/a/what-are-velocity-vs-time-graphs
-
-    slope_speed = area_of_right_triangle(
-        triangle_on_graph.end.x - triangle_on_graph.start.x, triangle_on_graph.peak.y
+) -> Displacement:
+    return multiply(flat_component_start.y)(
+        flat_component_end.x - flat_component_start.x
     )
 
-    return add(
-        multiply(flat_component_start.y)(flat_component_end.x - flat_component_start.x)
-    )(slope_speed)
+
+def displacement_from_velocity_curve(
+    start: Coordinate2D,
+    end: Coordinate2D,
+) -> Displacement:
+    """Area under a straight-line velocity-time segment."""
+
+    # Credit: https://www.khanacademy.org/science/ap-college-physics-1/xf557a762645cccc5:kinematics/xf557a762645cccc5:visual-models-of-motion/a/what-are-velocity-vs-time-graphs
+
+    if start.y == 0 or end.y == 0:
+        area = area_of_right_triangle(
+            end.x - start.x,
+            max(start.y, end.y),
+        )
+    else:
+        area = trapezoidal_rule(start, end)
+
+    return Displacement(Scalar(area))
 
 
 def displacement_of_velocity_curve_section(
     triangle_on_graph: TriangleDescription,
     first_slice: TriangleDescription,
     second_slice: TriangleDescription,
-) -> float:
-    """Calculate a sectional area under a triangular curve of a velocity over time graph."""
-    return subtract(
-        (
-            add(displacement_from_velocity_curve(first_slice))(
-                displacement_from_velocity_curve(second_slice)
-            )
-        )
-    )(displacement_from_velocity_curve(triangle_on_graph))
+) -> Displacement:
+    """Calculate a sectional area under a triangular curve of a velocity-time graph."""
+
+    whole_area = displacement_from_velocity_curve(
+        triangle_on_graph.start,
+        triangle_on_graph.end,
+    )
+
+    first_slice_area = displacement_from_velocity_curve(
+        first_slice.start,
+        first_slice.end,
+    )
+
+    second_slice_area = displacement_from_velocity_curve(
+        second_slice.start,
+        second_slice.end,
+    )
+
+    section_area = subtract(add(first_slice_area)(second_slice_area))(whole_area)
+
+    return Displacement(Scalar(section_area))
 
 
 def average_acceleration_from_slope(
@@ -201,14 +225,22 @@ def velocity_after_duration(
     return add(initial_velocity)(multiply(acceleration)(duration))
 
 
+def total_displacement(sorted_points: list[Coordinate2D]) -> Displacement:
+    total = 0
+
+    for start, end in zip(sorted_points, sorted_points[1:]):
+        total += displacement_from_velocity_curve(start, end)
+
+    return Displacement(Scalar(total))
+
+
 if __name__ == "__main__":
     print(
         displacement_from_velocity_curve(
-            TriangleDescription(
-                Coordinate2D(3, 6),
-                Coordinate2D(5, 6),
-                Coordinate2D(7, 0),
-            ),
+            Coordinate2D(3, 6),
+            Coordinate2D(7, 0),
+        )
+        + displacement_from_velocity_flat(
             Coordinate2D(0, 6),
             Coordinate2D(3, 6),
         )
@@ -218,27 +250,18 @@ if __name__ == "__main__":
     )  # -0.5
     print(
         displacement_from_velocity_curve(
-            TriangleDescription(
-                Coordinate2D(2, 0),
-                Coordinate2D(2.5, -5),
-                Coordinate2D(3, -5),
-            )
+            Coordinate2D(2, 0),
+            Coordinate2D(3, -5),
         )
     )  # -2.5
     print(
         displacement_from_velocity_curve(
-            TriangleDescription(
-                Coordinate2D(0, 0),
-                Coordinate2D(1, 5),
-                Coordinate2D(2, 0),
-            )
+            Coordinate2D(0, 0),
+            Coordinate2D(2, 0),
         )
         + displacement_from_velocity_curve(
-            TriangleDescription(
-                Coordinate2D(2, 0),
-                Coordinate2D(3, -5),
-                Coordinate2D(3, -5),
-            )
+            Coordinate2D(2, 0),
+            Coordinate2D(3, -5),
         )
     )  # 2.5
 
@@ -264,11 +287,10 @@ if __name__ == "__main__":
 
     print(
         displacement_from_velocity_curve(
-            TriangleDescription(
-                Coordinate2D(1, 0),
-                Coordinate2D(3, 4),
-                Coordinate2D(3, 4),
-            ),
+            Coordinate2D(1, 0),
+            Coordinate2D(3, 4),
+        )
+        + displacement_from_velocity_flat(
             Coordinate2D(3, 4),
             Coordinate2D(4, 4),
         )
@@ -276,11 +298,8 @@ if __name__ == "__main__":
 
     print(
         displacement_from_velocity_curve(
-            TriangleDescription(
-                Coordinate2D(1, 5),
-                Coordinate2D(1, 5),
-                Coordinate2D(2, 9),
-            )
+            Coordinate2D(1, 5),
+            Coordinate2D(2, 9),
         )
     )  # 2.5
 

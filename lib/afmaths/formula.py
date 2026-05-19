@@ -1,5 +1,5 @@
 import math
-from .operation import (
+from afmaths.operation import (
     SQUARE,
     add,
     divide,
@@ -7,7 +7,10 @@ from .operation import (
     multiply,
     factorial,
     reduce,
+    subtract,
 )
+
+from astronomy_types import Coordinate2D, Displacement, Scalar
 
 
 def sigmoid(input: float, bias: float = 0) -> float:
@@ -64,3 +67,13 @@ def herons_method(value: float):
         current_step = next_step
 
     return current_step
+
+
+def trapezoidal_rule(start: Coordinate2D, end: Coordinate2D) -> float:
+    """
+    Area under a straight-line velocity-time segment.
+    """
+
+    return Displacement(
+        Scalar(multiply((start.y + end.y) / 2)(subtract(start.x)(end.x)))
+    )
