@@ -1,7 +1,7 @@
 import math
 
-from .coordinate_functions import ecliptic_to_equatorial_coordinates
-from .time_functions import (
+from afmaths.astronomy.coordinate_functions import ecliptic_to_equatorial_coordinates
+from afmaths.astronomy.time_functions import (
     greenwich_to_julian_date,
     local_civil_to_universal_time,
 )

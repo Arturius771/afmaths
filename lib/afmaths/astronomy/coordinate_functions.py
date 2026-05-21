@@ -1,6 +1,6 @@
 import math
 
-from .time_functions import (
+from afmaths.astronomy.time_functions import (
     greenwich_sidereal_to_local_sidereal_time,
     greenwich_to_julian_date,
     julian_date_to_j2000,
