@@ -35,7 +35,7 @@ pip install -e .
 # Run files
 
 ```bash
-python -m afmaths.space_engineering
+python -m afmaths.astrodynamics
 ```
 
 # Update version number
