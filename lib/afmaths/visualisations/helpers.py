@@ -49,7 +49,7 @@ EXAMPLE_ELEMENTS = OrbitalElements(
 )
 
 
-def set_figure_layout(
+def figure_layout(
     figure: go.Figure,
     width_px: float,
     height_px: float,
@@ -60,11 +60,15 @@ def set_figure_layout(
     return (
         figure.update_layout(width=width_px, height=height_px)
         .update_xaxes(range=[plot_start.x, plot_end.x], zeroline=zeroline)
-        .update_yaxes(range=[plot_start.y, plot_end.y])
+        .update_yaxes(
+            range=[plot_start.y, plot_end.y],
+            scaleanchor="x",
+            scaleratio=1,
+        )
     )
 
 
-def add_circle(
+def figure_circle(
     figure: go.Figure,
     coordinates: Coordinate2D,
     radius: Distance,
@@ -86,17 +90,17 @@ def add_circle(
     )
 
 
-def add_plot_centre(
+def figure_plot_centre(
     figure: go.Figure,
     coordinates: Coordinate2D,
     radius: Distance = Distance(Scalar(1)),
     fill_colour: str = "red",
     line_colour: str = "red",
 ) -> go.Figure:
-    return add_circle(figure, coordinates, radius, fill_colour, line_colour)
+    return figure_circle(figure, coordinates, radius, fill_colour, line_colour)
 
 
-def add_planetary_body(
+def figure_planetary_body(
     figure: go.Figure,
     coordinates: Coordinate2D,
     radius: Distance,
@@ -105,7 +109,7 @@ def add_planetary_body(
     fill_colour: str = "blue",
     line_colour: str = "blue",
 ) -> go.Figure:
-    return add_circle(
+    return figure_circle(
         figure, coordinates, radius, fill_colour, line_colour
     ).add_annotation(
         x=coordinates.x,
@@ -116,7 +120,7 @@ def add_planetary_body(
     )
 
 
-def add_moveable_planetary_body(
+def figure_moveable_planetary_body(
     figure: go.Figure,
     initial_coordinates: Coordinate2D,
     text: str = "",
@@ -142,7 +146,7 @@ def add_moveable_planetary_body(
     )
 
 
-def add_orbit_line(
+def figure_orbit_line(
     figure: go.Figure, ellipse_centre: Coordinate2D, orbital_elements: OrbitalElements
 ) -> go.Figure:
     ellipse = draw_ellipse(
@@ -160,11 +164,11 @@ def add_orbit_line(
     )
 
 
-def attach_slider(figure: go.Figure, slider: list[dict]) -> go.Figure:
+def figure_slider(figure: go.Figure, slider: list[dict]) -> go.Figure:
     return figure.update_layout(sliders=[dict(steps=slider)])
 
 
-def generate_info_slider_steps(
+def generate_orbital_slider(
     step_n: int,
     plot_central_point: Coordinate2D,
     primary_body_coordinates: Coordinate2D,
@@ -224,18 +228,18 @@ def generate_info_slider_steps(
     return steps
 
 
-def calculate_central_body_position(
-    plot_centre: Coordinate2D, elements: OrbitalElements
+def plot_foci_positions(
+    plot_centre: Coordinate2D, elements: OrbitalElements, focus: int = 0
 ) -> Coordinate2D:
     # Primary body sits at focus
     return Coordinate2D(
         plot_centre.x
-        - calculate_foci(elements.semi_major_axis, elements.eccentricity)[0].x,
+        - calculate_foci(elements.semi_major_axis, elements.eccentricity)[focus].x,
         plot_centre.y,
     )
 
 
-def generate_sphere_surface(
+def plot_sphere_surface(
     radius: Distance,
     centre: PositionVector | None = None,
     resolution: int = 50,
@@ -258,13 +262,3 @@ def generate_sphere_surface(
     sphere_z = [[centre_z + radius * math.cos(v_j) for v_j in v] for _ in u]
 
     return Vector3D(sphere_x, sphere_y, sphere_z)
-
-
-def predict_position(
-    orbital_elements: OrbitalElements,
-    time_offset_s: Second = Second(Scalar(0)),
-) -> PositionVector:
-    return orbit_state_vector_prediction_from_orbital_elements(
-        orbital_elements,
-        time_offset_s=time_offset_s,
-    ).position

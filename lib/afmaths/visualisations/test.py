@@ -5,12 +5,12 @@ from astronomy_types import (
 )
 from afmaths.visualisations.helpers import (
     EXAMPLE_ELEMENTS,
-    generate_sphere_surface,
-    predict_position,
+    plot_sphere_surface,
 )
 import plotly.graph_objects as go
 from afmaths.astrodynamics import (
     generate_all_orbit_positions,
+    orbit_state_vector_prediction_from_orbital_elements,
 )
 
 CENTRAL_BODY_RADIUS_KM = 6378.0
@@ -29,19 +29,21 @@ PREDICTION_TIME_OFFSET = 1_000_000
 central_body_radius = CENTRAL_BODY_RADIUS_KM * CENTRAL_BODY_SCALE
 
 
-central_body_surface = generate_sphere_surface(Distance(Scalar(central_body_radius)))
+central_body_surface = plot_sphere_surface(Distance(Scalar(central_body_radius)))
 
-second_body_surface = generate_sphere_surface(
+second_body_surface = plot_sphere_surface(
     Distance(Scalar(SECOND_BODY_RADIUS_KM * SECOND_BODY_SCALE)),
-    predict_position(EXAMPLE_ELEMENTS),
+    orbit_state_vector_prediction_from_orbital_elements(
+        EXAMPLE_ELEMENTS,
+    ).position,
 )
 
-predicted_body_surface = generate_sphere_surface(
+predicted_body_surface = plot_sphere_surface(
     Distance(Scalar(SECOND_BODY_RADIUS_KM * SECOND_BODY_SCALE)),
-    predict_position(
+    orbit_state_vector_prediction_from_orbital_elements(
         EXAMPLE_ELEMENTS,
         time_offset_s=Second(Scalar(PREDICTION_TIME_OFFSET)),
-    ),
+    ).position,
 )
 
 x = []

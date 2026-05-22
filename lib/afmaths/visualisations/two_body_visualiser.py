@@ -1,101 +1,136 @@
 import math
 
+import plotly.graph_objects as go
+
 from afmaths.visualisations.helpers import (
     EXAMPLE_ELEMENTS,
-    add_moveable_planetary_body,
-    add_orbit_line,
-    add_planetary_body,
-    add_plot_centre,
-    attach_slider,
-    calculate_central_body_position,
-    generate_info_slider_steps,
-    set_figure_layout,
+    figure_circle,
+    figure_moveable_planetary_body,
+    figure_orbit_line,
+    figure_planetary_body,
+    figure_plot_centre,
+    figure_slider,
+    plot_foci_positions,
+    generate_orbital_slider,
+    figure_layout,
 )
-import plotly.graph_objects as go
-from afmaths.geometry import (
-    calculate_semi_minor_axis,
-)
+from afmaths.geometry import calculate_foci, calculate_semi_minor_axis
+from afmaths.astrodynamics import generate_relative_coordinate_from_eccentric_anomaly
+
 from astronomy_types import (
     Anomaly,
-    EccentricAnomaly,
-    Radians,
-    Scalar,
-    Distance,
+    ArgumentOfPerigee,
     Coordinate2D,
+    Distance,
+    EccentricAnomaly,
+    Eccentricity,
     GravitationalParameter,
+    Inclination,
+    OrbitalElements,
+    Radians,
+    RightAscension,
+    Scalar,
+    SemiMajorAxis,
+    TrueAnomaly,
     Vector2D,
-)
-from afmaths.astrodynamics import (
-    generate_relative_coordinate_from_eccentric_anomaly,
 )
 
 # =========================================================
-# 🧭 SYSTEM PARAMETERS (ONLY EDIT THESE)
+# 🧭 SYSTEM PARAMETERS
 # =========================================================
 
 PLOT_MIN = Vector2D(x=0, y=0)
 PLOT_MAX = Vector2D(x=70, y=70)
 PLOT_WIDTH = 800
 PLOT_HEIGHT = 800
-DISTANCE_SCALE_KM = 12824.9333333  # 1 x/y on plot = ?
-PRIMARY_BODY_RADIUS_KM = 6371 / DISTANCE_SCALE_KM  # visual radius of Primary body
-NUM_STEPS = 100  # slider resolution
+DISTANCE_SCALE_KM = 12824.9333333  # 1 plot unit = this many km
+PRIMARY_BODY_RADIUS_KM = 6371
+PRIMARY_BODY_RADIUS_PLOT = PRIMARY_BODY_RADIUS_KM / DISTANCE_SCALE_KM
+NUM_STEPS = 100
 PRIMARY_BODY_LABEL = "Earth"
 SECONDARY_BODY_LABEL = "Moon"
+GRAVITATIONAL_PARAMETER = GravitationalParameter(Scalar(398600.4418))
+
+
+PLOT_ELEMENTS = OrbitalElements(
+    Inclination(EXAMPLE_ELEMENTS.inclination),
+    RightAscension(EXAMPLE_ELEMENTS.right_ascension_of_ascending_node),
+    ArgumentOfPerigee(EXAMPLE_ELEMENTS.argument_of_perigee),
+    SemiMajorAxis(
+        Distance(Scalar(EXAMPLE_ELEMENTS.semi_major_axis / DISTANCE_SCALE_KM))
+    ),
+    Eccentricity(EXAMPLE_ELEMENTS.eccentricity),
+    TrueAnomaly(EXAMPLE_ELEMENTS.true_anomaly),
+)
+
 
 # =========================================================
 # 🎨 BUILD FIGURE
 # =========================================================
+
 central_point = Coordinate2D(
     PLOT_MAX.x / 2,
     PLOT_MAX.y / 2,
 )
-primary_coordinates = calculate_central_body_position(central_point, EXAMPLE_ELEMENTS)
-b = calculate_semi_minor_axis(
-    EXAMPLE_ELEMENTS.semi_major_axis, EXAMPLE_ELEMENTS.eccentricity
+
+primary_coordinates = plot_foci_positions(
+    central_point,
+    PLOT_ELEMENTS,
 )
 
-add_plot_centre(
-    attach_slider(
-        set_figure_layout(
-            add_planetary_body(
-                add_orbit_line(
-                    add_moveable_planetary_body(
-                        go.Figure(),
-                        generate_relative_coordinate_from_eccentric_anomaly(
-                            central_point,
-                            EXAMPLE_ELEMENTS.semi_major_axis,
-                            b,
-                            EccentricAnomaly(Anomaly(Radians(Scalar(0)))),
+semi_minor_axis = calculate_semi_minor_axis(
+    PLOT_ELEMENTS.semi_major_axis,
+    PLOT_ELEMENTS.eccentricity,
+)
+
+figure_plot_centre(
+    figure_slider(
+        figure_layout(
+            figure_circle(  # Foci
+                figure_planetary_body(
+                    figure_orbit_line(
+                        figure_moveable_planetary_body(
+                            go.Figure(),
+                            generate_relative_coordinate_from_eccentric_anomaly(
+                                central_point,
+                                PLOT_ELEMENTS.semi_major_axis,
+                                semi_minor_axis,
+                                EccentricAnomaly(Anomaly(Radians(Scalar(0)))),
+                            ),
+                            SECONDARY_BODY_LABEL,
+                            "white",
+                            "grey",
                         ),
-                        SECONDARY_BODY_LABEL,
-                        "white",
-                        "grey",
+                        central_point,
+                        PLOT_ELEMENTS,
                     ),
-                    central_point,
-                    EXAMPLE_ELEMENTS,
+                    primary_coordinates,
+                    Distance(Scalar(PRIMARY_BODY_RADIUS_PLOT)),
+                    PRIMARY_BODY_LABEL,
+                    "Black",
+                    "blue",
+                    "green",
                 ),
-                primary_coordinates,
-                Distance(Scalar(PRIMARY_BODY_RADIUS_KM)),
-                PRIMARY_BODY_LABEL,
-                "Black",
-                "blue",
-                "green",
+                plot_foci_positions(central_point, PLOT_ELEMENTS, 1),
+                Distance(Scalar(0.1)),
+                "red",
+                "red",
             ),
             PLOT_WIDTH,
             PLOT_HEIGHT,
             PLOT_MIN,
             PLOT_MAX,
         ),
-        generate_info_slider_steps(
+        generate_orbital_slider(
             NUM_STEPS,
             central_point,
             primary_coordinates,
-            EXAMPLE_ELEMENTS,
-            b,
+            PLOT_ELEMENTS,
+            semi_minor_axis,
             DISTANCE_SCALE_KM,
-            GravitationalParameter(Scalar(398600.4418)),
+            GRAVITATIONAL_PARAMETER,
         ),
     ),
     central_point,
+    Distance(Scalar(0.1)),
 ).show()
