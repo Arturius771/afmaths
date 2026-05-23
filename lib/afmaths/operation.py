@@ -1,4 +1,5 @@
 import math
+from astronomy_types import Ratio
 
 
 def add(num1: float):
@@ -93,6 +94,10 @@ def reduce(
         return final_value
 
     return reduction
+
+
+def ratio(num1: float):
+    return lambda num2: Ratio(divide(num2)(num1))
 
 
 if __name__ == "__main__":

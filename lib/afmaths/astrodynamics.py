@@ -2,6 +2,7 @@ from dataclasses import replace
 from math import atan
 import math
 
+from afmaths.astronomy.conversion_helpers import degrees_to_radians
 from afmaths.tensors import (
     dot_product_3d,
     vector_cross_multiplication_3d,
@@ -18,6 +19,7 @@ from afmaths.operation import (
     exponentiate,
     interval,
     multiply,
+    ratio,
     square_root,
     subtract,
 )
@@ -48,7 +50,6 @@ from astronomy_types import (
     Vector3D,
     Velocity,
     VelocityVector,
-    degrees_to_radians,
     Degrees,
     Distance,
 )
@@ -61,6 +62,22 @@ def orbit_radius(
     altitude: Distance, initial_body_radius: Distance = EARTH_RADIUS_KM
 ) -> Distance:
     return add(altitude)(initial_body_radius)
+
+
+def orbital_period(a: SemiMajorAxis, g: GravitationalParameter) -> Second:
+    return multiply(2)(multiply(math.pi)(square_root(divide(g)(CUBE(a)))))
+
+
+def period_at_position(
+    a: SemiMajorAxis, g: GravitationalParameter, true_anomaly: TrueAnomaly
+) -> Second:
+    return Second(
+        Scalar(
+            multiply(orbital_period(a, g))(
+                ratio(float(true_anomaly))(multiply(math.pi)(2))
+            )
+        )
+    )
 
 
 def vis_viva(

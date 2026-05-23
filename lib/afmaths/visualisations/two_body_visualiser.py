@@ -7,7 +7,7 @@ from afmaths.visualisations.helpers import (
     figure_plot_centre,
     figure_slider,
     plot_foci_positions,
-    generate_orbital_slider,
+    generate_orbital_slider_data,
     figure_layout,
 )
 from afmaths.geometry import calculate_semi_minor_axis
@@ -120,7 +120,7 @@ figure_plot_centre(
             PLOT_MIN,
             PLOT_MAX,
         ),
-        generate_orbital_slider(
+        generate_orbital_slider_data(
             NUM_STEPS,
             central_point,
             primary_coordinates,

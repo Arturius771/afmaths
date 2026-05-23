@@ -26,9 +26,9 @@ from astronomy_types import (
 )
 import plotly.graph_objects as go
 from afmaths.astrodynamics import (
-    orbit_state_vector_prediction_from_orbital_elements,
     generate_angles_on_circle,
     generate_relative_coordinate_from_eccentric_anomaly,
+    period_at_position,
     true_anomaly_from_eccentric_anomaly,
     vis_viva,
 )
@@ -158,11 +158,11 @@ def figure_orbit_line(
     )
 
 
-def figure_slider(figure: go.Figure, slider: list[dict]) -> go.Figure:
-    return figure.update_layout(sliders=[dict(steps=slider)])
+def figure_slider(figure: go.Figure, slider_function: list[dict]) -> go.Figure:
+    return figure.update_layout(sliders=[dict(steps=slider_function)])
 
 
-def generate_orbital_slider(
+def generate_orbital_slider_data(
     step_n: int,
     plot_central_point: Coordinate2D,
     primary_body_coordinates: Coordinate2D,
@@ -202,6 +202,12 @@ def generate_orbital_slider(
             gravitational_parameter=g,
         )
 
+        period = period_at_position(
+            SemiMajorAxis(Distance(Scalar(elements.semi_major_axis * plot_scale))),
+            g,
+            true_anomaly,
+        )
+
         steps.append(
             dict(
                 method="restyle",
@@ -211,7 +217,7 @@ def generate_orbital_slider(
                         "y": [[coordinates.y]],
                         "text": [
                             [
-                                f"r = {distance:.2f} km <br>v = {velocity:.2f} km/s <br>ta = {true_anomaly:.2f} rad"
+                                f"r = {distance:.2f} km <br>v = {velocity:.2f} km/s <br>ta = {true_anomaly:.2f} rad <br>T={period:.2f}"
                             ]
                         ],
                     },
