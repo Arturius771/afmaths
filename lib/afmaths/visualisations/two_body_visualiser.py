@@ -1,11 +1,7 @@
-import math
-
 import plotly.graph_objects as go
-
 from afmaths.visualisations.helpers import (
     EXAMPLE_ELEMENTS,
     figure_circle,
-    figure_moveable_planetary_body,
     figure_orbit_line,
     figure_planetary_body,
     figure_plot_centre,
@@ -14,9 +10,8 @@ from afmaths.visualisations.helpers import (
     generate_orbital_slider,
     figure_layout,
 )
-from afmaths.geometry import calculate_foci, calculate_semi_minor_axis
+from afmaths.geometry import calculate_semi_minor_axis
 from afmaths.astrodynamics import generate_relative_coordinate_from_eccentric_anomaly
-
 from astronomy_types import (
     Anomaly,
     ArgumentOfPerigee,
@@ -43,11 +38,13 @@ PLOT_MIN = Vector2D(x=0, y=0)
 PLOT_MAX = Vector2D(x=70, y=70)
 PLOT_WIDTH = 800
 PLOT_HEIGHT = 800
+NUM_STEPS = 100
 DISTANCE_SCALE_KM = 12824.9333333  # 1 plot unit = this many km
 PRIMARY_BODY_RADIUS_KM = 6371
 PRIMARY_BODY_RADIUS_PLOT = PRIMARY_BODY_RADIUS_KM / DISTANCE_SCALE_KM
-NUM_STEPS = 100
 PRIMARY_BODY_LABEL = "Earth"
+SECONDARY_BODY_RADIUS_KM = 1737.4
+SECONDARY_BODY_RADIUS_PLOT = SECONDARY_BODY_RADIUS_KM / DISTANCE_SCALE_KM
 SECONDARY_BODY_LABEL = "Moon"
 GRAVITATIONAL_PARAMETER = GravitationalParameter(Scalar(398600.4418))
 
@@ -86,10 +83,10 @@ semi_minor_axis = calculate_semi_minor_axis(
 figure_plot_centre(
     figure_slider(
         figure_layout(
-            figure_circle(  # Foci
+            figure_circle(
                 figure_planetary_body(
                     figure_orbit_line(
-                        figure_moveable_planetary_body(
+                        figure_planetary_body(
                             go.Figure(),
                             generate_relative_coordinate_from_eccentric_anomaly(
                                 central_point,
@@ -97,9 +94,11 @@ figure_plot_centre(
                                 semi_minor_axis,
                                 EccentricAnomaly(Anomaly(Radians(Scalar(0)))),
                             ),
+                            Distance(Scalar(SECONDARY_BODY_RADIUS_PLOT)),
                             SECONDARY_BODY_LABEL,
                             "white",
                             "grey",
+                            moveable=True,
                         ),
                         central_point,
                         PLOT_ELEMENTS,

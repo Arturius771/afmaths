@@ -15,6 +15,9 @@ from astronomy_types import (
     Second,
     Time,
     Year,
+)
+
+from afmaths.astronomy.conversion_helpers import (
     decimal_time_to_time,
     time_to_decimal_time,
 )

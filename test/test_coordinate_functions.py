@@ -28,11 +28,13 @@ from astronomy_types import (
     Second,
     Time,
     Year,
+)
+
+from afmaths.astronomy.conversion_helpers import (
     degrees_to_radians,
     dms_to_radians,
     hms_to_radians,
 )
-
 from afmaths.astronomy.coordinate_functions import (
     ecliptic_to_equatorial_coordinates,
     equatorial_to_ecliptic_coordinates,

@@ -1,5 +1,6 @@
 import math
 
+from afmaths.astronomy.conversion_helpers import degrees_to_radians
 from afmaths.astronomy.coordinate_functions import ecliptic_to_equatorial_coordinates
 from afmaths.astronomy.time_functions import (
     greenwich_to_julian_date,
@@ -20,7 +21,6 @@ from astronomy_types import (
     Ratio,
     Scalar,
     Year,
-    degrees_to_radians,
 )
 
 

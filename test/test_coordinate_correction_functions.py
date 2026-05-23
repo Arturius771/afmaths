@@ -24,12 +24,14 @@ from astronomy_types import (
     Second,
     Time,
     Year,
-    degrees_to_radians,
-    dms_to_radians,
-    hms_to_radians,
     DMS,
 )
 
+from afmaths.astronomy.conversion_helpers import (
+    degrees_to_radians,
+    dms_to_radians,
+    hms_to_radians,
+)
 from afmaths.astronomy.coordinate_correction_functions import (
     aberration_from_date,
     angle_difference,

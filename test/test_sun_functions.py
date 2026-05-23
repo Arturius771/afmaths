@@ -2,7 +2,8 @@ import math
 import unittest
 
 from astronomy_types import (
-    Date,
+    DMS,
+    HMS,
     Day,
     FullDate,
     Hour,
@@ -14,44 +15,33 @@ from astronomy_types import (
     Year,
 )
 
+from afmaths.astronomy.conversion_helpers import (
+    dms_to_degrees,
+    make_date,
+    make_time,
+    time_to_decimal_time,
+)
 from afmaths.astronomy.sun_functions import sun_position_approximate
-
-
-def make_date(year: int, month: int, day: float) -> Date:
-    return Date(year=Year(year), month=Month(month), day=Day(Scalar(day)))
-
-
-def make_time(hour: int, minute: int, second: float) -> Time:
-    return Time(hour=Hour(hour), minute=Minute(minute), second=Second(Scalar(second)))
-
-
-def hms_to_decimal_hours(hours: int, minutes: int, seconds: float) -> float:
-    return hours + minutes / 60 + seconds / 3600
-
-
-def dms_to_decimal_degrees(degrees: int, minutes: int, seconds: float) -> float:
-    sign = -1 if degrees < 0 else 1
-    return sign * (abs(degrees) + minutes / 60 + seconds / 3600)
 
 
 class SunTestMethods(unittest.TestCase):
     def test_sun_position_approximate(self):
         local_date = FullDate(
-            date=make_date(2003, 7, 27),
-            time=make_time(0, 0, 0),
+            date=make_date(Year(2003), Month(7), Day(Scalar(27))),
+            time=make_time(HMS(Hour(0), Minute(0), Second(Scalar(0)))),
         )
 
         result = sun_position_approximate(local_date, 0, 0)
 
         self.assertAlmostEqual(
             math.degrees(float(result.declination)),
-            dms_to_decimal_degrees(19, 21, 13.81),
+            dms_to_degrees(DMS(19, 21, 13.81)),
             places=2,
         )
 
         self.assertAlmostEqual(
             math.degrees(float(result.right_ascension)) / 15,
-            hms_to_decimal_hours(8, 23, 33.72),
+            time_to_decimal_time(Time(Hour(8), Minute(23), Second(Scalar(33.72)))),
             places=2,
         )
 

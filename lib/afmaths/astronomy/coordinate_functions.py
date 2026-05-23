@@ -1,5 +1,9 @@
 import math
 
+from afmaths.astronomy.conversion_helpers import (
+    degrees_to_radians,
+    time_to_decimal_time,
+)
 from afmaths.astronomy.time_functions import (
     greenwich_sidereal_to_local_sidereal_time,
     greenwich_to_julian_date,
@@ -26,8 +30,6 @@ from astronomy_types import (
     Radians,
     RightAscension,
     Scalar,
-    degrees_to_radians,
-    time_to_decimal_time,
 )
 
 

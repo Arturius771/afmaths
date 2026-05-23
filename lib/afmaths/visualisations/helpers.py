@@ -108,7 +108,27 @@ def figure_planetary_body(
     text_colour: str = "Black",
     fill_colour: str = "blue",
     line_colour: str = "blue",
+    moveable: bool = False,
 ) -> go.Figure:
+
+    if moveable:
+        return figure.add_trace(
+            go.Scatter(
+                x=[coordinates.x],
+                y=[coordinates.y],
+                mode="markers+text",
+                text=[text],
+                textposition="top center",
+                marker=dict(
+                    size=radius + 5,
+                    color=fill_colour,
+                    line=dict(color=line_colour, width=2),
+                ),
+                hovertext=[text],
+                hoverinfo="text",
+            )
+        )
+
     return figure_circle(
         figure, coordinates, radius, fill_colour, line_colour
     ).add_annotation(
@@ -117,32 +137,6 @@ def figure_planetary_body(
         text=text,
         showarrow=False,
         font=dict(color=text_colour),
-    )
-
-
-def figure_moveable_planetary_body(
-    figure: go.Figure,
-    initial_coordinates: Coordinate2D,
-    text: str = "",
-    fill_colour: str = "",
-    line_colour: str = "",
-) -> go.Figure:
-
-    return figure.add_trace(
-        go.Scatter(
-            x=[initial_coordinates.x],
-            y=[initial_coordinates.y],
-            mode="markers+text",
-            text=[text],
-            textposition="top center",
-            marker=dict(
-                size=18,
-                color=fill_colour,
-                line=dict(color=line_colour, width=2),
-            ),
-            hovertext=["Moon"],
-            hoverinfo="text",
-        )
     )
 
 
@@ -206,7 +200,7 @@ def generate_orbital_slider(
                 Distance(Scalar(elements.semi_major_axis * plot_scale))
             ),
             gravitational_parameter=g,
-        )  # vis-viva equation
+        )
 
         steps.append(
             dict(
