@@ -28,7 +28,8 @@ import plotly.graph_objects as go
 from afmaths.astrodynamics import (
     generate_angles_on_circle,
     generate_relative_coordinate_from_eccentric_anomaly,
-    period_at_position,
+    mean_anomaly_from_kepler_equation,
+    time_since_periapsis,
     true_anomaly_from_eccentric_anomaly,
     vis_viva,
 )
@@ -202,10 +203,13 @@ def generate_orbital_slider_data(
             gravitational_parameter=g,
         )
 
-        period = period_at_position(
+        time = time_since_periapsis(
             SemiMajorAxis(Distance(Scalar(elements.semi_major_axis * plot_scale))),
             g,
-            true_anomaly,
+            mean_anomaly_from_kepler_equation(
+                EccentricAnomaly(Anomaly(Radians(Scalar(eccentric_anomaly)))),
+                elements.eccentricity,
+            ),
         )
 
         steps.append(
@@ -217,7 +221,10 @@ def generate_orbital_slider_data(
                         "y": [[coordinates.y]],
                         "text": [
                             [
-                                f"r = {distance:.2f} km <br>v = {velocity:.2f} km/s <br>ta = {true_anomaly:.2f} rad <br>T={period:.2f}"
+                                f"r = {distance:.2f} km <br>"
+                                f"v = {velocity:.2f} km/s <br>"
+                                f"ta = {true_anomaly:.2f} rad <br>"
+                                f"t = {time:.2f} s"
                             ]
                         ],
                     },

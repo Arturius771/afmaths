@@ -68,13 +68,13 @@ def orbital_period(a: SemiMajorAxis, g: GravitationalParameter) -> Second:
     return multiply(2)(multiply(math.pi)(square_root(divide(g)(CUBE(a)))))
 
 
-def period_at_position(
-    a: SemiMajorAxis, g: GravitationalParameter, true_anomaly: TrueAnomaly
+def time_since_periapsis(
+    a: SemiMajorAxis, g: GravitationalParameter, mean_anomaly: MeanAnomaly
 ) -> Second:
     return Second(
         Scalar(
             multiply(orbital_period(a, g))(
-                ratio(float(true_anomaly))(multiply(math.pi)(2))
+                ratio(float(mean_anomaly))(multiply(math.pi)(2))
             )
         )
     )
