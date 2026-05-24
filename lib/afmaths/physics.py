@@ -14,10 +14,13 @@ from afmaths.operation import (
 from astronomy_types import (
     Acceleration,
     Coordinate2D,
+    Coordinate3D,
     Displacement,
     Scalar,
     Distance,
     Second,
+    Vector2D,
+    Vector3D,
     Velocity,
     dataclass,
 )
@@ -234,6 +237,84 @@ def total_displacement(sorted_points: list[Coordinate2D]) -> Displacement:
     return Displacement(Scalar(total))
 
 
+def propogate_vector(
+    initial: Coordinate2D, vector: Vector2D, iterations: int = 100
+) -> list[Coordinate2D]:
+    x = [initial]
+    for i in range(iterations):
+        x.append(
+            Coordinate2D(
+                float(x[i].x) + float(vector.x), float(x[i].y) + float(vector.y)
+            )
+        )
+
+    return x
+
+
+def propogate_vector_3d(
+    initial: Coordinate3D, vector: Vector3D, iterations: int = 100
+) -> list[Coordinate3D]:
+    x = [initial]
+    for i in range(iterations):
+        x.append(
+            Coordinate3D(
+                float(x[i].x) + float(vector.x),
+                float(x[i].y) + float(vector.y),
+                float(x[i].z) + float(vector.z),
+            )
+        )
+
+    return x
+
+
+def detect_collision(
+    object_a_coordinates: Coordinate2D,
+    object_b_coordinates: Coordinate2D,
+    object_a_vector: Vector2D,
+    object_b_vector: Vector2D,
+) -> tuple[bool, Coordinate2D]:
+    a_positions = propogate_vector(object_a_coordinates, object_a_vector)
+    b_positions = propogate_vector(object_b_coordinates, object_b_vector)
+
+    length_a = len(a_positions)
+    length_b = len(b_positions)
+
+    if length_a > length_b:
+        for i in range(length_a):
+            if a_positions[i] == b_positions[i]:
+                return True, a_positions[i]
+    else:
+        for i in range(length_b):
+            if a_positions[i] == b_positions[i]:
+                return True, b_positions[i]
+
+    return False, Coordinate2D(0, 0)
+
+
+def detect_collision_3d(
+    object_a_coordinates: Coordinate3D,
+    object_b_coordinates: Coordinate3D,
+    object_a_vector: Vector3D,
+    object_b_vector: Vector3D,
+) -> tuple[bool, Coordinate3D]:
+    a_positions = propogate_vector_3d(object_a_coordinates, object_a_vector)
+    b_positions = propogate_vector_3d(object_b_coordinates, object_b_vector)
+
+    length_a = len(a_positions)
+    length_b = len(b_positions)
+
+    if length_a > length_b:
+        for i in range(length_a):
+            if a_positions[i] == b_positions[i]:
+                return True, a_positions[i]
+    else:
+        for i in range(length_b):
+            if a_positions[i] == b_positions[i]:
+                return True, b_positions[i]
+
+    return False, Coordinate3D(0, 0, 0)
+
+
 if __name__ == "__main__":
     print(
         displacement_from_velocity_curve(
@@ -306,5 +387,13 @@ if __name__ == "__main__":
     print(
         velocity_after_duration(
             Acceleration(Scalar(1)), Velocity(Scalar(0)), Second(Scalar(5))
+        )
+    )
+
+    print(propogate_vector(Coordinate2D(0, 0), Vector2D(1, 1), 2))
+
+    print(
+        detect_collision(
+            Coordinate2D(0, 0), Coordinate2D(2, 0), Vector2D(1, 0), Vector2D(-1, 0)
         )
     )
