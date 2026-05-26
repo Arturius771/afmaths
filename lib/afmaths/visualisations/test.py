@@ -8,7 +8,7 @@ from afmaths.visualisations.helpers import (
     plot_sphere_surface,
 )
 import plotly.graph_objects as go
-from afmaths.astrodynamics import (
+from afmaths.space.astrodynamics import (
     generate_all_orbit_positions,
     orbit_state_vector_prediction_from_orbital_elements,
 )

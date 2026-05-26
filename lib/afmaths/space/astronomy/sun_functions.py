@@ -1,8 +1,10 @@
 import math
 
-from afmaths.astronomy.conversion_helpers import degrees_to_radians
-from afmaths.astronomy.coordinate_functions import ecliptic_to_equatorial_coordinates
-from afmaths.astronomy.time_functions import (
+from afmaths.space.astronomy.conversion_helpers import degrees_to_radians
+from afmaths.space.astronomy.coordinate_functions import (
+    ecliptic_to_equatorial_coordinates,
+)
+from afmaths.space.astronomy.time_functions import (
     greenwich_to_julian_date,
     local_civil_to_universal_time,
 )

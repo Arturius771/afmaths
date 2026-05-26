@@ -1,10 +1,10 @@
 import math
 
-from afmaths.astronomy.conversion_helpers import (
+from afmaths.space.astronomy.conversion_helpers import (
     decimal_time_to_time,
     degrees_to_radians,
 )
-from afmaths.astronomy.time_functions import (
+from afmaths.space.astronomy.time_functions import (
     greenwich_sidereal_to_universal_time,
     greenwich_to_julian_date,
     julian_date_to_epoch,

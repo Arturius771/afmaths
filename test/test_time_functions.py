@@ -1,4 +1,3 @@
-import math
 import unittest
 
 from astronomy_types import (
@@ -20,8 +19,8 @@ from astronomy_types import (
     Year,
 )
 
-from afmaths.astronomy.conversion_helpers import degrees_to_radians
-from afmaths.astronomy.time_functions import (
+from afmaths.space.astronomy.conversion_helpers import degrees_to_radians
+from afmaths.space.astronomy.time_functions import (
     date_of_easter,
     date_to_day_number,
     decimal_hours_to_hours_minutes_seconds,

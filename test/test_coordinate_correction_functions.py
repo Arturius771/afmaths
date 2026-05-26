@@ -27,12 +27,12 @@ from astronomy_types import (
     DMS,
 )
 
-from afmaths.astronomy.conversion_helpers import (
+from afmaths.space.astronomy.conversion_helpers import (
     degrees_to_radians,
     dms_to_radians,
     hms_to_radians,
 )
-from afmaths.astronomy.coordinate_correction_functions import (
+from afmaths.space.astronomy.coordinate_correction_functions import (
     aberration_from_date,
     angle_difference,
     nutation_from_date,

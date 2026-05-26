@@ -1,6 +1,6 @@
 import math
 
-from afmaths.astrodynamics import (
+from afmaths.space.astrodynamics import (
     eccentric_anomaly_solved,
     newton_iteration,
 )

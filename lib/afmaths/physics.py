@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 import math
 from afmaths.formula import inverse_square_law, trapezoidal_rule
 from afmaths.geometry import area_of_right_triangle
@@ -22,7 +23,6 @@ from astronomy_types import (
     Vector2D,
     Vector3D,
     Velocity,
-    dataclass,
 )
 
 
@@ -238,7 +238,7 @@ def total_displacement(sorted_points: list[Coordinate2D]) -> Displacement:
 
 
 def propogate_vector(
-    initial: Coordinate2D, vector: Vector2D, iterations: int = 100
+    initial: Coordinate2D[float], vector: Vector2D, iterations: int = 100
 ) -> list[Coordinate2D]:
     x = [initial]
     for i in range(iterations):
@@ -272,21 +272,17 @@ def detect_collision(
     object_b_coordinates: Coordinate2D,
     object_a_vector: Vector2D,
     object_b_vector: Vector2D,
+    margin: int = 1,
 ) -> tuple[bool, Coordinate2D]:
     a_positions = propogate_vector(object_a_coordinates, object_a_vector)
     b_positions = propogate_vector(object_b_coordinates, object_b_vector)
 
-    length_a = len(a_positions)
-    length_b = len(b_positions)
-
-    if length_a > length_b:
-        for i in range(length_a):
-            if a_positions[i] == b_positions[i]:
-                return True, a_positions[i]
-    else:
-        for i in range(length_b):
-            if a_positions[i] == b_positions[i]:
-                return True, b_positions[i]
+    for i in range(len(a_positions)):
+        if a_positions[i] == b_positions[i] or (
+            abs(a_positions[i].x - b_positions[i].x) < margin
+            and abs(a_positions[i].y - b_positions[i].y) < margin
+        ):
+            return True, a_positions[i]
 
     return False, Coordinate2D(0, 0)
 

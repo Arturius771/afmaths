@@ -11,7 +11,9 @@ from afmaths.visualisations.helpers import (
     figure_layout,
 )
 from afmaths.geometry import calculate_semi_minor_axis
-from afmaths.astrodynamics import generate_relative_coordinate_from_eccentric_anomaly
+from afmaths.space.astrodynamics import (
+    generate_relative_coordinate_from_eccentric_anomaly,
+)
 from astronomy_types import (
     Anomaly,
     ArgumentOfPerigee,
