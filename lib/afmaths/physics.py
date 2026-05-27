@@ -99,6 +99,11 @@ def flux_density(luminosity: float, distance_metres: float) -> float:
     return inverse_square_law(luminosity, distance_metres)
 
 
+def refractive_index(angle_of_incidence_1: float, angle_of_incedence_2: float):
+    """Find the refractive index of a material by rearranging Snell's law and measuring the change of angle in and out of the material."""
+    return divide(math.sin(angle_of_incedence_2))(math.sin(angle_of_incidence_1))
+
+
 def univesal_gravitation(
     mass1: Scalar, mass2: Scalar, distance_metres: Distance
 ) -> float:
