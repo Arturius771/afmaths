@@ -50,7 +50,7 @@ x = []
 y = []
 z = []
 
-for position in generate_all_orbit_positions(EXAMPLE_ELEMENTS, 51):
+for position in generate_all_orbit_positions(EXAMPLE_ELEMENTS, 100):
     x.append(position.x)
     y.append(position.y)
     z.append(position.z)

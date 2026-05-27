@@ -7,8 +7,8 @@ from astronomy_types import (
     SemiMajorAxis,
     SemiMinorAxis,
 )
-
-from .operation import (
+from afmaths.formula import taylor_series
+from afmaths.operation import (
     HALF,
     SQUARE,
     add,
@@ -19,7 +19,6 @@ from .operation import (
     subtract,
 )
 import math
-from .formula import taylor_series
 
 pythagoras = lambda a: lambda b: add(SQUARE(a))(SQUARE(b))
 
@@ -69,6 +68,10 @@ def sine(angle_degrees: float) -> float:
 def cosine(angle_degrees: float) -> float:
     """Returns a value in radians"""
     return taylor_series(math.radians(angle_degrees))(1, 2, 2)
+
+
+def area(length: float, height: float) -> float:
+    return multiply(length)(height)
 
 
 # TODO: Check naming, this may be valid for more than just right triangles

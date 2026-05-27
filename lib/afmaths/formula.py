@@ -7,10 +7,10 @@ from afmaths.operation import (
     multiply,
     factorial,
     reduce,
-    subtract,
+    summation,
 )
 
-from astronomy_types import Coordinate2D, Displacement, Scalar
+from astronomy_types import Coordinate2D
 
 
 def sigmoid(input: float, bias: float = 0) -> float:
@@ -69,11 +69,31 @@ def herons_method(value: float):
     return current_step
 
 
-def trapezoidal_rule(start: Coordinate2D, end: Coordinate2D) -> float:
-    """
-    Area under a straight-line velocity-time segment.
-    """
+def trapezoidal_rule(curve: list[Coordinate2D]) -> float:
+    if len(curve) < 2:
+        return 0.0
 
-    return Displacement(
-        Scalar(multiply((start.y + end.y) / 2)(subtract(start.x)(end.x)))
-    )
+    curve = sorted(curve, key=lambda point: point.x)
+
+    def trap(n: int) -> float:
+        left = curve[n]  # x_k, f(x_k)
+        right = curve[n + 1]  # x_{k+1}, f(x_{k+1})
+
+        width = right.x - left.x  # x_{k+1} - x_k
+
+        average_height = (left.y + right.y) / 2
+        # (f(x_k) + f(x_{k+1})) / 2
+
+        return multiply(width)(average_height)
+
+    return summation(trap, 0, len(curve) - 2)
+
+
+# def trapezoidal_rule(start: Coordinate2D, end: Coordinate2D) -> float:
+#     """
+#     Area under a straight-line velocity-time segment.
+#     """
+
+#     return Displacement(
+#         Scalar(multiply((start.y + end.y) / 2)(subtract(start.x)(end.x)))
+#     )

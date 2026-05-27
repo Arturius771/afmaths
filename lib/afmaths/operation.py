@@ -1,4 +1,5 @@
 import math
+from typing import Callable
 from astronomy_types import Ratio
 
 
@@ -98,6 +99,32 @@ def reduce(
 
 def ratio(num1: float):
     return lambda num2: Ratio(divide(num2)(num1))
+
+
+def summation(
+    sum_function: Callable[[int], float],
+    start_index: int,
+    stop_index: int,
+) -> float:
+    total = 0.0
+
+    for val in range(start_index, stop_index + 1):
+        total += sum_function(val)
+
+    return total
+
+
+def product(
+    product_function: Callable[[int], float],
+    start_index: int,
+    stop_index: int,
+) -> float:
+    total = 0.0
+
+    for val in range(start_index, stop_index + 1):
+        total *= product_function(val)
+
+    return total
 
 
 if __name__ == "__main__":
