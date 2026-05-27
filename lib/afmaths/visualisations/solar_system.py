@@ -1,17 +1,8 @@
 from dataclasses import dataclass
 
-from astronomy_types import (
-    Distance,
-    GravitationalParameter,
-    Scalar,
-    Second,
-    Vector3D,
-)
-
-import plotly.graph_objects as go
+from astronomy_types import GravitationalParameter, Scalar, Second
 
 from afmaths.space.astrodynamics import (
-    generate_all_orbit_positions,
     orbit_state_vector_prediction_from_orbital_elements,
     orbital_elements_from_state_vectors,
 )
@@ -21,11 +12,12 @@ from afmaths.space.horizons_api import (
     get_planet_state_vectors,
 )
 
-from afmaths.visualisations.helpers import plot_sphere_surface
-
-# ---------------------------------------------------------------------
-# Visualisation scaling
-# ---------------------------------------------------------------------
+from afmaths.visualisations.helpers import (
+    add_body_surface,
+    add_orbit_line_trace,
+    make_3d_orbit_figure,
+    scale_position,
+)
 
 DISTANCE_SCALE_KM = 1_000_000
 PLANET_RADIUS_SCALE = 1000.0
@@ -35,8 +27,7 @@ ORBIT_POINTS = 500
 START_TIME = "2026-May-27 00:00"
 STOP_TIME = "2026-May-28 00:00"
 STEP_SIZE = "1h"
-
-PREDICTION_TIME_OFFSET_S = 1_000_000
+TIME_OFFSET = 0
 
 SUN_RADIUS_KM = 696_340.0
 SUN_GRAVITATIONAL_PARAMETER = GravitationalParameter(Scalar(132_712_440_018.0))
@@ -62,70 +53,6 @@ PLANETS = [
 ]
 
 
-def scale_value(value: float | int) -> float:
-    return float(value) / DISTANCE_SCALE_KM
-
-
-def scale_position(position) -> Vector3D:
-    return Vector3D(
-        x=scale_value(position.x),
-        y=scale_value(position.y),
-        z=scale_value(position.z),
-    )
-
-
-def scaled_radius(radius_km: float, scale: float) -> Distance:
-    return Distance(Scalar((radius_km * scale) / DISTANCE_SCALE_KM))
-
-
-def add_body_surface(
-    traces: list,
-    name: str,
-    radius_km: float,
-    radius_scale: float,
-    position=None,
-    opacity: float = 0.9,
-) -> None:
-    surface = plot_sphere_surface(
-        scaled_radius(radius_km, radius_scale),
-        position,
-    )
-
-    traces.append(
-        go.Surface(
-            x=surface.x,
-            y=surface.y,
-            z=surface.z,
-            name=name,
-            opacity=opacity,
-            showscale=False,
-        )
-    )
-
-
-def add_orbit_trace(traces: list, name: str, orbital_elements) -> None:
-    x = []
-    y = []
-    z = []
-
-    for position in generate_all_orbit_positions(orbital_elements, ORBIT_POINTS):
-        scaled = scale_position(position)
-
-        x.append(scaled.x)
-        y.append(scaled.y)
-        z.append(scaled.z)
-
-    traces.append(
-        go.Scatter3d(
-            x=x,
-            y=y,
-            z=z,
-            mode="lines",
-            name=f"{name} orbit",
-        )
-    )
-
-
 def get_heliocentric_orbital_elements(target: HorizonsCommandTarget):
     state_vector = get_planet_state_vectors(
         target=target,
@@ -144,23 +71,27 @@ def get_heliocentric_orbital_elements(target: HorizonsCommandTarget):
 def add_planet(traces: list, planet: PlanetPlotConfig) -> None:
     orbital_elements = get_heliocentric_orbital_elements(planet.target)
 
-    add_orbit_trace(
+    add_orbit_line_trace(
         traces,
         planet.name,
         orbital_elements,
+        DISTANCE_SCALE_KM,
+        ORBIT_POINTS,
     )
 
     current_state = orbit_state_vector_prediction_from_orbital_elements(
         orbital_elements,
+        Second(Scalar(TIME_OFFSET)),
     )
 
-    current_position = scale_position(current_state.position)
+    current_position = scale_position(current_state.position, DISTANCE_SCALE_KM)
 
     add_body_surface(
         traces,
         planet.name,
         planet.radius_km,
         planet.radius_scale,
+        DISTANCE_SCALE_KM,
         current_position,
     )
 
@@ -173,22 +104,17 @@ def main() -> None:
         "Sun",
         SUN_RADIUS_KM,
         SUN_RADIUS_SCALE,
+        DISTANCE_SCALE_KM,
         opacity=0.6,
     )
 
     for planet in PLANETS:
         add_planet(traces, planet)
 
-    fig = go.Figure(data=traces)
-
-    fig.update_layout(
-        title="Heliocentric solar system model",
-        scene=dict(
-            xaxis_title=f"X ({DISTANCE_SCALE_KM:,} km units)",
-            yaxis_title=f"Y ({DISTANCE_SCALE_KM:,} km units)",
-            zaxis_title=f"Z ({DISTANCE_SCALE_KM:,} km units)",
-            aspectmode="data",
-        ),
+    fig = make_3d_orbit_figure(
+        traces,
+        "Heliocentric solar system model",
+        DISTANCE_SCALE_KM,
     )
 
     fig.show()

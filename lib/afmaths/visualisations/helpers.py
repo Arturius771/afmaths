@@ -26,6 +26,7 @@ from astronomy_types import (
 )
 import plotly.graph_objects as go
 from afmaths.space.astrodynamics import (
+    generate_all_orbit_positions,
     generate_angles_on_circle,
     generate_relative_coordinate_from_eccentric_anomaly,
     mean_anomaly_from_kepler_equation,
@@ -269,3 +270,98 @@ def plot_sphere_surface(
     sphere_z = [[centre_z + radius * math.cos(v_j) for v_j in v] for _ in u]
 
     return Vector3D(sphere_x, sphere_y, sphere_z)
+
+
+def scale_value(value: float | int, distance_scale_km: float) -> float:
+    return float(value) / distance_scale_km
+
+
+def scale_position(position, distance_scale_km: float) -> Vector3D:
+    return Vector3D(
+        x=scale_value(position.x, distance_scale_km),
+        y=scale_value(position.y, distance_scale_km),
+        z=scale_value(position.z, distance_scale_km),
+    )
+
+
+def scaled_radius(
+    radius_km: float,
+    radius_scale: float,
+    distance_scale_km: float,
+) -> Distance:
+    return Distance(Scalar((radius_km * radius_scale) / distance_scale_km))
+
+
+def add_body_surface(
+    traces: list,
+    name: str,
+    radius_km: float,
+    radius_scale: float,
+    distance_scale_km: float,
+    position=None,
+    opacity: float = 0.9,
+) -> None:
+    surface = plot_sphere_surface(
+        scaled_radius(radius_km, radius_scale, distance_scale_km),
+        position,
+    )
+
+    traces.append(
+        go.Surface(
+            x=surface.x,
+            y=surface.y,
+            z=surface.z,
+            name=name,
+            opacity=opacity,
+            showscale=False,
+        )
+    )
+
+
+def add_orbit_line_trace(
+    traces: list,
+    name: str,
+    orbital_elements,
+    distance_scale_km: float,
+    orbit_points: int,
+) -> None:
+    x = []
+    y = []
+    z = []
+
+    for position in generate_all_orbit_positions(orbital_elements, orbit_points):
+        scaled = scale_position(position, distance_scale_km)
+
+        x.append(scaled.x)
+        y.append(scaled.y)
+        z.append(scaled.z)
+
+    traces.append(
+        go.Scatter3d(
+            x=x,
+            y=y,
+            z=z,
+            mode="lines",
+            name=f"{name} orbit",
+        )
+    )
+
+
+def make_3d_orbit_figure(
+    traces: list,
+    title: str,
+    distance_scale_km: float,
+) -> go.Figure:
+    fig = go.Figure(data=traces)
+
+    fig.update_layout(
+        title=title,
+        scene=dict(
+            xaxis_title=f"X ({distance_scale_km:,} km units)",
+            yaxis_title=f"Y ({distance_scale_km:,} km units)",
+            zaxis_title=f"Z ({distance_scale_km:,} km units)",
+            aspectmode="data",
+        ),
+    )
+
+    return fig
