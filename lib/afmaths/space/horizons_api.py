@@ -93,6 +93,7 @@ def build_horizons_url(query: HorizonsObserverQuery) -> str:
 
 def fetch_horizons_result(query: HorizonsObserverQuery) -> str:
     url = build_horizons_url(query)
+    print(url)
 
     response = requests.get(url, timeout=30)
     response.raise_for_status()

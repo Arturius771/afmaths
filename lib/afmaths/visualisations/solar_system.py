@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from astronomy_types import GravitationalParameter, Scalar, Second
+from astronomy_types import GravitationalParameter, OrbitalElements, Scalar, Second
 
 from afmaths.space.astrodynamics import (
     orbit_state_vector_prediction_from_orbital_elements,
@@ -53,7 +53,7 @@ PLANETS = [
 ]
 
 
-def get_heliocentric_orbital_elements(target: HorizonsCommandTarget):
+def get_heliocentric_orbital_elements(target: HorizonsCommandTarget) -> OrbitalElements:
     state_vector = get_planet_state_vectors(
         target=target,
         centre=HorizonsCommandTarget.SUN,
