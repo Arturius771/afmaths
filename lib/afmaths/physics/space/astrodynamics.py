@@ -2,7 +2,7 @@ from dataclasses import replace
 from math import atan
 import math
 
-from afmaths.space.astronomy.conversion_helpers import degrees_to_radians
+from afmaths.physics.space.astronomy.conversion_helpers import degrees_to_radians
 from afmaths.tensors import (
     dot_product_3d,
     vector_cross_multiplication_3d,

@@ -1,6 +1,7 @@
-from afmaths.physics import total_displacement
 import plotly.graph_objects as go
 from astronomy_types import Coordinate2D
+
+from afmaths.physics.kinematics import velocity_time_total_displacement
 
 # velocity_points = [
 #     Coordinate2D(0, 0),
@@ -31,7 +32,7 @@ for pair in sorted_pairs:
 fig = go.Figure()
 fig.add_trace(go.Scatter(x=time_sorted, y=values_sorted, mode="lines", name="Velocity"))
 fig.update_layout(
-    title=f"Velocity over time (displacement: {total_displacement(sorted_vals)})",
+    title=f"Velocity over time (displacement: {velocity_time_total_displacement(sorted_vals)})",
     xaxis_title="Time",
     yaxis_title="Velocity",
 )

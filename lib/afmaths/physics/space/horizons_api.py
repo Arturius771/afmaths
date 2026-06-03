@@ -19,7 +19,10 @@ from astronomy_types import (
     Velocity,
 )
 
-from afmaths.space.astronomy.conversion_helpers import dms_to_radians, hms_to_radians
+from afmaths.physics.space.astronomy.conversion_helpers import (
+    dms_to_radians,
+    hms_to_radians,
+)
 
 
 class HorizonsFormat(str, Enum):

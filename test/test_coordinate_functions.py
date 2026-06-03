@@ -30,12 +30,12 @@ from astronomy_types import (
     Year,
 )
 
-from afmaths.space.astronomy.conversion_helpers import (
+from afmaths.physics.space.astronomy.conversion_helpers import (
     degrees_to_radians,
     dms_to_radians,
     hms_to_radians,
 )
-from afmaths.space.astronomy.coordinate_functions import (
+from afmaths.physics.space.astronomy.coordinate_functions import (
     ecliptic_to_equatorial_coordinates,
     equatorial_to_ecliptic_coordinates,
     equatorial_to_galactic_coordinates,

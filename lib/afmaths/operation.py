@@ -86,6 +86,8 @@ def interval(start: float, end: float, n: int) -> list[float]:
 def reduce(
     reduce_function,
 ):
+    """Returns a function that applies a reduction function to a list of values."""
+
     def reduction(sequence: list[float]) -> float:
         # For example, reduce(lambda x, y: x+y, [1, 2, 3, 4, 5])
         # calculates ((((1 + 2) + 3) + 4) + 5).
@@ -98,6 +100,7 @@ def reduce(
 
 
 def ratio(num1: float):
+    """Returns a function that calculates the ratio of num1 to num2."""
     return lambda num2: Ratio(divide(num2)(num1))
 
 

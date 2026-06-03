@@ -17,7 +17,7 @@ from astronomy_types import (
     Year,
 )
 
-from afmaths.space.astronomy.conversion_helpers import (
+from afmaths.physics.space.astronomy.conversion_helpers import (
     decimal_time_to_time,
     time_to_decimal_time,
 )

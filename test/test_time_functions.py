@@ -19,8 +19,8 @@ from astronomy_types import (
     Year,
 )
 
-from afmaths.space.astronomy.conversion_helpers import degrees_to_radians
-from afmaths.space.astronomy.time_functions import (
+from afmaths.physics.space.astronomy.conversion_helpers import degrees_to_radians
+from afmaths.physics.space.astronomy.time_functions import (
     date_of_easter,
     date_to_day_number,
     decimal_hours_to_hours_minutes_seconds,

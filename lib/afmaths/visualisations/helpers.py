@@ -25,7 +25,7 @@ from astronomy_types import (
     SemiMinorAxis,
 )
 import plotly.graph_objects as go
-from afmaths.space.astrodynamics import (
+from afmaths.physics.space.astrodynamics import (
     generate_all_orbit_positions,
     generate_angles_on_circle,
     generate_relative_coordinate_from_eccentric_anomaly,

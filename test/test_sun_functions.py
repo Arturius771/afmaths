@@ -15,13 +15,13 @@ from astronomy_types import (
     Year,
 )
 
-from afmaths.space.astronomy.conversion_helpers import (
+from afmaths.physics.space.astronomy.conversion_helpers import (
     dms_to_degrees,
     make_date,
     make_time,
     time_to_decimal_time,
 )
-from afmaths.space.astronomy.sun_functions import sun_position_approximate
+from afmaths.physics.space.astronomy.sun_functions import sun_position_approximate
 
 
 class SunTestMethods(unittest.TestCase):

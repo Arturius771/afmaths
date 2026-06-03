@@ -2,12 +2,12 @@ from dataclasses import dataclass
 
 from astronomy_types import GravitationalParameter, OrbitalElements, Scalar, Second
 
-from afmaths.space.astrodynamics import (
+from afmaths.physics.space.astrodynamics import (
     orbit_state_vector_prediction_from_orbital_elements,
     orbital_elements_from_state_vectors,
 )
 
-from afmaths.space.horizons_api import (
+from afmaths.physics.space.horizons_api import (
     HorizonsCommandTarget,
     get_planet_state_vectors,
 )
