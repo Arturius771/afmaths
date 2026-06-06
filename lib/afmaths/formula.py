@@ -1,3 +1,4 @@
+from email.mime import base
 import math
 from afmaths.operation import (
     SQUARE,
@@ -89,6 +90,10 @@ def trapezoidal_rule(curve: list[Coordinate2D]) -> float:
     return summation(trap, 0, len(curve) - 2)
 
 
+def power_rule_string(symbol: float, exponent: float) -> str:
+    return f"f({symbol}^{{{exponent}}}) = {exponent} * {symbol}^{{{exponent - 1}}}"
+
+
 # def trapezoidal_rule(start: Coordinate2D, end: Coordinate2D) -> float:
 #     """
 #     Area under a straight-line velocity-time segment.
@@ -97,3 +102,11 @@ def trapezoidal_rule(curve: list[Coordinate2D]) -> float:
 #     return Displacement(
 #         Scalar(multiply((start.y + end.y) / 2)(subtract(start.x)(end.x)))
 #     )
+
+if __name__ == "__main__":
+    print(sigmoid(0))
+    print(sigmoid(1))
+    print(sigmoid(-1))
+    print(sigmoid(10))
+    print(sigmoid(-10))
+    print(power_rule_string(2, 3))
