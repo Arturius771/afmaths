@@ -34,7 +34,7 @@ from afmaths.physics.space.astrodynamics import (
     generate_all_orbit_positions,
     generate_angles_on_circle,
     generate_relative_coordinate_from_eccentric_anomaly,
-    mean_anomaly_from_kepler_equation,
+    kepler_equation,
     orbit_state_vector_prediction_from_orbital_elements,
     orbital_elements_from_state_vectors,
     time_since_periapsis,
@@ -211,7 +211,7 @@ def generate_orbital_slider_data(
         time = time_since_periapsis(
             SemiMajorAxis(Distance(Scalar(elements.semi_major_axis * plot_scale))),
             g,
-            mean_anomaly_from_kepler_equation(
+            kepler_equation(
                 eccentric_anomaly_obj,
                 elements.eccentricity,
             ),

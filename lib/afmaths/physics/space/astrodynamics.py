@@ -234,9 +234,7 @@ def mean_motion(
     )
 
 
-def mean_anomaly_from_kepler_equation(
-    E_rad: EccentricAnomaly, eccentricity: Eccentricity
-) -> MeanAnomaly:
+def kepler_equation(E_rad: EccentricAnomaly, eccentricity: Eccentricity) -> MeanAnomaly:
     """Kepler equation."""
     # M = E - e * np.sin(E)
     return subtract(multiply(eccentricity)(math.sin(E_rad)))(E_rad)
@@ -458,7 +456,7 @@ def newton_iteration(
     # M = E - e * np.sin(E)
     return subtract(
         divide(subtract(multiply(eccentricity)(math.cos(E_i)))(1))(
-            subtract(mean_anomaly)(mean_anomaly_from_kepler_equation(E_i, eccentricity))
+            subtract(mean_anomaly)(kepler_equation(E_i, eccentricity))
         )
     )(E_i)
 
@@ -587,7 +585,7 @@ def orbit_state_vector_prediction_from_orbital_elements(
 ) -> StateVectors:
     """Calculates the state vectors (position and velocity) of an orbit from the orbital elements at a given time offset from the current position in the orbit"""
 
-    initial_mean_anomaly = mean_anomaly_from_kepler_equation(
+    initial_mean_anomaly = kepler_equation(
         eccentric_anomaly_from_true_anomaly(
             orbital_elements.true_anomaly, orbital_elements.eccentricity
         ),
@@ -689,7 +687,7 @@ def orbit_coordinate_prediction(
 ) -> Coordinate2D:
 
     M = mean_anomaly_at_time_offset(
-        mean_anomaly_from_kepler_equation(
+        kepler_equation(
             eccentric_anomaly_from_true_anomaly(
                 TrueAnomaly(Anomaly(Radians(Scalar(0)))), orbital_elements.eccentricity
             ),
