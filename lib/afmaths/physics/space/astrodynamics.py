@@ -652,7 +652,9 @@ def generate_angles_on_circle(resolution: int) -> list[Radians]:
 
 
 def generate_all_orbit_positions(
-    orbital_elements: OrbitalElements, resolution: int
+    orbital_elements: OrbitalElements,
+    resolution: int,
+    gravitational_parameter: GravitationalParameter = EARTH_MU_KM_CUBED,
 ) -> list[PositionVector]:
     if resolution < 50:
         raise ValueError("Resolution must be greater than 50.")
@@ -664,6 +666,7 @@ def generate_all_orbit_positions(
                     orbital_elements,
                     true_anomaly=true_anomaly,
                 ),
+                gravitational_parameter=gravitational_parameter,
             ).position
         )
     return position_list

@@ -63,7 +63,7 @@ def main() -> None:
         orbit_points=ORBIT_POINTS,
         start_time=datetime.datetime.now(),
         time_offset=datetime.timedelta(days=30),
-        add_prediction_to_orbit=True,
+        add_prediction_to_orbit=False,
         use_horizon_api_for_prediction=False,
     )
 

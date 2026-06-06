@@ -30,6 +30,7 @@ from afmaths.geometry import (
 )
 from afmaths.operation import interval
 from afmaths.physics.space.astrodynamics import (
+    EARTH_MU_KM_CUBED,
     generate_all_orbit_positions,
     generate_angles_on_circle,
     generate_relative_coordinate_from_eccentric_anomaly,
@@ -323,12 +324,15 @@ def add_orbit_line_trace(
     orbital_elements: OrbitalElements,
     distance_scale_km: float,
     orbit_points: int,
+    gravitational_parameter: GravitationalParameter = EARTH_MU_KM_CUBED,
 ) -> go.Scatter3d:
     x = []
     y = []
     z = []
 
-    for position in generate_all_orbit_positions(orbital_elements, orbit_points):
+    for position in generate_all_orbit_positions(
+        orbital_elements, orbit_points, gravitational_parameter
+    ):
         scaled = scale_position(position, distance_scale_km)
 
         x.append(scaled.x)
@@ -388,8 +392,8 @@ class OrbitPlotSettings:
         return self.start_time + self.time_offset
 
     @property
-    def time_offset_seconds(self) -> float:
-        return python_timedelta_to_seconds(self.time_offset)
+    def time_offset_seconds(self) -> Second:
+        return Second(Scalar(python_timedelta_to_seconds(self.time_offset)))
 
 
 def get_horizon_state_vectors(
@@ -410,7 +414,7 @@ def predict_state_from_orbital_elements(
 ) -> StateVectors:
     return orbit_state_vector_prediction_from_orbital_elements(
         orbital_elements,
-        Second(Scalar(settings.time_offset_seconds)),
+        settings.time_offset_seconds,
         settings.gravitational_parameter,
     )
 
@@ -438,6 +442,7 @@ def add_orbiting_body_to_traces(
             orbital_elements,
             settings.distance_scale_km,
             settings.orbit_points,
+            settings.gravitational_parameter,
         )
     )
 
