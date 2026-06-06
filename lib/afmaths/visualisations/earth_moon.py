@@ -53,7 +53,6 @@ def main() -> None:
         start_time=datetime.datetime.now(),
         time_offset=datetime.timedelta(days=30),
         add_prediction_to_orbit=True,
-        use_horizon_api_for_prediction=False,
     )
 
     EarthMoonOrbitPlot(settings).show()

@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 import datetime
 import math
 
@@ -385,7 +385,6 @@ class OrbitPlotSettings:
     start_time: datetime.datetime
     time_offset: datetime.timedelta
     add_prediction_to_orbit: bool = True
-    use_horizon_api_for_prediction: bool = False
 
     @property
     def stop_time(self) -> datetime.datetime:
@@ -430,10 +429,15 @@ def add_orbiting_body_to_traces(
     if len(horizon_state_vectors) < 1:
         raise ValueError(f"No Horizons state vectors returned for {body.name}")
 
-    current_state = horizon_state_vectors[0]
     orbital_elements = orbital_elements_from_state_vectors(
-        current_state,
+        horizon_state_vectors[0],  # horizon state vectors
         gravitational_parameter=settings.gravitational_parameter,
+    )
+
+    # For internal consistency, we predict the current state from the orbital elements rather than using the Horizons state vector directly. This ensures that the position used for the body surface and the orbit line are based on the same model.
+    model_current_state = predict_state_from_orbital_elements(
+        orbital_elements,
+        replace(settings, time_offset=datetime.timedelta(seconds=0)),
     )
 
     traces.append(
@@ -452,7 +456,10 @@ def add_orbiting_body_to_traces(
             body.radius_km,
             body.radius_scale,
             settings.distance_scale_km,
-            position=scale_position(current_state.position, settings.distance_scale_km),
+            position=scale_position(
+                model_current_state.position,
+                settings.distance_scale_km,
+            ),
             opacity=opacity,
         )
     )
@@ -460,18 +467,10 @@ def add_orbiting_body_to_traces(
     if not settings.add_prediction_to_orbit:
         return
 
-    if settings.use_horizon_api_for_prediction:
-        if len(horizon_state_vectors) < 2:
-            raise ValueError(
-                f"Need at least two Horizons state vectors to show prediction for {body.name}"
-            )
-
-        prediction_state = horizon_state_vectors[-1]
-    else:
-        prediction_state = predict_state_from_orbital_elements(
-            orbital_elements,
-            settings,
-        )
+    model_prediction_state = predict_state_from_orbital_elements(
+        orbital_elements,
+        settings,
+    )
 
     traces.append(
         add_body_surface(
@@ -480,7 +479,7 @@ def add_orbiting_body_to_traces(
             body.radius_scale,
             settings.distance_scale_km,
             position=scale_position(
-                prediction_state.position,
+                model_prediction_state.position,
                 settings.distance_scale_km,
             ),
             opacity=opacity,

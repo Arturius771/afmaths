@@ -62,9 +62,8 @@ def main() -> None:
         distance_scale_km=DISTANCE_SCALE_KM,
         orbit_points=ORBIT_POINTS,
         start_time=datetime.datetime.now(),
-        time_offset=datetime.timedelta(days=30),
-        add_prediction_to_orbit=False,
-        use_horizon_api_for_prediction=False,
+        time_offset=datetime.timedelta(days=124),
+        add_prediction_to_orbit=True,
     )
 
     HeliocentricSolarSystemPlot(settings).show()
