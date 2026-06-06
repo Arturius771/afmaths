@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import datetime
 from enum import Enum
 from typing import Literal
 
@@ -11,6 +12,7 @@ from astronomy_types import (
     HMS,
     Declination,
     EquatorialCoordinates,
+    FullDate,
     Position,
     RightAscension,
     Scalar,
@@ -21,7 +23,9 @@ from astronomy_types import (
 
 from afmaths.physics.space.astronomy.conversion_helpers import (
     dms_to_radians,
+    fulldate_to_string,
     hms_to_radians,
+    python_datetime_to_fulldate,
 )
 
 
@@ -61,8 +65,8 @@ CoordinateType = Literal["astrometric", "apparent"]
 @dataclass(frozen=True)
 class HorizonsObserverQuery:
     target: HorizonsCommandTarget
-    start_time: str
-    stop_time: str
+    start_time: FullDate
+    stop_time: FullDate
     step_size: str = "1h"
     centre: HorizonsCommandTarget = HorizonsCommandTarget.EARTH
     response_format: HorizonsFormat = HorizonsFormat.JSON
@@ -81,8 +85,8 @@ def build_horizons_url(query: HorizonsObserverQuery) -> str:
             "COMMAND": quote_horizons(query.target.value),
             "EPHEM_TYPE": quote_horizons(query.ephemeris_type.value),
             "CENTER": quote_horizons(f"500@{query.centre.value}"),
-            "START_TIME": quote_horizons(query.start_time),
-            "STOP_TIME": quote_horizons(query.stop_time),
+            "START_TIME": quote_horizons(fulldate_to_string(query.start_time)),
+            "STOP_TIME": quote_horizons(fulldate_to_string(query.stop_time)),
             "STEP_SIZE": quote_horizons(query.step_size),
             "QUANTITIES": quote_horizons(quantities),
         },
@@ -202,8 +206,8 @@ def parse_equatorial_coordinates(
 
 def get_planet_equatorial_coordinates(
     target: HorizonsCommandTarget,
-    start_time: str,
-    stop_time: str,
+    start_time: FullDate,
+    stop_time: FullDate,
     step_size: str = "1h",
     centre: HorizonsCommandTarget = HorizonsCommandTarget.EARTH,
     response_format: HorizonsFormat = HorizonsFormat.JSON,
@@ -264,8 +268,8 @@ def parse_state_vector_rows(rows: list[str]) -> list[StateVectors]:
 
 def get_planet_state_vectors(
     target: HorizonsCommandTarget,
-    start_time: str,
-    stop_time: str,
+    start_time: FullDate,
+    stop_time: FullDate,
     step_size: str = "1h",
     centre: HorizonsCommandTarget = HorizonsCommandTarget.EARTH,
     response_format: HorizonsFormat = HorizonsFormat.JSON,
@@ -290,8 +294,10 @@ def get_planet_state_vectors(
 if __name__ == "__main__":
     coordinates = get_planet_equatorial_coordinates(
         target=HorizonsCommandTarget.MARS,
-        start_time="2026-May-27 00:00",
-        stop_time="2026-May-28 00:00",
+        start_time=python_datetime_to_fulldate(datetime.datetime.now()),
+        stop_time=python_datetime_to_fulldate(
+            datetime.datetime.now() + datetime.timedelta(days=1)
+        ),
         step_size="1h",
     )
 
@@ -301,8 +307,8 @@ if __name__ == "__main__":
 
     state_vectors = get_planet_state_vectors(
         target=HorizonsCommandTarget.MARS,
-        start_time="2026-May-27 00:00",
-        stop_time="2026-May-28 00:00",
+        start_time=python_datetime_to_fulldate(datetime.datetime(2026, 5, 27, 0, 0)),
+        stop_time=python_datetime_to_fulldate(datetime.datetime(2026, 5, 28, 0, 0)),
         step_size="1h",
     )
 

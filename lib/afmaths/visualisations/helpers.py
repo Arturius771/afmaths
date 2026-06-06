@@ -293,7 +293,7 @@ def scaled_radius(
 
 
 def add_body_surface(
-    traces: list,
+    traces_list: list,
     name: str,
     radius_km: float,
     radius_scale: float,
@@ -306,7 +306,7 @@ def add_body_surface(
         position,
     )
 
-    traces.append(
+    traces_list.append(
         go.Surface(
             x=surface.x,
             y=surface.y,
@@ -319,7 +319,7 @@ def add_body_surface(
 
 
 def add_orbit_line_trace(
-    traces: list,
+    traces_list: list,
     name: str,
     orbital_elements,
     distance_scale_km: float,
@@ -336,7 +336,7 @@ def add_orbit_line_trace(
         y.append(scaled.y)
         z.append(scaled.z)
 
-    traces.append(
+    traces_list.append(
         go.Scatter3d(
             x=x,
             y=y,

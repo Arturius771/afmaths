@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+import datetime
 
 from astronomy_types import GravitationalParameter, OrbitalElements, Scalar, Second
 
@@ -7,6 +8,12 @@ from afmaths.physics.space.astrodynamics import (
     orbital_elements_from_state_vectors,
 )
 
+from afmaths.physics.space.astronomy.conversion_helpers import (
+    hour_to_hour_string,
+    python_datetime_to_fulldate,
+    python_timedelta_to_seconds,
+    seconds_to_hours,
+)
 from afmaths.physics.space.horizons_api import (
     HorizonsCommandTarget,
     get_planet_state_vectors,
@@ -24,9 +31,13 @@ PLANET_RADIUS_SCALE = 1000.0
 SUN_RADIUS_SCALE = 10.0
 ORBIT_POINTS = 500
 
-START_TIME = "2026-May-27 00:00"
-STOP_TIME = "2026-May-28 00:00"
-STEP_SIZE = "1h"
+START_TIME = python_datetime_to_fulldate(datetime.datetime.now())
+STOP_TIME = python_datetime_to_fulldate(
+    datetime.datetime.now() + datetime.timedelta(days=365)
+)
+STEP_SIZE = hour_to_hour_string(
+    seconds_to_hours(python_timedelta_to_seconds(datetime.timedelta(weeks=12)))
+)
 TIME_OFFSET = 0
 
 SUN_RADIUS_KM = 696_340.0
@@ -68,7 +79,7 @@ def get_heliocentric_orbital_elements(target: HorizonsCommandTarget) -> OrbitalE
     )
 
 
-def add_planet(traces: list, planet: PlanetPlotConfig) -> None:
+def add_planet_trace(traces: list, planet: PlanetPlotConfig) -> None:
     orbital_elements = get_heliocentric_orbital_elements(planet.target)
 
     add_orbit_line_trace(
@@ -109,7 +120,7 @@ def main() -> None:
     )
 
     for planet in PLANETS:
-        add_planet(traces, planet)
+        add_planet_trace(traces, planet)
 
     fig = make_3d_orbit_figure(
         traces,

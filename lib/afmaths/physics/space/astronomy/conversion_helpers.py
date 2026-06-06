@@ -1,3 +1,4 @@
+import datetime
 import math
 
 from astronomy_types import (
@@ -7,6 +8,7 @@ from astronomy_types import (
     Day,
     DecimalTime,
     Degrees,
+    FullDate,
     Hour,
     Minute,
     Month,
@@ -88,3 +90,28 @@ def make_time(hms: HMS) -> Time:
         minute=Minute(hms.minutes),
         second=Second(Scalar(hms.seconds)),
     )
+
+
+def python_datetime_to_fulldate(date: datetime.datetime) -> FullDate:
+    return FullDate(
+        date=make_date(
+            year=Year(date.year), month=Month(date.month), day=Day(Scalar(date.day))
+        ),
+        time=make_time(HMS(hours=date.hour, minutes=date.minute, seconds=date.second)),
+    )
+
+
+def fulldate_to_string(date: FullDate) -> str:
+    return f"{date.date.year:04d}-{date.date.month:02d}-{date.date.day:02d} {date.time.hour:02d}:{date.time.minute:02d}:{date.time.second:02d}"
+
+
+def python_timedelta_to_seconds(delta: datetime.timedelta) -> Second:
+    return Second(Scalar(delta.total_seconds()))
+
+
+def seconds_to_hours(seconds: Second) -> Hour:
+    return Hour(int(round(float(seconds) / 3600)))
+
+
+def hour_to_hour_string(hour: Hour) -> str:
+    return f"{hour:02d}h"
