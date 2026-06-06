@@ -60,8 +60,8 @@ from astronomy_types import MeanAnomaly, Anomaly, Radians, Scalar
 #     )(E_i)
 
 
-from afmaths.visualisations.helpers import EXAMPLE_ELEMENTS
 import plotly.graph_objects as go
+from afmaths.physics.space.space_engineering import EXAMPLE_ELEMENTS
 
 _, history = eccentric_anomaly_solved(
     newton_iteration,

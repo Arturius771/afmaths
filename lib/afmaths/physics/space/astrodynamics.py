@@ -405,30 +405,12 @@ def argument_of_latitude(
     # u = np.arctan2(r[2] / np.sin(i), r[0] * np.cos(Omega) + r[1] * np.sin(Omega))
     # if u < 0:
     #     u += 2 * np.pi
-    numerator = divide(math.sin(inclination))(position_vector.z)
-    second_term = add(
-        multiply(position_vector.x)(math.cos(right_ascension_of_ascending_node))
-    )(multiply(position_vector.y)(math.sin(right_ascension_of_ascending_node)))
+    y = divide(math.sin(inclination))(position_vector.z)
+    x = add(multiply(position_vector.x)(math.cos(right_ascension_of_ascending_node)))(
+        multiply(position_vector.y)(math.sin(right_ascension_of_ascending_node))
+    )
 
-    x = numerator
-    y = second_term
-    u = atan(divide(second_term)(numerator))
-
-    # Account for the correct quadrant of the latitude
-    if x > 0:
-        if y < 0:
-            u += 2 * math.pi
-    elif x < 0:
-        u += math.pi
-    else:  # x == 0
-        if y > 0:
-            u = math.pi / 2
-        elif y < 0:
-            u = 3 * math.pi / 2
-        else:
-            u = 0
-
-    return Latitude(Radians(Scalar(u)))
+    return Latitude(Radians(Scalar(math.atan2(y, x) % (2 * math.pi))))
 
 
 def orbital_elements_from_state_vectors(

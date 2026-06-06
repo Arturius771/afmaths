@@ -64,13 +64,21 @@ CoordinateType = Literal["astrometric", "apparent"]
 
 @dataclass(frozen=True)
 class HorizonsObserverQuery:
+    # The target body for which to retrieve ephemeris data. Can be a planet, moon, asteroid, comet, spacecraft, or other solar system object supported by the Horizons system.
     target: HorizonsCommandTarget
+    # The start time for the ephemeris data retrieval, specified in the format "YYYY-MM-DD HH:MM:SS" or as a Julian date.
     start_time: FullDate
+    # The stop time for the ephemeris data retrieval, specified in the format "YYYY-MM-DD HH:MM:SS" or as a Julian date.
     stop_time: FullDate
+    # The time step size for the ephemeris data retrieval, specified as a string (e.g., "1h" for 1 hour, "30m" for 30 minutes).
     step_size: str = "1h"
+    # The center of motion for the ephemeris data retrieval, specified as a HorizonsCommandTarget (e.g., EARTH, SUN).
     centre: HorizonsCommandTarget = HorizonsCommandTarget.EARTH
+    # The desired response format for the ephemeris data, specified as a HorizonsFormat (e.g., JSON or TEXT).
     response_format: HorizonsFormat = HorizonsFormat.JSON
+    # The type of ephemeris data to retrieve, specified as a HorizonsEphemerisType (e.g., OBSERVER, ELEMENTS, VECTORS).
     ephemeris_type: HorizonsEphemerisType = HorizonsEphemerisType.OBSERVER
+    # The specific quantities to retrieve for the ephemeris data, specified as a tuple of HorizonsQuantity (e.g., RA_DEC for right ascension and declination). The default is to retrieve RA and DEC.
     quantities: tuple[HorizonsQuantity, ...] = (HorizonsQuantity.RA_DEC,)
 
 
@@ -204,7 +212,7 @@ def parse_equatorial_coordinates(
     return coordinates
 
 
-def get_planet_equatorial_coordinates(
+def get_object_equatorial_coordinates(
     target: HorizonsCommandTarget,
     start_time: FullDate,
     stop_time: FullDate,
@@ -266,11 +274,11 @@ def parse_state_vector_rows(rows: list[str]) -> list[StateVectors]:
     return state_vectors
 
 
-def get_planet_state_vectors(
+def get_object_state_vectors_from_horizon(
     target: HorizonsCommandTarget,
     start_time: FullDate,
     stop_time: FullDate,
-    step_size: str = "1h",
+    step_size: str = "1d",
     centre: HorizonsCommandTarget = HorizonsCommandTarget.EARTH,
     response_format: HorizonsFormat = HorizonsFormat.JSON,
 ) -> list[StateVectors]:
@@ -287,12 +295,11 @@ def get_planet_state_vectors(
 
     result = fetch_horizons_result(query)
     rows = extract_ephemeris_rows(result)
-
     return parse_state_vector_rows(rows)
 
 
 if __name__ == "__main__":
-    coordinates = get_planet_equatorial_coordinates(
+    coordinates = get_object_equatorial_coordinates(
         target=HorizonsCommandTarget.MARS,
         start_time=python_datetime_to_fulldate(datetime.datetime.now()),
         stop_time=python_datetime_to_fulldate(
@@ -305,7 +312,7 @@ if __name__ == "__main__":
     for coordinate in coordinates:
         print(coordinate)
 
-    state_vectors = get_planet_state_vectors(
+    state_vectors = get_object_state_vectors_from_horizon(
         target=HorizonsCommandTarget.MARS,
         start_time=python_datetime_to_fulldate(datetime.datetime(2026, 5, 27, 0, 0)),
         stop_time=python_datetime_to_fulldate(datetime.datetime(2026, 5, 28, 0, 0)),

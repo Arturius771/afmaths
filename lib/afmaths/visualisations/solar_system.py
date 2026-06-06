@@ -1,134 +1,73 @@
-from dataclasses import dataclass
 import datetime
 
-from astronomy_types import GravitationalParameter, OrbitalElements, Scalar, Second
+from astronomy_types import GravitationalParameter, Scalar
 
-from afmaths.physics.space.astrodynamics import (
-    orbit_state_vector_prediction_from_orbital_elements,
-    orbital_elements_from_state_vectors,
-)
-
-from afmaths.physics.space.astronomy.conversion_helpers import (
-    hour_to_hour_string,
-    python_datetime_to_fulldate,
-    python_timedelta_to_seconds,
-    seconds_to_hours,
-)
-from afmaths.physics.space.horizons_api import (
-    HorizonsCommandTarget,
-    get_planet_state_vectors,
-)
-
-from afmaths.visualisations.helpers import (
-    add_body_surface,
-    add_orbit_line_trace,
-    make_3d_orbit_figure,
-    scale_position,
-)
+from afmaths.physics.space.horizons_api import HorizonsCommandTarget
+from afmaths.visualisations.base_orbit_plot import Base3DOrbitPlot
+from afmaths.visualisations.helpers import BodyPlotConfig, OrbitPlotSettings
 
 DISTANCE_SCALE_KM = 1_000_000
 PLANET_RADIUS_SCALE = 1000.0
 SUN_RADIUS_SCALE = 10.0
 ORBIT_POINTS = 500
 
-START_TIME = python_datetime_to_fulldate(datetime.datetime.now())
-STOP_TIME = python_datetime_to_fulldate(
-    datetime.datetime.now() + datetime.timedelta(days=365)
-)
-STEP_SIZE = hour_to_hour_string(
-    seconds_to_hours(python_timedelta_to_seconds(datetime.timedelta(weeks=12)))
-)
-TIME_OFFSET = 0
-
 SUN_RADIUS_KM = 696_340.0
 SUN_GRAVITATIONAL_PARAMETER = GravitationalParameter(Scalar(132_712_440_018.0))
 
 
-@dataclass(frozen=True)
-class PlanetPlotConfig:
-    name: str
-    target: HorizonsCommandTarget
-    radius_km: float
-    radius_scale: float = PLANET_RADIUS_SCALE
-
-
 PLANETS = [
-    PlanetPlotConfig("Mercury", HorizonsCommandTarget.MERCURY, 2_439.7),
-    PlanetPlotConfig("Venus", HorizonsCommandTarget.VENUS, 6_051.8),
-    PlanetPlotConfig("Earth", HorizonsCommandTarget.EARTH, 6_371.0),
-    PlanetPlotConfig("Mars", HorizonsCommandTarget.MARS, 3_389.5),
-    PlanetPlotConfig("Jupiter", HorizonsCommandTarget.JUPITER, 69_911.0, 80.0),
-    PlanetPlotConfig("Saturn", HorizonsCommandTarget.SATURN, 58_232.0, 80.0),
-    PlanetPlotConfig("Uranus", HorizonsCommandTarget.URANUS, 25_362.0, 150.0),
-    PlanetPlotConfig("Neptune", HorizonsCommandTarget.NEPTUNE, 24_622.0, 150.0),
+    BodyPlotConfig(
+        "Mercury", HorizonsCommandTarget.MERCURY, 2_439.7, PLANET_RADIUS_SCALE
+    ),
+    BodyPlotConfig("Venus", HorizonsCommandTarget.VENUS, 6_051.8, PLANET_RADIUS_SCALE),
+    BodyPlotConfig("Earth", HorizonsCommandTarget.EARTH, 6_371.0, PLANET_RADIUS_SCALE),
+    BodyPlotConfig("Mars", HorizonsCommandTarget.MARS, 3_389.5, PLANET_RADIUS_SCALE),
+    BodyPlotConfig("Jupiter", HorizonsCommandTarget.JUPITER, 69_911.0, 80.0),
+    BodyPlotConfig("Saturn", HorizonsCommandTarget.SATURN, 58_232.0, 80.0),
+    BodyPlotConfig("Uranus", HorizonsCommandTarget.URANUS, 25_362.0, 150.0),
+    BodyPlotConfig("Neptune", HorizonsCommandTarget.NEPTUNE, 24_622.0, 150.0),
 ]
 
 
-def get_heliocentric_orbital_elements(target: HorizonsCommandTarget) -> OrbitalElements:
-    state_vector = get_planet_state_vectors(
-        target=target,
-        centre=HorizonsCommandTarget.SUN,
-        start_time=START_TIME,
-        stop_time=STOP_TIME,
-        step_size=STEP_SIZE,
-    )[0]
+class HeliocentricSolarSystemPlot(Base3DOrbitPlot):
+    @property
+    def title_prefix(self) -> str:
+        return "Heliocentric solar system model"
 
-    return orbital_elements_from_state_vectors(
-        state_vector,
-        gravitational_parameter=SUN_GRAVITATIONAL_PARAMETER,
-    )
+    @property
+    def central_body_name(self) -> str:
+        return "Sun"
 
+    @property
+    def central_body_radius_km(self) -> float:
+        return SUN_RADIUS_KM
 
-def add_planet_trace(traces: list, planet: PlanetPlotConfig) -> None:
-    orbital_elements = get_heliocentric_orbital_elements(planet.target)
+    @property
+    def central_body_radius_scale(self) -> float:
+        return SUN_RADIUS_SCALE
 
-    add_orbit_line_trace(
-        traces,
-        planet.name,
-        orbital_elements,
-        DISTANCE_SCALE_KM,
-        ORBIT_POINTS,
-    )
+    @property
+    def central_body_opacity(self) -> float:
+        return 0.6
 
-    current_state = orbit_state_vector_prediction_from_orbital_elements(
-        orbital_elements,
-        Second(Scalar(TIME_OFFSET)),
-    )
-
-    current_position = scale_position(current_state.position, DISTANCE_SCALE_KM)
-
-    add_body_surface(
-        traces,
-        planet.name,
-        planet.radius_km,
-        planet.radius_scale,
-        DISTANCE_SCALE_KM,
-        current_position,
-    )
+    @property
+    def orbiting_bodies(self) -> list[BodyPlotConfig]:
+        return PLANETS
 
 
 def main() -> None:
-    traces = []
-
-    add_body_surface(
-        traces,
-        "Sun",
-        SUN_RADIUS_KM,
-        SUN_RADIUS_SCALE,
-        DISTANCE_SCALE_KM,
-        opacity=0.6,
+    settings = OrbitPlotSettings(
+        centre=HorizonsCommandTarget.SUN,
+        gravitational_parameter=SUN_GRAVITATIONAL_PARAMETER,
+        distance_scale_km=DISTANCE_SCALE_KM,
+        orbit_points=ORBIT_POINTS,
+        start_time=datetime.datetime.now(),
+        time_offset=datetime.timedelta(days=30),
+        add_prediction_to_orbit=True,
+        use_horizon_api_for_prediction=False,
     )
 
-    for planet in PLANETS:
-        add_planet_trace(traces, planet)
-
-    fig = make_3d_orbit_figure(
-        traces,
-        "Heliocentric solar system model",
-        DISTANCE_SCALE_KM,
-    )
-
-    fig.show()
+    HeliocentricSolarSystemPlot(settings).show()
 
 
 if __name__ == "__main__":

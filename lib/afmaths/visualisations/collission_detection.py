@@ -3,8 +3,9 @@ from astronomy_types import (
     Vector2D,
 )
 
-from afmaths.physics import detect_collision, propogate_vector
 import plotly.graph_objects as go
+
+from afmaths.physics.kinematics import detect_collision, propogate_vector
 
 object_a_coordinates = Coordinate2D[float](5, 10)
 object_a_vector = Vector2D(0, -1)

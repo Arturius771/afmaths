@@ -1,6 +1,5 @@
 import plotly.graph_objects as go
 from afmaths.visualisations.helpers import (
-    EXAMPLE_ELEMENTS,
     figure_circle,
     figure_orbit_line,
     figure_planetary_body,
@@ -31,6 +30,9 @@ from astronomy_types import (
     TrueAnomaly,
     Vector2D,
 )
+
+from afmaths.physics.space.space_engineering import EXAMPLE_ELEMENTS
+from afmaths.visualisations.helpers import figure_plot_centre, figure_slider
 
 # =========================================================
 # 🧭 SYSTEM PARAMETERS

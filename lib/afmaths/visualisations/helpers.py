@@ -1,53 +1,52 @@
+from dataclasses import dataclass
+import datetime
 import math
 
-from afmaths.operation import interval
+import plotly.graph_objects as go
+
 from astronomy_types import (
     Anomaly,
-    ArgumentOfPerigee,
+    Coordinate2D,
     Distance,
-    Eccentricity,
-    Inclination,
+    EccentricAnomaly,
+    GravitationalParameter,
     OrbitalElements,
     PositionVector,
-    Ratio,
-    RightAscension,
+    Radians,
     Scalar,
     Second,
     SemiMajorAxis,
-    TrueAnomaly,
+    SemiMinorAxis,
+    StateVectors,
     Vector2D,
     Vector3D,
-    Coordinate2D,
-    EccentricAnomaly,
-    Radians,
-    Distance,
-    GravitationalParameter,
-    SemiMinorAxis,
 )
-import plotly.graph_objects as go
-from afmaths.physics.space.astrodynamics import (
-    generate_all_orbit_positions,
-    generate_angles_on_circle,
-    generate_relative_coordinate_from_eccentric_anomaly,
-    mean_anomaly_from_kepler_equation,
-    time_since_periapsis,
-    true_anomaly_from_eccentric_anomaly,
-    vis_viva,
-)
+
 from afmaths.geometry import (
     calculate_distance,
     calculate_foci,
     draw_circle_bounding_box,
     draw_ellipse,
 )
-
-EXAMPLE_ELEMENTS = OrbitalElements(
-    Inclination(Radians(Scalar(math.radians(5.145)))),
-    RightAscension(Radians(Scalar(3.024483909022929))),
-    ArgumentOfPerigee(Radians(Scalar(8.8))),
-    SemiMajorAxis(Distance(Scalar(384748))),
-    Eccentricity(Ratio(Scalar(0.0549006))),
-    TrueAnomaly(Anomaly(Radians(Scalar(2.987554518980773)))),
+from afmaths.operation import interval
+from afmaths.physics.space.astrodynamics import (
+    generate_all_orbit_positions,
+    generate_angles_on_circle,
+    generate_relative_coordinate_from_eccentric_anomaly,
+    mean_anomaly_from_kepler_equation,
+    orbit_state_vector_prediction_from_orbital_elements,
+    orbital_elements_from_state_vectors,
+    time_since_periapsis,
+    true_anomaly_from_eccentric_anomaly,
+    vis_viva,
+)
+from afmaths.physics.space.astronomy.conversion_helpers import (
+    python_datetime_to_fulldate,
+    python_timedelta_to_seconds,
+)
+from afmaths.physics.space.horizons_api import (
+    HorizonsCommandTarget,
+    get_object_state_vectors_from_horizon,
 )
 
 
@@ -177,15 +176,19 @@ def generate_orbital_slider_data(
 
     for eccentric_anomaly in generate_angles_on_circle(step_n):
 
+        eccentric_anomaly_obj = EccentricAnomaly(
+            Anomaly(Radians(Scalar(eccentric_anomaly)))
+        )
+
         true_anomaly = true_anomaly_from_eccentric_anomaly(
-            EccentricAnomaly(Anomaly(Radians(Scalar(eccentric_anomaly)))),
+            eccentric_anomaly_obj,
             elements.eccentricity,
         )
         coordinates = generate_relative_coordinate_from_eccentric_anomaly(
             plot_central_point,
             elements.semi_major_axis,
             b,
-            EccentricAnomaly(Anomaly(Radians(Scalar(eccentric_anomaly)))),
+            eccentric_anomaly_obj,
         )
 
         distance = (
@@ -208,7 +211,7 @@ def generate_orbital_slider_data(
             SemiMajorAxis(Distance(Scalar(elements.semi_major_axis * plot_scale))),
             g,
             mean_anomaly_from_kepler_equation(
-                EccentricAnomaly(Anomaly(Radians(Scalar(eccentric_anomaly)))),
+                eccentric_anomaly_obj,
                 elements.eccentricity,
             ),
         )
@@ -293,38 +296,34 @@ def scaled_radius(
 
 
 def add_body_surface(
-    traces_list: list,
     name: str,
     radius_km: float,
     radius_scale: float,
     distance_scale_km: float,
-    position=None,
+    position: PositionVector | None = None,
     opacity: float = 0.9,
-) -> None:
+) -> go.Surface:
     surface = plot_sphere_surface(
         scaled_radius(radius_km, radius_scale, distance_scale_km),
         position,
     )
 
-    traces_list.append(
-        go.Surface(
-            x=surface.x,
-            y=surface.y,
-            z=surface.z,
-            name=name,
-            opacity=opacity,
-            showscale=False,
-        )
+    return go.Surface(
+        x=surface.x,
+        y=surface.y,
+        z=surface.z,
+        name=name,
+        opacity=opacity,
+        showscale=False,
     )
 
 
 def add_orbit_line_trace(
-    traces_list: list,
     name: str,
-    orbital_elements,
+    orbital_elements: OrbitalElements,
     distance_scale_km: float,
     orbit_points: int,
-) -> None:
+) -> go.Scatter3d:
     x = []
     y = []
     z = []
@@ -336,14 +335,12 @@ def add_orbit_line_trace(
         y.append(scaled.y)
         z.append(scaled.z)
 
-    traces_list.append(
-        go.Scatter3d(
-            x=x,
-            y=y,
-            z=z,
-            mode="lines",
-            name=f"{name} orbit",
-        )
+    return go.Scatter3d(
+        x=x,
+        y=y,
+        z=z,
+        mode="lines",
+        name=f"{name} orbit",
     )
 
 
@@ -365,3 +362,122 @@ def make_3d_orbit_figure(
     )
 
     return fig
+
+
+@dataclass(frozen=True)
+class BodyPlotConfig:
+    name: str
+    target: HorizonsCommandTarget
+    radius_km: float
+    radius_scale: float
+
+
+@dataclass(frozen=True)
+class OrbitPlotSettings:
+    centre: HorizonsCommandTarget
+    gravitational_parameter: GravitationalParameter
+    distance_scale_km: float
+    orbit_points: int
+    start_time: datetime.datetime
+    time_offset: datetime.timedelta
+    add_prediction_to_orbit: bool = True
+    use_horizon_api_for_prediction: bool = False
+
+    @property
+    def stop_time(self) -> datetime.datetime:
+        return self.start_time + self.time_offset
+
+    @property
+    def time_offset_seconds(self) -> float:
+        return python_timedelta_to_seconds(self.time_offset)
+
+
+def get_horizon_state_vectors(
+    target: HorizonsCommandTarget,
+    settings: OrbitPlotSettings,
+) -> list[StateVectors]:
+    return get_object_state_vectors_from_horizon(
+        target=target,
+        centre=settings.centre,
+        start_time=python_datetime_to_fulldate(settings.start_time),
+        stop_time=python_datetime_to_fulldate(settings.stop_time),
+    )
+
+
+def predict_state_from_orbital_elements(
+    orbital_elements: OrbitalElements,
+    settings: OrbitPlotSettings,
+) -> StateVectors:
+    return orbit_state_vector_prediction_from_orbital_elements(
+        orbital_elements,
+        Second(Scalar(settings.time_offset_seconds)),
+        settings.gravitational_parameter,
+    )
+
+
+def add_orbiting_body_to_traces(
+    traces: list,
+    body: BodyPlotConfig,
+    settings: OrbitPlotSettings,
+    opacity: float = 0.9,
+) -> None:
+    horizon_state_vectors = get_horizon_state_vectors(body.target, settings)
+
+    if len(horizon_state_vectors) < 1:
+        raise ValueError(f"No Horizons state vectors returned for {body.name}")
+
+    current_state = horizon_state_vectors[0]
+    orbital_elements = orbital_elements_from_state_vectors(
+        current_state,
+        gravitational_parameter=settings.gravitational_parameter,
+    )
+
+    traces.append(
+        add_orbit_line_trace(
+            body.name,
+            orbital_elements,
+            settings.distance_scale_km,
+            settings.orbit_points,
+        )
+    )
+
+    traces.append(
+        add_body_surface(
+            body.name,
+            body.radius_km,
+            body.radius_scale,
+            settings.distance_scale_km,
+            position=scale_position(current_state.position, settings.distance_scale_km),
+            opacity=opacity,
+        )
+    )
+
+    if not settings.add_prediction_to_orbit:
+        return
+
+    if settings.use_horizon_api_for_prediction:
+        if len(horizon_state_vectors) < 2:
+            raise ValueError(
+                f"Need at least two Horizons state vectors to show prediction for {body.name}"
+            )
+
+        prediction_state = horizon_state_vectors[-1]
+    else:
+        prediction_state = predict_state_from_orbital_elements(
+            orbital_elements,
+            settings,
+        )
+
+    traces.append(
+        add_body_surface(
+            body.name + " prediction",
+            body.radius_km,
+            body.radius_scale,
+            settings.distance_scale_km,
+            position=scale_position(
+                prediction_state.position,
+                settings.distance_scale_km,
+            ),
+            opacity=opacity,
+        )
+    )
