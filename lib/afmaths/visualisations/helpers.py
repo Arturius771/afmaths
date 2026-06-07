@@ -407,17 +407,6 @@ def get_horizon_state_vectors(
     )
 
 
-def predict_state_from_orbital_elements(
-    orbital_elements: OrbitalElements,
-    settings: OrbitPlotSettings,
-) -> StateVectors:
-    return orbit_state_vector_prediction_from_orbital_elements(
-        orbital_elements,
-        settings.time_offset_seconds,
-        settings.gravitational_parameter,
-    )
-
-
 def add_orbiting_body_to_traces(
     traces: list,
     body: BodyPlotConfig,
@@ -435,9 +424,10 @@ def add_orbiting_body_to_traces(
     )
 
     # For internal consistency, we predict the current state from the orbital elements rather than using the Horizons state vector directly. This ensures that the position used for the body surface and the orbit line are based on the same model.
-    model_current_state = predict_state_from_orbital_elements(
+    model_current_state = orbit_state_vector_prediction_from_orbital_elements(
         orbital_elements,
-        replace(settings, time_offset=datetime.timedelta(seconds=0)),
+        Second(Scalar(0)),
+        settings.gravitational_parameter,
     )
 
     traces.append(
@@ -467,9 +457,10 @@ def add_orbiting_body_to_traces(
     if not settings.add_prediction_to_orbit:
         return
 
-    model_prediction_state = predict_state_from_orbital_elements(
+    model_prediction_state = orbit_state_vector_prediction_from_orbital_elements(
         orbital_elements,
-        settings,
+        settings.time_offset_seconds,
+        settings.gravitational_parameter,
     )
 
     traces.append(

@@ -8,7 +8,7 @@ from afmaths.visualisations.helpers import BodyPlotConfig, OrbitPlotSettings
 
 DISTANCE_SCALE_KM = 10_000
 BODY_RADIUS_SCALE = 20.0
-ORBIT_POINTS = 500
+ORBIT_POINTS = 50
 
 EARTH_RADIUS_KM = 6_371.0
 MOON_RADIUS_KM = 1_737.4
@@ -51,7 +51,7 @@ def main() -> None:
         distance_scale_km=DISTANCE_SCALE_KM,
         orbit_points=ORBIT_POINTS,
         start_time=datetime.datetime.now(),
-        time_offset=datetime.timedelta(days=30),
+        time_offset=datetime.timedelta(days=15),
         add_prediction_to_orbit=True,
     )
 

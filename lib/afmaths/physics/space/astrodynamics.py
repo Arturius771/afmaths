@@ -145,17 +145,19 @@ def inclination_from_angular_momentum_vector(
     angular_momentum_vector: Vector3D,
 ) -> Inclination:
     """Calculates the inclination of an orbit from the angular momentum vector"""
-
-    # # First formulation
-    # i1 = np.arctan2(np.sqrt(np.square(h[0]) + np.square(h[1])), h[2])
-    # # Second formulation
-    # i2 = np.arccos(h[2] / np.linalg.norm(h))
-
-    x = SQUARE(angular_momentum_vector.x)
-    y = SQUARE(angular_momentum_vector.y)
-    numerator = square_root(add(x)(y))
-    denominator = angular_momentum_vector.z
-    return Inclination(Radians(Scalar(atan(divide(denominator)(numerator)))))
+    return Inclination(
+        Radians(
+            Scalar(
+                math.atan2(
+                    math.sqrt(
+                        angular_momentum_vector.x * angular_momentum_vector.x
+                        + angular_momentum_vector.y * angular_momentum_vector.y
+                    ),
+                    angular_momentum_vector.z,
+                )
+            )
+        )
+    )
 
 
 def right_ascension_of_ascending_node_from_angular_momentum_vector(
@@ -165,16 +167,12 @@ def right_ascension_of_ascending_node_from_angular_momentum_vector(
 
     This relates the orbital plane to the celestial sphere.
     """
-
-    # # But it's better to use arctan2 which handles the quadrants for you
-    # Omega = np.arctan2(h[0], -h[1])
-    # # Note: equivalent to np.arctan(h[0] / -h[1]) + np.pi
-
     return RightAscension(
         Radians(
-            add(
-                math.atan(divide(-angular_momentum_vector.y)(angular_momentum_vector.x))
-            )(math.pi)
+            Scalar(
+                math.atan2(angular_momentum_vector.x, -angular_momentum_vector.y)
+                % (2 * math.pi)
+            )
         )
     )
 
@@ -654,8 +652,8 @@ def generate_all_orbit_positions(
     resolution: int,
     gravitational_parameter: GravitationalParameter = EARTH_MU_KM_CUBED,
 ) -> list[PositionVector]:
-    if resolution < 50:
-        raise ValueError("Resolution must be greater than 50.")
+    if resolution < 5:
+        raise ValueError("Resolution must be greater than 5.")
     position_list = []
     for true_anomaly in generate_angles_on_circle(resolution):
         position_list.append(

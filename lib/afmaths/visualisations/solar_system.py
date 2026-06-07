@@ -9,7 +9,7 @@ from afmaths.visualisations.helpers import BodyPlotConfig, OrbitPlotSettings
 DISTANCE_SCALE_KM = 1_000_000
 PLANET_RADIUS_SCALE = 1000.0
 SUN_RADIUS_SCALE = 10.0
-ORBIT_POINTS = 500
+ORBIT_POINTS = 50
 
 SUN_RADIUS_KM = 696_340.0
 SUN_GRAVITATIONAL_PARAMETER = GravitationalParameter(Scalar(132_712_440_018.0))
@@ -63,7 +63,7 @@ def main() -> None:
         orbit_points=ORBIT_POINTS,
         start_time=datetime.datetime.now(),
         time_offset=datetime.timedelta(days=124),
-        add_prediction_to_orbit=True,
+        add_prediction_to_orbit=False,
     )
 
     HeliocentricSolarSystemPlot(settings).show()
