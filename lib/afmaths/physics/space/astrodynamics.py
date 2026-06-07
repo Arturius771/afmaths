@@ -1,6 +1,7 @@
 from dataclasses import replace
 from math import atan
 import math
+from typing import Callable
 
 from afmaths.physics.space.astronomy.conversion_helpers import degrees_to_radians
 from afmaths.tensors import (
@@ -19,6 +20,7 @@ from afmaths.operation import (
     exponentiate,
     interval,
     multiply,
+    newtons_raphson_method,
     ratio,
     square_root,
     subtract,
@@ -294,7 +296,7 @@ def eccentric_anomaly_solved(
 ) -> tuple[EccentricAnomaly, list]:
     history = []  # TODO: make this more structured
 
-    E_i = mean_anomaly
+    E_i = EccentricAnomaly(mean_anomaly)
     delta_E = float("inf")
 
     iteration = 0
@@ -375,7 +377,7 @@ def true_anomaly_from_mean_anomaly(
     eccentricity: Eccentricity, mean_anomaly: MeanAnomaly
 ) -> TrueAnomaly:
     eccentric_anomaly, _ = eccentric_anomaly_solved(
-        newton_iteration, eccentricity, mean_anomaly
+        newtons_method, eccentricity, mean_anomaly
     )
 
     return true_anomaly_from_eccentric_anomaly(eccentric_anomaly, eccentricity)
@@ -446,17 +448,30 @@ def orbital_elements_from_state_vectors(
     )
 
 
-def newton_iteration(
-    E_i: EccentricAnomaly, eccentricity: Eccentricity, mean_anomaly: MeanAnomaly
-):
+def newtons_method(
+    E_i_guess: EccentricAnomaly, eccentricity: Eccentricity, mean_anomaly: MeanAnomaly
+) -> EccentricAnomaly:
+    """Performs one iteration of Newton's method to solve Kepler's equation for the eccentric anomaly.
+
+    Converges quckly if eccentricity is low."""
     # E_i - (E_i - e * np.sin(E_i) - M) / (1 - e * np.cos(E_i))
     # E_i - (E_i - eccentricity * math.sin(E_i) - mean_anomaly)
     # M = E - e * np.sin(E)
-    return subtract(
-        divide(subtract(multiply(eccentricity)(math.cos(E_i)))(1))(
-            subtract(mean_anomaly)(kepler_equation(E_i, eccentricity))
+    return EccentricAnomaly(
+        Anomaly(
+            Radians(
+                Scalar(
+                    newtons_raphson_method(
+                        E_i_guess,
+                        subtract(mean_anomaly)(
+                            kepler_equation(E_i_guess, eccentricity)
+                        ),
+                        subtract(multiply(eccentricity)(math.cos(E_i_guess)))(1),
+                    )
+                )
+            )
         )
-    )(E_i)
+    )
 
 
 def perifocal_position_vector(
@@ -697,7 +712,7 @@ def orbit_coordinate_prediction(
         ),
     )
 
-    E, _ = eccentric_anomaly_solved(newton_iteration, orbital_elements.eccentricity, M)
+    E, _ = eccentric_anomaly_solved(newtons_method, orbital_elements.eccentricity, M)
 
     return coordinate_from_eccentric_anomaly(
         orbital_elements.semi_major_axis,

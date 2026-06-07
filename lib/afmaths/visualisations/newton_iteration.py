@@ -2,7 +2,7 @@ import math
 
 from afmaths.physics.space.astrodynamics import (
     eccentric_anomaly_solved,
-    newton_iteration,
+    newtons_method,
 )
 
 from astronomy_types import MeanAnomaly, Anomaly, Radians, Scalar
@@ -64,7 +64,7 @@ import plotly.graph_objects as go
 from afmaths.physics.space.space_engineering import EXAMPLE_ELEMENTS
 
 _, history = eccentric_anomaly_solved(
-    newton_iteration,
+    newtons_method,
     EXAMPLE_ELEMENTS.eccentricity,
     MeanAnomaly(Anomaly(Radians(Scalar(1.8 * math.pi)))),
 )

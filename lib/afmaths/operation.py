@@ -130,5 +130,14 @@ def product(
     return total
 
 
+def newtons_raphson_method(
+    first_term: float, function: float, derivative: float
+) -> float:
+    # E_i - (E_i - e * np.sin(E_i) - M) / (1 - e * np.cos(E_i))
+    # E_i - (E_i - eccentricity * math.sin(E_i) - mean_anomaly)
+    # M = E - e * np.sin(E)
+    return subtract(divide(derivative)(function))(first_term)
+
+
 if __name__ == "__main__":
     print(reduce(lambda a, b: subtract(b)(a))([1, 2, 3, 5, 6]))
