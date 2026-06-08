@@ -94,6 +94,14 @@ def power_rule_string(symbol: float, exponent: float) -> str:
     return f"f({symbol}^{{{exponent}}}) = {exponent} * {symbol}^{{{exponent - 1}}}"
 
 
+def is_divisible(x: int, y: int) -> bool:
+
+    if x == 0:
+        raise ValueError("Cannot divide by zero")
+
+    return x % y == 0
+
+
 # def trapezoidal_rule(start: Coordinate2D, end: Coordinate2D) -> float:
 #     """
 #     Area under a straight-line velocity-time segment.

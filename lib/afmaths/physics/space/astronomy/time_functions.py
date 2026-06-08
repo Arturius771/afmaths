@@ -17,6 +17,7 @@ from astronomy_types import (
     Year,
 )
 
+from afmaths.formula import is_divisible
 from afmaths.physics.space.astronomy.type_conversion_helpers import (
     decimal_time_to_time,
     time_to_decimal_time,
@@ -71,11 +72,9 @@ def year_is_leap(year: Year) -> bool:
     """Determines if a given year is a leap year."""
     year_int = int(year)
 
-    divisible_by_4 = year_int % 4 == 0
-    divisible_by_100 = year_int % 100 == 0
-    divisible_by_400 = year_int % 400 == 0
-
-    return divisible_by_4 and (not divisible_by_100 or divisible_by_400)
+    return is_divisible(year_int, 4) and (
+        not is_divisible(year_int, 100) or is_divisible(year_int, 400)
+    )
 
 
 def greenwich_to_julian_date(date: Date) -> JulianDate:
