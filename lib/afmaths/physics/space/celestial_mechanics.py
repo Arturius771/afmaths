@@ -1,6 +1,7 @@
 from dataclasses import replace
 import math
 
+from afmaths.physics.physics import GRAVITATIONAL_CONSTANT
 from afmaths.physics.space.astronomy.type_conversion_helpers import (
     degrees_to_radians,
     position_vector_to_vector3d,
@@ -20,6 +21,7 @@ from afmaths.tensors import (
 from afmaths.geometry import calculate_semi_minor_axis, semi_major_axis_from_axes
 from afmaths.operation import (
     CUBE,
+    HALF,
     SQUARE,
     add,
     divide,
@@ -66,6 +68,101 @@ from astronomy_types import (
 
 EARTH_MU_KM_CUBED = GravitationalParameter(Scalar(398600.5))  # km^3 / s^2
 EARTH_RADIUS_KM = Distance(Scalar(6378.0))  # km
+
+
+def gravitational_parameter(mass1: float, mass2: float = 0) -> GravitationalParameter:
+    """
+    Calculates the graviational parameter (Mu) of two objects in m^3/s^2
+
+    :param mass1: The first bodies mass
+    :type mass1: float
+    :param mass2: The second bodies mass
+    :type mass2: float
+    :return: Mu = G * (mass1 + mass2)
+    :rtype: float
+    """
+    return multiply(GRAVITATIONAL_CONSTANT)(add(mass1)(mass2))
+
+
+def univesal_gravitation(
+    mass1: Scalar, mass2: Scalar, distance_metres: Distance
+) -> float:
+    """
+    Calculate the strength of the gravitational "force" between two objects.
+
+    :param mass1: The first object's mass
+    :type mass1: float
+    :param mass2: The second object's mass
+    :type mass2: float
+    :param distance_metres: The distance between the two objects
+    :type distance_metres: float
+    :return: Description
+    :rtype: float
+    """
+    return multiply(GRAVITATIONAL_CONSTANT)(
+        multiply(mass1)(mass2) / SQUARE(distance_metres)
+    )
+
+
+def gravitational_acceleration(mu: GravitationalParameter, radius: Distance) -> Scalar:
+    return divide(SQUARE(radius))(mu)
+
+
+def gravity_at_altitude(
+    altitude: Distance,
+    initial_body_radius: Distance,
+    mu: GravitationalParameter,
+) -> Scalar:
+    # From MSE SFM Exercise 1
+    return gravitational_acceleration(
+        mu,
+        orbit_radius(altitude, initial_body_radius),
+    )
+
+
+def centripetal_acceleration(velocity: Velocity, radius: Distance) -> Scalar:
+    # From MSE SFM Exercise 1
+    return divide(radius)(SQUARE(velocity))
+
+
+def mean_angular_rate(
+    semi_major_axis: SemiMajorAxis, gravitational_parameter: GravitationalParameter
+) -> Rate:
+    # From MSE SFM Exercise 1
+    return Rate(
+        Scalar(square_root(divide(CUBE(semi_major_axis))(gravitational_parameter)))
+    )
+
+
+def angular_momentum(state_vectors: StateVectors) -> Vector3D[Scalar]:
+    # From MSE SFM Exercise 2
+    return vector_cross_multiplication_3d(
+        state_vectors.position, state_vectors.velocity
+    )
+
+
+def angular_momentum_magnitude(angular_momentum_vector: Vector3D[Scalar]) -> Scalar:
+    # From MSE SFM Exercise 1
+    return vector_magnitude_3d(angular_momentum_vector)
+
+
+def instantaneous_angular_velocity(state_vectors: StateVectors) -> Scalar:
+    # From MSE SFM Exercise 1
+    h = angular_momentum_magnitude(angular_momentum(state_vectors))
+    r = vector_magnitude_3d(
+        Vector3D(
+            state_vectors.position.x, state_vectors.position.y, state_vectors.position.z
+        )
+    )
+
+    return divide(SQUARE(r))(h)
+
+
+def swept_area_of_ellipse(
+    angular_momentum: Scalar, time_since_periapsis: Second
+) -> Scalar:
+    # From MSE SFM Exercise 1
+    return multiply(HALF(angular_momentum))(time_since_periapsis)
 
 
 def orbit_radius(
@@ -186,7 +283,7 @@ def eccentricity_from_ellipse_equation(
     semi_major_axis: SemiMajorAxis,
     gravitational_parameter: GravitationalParameter = EARTH_MU_KM_CUBED,
 ) -> Eccentricity:
-    h = vector_magnitude_3d(angular_momentum_vector)
+    h = angular_momentum_magnitude(angular_momentum_vector)
 
     p = semi_latus_rectum_from_angular_momentum(
         h,
@@ -204,11 +301,7 @@ def mean_motion(
 ) -> MeanMotion:
     """Calculates the mean motion of an orbit from the semi major axis in radians per second"""
     # n = np.sqrt(mu / np.power(a, 3))
-    return MeanMotion(
-        Rate(
-            Scalar(square_root(divide(CUBE(semi_major_axis))(gravitational_parameter)))
-        )
-    )
+    return MeanMotion((mean_angular_rate(semi_major_axis, gravitational_parameter)))
 
 
 def kepler_equation(E_rad: EccentricAnomaly, eccentricity: Eccentricity) -> MeanAnomaly:
@@ -332,20 +425,7 @@ def true_anomaly_from_eccentric_anomaly(
     y = multiply(sqrt_term)(sin_E)  # √(1 - e²) * sin(E)
     x = subtract(eccentricity)(cos_E)
 
-    theta = math.atan(y / x)
-
-    if x > 0:
-        if y < 0:
-            theta += 2 * math.pi
-    elif x < 0:
-        theta += math.pi
-    else:  # x == 0
-        if y > 0:
-            theta = math.pi / 2
-        elif y < 0:
-            theta = 3 * math.pi / 2
-        else:
-            theta = 0
+    theta = math.atan2(y, x) % (2 * math.pi)
 
     return TrueAnomaly(Anomaly(Radians(Scalar(theta))))
 
@@ -395,9 +475,7 @@ def orbital_elements_from_state_vectors(
     """Calculates the orbital elements of an orbit from the state vectors (position and velocity)"""
     # From TUB MSE SFM Exercise 2 solution
 
-    angular_momentum_vector = vector_cross_multiplication_3d(
-        state_vectors.position, state_vectors.velocity
-    )
+    angular_momentum_vector = angular_momentum(state_vectors)
 
     inclination = inclination_from_angular_momentum_vector(angular_momentum_vector)
     raan = right_ascension_of_ascending_node_from_angular_momentum_vector(

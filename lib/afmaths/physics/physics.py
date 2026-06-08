@@ -11,7 +11,6 @@ from astronomy_types import (
     Acceleration,
     Coordinate2D,
     Scalar,
-    Distance,
     Second,
     Vector2D,
     Velocity,
@@ -19,7 +18,7 @@ from astronomy_types import (
 
 from afmaths.physics.kinematics import (
     detect_collision,
-    propogate_vector,
+    propagate_vector,
     velocity_after_duration,
     velocity_time_average_acceleration_from_slope,
     velocity_time_curve_displacement,
@@ -60,51 +59,12 @@ def refractive_index(angle_of_incidence_1: float, angle_of_incedence_2: float):
     return divide(math.sin(angle_of_incedence_2))(math.sin(angle_of_incidence_1))
 
 
-def univesal_gravitation(
-    mass1: Scalar, mass2: Scalar, distance_metres: Distance
-) -> float:
-    """
-    Calculate the strength of the gravitational "force" between two objects.
-
-    :param mass1: The first object's mass
-    :type mass1: float
-    :param mass2: The second object's mass
-    :type mass2: float
-    :param distance_metres: The distance between the two objects
-    :type distance_metres: float
-    :return: Description
-    :rtype: float
-    """
-    return multiply(GRAVITATIONAL_CONSTANT)(
-        multiply(mass1)(mass2) / SQUARE(distance_metres)
-    )
-
-
-def angular_diameter_degrees(distance: float, diameter: float) -> float:
-    """Calculates the angular diameter of an object in degrees"""
-    return math.degrees(diameter / distance)
-
-
 def diameter_of_distant_object(
     distance: float, angular_diameter_degrees: float
 ) -> float:
     """Returns the diameter of an object if the distance and angular diameter are known"""
     # Rearranges the equation in angular_diameter_degrees()
     return math.tan(math.radians(angular_diameter_degrees)) * distance
-
-
-def calculate_gravitional_parameter(mass1: float, mass2: float) -> float:
-    """
-    Calculates the graviational parameter (Mu) of two objects in m^3/s^2
-
-    :param mass1: The first bodies mass
-    :type mass1: float
-    :param mass2: The second bodies mass
-    :type mass2: float
-    :return: Mu = G * (mass1 + mass2)
-    :rtype: float
-    """
-    return multiply(GRAVITATIONAL_CONSTANT)(mass1 + mass2)
 
 
 def calculate_schwarzschild_radius(mass: float) -> float:
@@ -188,7 +148,7 @@ if __name__ == "__main__":
         )
     )
 
-    print(propogate_vector(Coordinate2D(0, 0), Vector2D(1, 1), 2))
+    print(propagate_vector(Coordinate2D(0, 0), Vector2D(1, 1), 2))
 
     print(
         detect_collision(
