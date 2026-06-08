@@ -122,7 +122,7 @@ def product(
     start_index: int,
     stop_index: int,
 ) -> float:
-    total = 0.0
+    total = 1.0
 
     for val in range(start_index, stop_index + 1):
         total *= product_function(val)
