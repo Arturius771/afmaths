@@ -8,14 +8,18 @@ from afmaths.physics.space.astronomy.type_conversion_helpers import (
     velocity_vector_to_vector3d,
 )
 from afmaths.physics.space.astronomy.coordinate_conversion import (
-    eci_rotation_matrix_from_orbital_elements,
-    transform_perifocal_to_earth_centred_inertial,
+    EarthCentredInertial,
+    orthonormal_frame_transform,
     vector_from_coordinates,
 )
+from afmaths.physics.space.space_engineering import EXAMPLE_ELEMENTS
 from afmaths.tensors import (
+    RotationMatrix,
     dot_product_3d,
+    rotation_matrix,
     vector_cross_multiplication_3d,
     vector_magnitude_3d,
+    vector_multiplication_2d,
 )
 
 from afmaths.geometry import calculate_semi_minor_axis, semi_major_axis_from_axes
@@ -59,6 +63,7 @@ from astronomy_types import (
     TrueAnomaly,
     Scalar,
     Ratio,
+    Vector2D,
     Vector3D,
     Velocity,
     VelocityVector,
@@ -118,11 +123,6 @@ def gravity_at_altitude(
         mu,
         orbit_radius(altitude, initial_body_radius),
     )
-
-
-def centripetal_acceleration(velocity: Velocity, radius: Distance) -> Scalar:
-    # From MSE SFM Exercise 1
-    return divide(radius)(SQUARE(velocity))
 
 
 def mean_angular_rate(
@@ -529,7 +529,22 @@ def newtons_method(
     )
 
 
-def perifocal_position_vector(
+def perifocal_position_vector_2d(
+    orbital_elements: OrbitalElements,
+) -> Vector2D[Scalar]:
+    radius = orbit_equation(
+        orbital_elements.semi_major_axis,
+        orbital_elements.eccentricity,
+        orbital_elements.true_anomaly,
+    )
+
+    return Vector2D(
+        x=Scalar(radius * math.cos(orbital_elements.true_anomaly)),
+        y=Scalar(radius * math.sin(orbital_elements.true_anomaly)),
+    )
+
+
+def perifocal_position_vector_3d(
     radius: Distance, true_anomaly: TrueAnomaly
 ) -> PositionVector:
     """Calculates the position vector in the perifocal coordinate system"""
@@ -544,7 +559,7 @@ def perifocal_position_vector(
     return PositionVector(Position(vector.x), Position(vector.y), Position(vector.z))
 
 
-def perifocal_velocity_vector(
+def perifocal_velocity_vector_3d(
     true_anomaly: TrueAnomaly,
     eccentricity: Eccentricity,
     semi_major_axis: SemiMajorAxis,
@@ -620,26 +635,26 @@ def orbit_state_vector_prediction_from_orbital_elements(
         true_anomaly_at_offset,
     )
 
-    perifocal_position = perifocal_position_vector(
+    perifocal_position_gaussian = perifocal_position_vector_3d(
         radius_at_offset, true_anomaly_at_offset
     )
 
-    perifocal_velocity = perifocal_velocity_vector(
+    perifocal_velocity_gaussian = perifocal_velocity_vector_3d(
         true_anomaly_at_offset,
         orbital_elements.eccentricity,
         orbital_elements.semi_major_axis,
         gravitational_parameter,
     )
 
-    eci_rotation_matrix = eci_rotation_matrix_from_orbital_elements(orbital_elements)
+    eci_rotation_matrix = perifocal_to_inertial_frame_rotation_matrix(orbital_elements)
 
     position_vector = transform_perifocal_to_earth_centred_inertial(
         eci_rotation_matrix,
-        position_vector_to_vector3d(perifocal_position),
+        position_vector_to_vector3d(perifocal_position_gaussian),
     )
 
     velocity_vector = transform_perifocal_to_earth_centred_inertial(
-        eci_rotation_matrix, velocity_vector_to_vector3d(perifocal_velocity)
+        eci_rotation_matrix, velocity_vector_to_vector3d(perifocal_velocity_gaussian)
     )
 
     return StateVectors(
@@ -745,6 +760,63 @@ def generate_relative_coordinate_from_eccentric_anomaly(
     )
 
 
+def transform_perifocal_to_earth_centred_inertial(
+    perifocal_to_eci_rotation_matrix: RotationMatrix,
+    perifocal_vector: Vector3D[Scalar],
+) -> EarthCentredInertial:
+    """Transforms a vector from the perifocal coordinate system to the ECI coordinate system using the provided transformation matrix"""
+    # TODO: reuse
+    return EarthCentredInertial(
+        orthonormal_frame_transform(perifocal_to_eci_rotation_matrix, perifocal_vector)
+    )
+
+
+def perifocal_to_inertial_frame_rotation_matrix(
+    orbital_elements: OrbitalElements,
+) -> RotationMatrix:
+    argument_of_perigee = orbital_elements.argument_of_perigee
+    right_ascension_of_ascening_node = (
+        orbital_elements.right_ascension_of_ascending_node
+    )
+    inclination = orbital_elements.inclination
+
+    p = [
+        math.cos(argument_of_perigee) * math.cos(right_ascension_of_ascening_node)
+        - math.sin(argument_of_perigee)
+        * math.cos(inclination)
+        * math.sin(right_ascension_of_ascening_node),
+        math.cos(argument_of_perigee) * math.sin(right_ascension_of_ascening_node)
+        + math.sin(argument_of_perigee)
+        * math.cos(inclination)
+        * math.cos(right_ascension_of_ascening_node),
+        math.sin(argument_of_perigee) * math.sin(inclination),
+    ]
+
+    q = [
+        -math.sin(argument_of_perigee) * math.cos(right_ascension_of_ascening_node)
+        - math.cos(argument_of_perigee)
+        * math.cos(inclination)
+        * math.sin(right_ascension_of_ascening_node),
+        -math.sin(argument_of_perigee) * math.sin(right_ascension_of_ascening_node)
+        + math.cos(argument_of_perigee)
+        * math.cos(inclination)
+        * math.cos(right_ascension_of_ascening_node),
+        math.cos(argument_of_perigee) * math.sin(inclination),
+    ]
+
+    w = [
+        math.sin(inclination) * math.sin(right_ascension_of_ascening_node),
+        -math.sin(inclination) * math.cos(right_ascension_of_ascening_node),
+        math.cos(inclination),
+    ]
+
+    return rotation_matrix(
+        Vector3D(Scalar(p[0]), Scalar(p[1]), Scalar(p[2])),
+        Vector3D(Scalar(q[0]), Scalar(q[1]), Scalar(q[2])),
+        Vector3D(Scalar(w[0]), Scalar(w[1]), Scalar(w[2])),
+    )
+
+
 # TODO: FST 1 equations
 # TODO: Increment of velocity
 
@@ -814,3 +886,5 @@ if __name__ == "__main__":
             Second(Scalar(1000)),
         )
     )
+
+    print(perifocal_position_vector_2d(EXAMPLE_ELEMENTS))

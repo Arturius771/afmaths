@@ -10,6 +10,7 @@ from afmaths.operation import (
 from astronomy_types import (
     Acceleration,
     Coordinate2D,
+    Distance,
     Scalar,
     Second,
     Vector2D,
@@ -79,6 +80,12 @@ def calculate_schwarzschild_radius(mass: float) -> float:
     return divide(SQUARE(SPEED_OF_LIGHT_METRES_PER_SECONDS))(
         multiply(multiply(2)(GRAVITATIONAL_CONSTANT))(mass)
     )
+
+
+def centripetal_acceleration(velocity: Velocity, radius: Distance) -> Scalar:
+    # From MSE SFM Exercise 1
+    # Equal to gravitational acceleration for circular orbits.
+    return divide(radius)(SQUARE(velocity))
 
 
 if __name__ == "__main__":

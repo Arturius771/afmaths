@@ -12,6 +12,13 @@ from astronomy_types import (
 RotationMatrix = NewType("RotationMatrix", Vector3D[Vector3D[Scalar]])
 
 
+def dot_product(vector_a: Vector2D[Scalar], vector_b: Vector2D[Scalar]) -> Scalar:
+    a = multiply(vector_a.x)(vector_b.x)
+    b = multiply(vector_a.y)(vector_b.y)
+
+    return add(a)(b)
+
+
 def dot_product_3d(vector_a: Vector3D[Scalar], vector_b: Vector3D[Scalar]) -> Scalar:
     """Returns the dot product of two vectors"""
     a = multiply(vector_a.x)(vector_b.x)
