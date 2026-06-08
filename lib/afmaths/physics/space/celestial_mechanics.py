@@ -647,12 +647,12 @@ def orbit_state_vector_prediction_from_orbital_elements(
 
     eci_rotation_matrix = perifocal_to_inertial_frame_rotation_matrix(orbital_elements)
 
-    position_vector = transform_perifocal_to_earth_centred_inertial(
+    position_vector = transform_perifocal_to_inertial(
         eci_rotation_matrix,
         position_vector_to_vector3d(perifocal_position_gaussian),
     )
 
-    velocity_vector = transform_perifocal_to_earth_centred_inertial(
+    velocity_vector = transform_perifocal_to_inertial(
         eci_rotation_matrix, velocity_vector_to_vector3d(perifocal_velocity_gaussian)
     )
 
@@ -710,7 +710,7 @@ def ellipse_perimeter_coordinate_from_eccentric_anomaly(
     )
 
 
-def ellipse_perimeter_position_prediction_2d(
+def predict_ellipse_perimeter_position_2d(
     orbital_elements: OrbitalElements,
     target_time: Second,
 ) -> Coordinate2D:
@@ -759,7 +759,7 @@ def translate_ellipse_coordinate(
     )
 
 
-def transform_perifocal_to_earth_centred_inertial(
+def transform_perifocal_to_inertial(
     perifocal_to_eci_rotation_matrix: RotationMatrix,
     perifocal_vector: Vector3D[Scalar],
 ) -> EarthCentredInertial:
@@ -873,7 +873,7 @@ if __name__ == "__main__":
     )
 
     print(
-        ellipse_perimeter_position_prediction_2d(
+        predict_ellipse_perimeter_position_2d(
             OrbitalElements(
                 Inclination(degrees_to_radians(Degrees(Scalar(98.371)))),
                 RightAscension(degrees_to_radians(Degrees(Scalar(120.534)))),
