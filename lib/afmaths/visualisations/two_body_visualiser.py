@@ -11,7 +11,7 @@ from afmaths.visualisations.helpers import (
 )
 from afmaths.geometry import calculate_semi_minor_axis
 from afmaths.physics.space.celestial_mechanics import (
-    generate_relative_coordinate_from_eccentric_anomaly,
+    translate_ellipse_coordinate,
 )
 from astronomy_types import (
     Anomaly,
@@ -92,7 +92,7 @@ figure_plot_centre(
                     figure_orbit_line(
                         figure_planetary_body(
                             go.Figure(),
-                            generate_relative_coordinate_from_eccentric_anomaly(
+                            translate_ellipse_coordinate(
                                 central_point,
                                 PLOT_ELEMENTS.semi_major_axis,
                                 semi_minor_axis,

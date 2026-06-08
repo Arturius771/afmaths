@@ -33,7 +33,7 @@ from afmaths.physics.space.celestial_mechanics import (
     EARTH_MU_KM_CUBED,
     generate_all_orbit_positions,
     generate_angles_on_circle,
-    generate_relative_coordinate_from_eccentric_anomaly,
+    translate_ellipse_coordinate,
     kepler_equation,
     orbit_state_vector_prediction_from_orbital_elements,
     orbital_elements_from_state_vectors,
@@ -185,7 +185,7 @@ def generate_orbital_slider_data(
             eccentric_anomaly_obj,
             elements.eccentricity,
         )
-        coordinates = generate_relative_coordinate_from_eccentric_anomaly(
+        coordinates = translate_ellipse_coordinate(
             plot_central_point,
             elements.semi_major_axis,
             b,
