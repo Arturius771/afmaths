@@ -4,6 +4,7 @@ import math
 from astronomy_types import (
     DMS,
     HMS,
+    Coordinate3D,
     Date,
     Day,
     DecimalTime,
@@ -12,10 +13,13 @@ from astronomy_types import (
     Hour,
     Minute,
     Month,
+    PositionVector,
     Radians,
     Scalar,
     Second,
     Time,
+    Vector3D,
+    VelocityVector,
     Year,
 )
 
@@ -115,3 +119,15 @@ def seconds_to_hours(seconds: Second) -> Hour:
 
 def hour_to_hour_string(hour: Hour) -> str:
     return f"{hour:02d}h"
+
+
+def coordinate3d_to_vector3d(coordinates: Coordinate3D) -> Vector3D[Scalar]:
+    return Vector3D(coordinates.x, coordinates.y, coordinates.z)
+
+
+def position_vector_to_vector3d(position_vector: PositionVector) -> Vector3D[Scalar]:
+    return Vector3D(position_vector.x, position_vector.y, position_vector.z)
+
+
+def velocity_vector_to_vector3d(velocity_vector: VelocityVector) -> Vector3D[Scalar]:
+    return Vector3D(velocity_vector.x, velocity_vector.y, velocity_vector.z)

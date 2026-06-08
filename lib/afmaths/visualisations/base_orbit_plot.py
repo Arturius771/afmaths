@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-from afmaths.physics.space.astronomy.conversion_helpers import (
+from afmaths.physics.space.astronomy.type_conversion_helpers import (
     fulldate_to_string,
     python_datetime_to_fulldate,
 )

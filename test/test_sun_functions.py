@@ -15,7 +15,7 @@ from astronomy_types import (
     Year,
 )
 
-from afmaths.physics.space.astronomy.conversion_helpers import (
+from afmaths.physics.space.astronomy.type_conversion_helpers import (
     dms_to_degrees,
     make_date,
     make_time,

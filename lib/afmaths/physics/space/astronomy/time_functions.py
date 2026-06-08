@@ -17,7 +17,7 @@ from astronomy_types import (
     Year,
 )
 
-from afmaths.physics.space.astronomy.conversion_helpers import (
+from afmaths.physics.space.astronomy.type_conversion_helpers import (
     decimal_time_to_time,
     time_to_decimal_time,
 )
@@ -50,6 +50,7 @@ def date_of_easter(year: Year) -> Date:
 
 
 def date_to_day_number(date: Date) -> int:
+    """Converts a date to the day number of the year."""
     year = date.year
     month = int(date.month)
     day = float(date.day)
@@ -67,6 +68,7 @@ def date_to_day_number(date: Date) -> int:
 
 
 def year_is_leap(year: Year) -> bool:
+    """Determines if a given year is a leap year."""
     year_int = int(year)
 
     divisible_by_4 = year_int % 4 == 0

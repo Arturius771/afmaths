@@ -41,7 +41,7 @@ from afmaths.physics.space.astrodynamics import (
     true_anomaly_from_eccentric_anomaly,
     vis_viva,
 )
-from afmaths.physics.space.astronomy.conversion_helpers import (
+from afmaths.physics.space.astronomy.type_conversion_helpers import (
     python_datetime_to_fulldate,
     python_timedelta_to_seconds,
 )

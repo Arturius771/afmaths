@@ -5,15 +5,15 @@ from astronomy_types import (
 
 import plotly.graph_objects as go
 
-from afmaths.physics.kinematics import detect_collision, propogate_vector
+from afmaths.physics.kinematics import detect_collision, propagate_vector
 
 object_a_coordinates = Coordinate2D[float](5, 10)
 object_a_vector = Vector2D(0, -1)
 object_b_coordinates = Coordinate2D[float](0, 5)
 object_b_vector = Vector2D(1, 0)
 
-vector_a = propogate_vector(object_a_coordinates, object_a_vector, 10)
-vector_b = propogate_vector(object_b_coordinates, object_b_vector, 10)
+vector_a = propagate_vector(object_a_coordinates, object_a_vector, 10)
+vector_b = propagate_vector(object_b_coordinates, object_b_vector, 10)
 
 a_x = [index.x for index in vector_a]
 a_y = [index.y for index in vector_a]

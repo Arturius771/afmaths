@@ -30,7 +30,7 @@ from astronomy_types import (
     Year,
 )
 
-from afmaths.physics.space.astronomy.conversion_helpers import (
+from afmaths.physics.space.astronomy.type_conversion_helpers import (
     degrees_to_radians,
     dms_to_radians,
     hms_to_radians,

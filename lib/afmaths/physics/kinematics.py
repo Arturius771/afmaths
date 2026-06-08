@@ -14,6 +14,7 @@ from afmaths.formula import trapezoidal_rule
 from afmaths.geometry import area
 from afmaths.graph import slope_gradiant
 from afmaths.operation import add, multiply
+from afmaths.tensors import vector_multiplication_2d, vector_multiplication_3d
 
 
 def velocity_time_displacement_flat(
@@ -69,36 +70,48 @@ def velocity_time_total_displacement(sorted_points: list[Coordinate2D]) -> Displ
     return Displacement(Scalar(total))
 
 
-def propogate_vector(
-    initial: Coordinate2D[float], vector: Vector2D, iterations: int = 100
+def propagate_vector(
+    initial: Coordinate2D[float],
+    vector: Vector2D,
+    iterations: int = 100,
 ) -> list[Coordinate2D]:
     """Propogates a vector through 2D space for a given number of iterations, returning the coordinates at each iteration. This is useful for detecting collisions between two objects with known initial coordinates and vectors."""
-    x = [initial]
-    for i in range(iterations):
-        x.append(
+
+    positions = []
+
+    for i in range(iterations + 1):
+        displacement = vector_multiplication_2d(vector, Scalar(i))
+
+        positions.append(
             Coordinate2D(
-                float(x[i].x) + float(vector.x), float(x[i].y) + float(vector.y)
+                float(initial.x) + float(displacement.x),
+                float(initial.y) + float(displacement.y),
             )
         )
 
-    return x
+    return positions
 
 
-def propogate_vector_3d(
-    initial: Coordinate3D, vector: Vector3D, iterations: int = 100
+def propagate_vector_3d(
+    initial: Coordinate3D,
+    vector: Vector3D,
+    iterations: int = 100,
 ) -> list[Coordinate3D]:
     """Propogates a vector through 3D space for a given number of iterations, returning the coordinates at each iteration. This is useful for detecting collisions between two objects with known initial coordinates and vectors."""
-    x = [initial]
-    for i in range(iterations):
-        x.append(
+    positions = []
+
+    for i in range(iterations + 1):
+        displacement = vector_multiplication_3d(vector, Scalar(i))
+
+        positions.append(
             Coordinate3D(
-                float(x[i].x) + float(vector.x),
-                float(x[i].y) + float(vector.y),
-                float(x[i].z) + float(vector.z),
+                float(initial.x) + float(displacement.x),
+                float(initial.y) + float(displacement.y),
+                float(initial.z) + float(displacement.z),
             )
         )
 
-    return x
+    return positions
 
 
 def detect_collision(
@@ -109,8 +122,8 @@ def detect_collision(
     margin: int = 1,
 ) -> tuple[bool, Coordinate2D]:
     """Detects if two objects will collide given their initial coordinates and vectors. Returns a tuple of (collision_detected, collision_coordinates)"""
-    a_positions = propogate_vector(object_a_coordinates, object_a_vector)
-    b_positions = propogate_vector(object_b_coordinates, object_b_vector)
+    a_positions = propagate_vector(object_a_coordinates, object_a_vector)
+    b_positions = propagate_vector(object_b_coordinates, object_b_vector)
 
     for i in range(len(a_positions)):
         if a_positions[i] == b_positions[i] or (
@@ -129,8 +142,8 @@ def detect_collision_3d(
     object_b_vector: Vector3D,
 ) -> tuple[bool, Coordinate3D]:
     """Detects if two objects will collide given their initial coordinates and vectors. Returns a tuple of (collision_detected, collision_coordinates)"""
-    a_positions = propogate_vector_3d(object_a_coordinates, object_a_vector)
-    b_positions = propogate_vector_3d(object_b_coordinates, object_b_vector)
+    a_positions = propagate_vector_3d(object_a_coordinates, object_a_vector)
+    b_positions = propagate_vector_3d(object_b_coordinates, object_b_vector)
 
     length_a = len(a_positions)
     length_b = len(b_positions)

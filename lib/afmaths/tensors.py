@@ -1,10 +1,15 @@
+from typing import NewType
+
 from .operation import SQUARE, add, multiply, square_root, subtract
 from astronomy_types import (
     Position,
     Scalar,
+    Vector2D,
     Vector3D,
     Velocity,
 )
+
+RotationMatrix = NewType("RotationMatrix", Vector3D[Vector3D[Scalar]])
 
 
 def dot_product_3d(vector_a: Vector3D[Scalar], vector_b: Vector3D[Scalar]) -> Scalar:
@@ -24,8 +29,18 @@ def vector_magnitude_3d(vector: Vector3D[Scalar]) -> Scalar:
     )
 
 
+def vector_multiplication_2d(
+    vector: Vector2D[Scalar], scalar: Scalar
+) -> Vector2D[Scalar]:
+    scalar_multiply = multiply(scalar)
+    i = scalar_multiply(vector.x)
+    j = scalar_multiply(vector.y)
+
+    return Vector2D(i, j)
+
+
 def vector_multiplication_3d(
-    vector: Vector3D[Scalar], scalar: float
+    vector: Vector3D[Scalar], scalar: Scalar
 ) -> Vector3D[Scalar]:
     scalar_multiply = multiply(scalar)
     i = scalar_multiply(vector.x)
@@ -57,3 +72,17 @@ def vector_cross_multiplication_3d(
     k = subtract(f)(e)
 
     return Vector3D(i, j, k)
+
+
+def rotation_matrix(
+    x_basis: Vector3D[Scalar],
+    y_basis: Vector3D[Scalar],
+    z_basis: Vector3D[Scalar],
+) -> RotationMatrix:
+    return RotationMatrix(
+        Vector3D(
+            Vector3D(x_basis.x, y_basis.x, z_basis.x),
+            Vector3D(x_basis.y, y_basis.y, z_basis.y),
+            Vector3D(x_basis.z, y_basis.z, z_basis.z),
+        )
+    )

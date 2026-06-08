@@ -1,6 +1,6 @@
 import math
 
-from afmaths.physics.space.astronomy.conversion_helpers import (
+from afmaths.physics.space.astronomy.type_conversion_helpers import (
     decimal_time_to_time,
     degrees_to_radians,
 )

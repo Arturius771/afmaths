@@ -19,7 +19,7 @@ from astronomy_types import (
     Year,
 )
 
-from afmaths.physics.space.astronomy.conversion_helpers import degrees_to_radians
+from afmaths.physics.space.astronomy.type_conversion_helpers import degrees_to_radians
 from afmaths.physics.space.astronomy.time_functions import (
     date_of_easter,
     date_to_day_number,
