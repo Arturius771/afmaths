@@ -498,27 +498,23 @@ def perifocal_position_vector(
 
 
 def perifocal_velocity_vector(
-    orbital_elements: OrbitalElements,
+    true_anomaly: TrueAnomaly,
+    eccentricity: Eccentricity,
+    semi_major_axis: SemiMajorAxis,
     gravitational_parameter: GravitationalParameter,
 ) -> VelocityVector:
     """Calculates the velocity vector in the perifocal coordinate system"""
     vector = vector_from_coordinates(
         Coordinate3D(
-            x=Scalar(-math.sin(orbital_elements.true_anomaly)),
-            y=Scalar(
-                add(orbital_elements.eccentricity)(
-                    math.cos(orbital_elements.true_anomaly)
-                )
-            ),
-            z=Scalar(0),
+            Scalar(-math.sin(true_anomaly)),
+            Scalar(add(eccentricity)(math.cos(true_anomaly))),
+            Scalar(0),
         ),
         Scalar(
             square_root(
-                divide(
-                    multiply(orbital_elements.semi_major_axis)(
-                        subtract(SQUARE(orbital_elements.eccentricity))(1)
-                    )
-                )(gravitational_parameter)
+                divide(multiply(semi_major_axis)(subtract(SQUARE(eccentricity))(1)))(
+                    gravitational_parameter
+                )
             )
         ),
     )
@@ -582,10 +578,9 @@ def orbit_state_vector_prediction_from_orbital_elements(
     )
 
     perifocal_velocity = perifocal_velocity_vector(
-        replace(
-            orbital_elements,
-            true_anomaly=true_anomaly_at_offset,
-        ),
+        true_anomaly_at_offset,
+        orbital_elements.eccentricity,
+        orbital_elements.semi_major_axis,
         gravitational_parameter,
     )
 
