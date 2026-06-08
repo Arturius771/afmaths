@@ -29,7 +29,7 @@ from afmaths.geometry import (
     draw_ellipse,
 )
 from afmaths.operation import interval
-from afmaths.physics.space.astrodynamics import (
+from afmaths.physics.space.celestial_mechanics import (
     EARTH_MU_KM_CUBED,
     generate_all_orbit_positions,
     generate_angles_on_circle,

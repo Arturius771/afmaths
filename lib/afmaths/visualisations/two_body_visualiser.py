@@ -10,7 +10,7 @@ from afmaths.visualisations.helpers import (
     figure_layout,
 )
 from afmaths.geometry import calculate_semi_minor_axis
-from afmaths.physics.space.astrodynamics import (
+from afmaths.physics.space.celestial_mechanics import (
     generate_relative_coordinate_from_eccentric_anomaly,
 )
 from astronomy_types import (

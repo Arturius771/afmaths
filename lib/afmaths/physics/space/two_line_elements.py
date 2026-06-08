@@ -1,6 +1,6 @@
 import math
 
-from afmaths.physics.space.astrodynamics import mean_motion
+from afmaths.physics.space.celestial_mechanics import mean_motion
 from afmaths.physics.space.astronomy.type_conversion_helpers import degrees_to_radians
 from afmaths.physics.space.astronomy.time_functions import (
     date_to_day_number,
