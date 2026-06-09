@@ -7,7 +7,7 @@ from afmaths.visualisations.base_orbit_plot import Base3DOrbitPlot
 from afmaths.visualisations.helpers import BodyPlotConfig, OrbitPlotSettings
 
 DISTANCE_SCALE_KM = 10_000
-BODY_RADIUS_SCALE = 20.0
+BODY_RADIUS_SCALE = 5.0
 ORBIT_POINTS = 50
 
 EARTH_RADIUS_KM = 6_371.0
