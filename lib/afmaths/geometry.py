@@ -12,7 +12,7 @@ from afmaths.operation import (
     HALF,
     SQUARE,
     add,
-    divide,
+    divide_by,
     exponentiate,
     multiply,
     square_root,
@@ -53,7 +53,7 @@ def sieve_of_eratosthenes(n: int) -> list[int]:
 
 def tangent(angle_degrees: float) -> float:
     """Returns a value in radians"""
-    return divide(cosine(angle_degrees))(sine(angle_degrees))
+    return divide_by(cosine(angle_degrees))(sine(angle_degrees))
 
 
 def arctangent(radians):
@@ -82,7 +82,7 @@ def area_of_right_triangle(base_length: float, height_length: float) -> float:
 
 def area_of_quarter_circle(side_length: float, radius: float) -> float:
     """Area = s^2 - ((1/4)*pi*r^2)"""
-    return subtract((divide(4)(1)) * math.pi * SQUARE(radius))(SQUARE(side_length))
+    return subtract((divide_by(4)(1)) * math.pi * SQUARE(radius))(SQUARE(side_length))
 
 
 def semi_major_axis_from_axes(a: float, b: float) -> SemiMajorAxis:

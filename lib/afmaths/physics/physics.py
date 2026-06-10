@@ -1,10 +1,10 @@
 from dataclasses import dataclass
 import math
+from afmaths.constants import GRAVITATIONAL_CONSTANT, SPEED_OF_LIGHT_METRES_PER_SECONDS
 from afmaths.operation import (
     HALF,
     SQUARE,
-    divide,
-    exponentiate,
+    divide_by,
     multiply,
 )
 from astronomy_types import (
@@ -35,11 +35,6 @@ class TriangleDescription:
     end: Coordinate2D
 
 
-SPEED_OF_LIGHT_METRES_PER_SECONDS = 299792458
-PLANCK_CONSTANT = multiply(6.62607004)(exponentiate(-34)(10))
-GRAVITATIONAL_CONSTANT = multiply(6.67430)(exponentiate(-11)(10))  # 6.67430e-11
-
-
 def dynamic_pressure(fluid_mass_density: float, flow_speed: float) -> float:
     """Calculates the dynamic pressure of a fluid"""
     return multiply(HALF(fluid_mass_density))(SQUARE(flow_speed))
@@ -57,7 +52,7 @@ def decibels(power1: float):
 
 def refractive_index(angle_of_incidence_1: float, angle_of_incedence_2: float):
     """Find the refractive index of a material by rearranging Snell's law and measuring the change of angle in and out of the material."""
-    return divide(math.sin(angle_of_incedence_2))(math.sin(angle_of_incidence_1))
+    return divide_by(math.sin(angle_of_incedence_2))(math.sin(angle_of_incidence_1))
 
 
 def diameter_of_distant_object(
@@ -77,7 +72,7 @@ def calculate_schwarzschild_radius(mass: float) -> float:
     :return: The radius in metres
     :rtype: float
     """
-    return divide(SQUARE(SPEED_OF_LIGHT_METRES_PER_SECONDS))(
+    return divide_by(SQUARE(SPEED_OF_LIGHT_METRES_PER_SECONDS))(
         multiply(multiply(2)(GRAVITATIONAL_CONSTANT))(mass)
     )
 
@@ -85,7 +80,7 @@ def calculate_schwarzschild_radius(mass: float) -> float:
 def centripetal_acceleration(velocity: Velocity, radius: Distance) -> Scalar:
     # From MSE SFM Exercise 1
     # Equal to gravitational acceleration for circular orbits.
-    return divide(radius)(SQUARE(velocity))
+    return divide_by(radius)(SQUARE(velocity))
 
 
 if __name__ == "__main__":

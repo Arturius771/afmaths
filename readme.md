@@ -38,6 +38,12 @@ pip install -e .
 python -m afmaths.space.astrodynamics
 ```
 
+# Run tests
+
+```bash
+python -m unittest
+```
+
 # Update version number
 
 ```bash

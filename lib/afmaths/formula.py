@@ -1,9 +1,8 @@
-from email.mime import base
 import math
 from afmaths.operation import (
     SQUARE,
     add,
-    divide,
+    divide_by,
     exponentiate,
     multiply,
     factorial,
@@ -17,7 +16,7 @@ from astronomy_types import Coordinate2D
 def sigmoid(input: float, bias: float = 0) -> float:
     """Calculates the sigmoid of a value"""
     # TM358 Section Block 1 section 5
-    return divide(add(1)(exponentiate(add(bias)(-input))(math.e)))(1)
+    return divide_by(add(1)(exponentiate(add(bias)(-input))(math.e)))(1)
 
 
 def inverse_square_law(source_strength: float, distance_metres: float) -> float:
@@ -25,7 +24,7 @@ def inverse_square_law(source_strength: float, distance_metres: float) -> float:
     ##TM255 block 1
     four_times_pi = multiply(4)(math.pi)
     denominator = multiply(SQUARE(distance_metres))(four_times_pi)
-    return divide(denominator)(source_strength)
+    return divide_by(denominator)(source_strength)
 
 
 def taylor_series(value):
@@ -38,7 +37,7 @@ def taylor_series(value):
         taylor = [initial_value_in_series]
         for _ in range(steps):
             exponent = exponentiate(initial_denmoninator)
-            division = divide(factorial(initial_denmoninator))
+            division = divide_by(factorial(initial_denmoninator))
             taylor.append(division(exponent(value)))
             initial_denmoninator += increment
 

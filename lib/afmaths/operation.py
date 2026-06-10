@@ -15,7 +15,7 @@ def multiply(num1: float):
     return lambda num2: num1 * num2
 
 
-def divide(denominator: float):
+def divide_by(denominator: float):
     return lambda numerator: numerator / denominator
 
 
@@ -32,11 +32,15 @@ def square():
     return exponentiate(2)
 
 
+def negate(value: float):
+    return -value
+
+
 # def ratio(num1): return  lambda num2: divide(num1)(num2) # TODO: provide as {numerator and denominator object?}
 
 
 def half():
-    return divide(2)
+    return divide_by(2)
 
 
 SQUARE = square()
@@ -101,18 +105,19 @@ def reduce(
 
 def ratio(num1: float):
     """Returns a function that calculates the ratio of num1 to num2."""
-    return lambda num2: Ratio(divide(num2)(num1))
+    return lambda num2: Ratio(divide_by(num2)(num1))
 
 
 def summation(
-    sum_function: Callable[[int], float],
+    sum_rule: Callable[[int], float],
     start_index: int,
     stop_index: int,
 ) -> float:
+    """Function that takes a rule, and then iteratively adds according to that rule."""
     total = 0.0
 
     for val in range(start_index, stop_index + 1):
-        total += sum_function(val)
+        total += sum_rule(val)
 
     return total
 
@@ -136,7 +141,7 @@ def newtons_raphson_method(
     # E_i - (E_i - e * np.sin(E_i) - M) / (1 - e * np.cos(E_i))
     # E_i - (E_i - eccentricity * math.sin(E_i) - mean_anomaly)
     # M = E - e * np.sin(E)
-    return subtract(divide(derivative)(function))(first_term)
+    return subtract(divide_by(derivative)(function))(first_term)
 
 
 if __name__ == "__main__":

@@ -1,49 +1,12 @@
-import math
-
 from astronomy_types import (
-    Anomaly,
-    ArgumentOfPerigee,
-    Distance,
-    Eccentricity,
     EquatorialCoordinates,
-    Inclination,
     OrbitalElements,
     Radians,
-    Ratio,
-    RightAscension,
     Scalar,
-    SemiMajorAxis,
-    TrueAnomaly,
 )
 
-EXAMPLE_ELEMENTS = OrbitalElements(
-    Inclination(Radians(Scalar(math.radians(5.145)))),
-    RightAscension(Radians(Scalar(3.024483909022929))),
-    ArgumentOfPerigee(Radians(Scalar(8.8))),
-    SemiMajorAxis(Distance(Scalar(384748))),
-    Eccentricity(Ratio(Scalar(0.0549006))),
-    TrueAnomaly(Anomaly(Radians(Scalar(2.987554518980773)))),
-)
-
-
-def angle_above_orbital_plane(
-    object_coords: EquatorialCoordinates,
-    orbit: OrbitalElements,
-) -> Radians:
-    value = math.cos(object_coords.declination) * math.sin(
-        orbit.inclination
-    ) * math.sin(
-        orbit.right_ascension_of_ascending_node - object_coords.right_ascension
-    ) + math.sin(
-        object_coords.declination
-    ) * math.cos(
-        orbit.inclination
-    )
-
-    # Prevent floating point drift errors at values close to +/-1.
-    value = max(-1.0, min(1.0, value))
-
-    return Radians(Scalar(math.asin(value)))
+from afmaths.constants import EXAMPLE_ELEMENTS
+from afmaths.physics.space.astrodynamics import angle_above_orbital_plane
 
 
 # ----------

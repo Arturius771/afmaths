@@ -1,4 +1,4 @@
-from afmaths.operation import divide, multiply, subtract, termial
+from afmaths.operation import divide_by, multiply, subtract, termial
 
 from astronomy_types import Coordinate2D
 
@@ -6,7 +6,7 @@ from astronomy_types import Coordinate2D
 def slope_gradiant(point1: Coordinate2D, point2: Coordinate2D) -> float:
     """Calculates the slope between two points"""
     ##https://www.bbc.co.uk/bitesize/topics/zvhs34j/articles/z4ctng8
-    return divide(subtract(point1.x)(point2.x))(subtract(point1.y)(point2.y))
+    return divide_by(subtract(point1.x)(point2.x))(subtract(point1.y)(point2.y))
 
 
 def equation_of_line(point1: Coordinate2D, point2: Coordinate2D) -> tuple[float, float]:

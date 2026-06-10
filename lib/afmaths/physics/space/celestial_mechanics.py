@@ -1,7 +1,13 @@
 from dataclasses import replace
 import math
 
-from afmaths.physics.physics import GRAVITATIONAL_CONSTANT
+
+from afmaths.constants import (
+    EARTH_MU_KM_CUBED,
+    EARTH_RADIUS_KM,
+    EXAMPLE_ELEMENTS,
+    GRAVITATIONAL_CONSTANT,
+)
 from afmaths.physics.space.astronomy.type_conversion_helpers import (
     degrees_to_radians,
     position_vector_to_vector3d,
@@ -12,7 +18,6 @@ from afmaths.physics.space.astronomy.coordinate_conversion import (
     orthonormal_frame_transform,
     vector_from_coordinates,
 )
-from afmaths.physics.space.space_engineering import EXAMPLE_ELEMENTS
 from afmaths.tensors import (
     RotationMatrix,
     dot_product_3d,
@@ -22,13 +27,13 @@ from afmaths.tensors import (
     vector_multiplication_2d,
 )
 
-from afmaths.geometry import calculate_semi_minor_axis, semi_major_axis_from_axes
+from afmaths.geometry import calculate_semi_minor_axis
 from afmaths.operation import (
     CUBE,
     HALF,
     SQUARE,
     add,
-    divide,
+    divide_by,
     exponentiate,
     interval,
     multiply,
@@ -71,9 +76,6 @@ from astronomy_types import (
     Distance,
 )
 
-EARTH_MU_KM_CUBED = GravitationalParameter(Scalar(398600.5))  # km^3 / s^2
-EARTH_RADIUS_KM = Distance(Scalar(6378.0))  # km
-
 
 def gravitational_parameter(mass1: float, mass2: float = 0) -> GravitationalParameter:
     """
@@ -110,7 +112,7 @@ def univesal_gravitation(
 
 
 def gravitational_acceleration(mu: GravitationalParameter, radius: Distance) -> Scalar:
-    return divide(SQUARE(radius))(mu)
+    return divide_by(SQUARE(radius))(mu)
 
 
 def gravity_at_altitude(
@@ -130,7 +132,7 @@ def mean_angular_rate(
 ) -> Rate:
     # From MSE SFM Exercise 1
     return Rate(
-        Scalar(square_root(divide(CUBE(semi_major_axis))(gravitational_parameter)))
+        Scalar(square_root(divide_by(CUBE(semi_major_axis))(gravitational_parameter)))
     )
 
 
@@ -155,7 +157,7 @@ def instantaneous_angular_velocity(state_vectors: StateVectors) -> Scalar:
         )
     )
 
-    return divide(SQUARE(r))(h)
+    return divide_by(SQUARE(r))(h)
 
 
 def swept_area_of_ellipse(
@@ -172,7 +174,7 @@ def orbit_radius(
 
 
 def orbital_period(a: SemiMajorAxis, g: GravitationalParameter) -> Second:
-    return multiply(2)(multiply(math.pi)(square_root(divide(g)(CUBE(a)))))
+    return multiply(2)(multiply(math.pi)(square_root(divide_by(g)(CUBE(a)))))
 
 
 def time_since_periapsis(
@@ -197,7 +199,7 @@ def vis_viva(
         Scalar(
             square_root(
                 multiply(gravitational_parameter)(
-                    subtract(divide(semi_major_axis)(1))(divide(orbit_radius)(2))
+                    subtract(divide_by(semi_major_axis)(1))(divide_by(orbit_radius)(2))
                 )
             )
         )
@@ -208,7 +210,9 @@ def velocity_for_altitude(
     orbit_radius: Distance,
     gravitational_parameter: GravitationalParameter = EARTH_MU_KM_CUBED,
 ) -> Velocity:
-    return Velocity(Scalar(square_root(divide(orbit_radius)(gravitational_parameter))))
+    return Velocity(
+        Scalar(square_root(divide_by(orbit_radius)(gravitational_parameter)))
+    )
 
 
 def velocity_difference(
@@ -274,7 +278,7 @@ def semi_major_axis_from_state_vectors(
         Vector3D(velocity_vector.x, velocity_vector.y, velocity_vector.z)
     )
     # This is a rearranged vis-viva equation
-    a = subtract(divide(gravitational_parameter)(SQUARE(v)))(divide(r)(2))
+    a = subtract(divide_by(gravitational_parameter)(SQUARE(v)))(divide_by(r)(2))
     return SemiMajorAxis(exponentiate(-1)(a))
 
 
@@ -291,7 +295,7 @@ def eccentricity_from_ellipse_equation(
     )
 
     return Eccentricity(
-        Ratio(Scalar(square_root(subtract(divide(semi_major_axis)(p))(1))))
+        Ratio(Scalar(square_root(subtract(divide_by(semi_major_axis)(p))(1))))
     )
 
 
@@ -332,7 +336,7 @@ def eccentric_anomaly(
         Vector3D(state.velocity.x, state.velocity.y, state.velocity.z),
     )
     x = multiply(SQUARE(semi_major_axis))(
-        multiply(mean_motion)((subtract(divide(semi_major_axis)(radius))(1)))
+        multiply(mean_motion)((subtract(divide_by(semi_major_axis)(radius))(1)))
     )
 
     return EccentricAnomaly(Anomaly(Radians(Scalar(math.atan2(y, x) % (2 * math.pi)))))
@@ -458,7 +462,7 @@ def argument_of_latitude(
     # u = np.arctan2(r[2] / np.sin(i), r[0] * np.cos(Omega) + r[1] * np.sin(Omega))
     # if u < 0:
     #     u += 2 * np.pi
-    y = divide(math.sin(inclination))(position_vector.z)
+    y = divide_by(math.sin(inclination))(position_vector.z)
     x = add(multiply(position_vector.x)(math.cos(right_ascension_of_ascending_node)))(
         multiply(position_vector.y)(math.sin(right_ascension_of_ascending_node))
     )
@@ -579,7 +583,7 @@ def perifocal_velocity_3d(
         ),
         Scalar(
             square_root(
-                divide(multiply(semi_major_axis)(subtract(SQUARE(eccentricity))(1)))(
+                divide_by(multiply(semi_major_axis)(subtract(SQUARE(eccentricity))(1)))(
                     gravitational_parameter
                 )
             )
@@ -597,7 +601,7 @@ def semi_latus_rectum_from_angular_momentum(
     angular_momentum_magnitude: Scalar,
     gravitational_parameter: GravitationalParameter,
 ) -> SemiLatusRectum:
-    return divide(gravitational_parameter)(SQUARE(angular_momentum_magnitude))
+    return divide_by(gravitational_parameter)(SQUARE(angular_momentum_magnitude))
 
 
 def orbit_equation(
@@ -608,7 +612,7 @@ def orbit_equation(
     # Trajectory equation: r = p / (1 + e * cos(theta))
     # Kepler's first law: r = a * (1 - e^2) / (1 + e * cos(theta))
     """Calculates the instantaneos radius of an orbit at a given true anomaly"""
-    return divide(add(1)(multiply(eccentricity)(math.cos(true_anomaly))))(
+    return divide_by(add(1)(multiply(eccentricity)(math.cos(true_anomaly))))(
         semi_latus_rectum(semi_major_axis, eccentricity)
     )
 

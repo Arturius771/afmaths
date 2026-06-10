@@ -3,21 +3,21 @@ from .geometry import pythagoras
 from .operation import (
     HALF,
     add,
-    divide,
+    divide_by,
     exponentiate,
     factorial,
     multiply,
     subtract,
 )
-from .list import sum
+from .list import list_sum
 
 
 def file_compression_ratio(uncompressed_size: float):
-    return lambda compressed_size: divide(compressed_size)(uncompressed_size)
+    return lambda compressed_size: divide_by(compressed_size)(uncompressed_size)
 
 
 def compressed_file_size(uncompressed_size):
-    return lambda compression_ratio: divide(compression_ratio)(uncompressed_size)
+    return lambda compression_ratio: divide_by(compression_ratio)(uncompressed_size)
 
 
 def diagonal_pixel_length(length_in_pixels):
@@ -63,26 +63,26 @@ def check_drive_clusters(
 
 def ml_f1_score(precision: float, recall: float) -> float:
     """F1 score: related to the harmonic mean of precision and recall. Calculated as F1 = 2/[(1/Precision) + (1/Recall)] = 2/[(TP + FP)/TP + (TP + FN)/TP] = 2/[(2TP + FP + FN)/TP] = 2TP/[2TP + FP + FN] . A high F1 score implies the system has low numbers of false positives and false negatives. - TM358"""
-    f1 = divide(add(divide(precision)(1))(divide(recall)(1)))(2)
+    f1 = divide_by(add(divide_by(precision)(1))(divide_by(recall)(1)))(2)
 
     return f1
 
 
 def ml_precesion(true_positives):
-    return lambda false_positives: divide(add(true_positives)(false_positives))(
+    return lambda false_positives: divide_by(add(true_positives)(false_positives))(
         true_positives
     )
 
 
 def ml_recall(true_positives):
     """Fraction of total positives out of both true and false positives - also known as the true positive rate."""
-    return lambda false_negatives: divide(add(true_positives)(false_negatives))(
+    return lambda false_negatives: divide_by(add(true_positives)(false_negatives))(
         true_positives
     )  # TM358
 
 
 def ml_false_positive_rate(false_positives):
-    return lambda true_negatives: divide(add(false_positives)(true_negatives))(
+    return lambda true_negatives: divide_by(add(false_positives)(true_negatives))(
         false_positives
     )
 
@@ -104,7 +104,7 @@ def ml_perceptron(inputs: list[float], weights: list[float], bias: float = 0) ->
     x = ml_weighted_inputs(inputs, weights)
     if x == None:
         return 0  # TODO: this is dangerous
-    return ml_activation_function(add(sum(x))(bias))
+    return ml_activation_function(add(list_sum(x))(bias))
 
 
 def ml_activation_function(input: float, threshold: float = 0):

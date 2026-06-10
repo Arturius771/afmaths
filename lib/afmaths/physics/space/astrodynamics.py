@@ -1,12 +1,20 @@
+import math
 from typing import NewType
 
-from astronomy_types import Distance, GravitationalParameter, Scalar, Velocity
+from astronomy_types import (
+    Distance,
+    EquatorialCoordinates,
+    GravitationalParameter,
+    OrbitalElements,
+    Radians,
+    Scalar,
+    Velocity,
+)
 
+from afmaths.constants import EARTH_MU_KM_CUBED, EARTH_RADIUS_KM
 from afmaths.geometry import semi_major_axis_from_axes
 from afmaths.operation import add
 from afmaths.physics.space.celestial_mechanics import (
-    EARTH_MU_KM_CUBED,
-    EARTH_RADIUS_KM,
     orbit_radius,
     velocity_difference,
     velocity_for_altitude,
@@ -47,7 +55,27 @@ def hohmann_transfer(
     return (delta_v, initial_velocity_change, final_velocity_change)
 
 
-if __name__ == "main":
+def angle_above_orbital_plane(
+    target_object: EquatorialCoordinates,
+    orbit: OrbitalElements,
+) -> Radians:
+    value = math.cos(target_object.declination) * math.sin(
+        orbit.inclination
+    ) * math.sin(
+        orbit.right_ascension_of_ascending_node - target_object.right_ascension
+    ) + math.sin(
+        target_object.declination
+    ) * math.cos(
+        orbit.inclination
+    )
+
+    # Prevent floating point drift errors at values close to +/-1.
+    value = max(-1.0, min(1.0, value))
+
+    return Radians(Scalar(math.asin(value)))
+
+
+if __name__ == "__main__":
 
     # (0.37539955175032447, 0.19003921507073027, 0.18536033667959417)
     print(hohmann_transfer(Distance(Scalar(300)), Distance(Scalar(1000))))
