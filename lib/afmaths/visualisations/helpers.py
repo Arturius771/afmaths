@@ -160,8 +160,8 @@ def figure_orbit_line(
     )
 
 
-def figure_slider(figure: go.Figure, slider_function: list[dict]) -> go.Figure:
-    return figure.update_layout(sliders=[dict(steps=slider_function)])
+def figure_slider(figure: go.Figure, slider_steps: list[dict]) -> go.Figure:
+    return figure.update_layout(sliders=[dict(steps=slider_steps)])
 
 
 def generate_orbital_slider_data(
@@ -371,7 +371,7 @@ def make_3d_orbit_figure(
 @dataclass(frozen=True)
 class BodyPlotConfig:
     name: str
-    target: HorizonsCommandTarget
+    target: HorizonsCommandTarget | OrbitalElements
     radius_km: float
     radius_scale: float
 
@@ -413,7 +413,9 @@ def add_orbiting_body_to_traces(
     settings: OrbitPlotSettings,
     opacity: float = 0.9,
 ) -> None:
-    horizon_state_vectors = get_horizon_state_vectors(body.target, settings)
+    horizon_state_vectors = get_horizon_state_vectors(
+        HorizonsCommandTarget(body.target), settings
+    )
 
     if len(horizon_state_vectors) < 1:
         raise ValueError(f"No Horizons state vectors returned for {body.name}")
