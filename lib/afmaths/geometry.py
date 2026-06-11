@@ -17,14 +17,13 @@ from afmaths.operation import (
     SQUARE,
     add,
     divide_by,
-    exponentiate,
     multiply,
     square_root,
     subtract,
 )
 import math
 
-Hyperbola = NewType("Hyperbola", Vector3D)
+Area = NewType("Area", Scalar)
 
 pythagoras = lambda a: lambda b: add(SQUARE(a))(SQUARE(b))
 
@@ -71,17 +70,17 @@ def cosine(angle_degrees: float) -> float:
     return taylor_series(math.radians(angle_degrees))(1, 2, 2)
 
 
-def area(length: float, height: float) -> float:
+def area(length: float, height: float) -> Area:
     return multiply(length)(height)
 
 
 # TODO: Check naming, this may be valid for more than just right triangles
-def area_of_right_triangle(base_length: float, height_length: float) -> float:
+def area_of_right_triangle(base_length: float, height_length: float) -> Area:
     """Area = base * height / 2"""
     return HALF(multiply(base_length)(height_length))
 
 
-def area_of_quarter_circle(side_length: float, radius: float) -> float:
+def area_of_quarter_circle(side_length: float, radius: float) -> Area:
     """Area = s^2 - ((1/4)*pi*r^2)"""
     return subtract((divide_by(4)(1)) * math.pi * SQUARE(radius))(SQUARE(side_length))
 

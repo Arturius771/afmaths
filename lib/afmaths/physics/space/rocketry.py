@@ -2,18 +2,21 @@ import math
 from typing import NewType
 
 from afmaths.constants import STANDARD_GRAVITY
+from afmaths.geometry import Area
 from afmaths.operation import (
     add,
     divide_by,
     exponentiate,
     multiply,
     negate,
+    ratio,
     subtract,
     summation,
 )
 from astronomy_types import (
     Distance,
     Rate,
+    Ratio,
     Scalar,
     Velocity,
 )
@@ -21,6 +24,8 @@ from astronomy_types import (
 from afmaths.physics.space.astrodynamics import DeltaV, hohmann_transfer
 
 Mass = NewType("Mass", float)
+Pressure = NewType("Pressure", float)
+Force = NewType("Force", float)
 
 
 def ideal_rocket_equation(
@@ -108,12 +113,28 @@ def delta_v_for_stages(
 
 
 def momentum(
-    initial_mass: float,
-    delta_mass: float,
+    initial_mass: Mass,
+    delta_mass: Mass,
     initial_velocity: Velocity,
     delta_v: Velocity,
 ) -> float:
     return multiply(subtract(delta_mass)(initial_mass))(add(initial_velocity)(delta_v))
+
+
+def thrust(
+    mass_flow_rate: float,
+    exit_velocity: Velocity,
+    exit_pressure: Pressure,
+    outside_pressure: Pressure,
+    nozzle_exit: Area,
+) -> Force:
+    return add(multiply(mass_flow_rate)(exit_velocity))(
+        multiply(subtract(outside_pressure)(exit_pressure))(nozzle_exit)
+    )
+
+
+def thrust_to_weight(thrust: Force, weight: Mass) -> Ratio:
+    return Ratio(Scalar(ratio(thrust)(weight)))
 
 
 if __name__ == "__main__":
