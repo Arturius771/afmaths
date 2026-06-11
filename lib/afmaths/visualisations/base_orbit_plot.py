@@ -502,14 +502,10 @@ class Base2DOrbitPlot(ABC):
 
     def ellipse_centre(self, index: int) -> Coordinate2D:
         elements = self.orbital_elements[index]
-
-        c = calculate_foci(
-            elements.semi_major_axis,
-            elements.eccentricity,
-        )[0].x
+        c = calculate_foci(elements.semi_major_axis, elements.eccentricity)[0]
 
         return Coordinate2D(
-            self.central_point.x + c,
+            self.central_point.x + c.x,
             self.central_point.y,
         )
 

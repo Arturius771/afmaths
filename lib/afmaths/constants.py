@@ -24,15 +24,23 @@ EARTH_RADIUS_KM = Distance(Scalar(6378.0))  # km
 EXAMPLE_ELEMENTS = OrbitalElements(
     Inclination(Radians(Scalar(math.radians(5.145)))),
     RightAscension(Radians(Scalar(3.024483909022929))),
-    ArgumentOfPerigee(Radians(Scalar(8.8))),
+    ArgumentOfPerigee(Radians(Scalar(4.4))),
     SemiMajorAxis(Distance(Scalar(384748))),
     Eccentricity(Ratio(Scalar(0.0549006))),
     TrueAnomaly(Anomaly(Radians(Scalar(2.987554518980773)))),
 )
+# OTHER_EXAMPLE_ELEMENTS = OrbitalElements(
+#     Inclination(Radians(Scalar(math.radians(5.145)))),
+#     RightAscension(Radians(Scalar(3.024483909022929))),
+#     ArgumentOfPerigee(Radians(Scalar(0))),
+#     SemiMajorAxis(Distance(Scalar(384748))),
+#     Eccentricity(Ratio(Scalar(0.0549006))),
+#     TrueAnomaly(Anomaly(Radians(Scalar(2.987554518980773)))),
+# )
 OTHER_EXAMPLE_ELEMENTS = OrbitalElements(
     Inclination(Radians(Scalar(math.radians(4.145)))),
     RightAscension(Radians(Scalar(2.824483909022929))),
-    ArgumentOfPerigee(Radians(Scalar(3.8))),
+    ArgumentOfPerigee(Radians(Scalar(4.4))),
     SemiMajorAxis(Distance(Scalar(354748))),
     Eccentricity(Ratio(Scalar(0.5449006))),
     TrueAnomaly(Anomaly(Radians(Scalar(2.987554518980773)))),
