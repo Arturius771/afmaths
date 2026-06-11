@@ -1,4 +1,5 @@
 import math
+from typing import NewType
 
 from astronomy_types import (
     Anomaly,
@@ -28,7 +29,19 @@ EXAMPLE_ELEMENTS = OrbitalElements(
     Eccentricity(Ratio(Scalar(0.0549006))),
     TrueAnomaly(Anomaly(Radians(Scalar(2.987554518980773)))),
 )
+OTHER_EXAMPLE_ELEMENTS = OrbitalElements(
+    Inclination(Radians(Scalar(math.radians(4.145)))),
+    RightAscension(Radians(Scalar(2.824483909022929))),
+    ArgumentOfPerigee(Radians(Scalar(3.8))),
+    SemiMajorAxis(Distance(Scalar(354748))),
+    Eccentricity(Ratio(Scalar(0.5449006))),
+    TrueAnomaly(Anomaly(Radians(Scalar(2.987554518980773)))),
+)
 SPEED_OF_LIGHT_METRES_PER_SECONDS = 299792458
 PLANCK_CONSTANT = multiply(6.62607004)(exponentiate(-34)(10))
 GRAVITATIONAL_CONSTANT = multiply(6.67430)(exponentiate(-11)(10))  # 6.67430e-11
 STANDARD_GRAVITY = 9.80665  # m/s
+
+Mass = NewType("Mass", float)
+Pressure = NewType("Pressure", float)
+Force = NewType("Force", float)

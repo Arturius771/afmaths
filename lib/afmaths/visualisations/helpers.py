@@ -143,25 +143,38 @@ def figure_planetary_body(
 
 
 def figure_orbit_line(
-    figure: go.Figure, ellipse_centre: Coordinate2D, orbital_elements: OrbitalElements
+    figure: go.Figure,
+    coordinates: list[Coordinate2D],
+    name: str = "orbit",
 ) -> go.Figure:
-    ellipse = ellipse_bounding_box(
-        ellipse_centre,
-        orbital_elements.semi_major_axis,
-        orbital_elements.eccentricity,
-    )
-    return figure.add_shape(
-        type="circle",
-        x0=ellipse[0].x,
-        y0=ellipse[0].y,
-        x1=ellipse[1].x,
-        y1=ellipse[1].y,
-        line_color="grey",
+    return figure.add_trace(
+        go.Scatter(
+            x=[coordinate.x for coordinate in coordinates],
+            y=[coordinate.y for coordinate in coordinates],
+            mode="lines",
+            name=name,
+            line=dict(color="grey"),
+            showlegend=False,
+        )
     )
 
 
 def figure_slider(figure: go.Figure, slider_steps: list[dict]) -> go.Figure:
     return figure.update_layout(sliders=[dict(steps=slider_steps)])
+
+
+def rotate_around_point(
+    point: Coordinate2D,
+    centre: Coordinate2D,
+    angle: float,
+) -> Coordinate2D:
+    dx = point.x - centre.x
+    dy = point.y - centre.y
+
+    return Coordinate2D(
+        centre.x + dx * math.cos(angle) - dy * math.sin(angle),
+        centre.y + dx * math.sin(angle) + dy * math.cos(angle),
+    )
 
 
 def generate_orbital_slider_data(
@@ -200,16 +213,29 @@ def generate_orbital_slider_data(
             * plot_scale
         )
 
-        velocity = vis_viva(
-            orbit_radius=Distance(Scalar(distance)),
-            semi_major_axis=SemiMajorAxis(
-                Distance(Scalar(elements.semi_major_axis * plot_scale))
-            ),
+        distance_km = (
+            calculate_distance(
+                Coordinate2D(coordinates.x, coordinates.y),
+                primary_body_coordinates,
+            )
+            * plot_scale
+        )
+
+        distance_m = distance_km * 1000
+
+        semi_major_axis_km = elements.semi_major_axis * plot_scale
+        semi_major_axis_m = semi_major_axis_km * 1000
+
+        velocity_m_s = vis_viva(
+            orbit_radius=Distance(Scalar(distance_m)),
+            semi_major_axis=SemiMajorAxis(Distance(Scalar(semi_major_axis_m))),
             gravitational_parameter=g,
         )
 
+        velocity_km_s = velocity_m_s / 1000
+
         time = time_since_periapsis(
-            SemiMajorAxis(Distance(Scalar(elements.semi_major_axis * plot_scale))),
+            SemiMajorAxis(Distance(Scalar(semi_major_axis_m))),
             g,
             kepler_equation(
                 eccentric_anomaly_obj,
@@ -227,7 +253,7 @@ def generate_orbital_slider_data(
                         "text": [
                             [
                                 f"r = {distance:.2f} km <br>"
-                                f"v = {velocity:.2f} km/s <br>"
+                                f"v = {velocity_km_s:.2f} km/s <br>"
                                 f"ta = {true_anomaly:.2f} rad <br>"
                                 f"t = {time:.2f} s"
                             ]
@@ -393,6 +419,18 @@ class OrbitPlotSettings:
     @property
     def time_offset_seconds(self) -> Second:
         return Second(Scalar(python_timedelta_to_seconds(self.time_offset)))
+
+
+@dataclass(frozen=True)
+class OrbitPlot2DSettings:
+    distance_scale_km: float
+    plot_width: int = 800
+    plot_height: int = 800
+    plot_min_x: float = 0
+    plot_min_y: float = 0
+    plot_max_x: float = 70
+    plot_max_y: float = 70
+    slider_steps: int = 51
 
 
 def get_horizon_state_vectors(

@@ -1,12 +1,12 @@
 from dataclasses import replace
 import math
 
-
 from afmaths.constants import (
     EARTH_MU_KM_CUBED,
     EARTH_RADIUS_KM,
     EXAMPLE_ELEMENTS,
     GRAVITATIONAL_CONSTANT,
+    Mass,
 )
 from afmaths.physics.space.astronomy.type_conversion_helpers import (
     degrees_to_radians,
@@ -81,7 +81,9 @@ from astronomy_types import (
 )
 
 
-def gravitational_parameter(mass1: float, mass2: float = 0) -> GravitationalParameter:
+def gravitational_parameter(
+    mass1: Mass, mass2: Mass = Mass(0)
+) -> GravitationalParameter:
     """
     Calculates the graviational parameter (Mu) of two objects in m^3/s^2
 
@@ -90,7 +92,7 @@ def gravitational_parameter(mass1: float, mass2: float = 0) -> GravitationalPara
     :param mass2: The second bodies mass
     :type mass2: float
     :return: Mu = G * (mass1 + mass2)
-    :rtype: float
+    :rtype: Mass
     """
     return multiply(GRAVITATIONAL_CONSTANT)(add(mass1)(mass2))
 

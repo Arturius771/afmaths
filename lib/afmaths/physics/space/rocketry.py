@@ -1,7 +1,6 @@
 import math
-from typing import NewType
 
-from afmaths.constants import STANDARD_GRAVITY
+from afmaths.constants import STANDARD_GRAVITY, Force, Mass, Pressure
 from afmaths.geometry import Area
 from afmaths.operation import (
     add,
@@ -22,10 +21,6 @@ from astronomy_types import (
 )
 
 from afmaths.physics.space.astrodynamics import DeltaV, hohmann_transfer
-
-Mass = NewType("Mass", float)
-Pressure = NewType("Pressure", float)
-Force = NewType("Force", float)
 
 
 def ideal_rocket_equation(
