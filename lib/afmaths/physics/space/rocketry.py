@@ -55,7 +55,7 @@ def empty_weight(structure_mass: Mass, payload_mass: Mass, motor_mass: Mass) -> 
     return add(add(structure_mass)(motor_mass))(payload_mass)
 
 
-def total_mass(empty_weight: Mass, propellant_mass: Mass) -> Mass:
+def total_rocket_mass(empty_weight: Mass, propellant_mass: Mass) -> Mass:
     return add(empty_weight)(propellant_mass)
 
 

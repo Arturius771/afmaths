@@ -27,7 +27,11 @@ from afmaths.tensors import (
     vector_multiplication_2d,
 )
 
-from afmaths.geometry import calculate_semi_minor_axis
+from afmaths.geometry import (
+    semi_minor_axis,
+    eccentricity,
+    semi_minor_axis_from_semi_latus_rectum,
+)
 from afmaths.operation import (
     CUBE,
     HALF,
@@ -294,9 +298,9 @@ def eccentricity_from_ellipse_equation(
         gravitational_parameter,
     )
 
-    return Eccentricity(
-        Ratio(Scalar(square_root(subtract(divide_by(semi_major_axis)(p))(1))))
-    )
+    b = semi_minor_axis_from_semi_latus_rectum(p, semi_major_axis)
+
+    return eccentricity(semi_major_axis, b)
 
 
 def mean_motion(
@@ -736,7 +740,7 @@ def predict_ellipse_perimeter_position_2d(
 
     return ellipse_perimeter_coordinate_from_eccentric_anomaly(
         orbital_elements.semi_major_axis,
-        calculate_semi_minor_axis(
+        semi_minor_axis(
             orbital_elements.semi_major_axis,
             orbital_elements.eccentricity,
         ),

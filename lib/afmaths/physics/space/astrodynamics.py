@@ -12,7 +12,7 @@ from astronomy_types import (
 )
 
 from afmaths.constants import EARTH_MU_KM_CUBED, EARTH_RADIUS_KM
-from afmaths.geometry import semi_major_axis_from_axes
+from afmaths.geometry import semi_major_axis_from_vertex_distances
 from afmaths.operation import add
 from afmaths.physics.space.celestial_mechanics import (
     orbit_radius,
@@ -36,7 +36,7 @@ def hohmann_transfer(
     r_a = orbit_radius(initial_altitude_km, initial_body_radius)
     r_b = orbit_radius(target_altitude_km, initial_body_radius)
 
-    semi_major_axis_transfer_ellipse = semi_major_axis_from_axes(r_a, r_b)
+    semi_major_axis_transfer_ellipse = semi_major_axis_from_vertex_distances(r_a, r_b)
     initial_velocity = velocity_for_altitude(r_a, gravitational_parameter)
     final_velocity = velocity_for_altitude(r_b, gravitational_parameter)
     velocity_on_orbit_at_initial_orbit = vis_viva(

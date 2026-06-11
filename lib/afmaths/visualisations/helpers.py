@@ -25,8 +25,8 @@ from astronomy_types import (
 from afmaths.geometry import (
     calculate_distance,
     calculate_foci,
-    draw_circle_bounding_box,
-    draw_ellipse,
+    circle_bounding_box,
+    ellipse_bounding_box,
 )
 from afmaths.operation import interval
 from afmaths.physics.space.celestial_mechanics import (
@@ -77,7 +77,7 @@ def figure_circle(
     fill_colour: str = "blue",
     line_colour: str = "blue",
 ) -> go.Figure:
-    bounding_box = draw_circle_bounding_box(
+    bounding_box = circle_bounding_box(
         coordinates,
         radius,
     )
@@ -145,7 +145,7 @@ def figure_planetary_body(
 def figure_orbit_line(
     figure: go.Figure, ellipse_centre: Coordinate2D, orbital_elements: OrbitalElements
 ) -> go.Figure:
-    ellipse = draw_ellipse(
+    ellipse = ellipse_bounding_box(
         ellipse_centre,
         orbital_elements.semi_major_axis,
         orbital_elements.eccentricity,

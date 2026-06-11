@@ -9,7 +9,7 @@ from afmaths.visualisations.helpers import (
     generate_orbital_slider_data,
     figure_layout,
 )
-from afmaths.geometry import calculate_semi_minor_axis
+from afmaths.geometry import semi_minor_axis
 from afmaths.physics.space.celestial_mechanics import (
     translate_ellipse_coordinate,
 )
@@ -79,7 +79,7 @@ primary_coordinates = plot_foci_positions(
     PLOT_ELEMENTS,
 )
 
-semi_minor_axis = calculate_semi_minor_axis(
+b = semi_minor_axis(
     PLOT_ELEMENTS.semi_major_axis,
     PLOT_ELEMENTS.eccentricity,
 )
@@ -95,7 +95,7 @@ figure_plot_centre(
                             translate_ellipse_coordinate(
                                 central_point,
                                 PLOT_ELEMENTS.semi_major_axis,
-                                semi_minor_axis,
+                                b,
                                 EccentricAnomaly(Anomaly(Radians(Scalar(0)))),
                             ),
                             Distance(Scalar(SECONDARY_BODY_RADIUS_PLOT)),
@@ -129,7 +129,7 @@ figure_plot_centre(
             central_point,
             primary_coordinates,
             PLOT_ELEMENTS,
-            semi_minor_axis,
+            b,
             DISTANCE_SCALE_KM,
             GRAVITATIONAL_PARAMETER,
         ),

@@ -1,11 +1,15 @@
+from typing import NewType
+
 from astronomy_types import (
     Coordinate2D,
     Distance,
     Eccentricity,
     Ratio,
     Scalar,
+    SemiLatusRectum,
     SemiMajorAxis,
     SemiMinorAxis,
+    Vector3D,
 )
 from afmaths.formula import taylor_series
 from afmaths.operation import (
@@ -20,20 +24,17 @@ from afmaths.operation import (
 )
 import math
 
+Hyperbola = NewType("Hyperbola", Vector3D)
+
 pythagoras = lambda a: lambda b: add(SQUARE(a))(SQUARE(b))
 
 
 def euclid(m: int, n: int) -> int:
     """Given two positive integers, m and n, find their greatest common divisor which is the largest positive integer that divides both evenly."""
-
     remainder = m % n
     if remainder == 0:
         return n
-    else:
-        m = n
-        n = remainder
-        euclid(m, n)
-    return n
+    return euclid(n, remainder)
 
 
 def sieve_of_eratosthenes(n: int) -> list[int]:
@@ -85,12 +86,15 @@ def area_of_quarter_circle(side_length: float, radius: float) -> float:
     return subtract((divide_by(4)(1)) * math.pi * SQUARE(radius))(SQUARE(side_length))
 
 
-def semi_major_axis_from_axes(a: float, b: float) -> SemiMajorAxis:
+def semi_major_axis_from_vertex_distances(
+    min_vertex_distance: Distance,
+    max_vertex_distance: Distance,
+) -> SemiMajorAxis:
     """Returns the semi major axis of an ellipse given the lengths of the two axes"""
-    return HALF(add(a)(b))
+    return SemiMajorAxis(HALF(add(min_vertex_distance)(max_vertex_distance)))
 
 
-def draw_circle_bounding_box(
+def circle_bounding_box(
     coordinates: Coordinate2D, radius: Distance
 ) -> tuple[Coordinate2D, Coordinate2D]:
     """
@@ -104,34 +108,27 @@ def draw_circle_bounding_box(
     Returns:
     tuple: A tuple containing the coordinates of the bounding box in the format (x0, y0, x1, y1).
     """
-    return draw_ellipse(
+    return ellipse_bounding_box(
         coordinates, SemiMajorAxis(radius), Eccentricity(Ratio(Scalar(0)))
     )
 
 
-def draw_ellipse(
-    coordinates: Coordinate2D, radius: SemiMajorAxis, eccentricity: Eccentricity
+def ellipse_bounding_box(
+    coordinates: Coordinate2D, a: SemiMajorAxis, e: Eccentricity
 ) -> tuple[Coordinate2D, Coordinate2D]:
     """
     Returns:
     tuple: A tuple containing the coordinates of the bounding box in the format (x0, y0, x1, y1).
     """
-    if eccentricity < 0 or eccentricity >= 1:
+    if e < 0 or e >= 1:
         raise ValueError("Eccentricity must be in the range [0, 1).")
 
-    semi_minor_axis = calculate_semi_minor_axis(SemiMajorAxis(radius), eccentricity)
+    b = semi_minor_axis(a, e)
 
     return (
-        Coordinate2D(coordinates.x - radius, coordinates.y - semi_minor_axis),
-        Coordinate2D(coordinates.x + radius, coordinates.y + semi_minor_axis),
+        Coordinate2D(coordinates.x - a, coordinates.y - b),
+        Coordinate2D(coordinates.x + a, coordinates.y + b),
     )
-
-
-def calculate_semi_minor_axis(
-    semi_major_axis: SemiMajorAxis, eccentricity: Eccentricity
-) -> SemiMinorAxis:
-    # a * sqrt(1 - e**2)
-    return multiply(semi_major_axis)(square_root(subtract(SQUARE(eccentricity))(1)))
 
 
 # def calculate_semi_minor_axis(
@@ -174,7 +171,7 @@ def calculate_distance(
 
 
 def calculate_foci(
-    semi_major_axis: SemiMajorAxis, eccentricity: Eccentricity
+    a: SemiMajorAxis, e: Eccentricity
 ) -> tuple[Coordinate2D, Coordinate2D]:
     """
     Calculate the coordinates of the foci of an ellipse given its semi-major axis and eccentricity.
@@ -186,16 +183,17 @@ def calculate_foci(
     Returns:
     tuple: A tuple containing the coordinates of the two foci in the format ((x1, y1), (x2, y2)).
     """
-    if eccentricity < 0 or eccentricity >= 1:
+    if e < 0 or e >= 1:
         raise ValueError("Eccentricity must be in the range [0, 1).")
 
-    c = semi_major_axis * eccentricity
+    c = a * e
     # [X1, Y1] = (-c, 0) and [X2, Y2] = (c, 0) for an ellipse centered at the origin
     return (Coordinate2D(-c, 0), Coordinate2D(c, 0))
 
 
-def calculate_semi_major_axis(
-    radius: Distance, eccentricity: Eccentricity
+def semi_major_axis_from_nearest_vertex_distance(
+    nearest_vertex_distance: Distance,
+    eccentricity: Eccentricity,
 ) -> SemiMajorAxis:
     """
     Calculate the semi-major axis of an ellipse given the distance from the center to a point on the ellipse and the eccentricity.
@@ -207,7 +205,41 @@ def calculate_semi_major_axis(
     Returns:
     float: The semi-major axis of the ellipse.
     """
-    if eccentricity < 0 or eccentricity >= 1:
-        raise ValueError("Eccentricity must be in the range [0, 1).")
+    return SemiMajorAxis(Distance(Scalar(nearest_vertex_distance / (1 - eccentricity))))
 
-    return SemiMajorAxis(Distance(Scalar(radius / (1 - eccentricity))))
+
+def semi_major_axis_hyperbola(l: SemiLatusRectum, e: Eccentricity) -> SemiMajorAxis:
+    if e <= 1:
+        raise ValueError("Hyperbola eccentricity must be > 1.")
+    return divide_by(subtract(1)(SQUARE(e)))(l)
+
+
+def eccentricity(a: SemiMajorAxis, b: SemiMinorAxis) -> Eccentricity:
+    return Eccentricity(
+        Ratio(Scalar(square_root(subtract(divide_by(SQUARE(a))(SQUARE(b)))(1))))
+    )
+
+
+def semi_minor_axis(a: SemiMajorAxis, e: Eccentricity) -> SemiMinorAxis:
+    # a * sqrt(1 - e**2)
+    return multiply(a)(square_root(subtract(SQUARE(e))(1)))
+
+
+def geometric_mean_distance(x: Distance, y: Distance) -> Distance:
+    return Distance(Scalar(square_root(multiply(x)(y))))
+
+
+def semi_minor_axis_from_semi_latus_rectum(
+    semi_latus_rectum: SemiLatusRectum,
+    semi_major_axis: SemiMajorAxis,
+) -> SemiMinorAxis:
+    return SemiMinorAxis(geometric_mean_distance(semi_latus_rectum, semi_major_axis))
+
+
+def semi_minor_axis_from_vertex_distances(
+    nearest_vertex_distance: Distance,
+    farthest_vertex_distance: Distance,
+) -> SemiMinorAxis:
+    return SemiMinorAxis(
+        geometric_mean_distance(nearest_vertex_distance, farthest_vertex_distance)
+    )
