@@ -9,5 +9,5 @@ def probability_of_outcome_percentage(
     )(1)
 
 
-# if __name__ == '__main__':
-#     print(probability_of_outcome_percentage(1000, .5))
+if __name__ == "__main__":
+    print(probability_of_outcome_percentage(1000, 0.5))

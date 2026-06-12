@@ -36,6 +36,10 @@ def negate(value: float):
     return -value
 
 
+def absolute(value: float):
+    return abs(value)
+
+
 # def ratio(num1): return  lambda num2: divide(num1)(num2) # TODO: provide as {numerator and denominator object?}
 
 

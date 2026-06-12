@@ -48,12 +48,16 @@ class EarthMoon2DOrbitPlot(Base2DOrbitPlot):
         return [7.346e22, 1000]
 
     @property
+    def orbiting_body_is_satellite(self) -> list[bool]:
+        return [False, True]
+
+    @property
     def orbital_elements(self) -> list[OrbitalElements]:
         return [
             OrbitalElements(
                 Inclination(EXAMPLE_ELEMENTS.inclination),
                 RightAscension(EXAMPLE_ELEMENTS.right_ascension_of_ascending_node),
-                ArgumentOfPerigee(EXAMPLE_ELEMENTS.argument_of_perigee),
+                ArgumentOfPerigee(EXAMPLE_ELEMENTS.argument_of_periapsis),
                 SemiMajorAxis(
                     Distance(
                         Scalar(EXAMPLE_ELEMENTS.semi_major_axis / DISTANCE_SCALE_KM)
@@ -67,7 +71,7 @@ class EarthMoon2DOrbitPlot(Base2DOrbitPlot):
                 RightAscension(
                     OTHER_EXAMPLE_ELEMENTS.right_ascension_of_ascending_node
                 ),
-                ArgumentOfPerigee(OTHER_EXAMPLE_ELEMENTS.argument_of_perigee),
+                ArgumentOfPerigee(OTHER_EXAMPLE_ELEMENTS.argument_of_periapsis),
                 SemiMajorAxis(
                     Distance(
                         Scalar(

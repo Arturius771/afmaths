@@ -1,27 +1,118 @@
 import math
-from typing import NewType
 
 from astronomy_types import (
     Distance,
     EquatorialCoordinates,
     GravitationalParameter,
     OrbitalElements,
+    Position,
+    PositionVector,
     Radians,
     Scalar,
+    StateVectors,
+    Vector3D,
     Velocity,
+    VelocityVector,
 )
 
-from afmaths.constants import EARTH_MU_KM_CUBED, EARTH_RADIUS_KM
+from afmaths.constants import EARTH_MU_KM_CUBED, EARTH_RADIUS_KM, DeltaV
 from afmaths.geometry import semi_major_axis_from_vertex_distances
-from afmaths.operation import add
+from afmaths.operation import add, divide_by, multiply, negate
+from afmaths.physics.space.astronomy.coordinate_conversion import (
+    nadir_vector,
+    zenith_vector,
+)
 from afmaths.physics.space.celestial_mechanics import (
+    angular_momentum,
     orbit_radius,
+    orbital_elements_from_state_vectors,
+    periapsis,
     velocity_difference,
     velocity_for_altitude,
     vis_viva,
 )
+from afmaths.tensors import (
+    dot_product_3d,
+    vector_magnitude,
+    vector_negate,
+    vector_normalise,
+)
 
-DeltaV = NewType("DeltaV", Velocity)
+
+def radial(position: PositionVector) -> Vector3D:
+    return zenith_vector(position)
+
+
+def anti_radial(position: PositionVector) -> Vector3D:
+    return nadir_vector(position)
+
+
+def prograde(velocity: VelocityVector) -> Vector3D:
+    return vector_normalise(velocity)
+
+
+def retrograde(velocity: VelocityVector) -> Vector3D:
+    return vector_negate(prograde(velocity))
+
+
+def normal(state: StateVectors) -> Vector3D:
+    return vector_normalise(angular_momentum(state))
+
+
+def anti_normal(state: StateVectors) -> Vector3D:
+    return vector_negate(normal(state))
+
+
+def flight_path_angle(
+    state: StateVectors, mu: GravitationalParameter = EARTH_MU_KM_CUBED
+) -> Radians:
+    elements = orbital_elements_from_state_vectors(state)
+    r_p = periapsis(elements.semi_major_axis, elements.eccentricity)
+    velocity_at_periapsis = vis_viva(mu, r_p, elements.semi_major_axis)
+
+    return Radians(
+        Scalar(
+            math.acos(
+                divide_by(
+                    multiply(
+                        vector_magnitude(
+                            Vector3D(
+                                state.position.x, state.position.y, state.position.z
+                            )
+                        )
+                    )(
+                        vector_magnitude(
+                            Vector3D(
+                                state.velocity.x, state.velocity.y, state.velocity.z
+                            )
+                        )
+                    )
+                )(multiply(r_p)(velocity_at_periapsis))
+            )
+        )
+    )
+
+
+def signed_flight_path_angle(state: StateVectors) -> Radians:
+    r = vector_magnitude(Vector3D(state.position.x, state.position.y, state.position.z))
+    v = vector_magnitude(Vector3D(state.velocity.x, state.velocity.y, state.velocity.z))
+
+    return Radians(
+        Scalar(
+            math.asin(
+                divide_by(multiply(r)(v))(
+                    dot_product_3d(
+                        Vector3D(
+                            state.position.x,
+                            state.position.y,
+                            state.position.z,
+                        ),
+                        Vector3D(state.velocity.x, state.velocity.y, state.velocity.z),
+                    )
+                )
+            )
+        )
+    )
 
 
 def hohmann_transfer(
@@ -79,3 +170,26 @@ if __name__ == "__main__":
 
     # (0.37539955175032447, 0.19003921507073027, 0.18536033667959417)
     print(hohmann_transfer(Distance(Scalar(300)), Distance(Scalar(1000))))
+
+    position = PositionVector(
+        Position(Scalar(7000)), Position(Scalar(0.1)), Position(Scalar(0.1))
+    )
+
+    velocity = VelocityVector(
+        Velocity(Scalar(0.1)), Velocity(Scalar(7.5)), Velocity(Scalar(0.1))
+    )
+
+    print(f"Radial      : {radial(position)}")
+    print(f"Anti-radial : {anti_radial(position)}")
+    print(f"Zenith      : {zenith_vector(position)}")
+    print(f"Nadir       : {nadir_vector(position)}")
+    print(f"Prograde    : {prograde(velocity)}")
+    print(f"Retrograde  : {retrograde(velocity)}")
+    print(f"Normal      : {normal(StateVectors(position, velocity))}")
+    print(f"Anti-normal : {anti_normal(StateVectors(position, velocity))}")
+    print(
+        f"Flight path angle (deg): {math.degrees(flight_path_angle(StateVectors(position, velocity)))}"
+    )
+    print(
+        f"Flight path angle (deg): {math.degrees(signed_flight_path_angle(StateVectors(position, velocity)))}"
+    )

@@ -3,6 +3,8 @@ from astronomy_types import (
     Coordinate2D,
     Coordinate3D,
     Displacement,
+    Position,
+    PositionVector,
     Scalar,
     Second,
     Vector2D,
@@ -158,3 +160,30 @@ def detect_collision_3d(
                 return True, b_positions[i]
 
     return False, Coordinate3D(0, 0, 0)
+
+
+def displacement_vector(
+    coords: Coordinate3D[Scalar],
+    origin: Coordinate3D[Scalar],
+) -> Vector3D[Displacement]:
+    """target coordinate − origin coordinate"""
+    return Vector3D(
+        Displacement(Scalar(coords.x - origin.x)),
+        Displacement(Scalar(coords.y - origin.y)),
+        Displacement(Scalar(coords.z - origin.z)),
+    )
+
+
+def position_vector_from_coordinates(
+    coords: Coordinate3D[Scalar],
+    origin: Coordinate3D[Scalar],
+) -> PositionVector:
+    """displacement interpreted as position relative to origin"""
+    v = displacement_vector(coords, origin)
+    return PositionVector(
+        Position(
+            v.x,
+        ),
+        Position(v.y),
+        Position(v.z),
+    )

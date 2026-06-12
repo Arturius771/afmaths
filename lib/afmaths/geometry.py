@@ -1,16 +1,15 @@
-from typing import NewType
-
 from astronomy_types import (
     Coordinate2D,
     Distance,
+    EccentricAnomaly,
     Eccentricity,
     Ratio,
     Scalar,
     SemiLatusRectum,
     SemiMajorAxis,
     SemiMinorAxis,
-    Vector3D,
 )
+from afmaths.constants import Area
 from afmaths.formula import taylor_series
 from afmaths.operation import (
     HALF,
@@ -22,8 +21,6 @@ from afmaths.operation import (
     subtract,
 )
 import math
-
-Area = NewType("Area", Scalar)
 
 pythagoras = lambda a: lambda b: add(SQUARE(a))(SQUARE(b))
 
@@ -192,7 +189,7 @@ def calculate_foci(
 
 def semi_major_axis_from_nearest_vertex_distance(
     nearest_vertex_distance: Distance,
-    eccentricity: Eccentricity,
+    e: Eccentricity,
 ) -> SemiMajorAxis:
     """
     Calculate the semi-major axis of an ellipse given the distance from the center to a point on the ellipse and the eccentricity.
@@ -204,7 +201,9 @@ def semi_major_axis_from_nearest_vertex_distance(
     Returns:
     float: The semi-major axis of the ellipse.
     """
-    return SemiMajorAxis(Distance(Scalar(nearest_vertex_distance / (1 - eccentricity))))
+    return SemiMajorAxis(
+        Distance(Scalar(nearest_vertex_distance / (eccentricity_factor_minus(e))))
+    )
 
 
 def semi_major_axis_hyperbola(l: SemiLatusRectum, e: Eccentricity) -> SemiMajorAxis:
@@ -221,7 +220,7 @@ def eccentricity(a: SemiMajorAxis, b: SemiMinorAxis) -> Eccentricity:
 
 def semi_minor_axis(a: SemiMajorAxis, e: Eccentricity) -> SemiMinorAxis:
     # a * sqrt(1 - e**2)
-    return multiply(a)(square_root(subtract(SQUARE(e))(1)))
+    return multiply(a)(square_root(eccentricity_factor_minus(SQUARE(e))))
 
 
 def geometric_mean_distance(x: Distance, y: Distance) -> Distance:
@@ -241,4 +240,44 @@ def semi_minor_axis_from_vertex_distances(
 ) -> SemiMinorAxis:
     return SemiMinorAxis(
         geometric_mean_distance(nearest_vertex_distance, farthest_vertex_distance)
+    )
+
+
+def eccentricity_factor_minus(e: Eccentricity) -> Scalar:
+    """1 - e"""
+    return subtract(e)(1)  # 1 - e
+
+
+def eccentricity_factor_plus(e: Eccentricity) -> Scalar:
+    """1 + e"""
+    return add(e)(1)  # 1 + e
+
+
+def ellipse_perimeter_coordinate_from_eccentric_anomaly(
+    semi_major_axis: SemiMajorAxis,
+    semi_minor_axis: SemiMinorAxis,
+    eccentric_anomaly: EccentricAnomaly,
+) -> Coordinate2D:
+    return Coordinate2D(
+        x=multiply(semi_major_axis)(math.cos(eccentric_anomaly)),
+        y=multiply(semi_minor_axis)(math.sin(eccentric_anomaly)),
+    )
+
+
+def translate_ellipse_coordinate(
+    reference_central_body: Coordinate2D,
+    semi_major_axis: SemiMajorAxis,
+    semi_minor_axis: SemiMinorAxis,
+    eccentric_anomaly: EccentricAnomaly,
+) -> Coordinate2D:
+
+    relative = ellipse_perimeter_coordinate_from_eccentric_anomaly(
+        semi_major_axis,
+        semi_minor_axis,
+        eccentric_anomaly,
+    )
+
+    return Coordinate2D(
+        x=reference_central_body.x + relative.x,
+        y=reference_central_body.y + relative.y,
     )

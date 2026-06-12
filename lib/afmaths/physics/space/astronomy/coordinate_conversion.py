@@ -1,19 +1,14 @@
 from astronomy_types import (
-    Coordinate3D,
-    NewType,
+    PositionVector,
     Scalar,
     Vector3D,
-)
-
-from afmaths.physics.space.astronomy.type_conversion_helpers import (
-    coordinate3d_to_vector3d,
 )
 from afmaths.tensors import (
     dot_product_3d,
     vector_multiplication_3d,
+    vector_negate,
+    vector_normalise,
 )
-
-EarthCentredInertial = NewType("EarthCentredInertial", Vector3D[Scalar])
 
 
 def orthonormal_frame_transform(
@@ -27,11 +22,16 @@ def orthonormal_frame_transform(
     )
 
 
-def vector_from_coordinates(
-    coordinates: Coordinate3D,
+def vector_from_direction(
+    direction: Vector3D[Scalar],
     magnitude: Scalar,
 ) -> Vector3D[Scalar]:
-    return vector_multiplication_3d(
-        coordinate3d_to_vector3d(coordinates),
-        magnitude,
-    )
+    return vector_multiplication_3d(direction, magnitude)
+
+
+def nadir_vector(position: PositionVector) -> Vector3D:
+    return vector_negate(zenith_vector(position))
+
+
+def zenith_vector(position: PositionVector) -> Vector3D:
+    return vector_normalise(position)

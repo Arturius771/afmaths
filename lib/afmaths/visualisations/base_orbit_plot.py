@@ -1,20 +1,38 @@
 from abc import ABC, abstractmethod
+from dataclasses import replace
 import math
 
+import plotly.graph_objects as go
+
 from afmaths.constants import Mass
-from afmaths.geometry import calculate_distance, calculate_foci, semi_minor_axis
+from afmaths.geometry import (
+    calculate_distance,
+    calculate_foci,
+    semi_minor_axis,
+    translate_ellipse_coordinate,
+)
+from afmaths.physics.kinematics import position_vector_from_coordinates
+from afmaths.physics.space.astrodynamics import (
+    anti_normal,
+    anti_radial,
+    normal,
+    prograde,
+    radial,
+    retrograde,
+)
 from afmaths.physics.space.astronomy.type_conversion_helpers import (
     fulldate_to_string,
     python_datetime_to_fulldate,
 )
 from afmaths.physics.space.celestial_mechanics import (
-    generate_angles_on_circle,
     gravitational_parameter,
-    kepler_equation,
-    time_since_periapsis,
-    translate_ellipse_coordinate,
+    orbital_period,
     true_anomaly_from_eccentric_anomaly,
     vis_viva,
+)
+from afmaths.physics.space.orbit_propagation import (
+    eccentric_anomaly_at_time,
+    generate_angles_on_circle,
 )
 from afmaths.visualisations.helpers import (
     BodyPlotConfig,
@@ -24,29 +42,30 @@ from afmaths.visualisations.helpers import (
     add_orbiting_body_to_traces,
     figure_circle,
     figure_layout,
-    figure_orbit_line,
     figure_planetary_body,
     figure_plot_centre,
     figure_slider,
-    generate_orbital_slider_data,
     make_3d_orbit_figure,
-    plot_foci_positions,
     rotate_around_point,
 )
 
-import plotly.graph_objects as go
 from astronomy_types import (
     Anomaly,
     Coordinate2D,
+    Coordinate3D,
     Distance,
     EccentricAnomaly,
-    GravitationalParameter,
+    MeanAnomaly,
     OrbitalElements,
     Radians,
     Scalar,
+    Second,
     SemiMajorAxis,
-    SemiMinorAxis,
+    StateVectors,
     Vector2D,
+    Vector3D,
+    Velocity,
+    VelocityVector,
 )
 
 
@@ -95,11 +114,7 @@ class Base3DOrbitPlot(ABC):
         ]
 
         for body in self.orbiting_bodies:
-            add_orbiting_body_to_traces(
-                traces,
-                body,
-                self.settings,
-            )
+            add_orbiting_body_to_traces(traces, body, self.settings)
 
         return traces
 
@@ -116,7 +131,6 @@ class Base3DOrbitPlot(ABC):
             self.make_title(),
             self.settings.distance_scale_km,
         )
-
         fig.show()
 
 
@@ -165,6 +179,10 @@ class Base2DOrbitPlot(ABC):
         pass
 
     @property
+    def orbiting_body_is_satellite(self) -> list[bool]:
+        return [False for _ in self.orbiting_body_names]
+
+    @property
     def plot_min(self) -> Vector2D:
         return Vector2D(x=self.settings.plot_min_x, y=self.settings.plot_min_y)
 
@@ -186,10 +204,7 @@ class Base2DOrbitPlot(ABC):
 
     @property
     def central_point(self) -> Coordinate2D:
-        return Coordinate2D(
-            self.plot_max.x / 2,
-            self.plot_max.y / 2,
-        )
+        return Coordinate2D(self.plot_max.x / 2, self.plot_max.y / 2)
 
     @property
     def central_body_radius_plot(self) -> Distance:
@@ -204,20 +219,16 @@ class Base2DOrbitPlot(ABC):
             )
         )
 
-    def gravitational_parameter(self, index: int) -> GravitationalParameter:
-        return gravitational_parameter(
-            Mass(self.central_body_mass_kg),
-            Mass(self.orbiting_body_mass_kg[index]),
+    def semi_major_axis_metres(self, index: int) -> SemiMajorAxis:
+        return SemiMajorAxis(
+            Distance(
+                Scalar(
+                    self.orbital_elements[index].semi_major_axis
+                    * self.settings.distance_scale_km
+                    * 1000
+                )
+            )
         )
-
-    def semi_minor_axis(self, index: int) -> SemiMinorAxis:
-        return semi_minor_axis(
-            self.orbital_elements[index].semi_major_axis,
-            self.orbital_elements[index].eccentricity,
-        )
-
-    def primary_coordinates(self, index: int) -> Coordinate2D:
-        return self.central_point
 
     def initial_orbiting_body_coordinates(self, index: int) -> Coordinate2D:
         return self.orbiting_body_coordinates(
@@ -231,18 +242,20 @@ class Base2DOrbitPlot(ABC):
             == len(self.orbiting_body_radius_km)
             == len(self.orbiting_body_mass_kg)
             == len(self.orbital_elements)
+            == len(self.orbiting_body_is_satellite)
         ):
             raise ValueError(
                 "orbiting_body_names, orbiting_body_radius_km, "
-                "orbiting_body_mass_kg, and orbital_elements must have the same length"
+                "orbiting_body_mass_kg, orbital_elements, and "
+                "orbiting_body_is_satellite must have the same length"
             )
 
     def add_orbiting_body(
         self, fig: go.Figure, index: int
-    ) -> tuple[go.Figure, int, int]:
+    ) -> tuple[go.Figure, int, int, list[int]]:
         body_trace_index = len(tuple(fig.data))
-
         coordinates = self.initial_orbiting_body_coordinates(index)
+        body_colour = "orange" if self.orbiting_body_is_satellite[index] else "grey"
 
         fig.add_trace(
             go.Scatter(
@@ -252,8 +265,8 @@ class Base2DOrbitPlot(ABC):
                 name=self.orbiting_body_names[index],
                 marker=dict(
                     size=self.orbiting_body_radius_plot(index) + 5,
-                    color="grey",
-                    line=dict(color="grey", width=2),
+                    color=body_colour,
+                    line=dict(color=body_colour, width=2),
                 ),
                 hovertext=[self.orbiting_body_names[index]],
                 hoverinfo="text",
@@ -280,23 +293,97 @@ class Base2DOrbitPlot(ABC):
             )
         )
 
-        fig = figure_orbit_line(
-            fig,
-            self.orbit_line_coordinates(index),
-            f"{self.orbiting_body_names[index]} orbit",
-        )
+        self.add_orbit_line(fig, index)
 
         fig = figure_circle(
             fig,
-            plot_foci_positions(
-                self.ellipse_centre(index), self.orbital_elements[index], 1
-            ),
+            self.secondary_focus_coordinates(index),
             Distance(Scalar(0.1)),
             "red",
             "red",
         )
 
-        return fig, body_trace_index, label_trace_index
+        vector_trace_indices = self.add_satellite_direction_traces(
+            fig,
+            index,
+            coordinates,
+        )
+
+        return fig, body_trace_index, label_trace_index, vector_trace_indices
+
+    def add_orbit_line(self, fig: go.Figure, index: int) -> None:
+        coordinates = [
+            self.orbiting_body_coordinates(
+                index,
+                EccentricAnomaly(Anomaly(Radians(Scalar(angle)))),
+            )
+            for angle in generate_angles_on_circle(200)
+        ]
+
+        orbit_colour = "orange" if self.orbiting_body_is_satellite[index] else "grey"
+
+        fig.add_trace(
+            go.Scatter(
+                x=[coordinate.x for coordinate in coordinates],
+                y=[coordinate.y for coordinate in coordinates],
+                mode="lines",
+                name=f"{self.orbiting_body_names[index]} orbit",
+                line=dict(color=orbit_colour),
+                hoverinfo="skip",
+            )
+        )
+
+    def add_satellite_direction_traces(
+        self,
+        fig: go.Figure,
+        index: int,
+        coordinates: Coordinate2D,
+    ) -> list[int]:
+        if not self.orbiting_body_is_satellite[index]:
+            return []
+
+        trace_indices = []
+
+        for direction_name in [
+            "Radial",
+            "Anti-radial",
+            "Prograde",
+            "Retrograde",
+            "Normal",
+            "Anti-normal",
+        ]:
+            trace_indices.append(len(tuple(fig.data)))
+
+            fig.add_trace(
+                go.Scatter(
+                    x=[coordinates.x, coordinates.x],
+                    y=[coordinates.y, coordinates.y],
+                    mode="lines+markers",
+                    name=f"{self.orbiting_body_names[index]} {direction_name}",
+                    hoverinfo="name",
+                )
+            )
+
+        return trace_indices
+
+    def secondary_focus_coordinates(self, index: int) -> Coordinate2D:
+        elements = self.orbital_elements[index]
+
+        c = calculate_foci(
+            elements.semi_major_axis,
+            elements.eccentricity,
+        )[0].x
+
+        unrotated_second_focus = Coordinate2D(
+            self.central_point.x + 2 * c,
+            self.central_point.y,
+        )
+
+        return rotate_around_point(
+            unrotated_second_focus,
+            self.central_point,
+            elements.argument_of_periapsis,
+        )
 
     def build_figure(self) -> go.Figure:
         self.validate_orbiting_bodies()
@@ -305,17 +392,20 @@ class Base2DOrbitPlot(ABC):
 
         body_trace_indices: list[int] = []
         label_trace_indices: list[int] = []
+        vector_trace_indices: list[list[int]] = []
 
         for index in range(len(self.orbital_elements)):
-            fig, body_trace_index, label_trace_index = self.add_orbiting_body(
-                fig, index
+            fig, body_trace_index, label_trace_index, body_vector_trace_indices = (
+                self.add_orbiting_body(fig, index)
             )
+
             body_trace_indices.append(body_trace_index)
             label_trace_indices.append(label_trace_index)
+            vector_trace_indices.append(body_vector_trace_indices)
 
         fig = figure_planetary_body(
             fig,
-            self.primary_coordinates(0),
+            self.central_point,
             self.central_body_radius_plot,
             self.central_body_name,
             "Black",
@@ -336,6 +426,7 @@ class Base2DOrbitPlot(ABC):
             self.generate_combined_orbital_slider_data(
                 body_trace_indices,
                 label_trace_indices,
+                vector_trace_indices,
             ),
         )
 
@@ -349,69 +440,27 @@ class Base2DOrbitPlot(ABC):
 
         return fig
 
-    def orbit_line_coordinates(self, index: int) -> list[Coordinate2D]:
-        return [
-            self.orbiting_body_coordinates(
-                index,
-                EccentricAnomaly(Anomaly(Radians(Scalar(angle)))),
-            )
-            for angle in generate_angles_on_circle(200)
-        ]
-
     def make_title(self) -> str:
         return self.title_prefix
 
     def show(self) -> None:
         self.build_figure().show()
 
-    def orbital_period_seconds(self, index: int) -> float:
-        elements = self.orbital_elements[index]
-
-        semi_major_axis_km = elements.semi_major_axis * self.settings.distance_scale_km
-        semi_major_axis_m = semi_major_axis_km * 1000
-
-        mu = self.gravitational_parameter(index)
-
-        return 2 * math.pi * math.sqrt((semi_major_axis_m**3) / mu)
-
-    def eccentric_anomaly_at_time(
-        self, index: int, time_seconds: float
-    ) -> EccentricAnomaly:
-        elements = self.orbital_elements[index]
-
-        semi_major_axis_km = elements.semi_major_axis * self.settings.distance_scale_km
-        semi_major_axis_m = semi_major_axis_km * 1000
-
-        mu = self.gravitational_parameter(index)
-
-        mean_motion = math.sqrt(mu / semi_major_axis_m**3)
-        mean_anomaly = mean_motion * time_seconds
-
-        # Keep the body on the visible ellipse, but do not force it to complete
-        # exactly one orbit during the slider cycle.
-        mean_anomaly = mean_anomaly % (2 * math.pi)
-
-        eccentricity = elements.eccentricity
-
-        eccentric_anomaly = mean_anomaly
-
-        for _ in range(20):
-            eccentric_anomaly = eccentric_anomaly - (
-                eccentric_anomaly
-                - eccentricity * math.sin(eccentric_anomaly)
-                - mean_anomaly
-            ) / (1 - eccentricity * math.cos(eccentric_anomaly))
-
-        return EccentricAnomaly(Anomaly(Radians(Scalar(eccentric_anomaly))))
-
     def generate_combined_orbital_slider_data(
         self,
         body_trace_indices: list[int],
         label_trace_indices: list[int],
+        vector_trace_indices: list[list[int]],
     ) -> list[dict]:
         steps = []
 
-        reference_period = self.orbital_period_seconds(0)
+        reference_period = orbital_period(
+            self.semi_major_axis_metres(0),
+            gravitational_parameter(
+                Mass(self.central_body_mass_kg),
+                Mass(self.orbiting_body_mass_kg[0]),
+            ),
+        )
 
         for step_index in range(self.num_steps):
             fraction = step_index / (self.num_steps - 1)
@@ -424,14 +473,26 @@ class Base2DOrbitPlot(ABC):
             label_y_updates = []
             label_text_updates = []
 
+            vector_x_updates = []
+            vector_y_updates = []
+            vector_update_indices = []
+
             for index in range(len(self.orbital_elements)):
                 elements = self.orbital_elements[index]
-                b = self.semi_minor_axis(index)
-                primary_coordinates = self.primary_coordinates(index)
 
-                eccentric_anomaly_obj = self.eccentric_anomaly_at_time(
-                    index,
-                    elapsed_time,
+                eccentric_anomaly_obj = eccentric_anomaly_at_time(
+                    replace(
+                        elements,
+                        semi_major_axis=SemiMajorAxis(
+                            Distance(
+                                Scalar(
+                                    self.orbital_elements[index].semi_major_axis
+                                    * self.settings.distance_scale_km
+                                )
+                            )
+                        ),
+                    ),
+                    Second(Scalar(elapsed_time)),
                 )
 
                 true_anomaly = true_anomaly_from_eccentric_anomaly(
@@ -447,22 +508,20 @@ class Base2DOrbitPlot(ABC):
                 distance_km = (
                     calculate_distance(
                         Coordinate2D(coordinates.x, coordinates.y),
-                        primary_coordinates,
+                        self.central_point,
                     )
                     * self.settings.distance_scale_km
                 )
 
                 distance_m = distance_km * 1000
 
-                semi_major_axis_km = (
-                    elements.semi_major_axis * self.settings.distance_scale_km
-                )
-                semi_major_axis_m = semi_major_axis_km * 1000
-
                 velocity_m_s = vis_viva(
+                    gravitational_parameter=gravitational_parameter(
+                        Mass(self.central_body_mass_kg),
+                        Mass(self.orbiting_body_mass_kg[index]),
+                    ),
                     orbit_radius=Distance(Scalar(distance_m)),
-                    semi_major_axis=SemiMajorAxis(Distance(Scalar(semi_major_axis_m))),
-                    gravitational_parameter=self.gravitational_parameter(index),
+                    semi_major_axis=self.semi_major_axis_metres(index),
                 )
 
                 velocity_km_s = velocity_m_s / 1000
@@ -482,23 +541,128 @@ class Base2DOrbitPlot(ABC):
                     ]
                 )
 
+                if self.orbiting_body_is_satellite[index]:
+                    position_vector = position_vector_from_coordinates(
+                        Coordinate3D(coordinates.x, coordinates.y, Scalar(0)),
+                        Coordinate3D(
+                            self.central_point.x,
+                            self.central_point.y,
+                            Scalar(0),
+                        ),
+                    )
+
+                    velocity_vector = self.velocity_vector_at_time(
+                        index,
+                        elapsed_time,
+                    )
+
+                    direction_vectors = [
+                        radial(position_vector),
+                        anti_radial(position_vector),
+                        prograde(velocity_vector),
+                        retrograde(velocity_vector),
+                        normal(StateVectors(position_vector, velocity_vector)),
+                        anti_normal(StateVectors(position_vector, velocity_vector)),
+                    ]
+
+                    for direction_vector, trace_index in zip(
+                        direction_vectors,
+                        vector_trace_indices[index],
+                    ):
+                        xs, ys = self.vector_line(coordinates, direction_vector)
+
+                        vector_x_updates.append(xs)
+                        vector_y_updates.append(ys)
+                        vector_update_indices.append(trace_index)
+
+            update = {
+                "x": body_x_updates + label_x_updates + vector_x_updates,
+                "y": body_y_updates + label_y_updates + vector_y_updates,
+                "text": [[] for _ in body_trace_indices] + label_text_updates,
+            }
+
             steps.append(
                 dict(
                     method="restyle",
                     args=[
-                        {
-                            "x": body_x_updates + label_x_updates,
-                            "y": body_y_updates + label_y_updates,
-                            "text": [[] for _ in body_trace_indices]
-                            + label_text_updates,
-                        },
-                        body_trace_indices + label_trace_indices,
+                        update,
+                        body_trace_indices
+                        + label_trace_indices
+                        + vector_update_indices,
                     ],
                     label=f"{fraction:.2f}",
                 )
             )
 
         return steps
+
+    def velocity_vector_at_time(
+        self,
+        index: int,
+        elapsed_time: float,
+    ) -> VelocityVector:
+        period = orbital_period(
+            self.semi_major_axis_metres(index),
+            gravitational_parameter(
+                Mass(self.central_body_mass_kg),
+                Mass(self.orbiting_body_mass_kg[index]),
+            ),
+        )
+
+        delta_time = period / 10000
+
+        elements = self.orbital_elements[index]
+
+        scaled_elements = replace(
+            elements,
+            semi_major_axis=SemiMajorAxis(
+                Distance(
+                    Scalar(
+                        self.orbital_elements[index].semi_major_axis
+                        * self.settings.distance_scale_km
+                    )
+                )
+            ),
+        )
+
+        current_coordinates = self.orbiting_body_coordinates(
+            index,
+            eccentric_anomaly_at_time(
+                scaled_elements,
+                Second(Scalar(elapsed_time)),
+            ),
+        )
+
+        next_coordinates = self.orbiting_body_coordinates(
+            index,
+            eccentric_anomaly_at_time(
+                scaled_elements,
+                Second(Scalar(elapsed_time + delta_time)),
+            ),
+        )
+        return VelocityVector(
+            Velocity(Scalar((next_coordinates.x - current_coordinates.x) / delta_time)),
+            Velocity(Scalar((next_coordinates.y - current_coordinates.y) / delta_time)),
+            Velocity(Scalar(0)),
+        )
+
+    def vector_line(
+        self,
+        start: Coordinate2D,
+        direction: Vector3D,
+    ) -> tuple[list[float], list[float]]:
+        length = self.direction_vector_length()
+
+        return (
+            [start.x, start.x + direction.x * length],
+            [start.y, start.y + direction.y * length],
+        )
+
+    def direction_vector_length(self) -> float:
+        plot_range_x = self.plot_max.x - self.plot_min.x
+        plot_range_y = self.plot_max.y - self.plot_min.y
+
+        return min(plot_range_x, plot_range_y) * 0.06
 
     def ellipse_centre(self, index: int) -> Coordinate2D:
         elements = self.orbital_elements[index]
@@ -521,12 +685,15 @@ class Base2DOrbitPlot(ABC):
         unrotated = translate_ellipse_coordinate(
             centre,
             elements.semi_major_axis,
-            self.semi_minor_axis(index),
+            semi_minor_axis(
+                self.orbital_elements[index].semi_major_axis,
+                self.orbital_elements[index].eccentricity,
+            ),
             eccentric_anomaly,
         )
 
         return rotate_around_point(
             unrotated,
-            self.central_point,  # Earth/focus
-            elements.argument_of_perigee,
+            self.central_point,
+            elements.argument_of_periapsis,
         )

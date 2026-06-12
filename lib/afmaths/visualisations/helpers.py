@@ -27,15 +27,12 @@ from afmaths.geometry import (
     calculate_foci,
     circle_bounding_box,
     ellipse_bounding_box,
+    translate_ellipse_coordinate,
 )
 from afmaths.operation import interval
 from afmaths.physics.space.celestial_mechanics import (
     EARTH_MU_KM_CUBED,
-    generate_all_orbit_positions,
-    generate_angles_on_circle,
-    translate_ellipse_coordinate,
     kepler_equation,
-    orbit_state_vector_prediction_from_orbital_elements,
     orbital_elements_from_state_vectors,
     time_since_periapsis,
     true_anomaly_from_eccentric_anomaly,
@@ -48,6 +45,11 @@ from afmaths.physics.space.astronomy.type_conversion_helpers import (
 from afmaths.physics.space.horizons_api import (
     HorizonsCommandTarget,
     get_object_state_vectors_from_horizon,
+)
+from afmaths.physics.space.orbit_propagation import (
+    generate_all_orbit_positions,
+    generate_angles_on_circle,
+    orbit_state_vector_prediction_from_orbital_elements,
 )
 
 

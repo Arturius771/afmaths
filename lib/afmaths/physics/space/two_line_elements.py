@@ -136,7 +136,7 @@ def two_line_element_from_orbital_elements(
         f"{math.degrees(orbital_elements.inclination):8.4f} "
         f"{math.degrees(orbital_elements.right_ascension_of_ascending_node):8.4f} "
         f"{ecc} "
-        f"{math.degrees(orbital_elements.argument_of_perigee):8.4f} "
+        f"{math.degrees(orbital_elements.argument_of_periapsis):8.4f} "
         f"{mean_anomaly_deg:8.4f} "
         f"{mean_motion_rev_day:11.8f} "
         f"{revolution_number:05d}"

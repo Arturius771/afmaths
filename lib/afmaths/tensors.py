@@ -1,6 +1,6 @@
-from typing import NewType
+from afmaths.constants import RotationMatrix
 
-from .operation import SQUARE, add, multiply, square_root, subtract
+from .operation import SQUARE, add, divide_by, multiply, negate, square_root, subtract
 from astronomy_types import (
     Position,
     Scalar,
@@ -8,8 +8,6 @@ from astronomy_types import (
     Vector3D,
     Velocity,
 )
-
-RotationMatrix = NewType("RotationMatrix", Vector3D[Vector3D[Scalar]])
 
 
 def dot_product(vector_a: Vector2D[Scalar], vector_b: Vector2D[Scalar]) -> Scalar:
@@ -29,10 +27,28 @@ def dot_product_3d(vector_a: Vector3D[Scalar], vector_b: Vector3D[Scalar]) -> Sc
 
 
 # TODO: check naming
-def vector_magnitude_3d(vector: Vector3D[Scalar]) -> Scalar:
+def vector_magnitude(vector: Vector3D[Scalar]) -> Scalar:
     """Returns the magnitude of a vector"""
     return Scalar(
         square_root(add(SQUARE(vector.x))(add(SQUARE(vector.y))(SQUARE(vector.z))))
+    )
+
+
+def vector_normalise(vector: Vector3D) -> Vector3D:
+    magnitude = vector_magnitude(vector)
+
+    return Vector3D(
+        divide_by(magnitude)(vector.x),
+        divide_by(magnitude)(vector.y),
+        divide_by(magnitude)(vector.z),
+    )
+
+
+def vector_negate(vector: Vector3D) -> Vector3D:
+    return Vector3D(
+        negate(vector.x),
+        negate(vector.y),
+        negate(vector.z),
     )
 
 
