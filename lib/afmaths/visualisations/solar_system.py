@@ -3,8 +3,11 @@ import datetime
 from astronomy_types import GravitationalParameter, Scalar
 
 from afmaths.physics.space.horizons_api import HorizonsCommandTarget
-from afmaths.visualisations.base_orbit_plot import Base3DOrbitPlot
-from afmaths.visualisations.helpers import BodyPlotConfig, OrbitPlotSettings
+from afmaths.visualisations.helpers import (
+    BodyPlotConfig,
+    OrbitPlotSettings,
+    build_3d_orbit_figure,
+)
 
 DISTANCE_SCALE_KM = 1_000_000
 PLANET_RADIUS_SCALE = 1000.0
@@ -29,32 +32,6 @@ PLANETS = [
 ]
 
 
-class HeliocentricSolarSystemPlot(Base3DOrbitPlot):
-    @property
-    def title_prefix(self) -> str:
-        return "Heliocentric solar system model"
-
-    @property
-    def central_body_name(self) -> str:
-        return "Sun"
-
-    @property
-    def central_body_radius_km(self) -> float:
-        return SUN_RADIUS_KM
-
-    @property
-    def central_body_radius_scale(self) -> float:
-        return SUN_RADIUS_SCALE
-
-    @property
-    def central_body_opacity(self) -> float:
-        return 0.6
-
-    @property
-    def orbiting_bodies(self) -> list[BodyPlotConfig]:
-        return PLANETS
-
-
 def main() -> None:
     settings = OrbitPlotSettings(
         centre=HorizonsCommandTarget.SUN,
@@ -66,7 +43,15 @@ def main() -> None:
         add_prediction_to_orbit=False,
     )
 
-    HeliocentricSolarSystemPlot(settings).show()
+    build_3d_orbit_figure(
+        settings=settings,
+        title="Heliocentric solar system model",
+        central_body_name="Sun",
+        central_body_radius_km=SUN_RADIUS_KM,
+        central_body_radius_scale=SUN_RADIUS_SCALE,
+        central_body_opacity=0.6,
+        orbiting_bodies=PLANETS,
+    ).show()
 
 
 if __name__ == "__main__":

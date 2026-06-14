@@ -508,7 +508,7 @@ def newtons_method(
 
 
 def semi_latus_rectum(a: SemiMajorAxis, e: Eccentricity) -> SemiLatusRectum:
-    return multiply(a)(subtract(SQUARE(e))(1))
+    return multiply(a)(eccentricity_factor_minus(SQUARE(e)))
 
 
 def semi_latus_rectum_from_angular_momentum(
@@ -531,11 +531,11 @@ def orbit_equation(
     )(semi_latus_rectum(semi_major_axis, eccentricity))
 
 
-def periapsis(a: SemiMajorAxis, e: Eccentricity) -> Distance:
+def periapsis_radius(a: SemiMajorAxis, e: Eccentricity) -> Distance:
     return multiply(a)(eccentricity_factor_minus(e))
 
 
-def apoapsis(a: SemiMajorAxis, e: Eccentricity) -> Distance:
+def apoapsis_radius(a: SemiMajorAxis, e: Eccentricity) -> Distance:
     return multiply(a)(eccentricity_factor_plus(e))
 
 

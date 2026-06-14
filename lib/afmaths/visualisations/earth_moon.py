@@ -3,8 +3,11 @@ import datetime
 from astronomy_types import GravitationalParameter, Scalar
 
 from afmaths.physics.space.horizons_api import HorizonsCommandTarget
-from afmaths.visualisations.base_orbit_plot import Base3DOrbitPlot
-from afmaths.visualisations.helpers import BodyPlotConfig, OrbitPlotSettings
+from afmaths.visualisations.helpers import (
+    BodyPlotConfig,
+    OrbitPlotSettings,
+    build_3d_orbit_figure,
+)
 
 DISTANCE_SCALE_KM = 10_000
 BODY_RADIUS_SCALE = 5.0
@@ -13,35 +16,6 @@ ORBIT_POINTS = 50
 EARTH_RADIUS_KM = 6_371.0
 MOON_RADIUS_KM = 1_737.4
 EARTH_GRAVITATIONAL_PARAMETER = GravitationalParameter(Scalar(398_600.4418))
-
-
-class EarthMoonOrbitPlot(Base3DOrbitPlot):
-    @property
-    def title_prefix(self) -> str:
-        return "Earth-Moon system"
-
-    @property
-    def central_body_name(self) -> str:
-        return "Earth"
-
-    @property
-    def central_body_radius_km(self) -> float:
-        return EARTH_RADIUS_KM
-
-    @property
-    def central_body_radius_scale(self) -> float:
-        return BODY_RADIUS_SCALE
-
-    @property
-    def orbiting_bodies(self) -> list[BodyPlotConfig]:
-        return [
-            BodyPlotConfig(
-                name="Moon",
-                target=HorizonsCommandTarget.MOON,
-                radius_km=MOON_RADIUS_KM,
-                radius_scale=BODY_RADIUS_SCALE,
-            )
-        ]
 
 
 def main() -> None:
@@ -55,7 +29,21 @@ def main() -> None:
         add_prediction_to_orbit=True,
     )
 
-    EarthMoonOrbitPlot(settings).show()
+    build_3d_orbit_figure(
+        settings=settings,
+        title="Earth-Moon system",
+        central_body_name="Earth",
+        central_body_radius_km=EARTH_RADIUS_KM,
+        central_body_radius_scale=BODY_RADIUS_SCALE,
+        orbiting_bodies=[
+            BodyPlotConfig(
+                name="Moon",
+                target=HorizonsCommandTarget.MOON,
+                radius_km=MOON_RADIUS_KM,
+                radius_scale=BODY_RADIUS_SCALE,
+            )
+        ],
+    ).show()
 
 
 if __name__ == "__main__":

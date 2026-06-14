@@ -1,6 +1,5 @@
 from astronomy_types import (
     Coordinate2D,
-    Vector2D,
 )
 
 import plotly.graph_objects as go

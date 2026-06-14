@@ -38,7 +38,7 @@ from afmaths.physics.space.celestial_mechanics import (
     angular_momentum,
     orbit_radius,
     orbital_elements_from_state_vectors,
-    periapsis,
+    periapsis_radius,
     radial_velocity,
     velocity_difference,
     velocity_for_altitude,
@@ -93,7 +93,7 @@ def flight_path_angle(
     state: StateVectors, mu: GravitationalParameter = EARTH_MU_KM_CUBED
 ) -> Radians:
     elements = orbital_elements_from_state_vectors(state)
-    r_p = periapsis(elements.semi_major_axis, elements.eccentricity)
+    r_p = periapsis_radius(elements.semi_major_axis, elements.eccentricity)
     velocity_at_periapsis = vis_viva(mu, r_p, elements.semi_major_axis)
 
     return Radians(
