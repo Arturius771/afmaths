@@ -222,6 +222,8 @@ def angle_above_orbital_plane(
     return Radians(Scalar(math.asin(value)))
 
 
+# TODO: function(s) to change specific orbital elements
+
 if __name__ == "__main__":
 
     # (0.37539955175032447, 0.19003921507073027, 0.18536033667959417)
