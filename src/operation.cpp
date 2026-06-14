@@ -31,21 +31,21 @@ std::vector<float> interval(float start, float end, int n) {
  */
 int termial(int number) { return ((number + 1) * number) / 2; }
 
-float summation(int start_index, int stop_index, float (*sum_function)(int)) {
+float summation(int start_index, int stop_index, float (*sum_rule)(int)) {
   float total = 0.0;
 
   for (int i = start_index; i < stop_index + 1; i++) {
-    total += sum_function(i);
+    total += sum_rule(i);
   }
 
   return total;
 }
 
-float product(int start_index, int stop_index, float (*product_function)(int)) {
+float product(int start_index, int stop_index, float (*product_rule)(int)) {
   float total = 1.0;
 
   for (int i = start_index; i < stop_index + 1; i++) {
-    total *= product_function(i);
+    total *= product_rule(i);
   }
 
   return total;

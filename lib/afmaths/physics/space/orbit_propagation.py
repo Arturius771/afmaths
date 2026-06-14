@@ -33,7 +33,7 @@ from astronomy_types import (
 from afmaths.constants import (
     EARTH_MU_KM_CUBED,
     EXAMPLE_ELEMENTS,
-    EarthCentredInertial,
+    EarthCentredInertialFrame,
     RotationMatrix,
 )
 from afmaths.geometry import (
@@ -55,7 +55,13 @@ from afmaths.physics.space.astronomy.coordinate_conversion import (
 )
 from afmaths.physics.space.astronomy.type_conversion_helpers import (
     degrees_to_radians,
+    make_position_vector,
+    make_true_anomaly,
     position_vector_to_vector3d,
+    make_state_vector,
+    vector2d,
+    vector3d,
+    make_velocity_vector,
     velocity_vector_to_vector3d,
 )
 from afmaths.physics.space.celestial_mechanics import (
@@ -85,9 +91,9 @@ def perifocal_position_2d(
 ) -> Vector2D[Scalar]:
 
     return vector_multiplication_2d(
-        Vector2D(
-            x=Scalar(math.cos(orbital_elements.true_anomaly)),
-            y=Scalar(math.sin(orbital_elements.true_anomaly)),
+        vector2d(
+            Scalar(math.cos(orbital_elements.true_anomaly)),
+            Scalar(math.sin(orbital_elements.true_anomaly)),
         ),
         orbit_equation(
             orbital_elements.semi_major_axis,
@@ -101,20 +107,20 @@ def perifocal_position_3d(
     orbital_elements: OrbitalElements,
 ) -> PositionVector:
     """Calculates the position vector in the perifocal coordinate system"""
-
-    vector = vector_from_direction(
-        Vector3D(
-            x=Scalar(math.cos(orbital_elements.true_anomaly)),
-            y=Scalar(math.sin(orbital_elements.true_anomaly)),
-            z=Scalar(0),
-        ),
-        orbit_equation(
-            orbital_elements.semi_major_axis,
-            orbital_elements.eccentricity,
-            orbital_elements.true_anomaly,
-        ),
+    return make_position_vector(
+        vector_from_direction(
+            vector3d(
+                Scalar(math.cos(orbital_elements.true_anomaly)),
+                Scalar(math.sin(orbital_elements.true_anomaly)),
+                Scalar(0),
+            ),
+            orbit_equation(
+                orbital_elements.semi_major_axis,
+                orbital_elements.eccentricity,
+                orbital_elements.true_anomaly,
+            ),
+        )
     )
-    return PositionVector(Position(vector.x), Position(vector.y), Position(vector.z))
 
 
 def perifocal_velocity_3d(
@@ -124,22 +130,23 @@ def perifocal_velocity_3d(
     gravitational_parameter: GravitationalParameter,
 ) -> VelocityVector:
     """Calculates the velocity vector in the perifocal coordinate system"""
-    vector = vector_from_direction(
-        Vector3D(
-            Scalar(-math.sin(true_anomaly)),
-            Scalar(add(eccentricity)(math.cos(true_anomaly))),
-            Scalar(0),
-        ),
-        Scalar(
-            square_root(
-                divide_by(multiply(semi_major_axis)(subtract(SQUARE(eccentricity))(1)))(
-                    gravitational_parameter
-                )
-            )
-        ),
-    )
 
-    return VelocityVector(Velocity(vector.x), Velocity(vector.y), Velocity(vector.z))
+    return make_velocity_vector(
+        vector_from_direction(
+            vector3d(
+                Scalar(-math.sin(true_anomaly)),
+                Scalar(add(eccentricity)(math.cos(true_anomaly))),
+                Scalar(0),
+            ),
+            Scalar(
+                square_root(
+                    divide_by(
+                        multiply(semi_major_axis)(subtract(SQUARE(eccentricity))(1))
+                    )(gravitational_parameter)
+                )
+            ),
+        )
+    )
 
 
 def orbit_state_vector_prediction_from_orbital_elements(
@@ -176,25 +183,18 @@ def orbit_state_vector_prediction_from_orbital_elements(
 
     eci_rotation_matrix = perifocal_to_inertial_frame_rotation_matrix(orbital_elements)
 
-    position_vector = transform_perifocal_to_inertial(
-        eci_rotation_matrix,
-        position_vector_to_vector3d(perifocal_position_gaussian),
-    )
-
-    velocity_vector = transform_perifocal_to_inertial(
-        eci_rotation_matrix, velocity_vector_to_vector3d(perifocal_velocity_gaussian)
-    )
-
-    return StateVectors(
-        PositionVector(
-            Position(position_vector.x),
-            Position(position_vector.y),
-            Position(position_vector.z),
+    return make_state_vector(
+        make_position_vector(
+            transform_perifocal_to_inertial(
+                eci_rotation_matrix,
+                position_vector_to_vector3d(perifocal_position_gaussian),
+            )
         ),
-        VelocityVector(
-            Velocity(velocity_vector.x),
-            Velocity(velocity_vector.y),
-            Velocity(velocity_vector.z),
+        make_velocity_vector(
+            transform_perifocal_to_inertial(
+                eci_rotation_matrix,
+                velocity_vector_to_vector3d(perifocal_velocity_gaussian),
+            )
         ),
     )
 
@@ -228,7 +228,7 @@ def propagate_orbit_2d(
     M = mean_anomaly_at_time(
         kepler_equation(
             eccentric_anomaly_from_true_anomaly(
-                TrueAnomaly(Anomaly(Radians(Scalar(0)))), orbital_elements.eccentricity
+                make_true_anomaly(0), orbital_elements.eccentricity
             ),
             orbital_elements.eccentricity,
         ),
@@ -289,10 +289,10 @@ def eccentric_anomaly_at_time(
 def transform_perifocal_to_inertial(
     perifocal_to_eci_rotation_matrix: RotationMatrix,
     perifocal_vector: Vector3D[Scalar],
-) -> EarthCentredInertial:
+) -> EarthCentredInertialFrame:
     """Transforms a vector from the perifocal coordinate system to the ECI coordinate system using the provided transformation matrix"""
     # TODO: reuse
-    return EarthCentredInertial(
+    return EarthCentredInertialFrame(
         orthonormal_frame_transform(perifocal_to_eci_rotation_matrix, perifocal_vector)
     )
 
@@ -337,9 +337,9 @@ def perifocal_to_inertial_frame_rotation_matrix(
     ]
 
     return rotation_matrix(
-        Vector3D(Scalar(p[0]), Scalar(p[1]), Scalar(p[2])),
-        Vector3D(Scalar(q[0]), Scalar(q[1]), Scalar(q[2])),
-        Vector3D(Scalar(w[0]), Scalar(w[1]), Scalar(w[2])),
+        vector3d(Scalar(p[0]), Scalar(p[1]), Scalar(p[2])),
+        vector3d(Scalar(q[0]), Scalar(q[1]), Scalar(q[2])),
+        vector3d(Scalar(w[0]), Scalar(w[1]), Scalar(w[2])),
     )
 
 

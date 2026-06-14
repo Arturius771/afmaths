@@ -8,6 +8,9 @@ from astronomy_types import (
     SemiLatusRectum,
     SemiMajorAxis,
     SemiMinorAxis,
+    StateVectors,
+    Vector3D,
+    Velocity,
 )
 from afmaths.constants import Area
 from afmaths.formula import taylor_series
@@ -21,6 +24,8 @@ from afmaths.operation import (
     subtract,
 )
 import math
+
+from afmaths.tensors import dot_product_3d, vector_magnitude
 
 pythagoras = lambda a: lambda b: add(SQUARE(a))(SQUARE(b))
 
@@ -265,7 +270,7 @@ def ellipse_perimeter_coordinate_from_eccentric_anomaly(
 
 
 def translate_ellipse_coordinate(
-    reference_central_body: Coordinate2D,
+    central_point: Coordinate2D,
     semi_major_axis: SemiMajorAxis,
     semi_minor_axis: SemiMinorAxis,
     eccentric_anomaly: EccentricAnomaly,
@@ -278,6 +283,6 @@ def translate_ellipse_coordinate(
     )
 
     return Coordinate2D(
-        x=reference_central_body.x + relative.x,
-        y=reference_central_body.y + relative.y,
+        x=central_point.x + relative.x,
+        y=central_point.y + relative.y,
     )

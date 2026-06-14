@@ -5,14 +5,19 @@ from afmaths.constants import (
     EARTH_MU_KM_CUBED,
     EARTH_RADIUS_KM,
     GRAVITATIONAL_CONSTANT,
+    DeltaV,
     Mass,
+)
+from afmaths.physics.space.astronomy.type_conversion_helpers import (
+    make_eccentric_anomaly,
+    make_true_anomaly,
+    position_vector_to_vector3d,
+    velocity_vector_to_vector3d,
 )
 from afmaths.tensors import (
     dot_product_3d,
     vector_cross_multiplication_3d,
     vector_magnitude,
-    vector_negate,
-    vector_normalise,
 )
 
 from afmaths.geometry import (
@@ -140,11 +145,7 @@ def angular_momentum_magnitude(angular_momentum_vector: Vector3D[Scalar]) -> Sca
 def instantaneous_angular_velocity(state_vectors: StateVectors) -> Scalar:
     # From MSE SFM Exercise 1
     h = angular_momentum_magnitude(angular_momentum(state_vectors))
-    r = vector_magnitude(
-        Vector3D(
-            state_vectors.position.x, state_vectors.position.y, state_vectors.position.z
-        )
-    )
+    r = vector_magnitude(position_vector_to_vector3d(state_vectors.position))
 
     return divide_by(SQUARE(r))(h)
 
@@ -204,9 +205,7 @@ def velocity_for_altitude(
     )
 
 
-def velocity_difference(
-    initial_velocity: Velocity, final_velocity: Velocity
-) -> Velocity:
+def velocity_difference(initial_velocity: Velocity, final_velocity: Velocity) -> DeltaV:
     return subtract(initial_velocity)(final_velocity)
 
 
@@ -225,6 +224,16 @@ def inclination_from_angular_momentum_vector(
                     angular_momentum_vector.z,
                 )
             )
+        )
+    )
+
+
+def radial_velocity(state: StateVectors) -> Velocity:
+    position = position_vector_to_vector3d(state.position)
+
+    return Velocity(
+        divide_by(vector_magnitude(position))(
+            dot_product_3d(position, velocity_vector_to_vector3d(state.velocity))
         )
     )
 
@@ -257,15 +266,8 @@ def semi_major_axis_from_state_vectors(
     # a = 1 / (2 / r_norm - np.square(v_norm) / mu)
     # 1e-3 * a
 
-    position_vector = state_vectors.position
-    velocity_vector = state_vectors.velocity
-
-    r = vector_magnitude(
-        Vector3D(position_vector.x, position_vector.y, position_vector.z)
-    )
-    v = vector_magnitude(
-        Vector3D(velocity_vector.x, velocity_vector.y, velocity_vector.z)
-    )
+    r = vector_magnitude(position_vector_to_vector3d(state_vectors.position))
+    v = vector_magnitude(velocity_vector_to_vector3d(state_vectors.velocity))
     # This is a rearranged vis-viva equation
     a = subtract(divide_by(gravitational_parameter)(SQUARE(v)))(divide_by(r)(2))
     return SemiMajorAxis(exponentiate(-1)(a))
@@ -316,37 +318,28 @@ def eccentric_anomaly(
     mean_motion: MeanMotion,
 ) -> EccentricAnomaly:
     # E = np.arctan2(np.dot(r, v) / (np.square(a) * n), 1 - r_norm / a)
-    radius = vector_magnitude(
-        Vector3D(state.position.x, state.position.y, state.position.z)
-    )
+    pos_3d = position_vector_to_vector3d(state.position)
+    radius = vector_magnitude(pos_3d)
 
     y = dot_product_3d(
-        Vector3D(state.position.x, state.position.y, state.position.z),
-        Vector3D(state.velocity.x, state.velocity.y, state.velocity.z),
+        pos_3d,
+        velocity_vector_to_vector3d(state.velocity),
     )
     x = multiply(SQUARE(semi_major_axis))(
         multiply(mean_motion)((subtract(divide_by(semi_major_axis)(radius))(1)))
     )
 
-    return EccentricAnomaly(Anomaly(Radians(Scalar(math.atan2(y, x) % (2 * math.pi)))))
+    return make_eccentric_anomaly(math.atan2(y, x) % (2 * math.pi))
 
 
 def eccentric_anomaly_from_true_anomaly(
     theta: TrueAnomaly, e: Eccentricity
 ) -> EccentricAnomaly:
-    return EccentricAnomaly(
-        Anomaly(
-            Radians(
-                Scalar(
-                    multiply(2)(
-                        math.atan2(
-                            math.sqrt(eccentricity_factor_minus(e))
-                            * math.sin(theta / 2),
-                            math.sqrt(eccentricity_factor_plus(e))
-                            * math.cos(theta / 2),
-                        )
-                    )
-                )
+    return make_eccentric_anomaly(
+        multiply(2)(
+            math.atan2(
+                math.sqrt(eccentricity_factor_minus(e)) * math.sin(theta / 2),
+                math.sqrt(eccentricity_factor_plus(e)) * math.cos(theta / 2),
             )
         )
     )
@@ -375,7 +368,7 @@ def eccentric_anomaly_solved(
         history.append((iteration, E_next, math.degrees(E_next), delta_E))
         E_i = E_next
 
-    return EccentricAnomaly(Anomaly(Radians(Scalar(E_i)))), history
+    return make_eccentric_anomaly(E_i), history
 
 
 ## Check if this belongs in geometry.py
@@ -422,7 +415,15 @@ def true_anomaly_from_eccentric_anomaly(
 
     theta = math.atan2(y, x) % (2 * math.pi)
 
-    return TrueAnomaly(Anomaly(Radians(Scalar(theta))))
+    return make_true_anomaly(theta)
+
+
+# TODO: define what we mean by angle more clearly
+def true_anomaly_at_angle(
+    orbit: OrbitalElements,
+    inertial_angle: Radians,
+) -> TrueAnomaly:
+    return make_true_anomaly(subtract(orbit.argument_of_periapsis)(inertial_angle))
 
 
 def true_anomaly(eccentricity: Eccentricity, mean_anomaly: MeanAnomaly) -> TrueAnomaly:
@@ -497,19 +498,11 @@ def newtons_method(
     # E_i - (E_i - e * np.sin(E_i) - M) / (1 - e * np.cos(E_i))
     # E_i - (E_i - eccentricity * math.sin(E_i) - mean_anomaly)
     # M = E - e * np.sin(E)
-    return EccentricAnomaly(
-        Anomaly(
-            Radians(
-                Scalar(
-                    newtons_raphson_method(
-                        E_i_guess,
-                        subtract(mean_anomaly)(
-                            kepler_equation(E_i_guess, eccentricity)
-                        ),
-                        subtract(multiply(eccentricity)(math.cos(E_i_guess)))(1),
-                    )
-                )
-            )
+    return make_eccentric_anomaly(
+        newtons_raphson_method(
+            E_i_guess,
+            subtract(mean_anomaly)(kepler_equation(E_i_guess, eccentricity)),
+            subtract(multiply(eccentricity)(math.cos(E_i_guess)))(1),
         )
     )
 

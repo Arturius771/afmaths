@@ -20,12 +20,12 @@ from astronomy_types import (
     Velocity,
 )
 
-from afmaths.physics.space.astrodynamics import DeltaV, hohmann_transfer
+from afmaths.physics.space.astrodynamics import DeltaV, hohmann_transfer_delta_v
 
 
 def ideal_rocket_equation(
     effective_exhaust_velocity: Velocity, initial_mass: Mass, final_mass: Mass
-) -> Velocity:
+) -> DeltaV:
     return multiply(math.log(mass_ratio(final_mass, initial_mass)))(
         effective_exhaust_velocity
     )
@@ -80,17 +80,14 @@ def delta_v_for_stages(
     effective_exhaust_velocity: Velocity,
 ) -> tuple[DeltaV, list[DeltaV]]:
 
-    def stage_delta_v(i: int) -> float:
+    def stage_delta_v(i: int) -> DeltaV:
         return ideal_rocket_equation(
             effective_exhaust_velocity,
             mass_per_stage[i],
             mass_per_stage[i + 1],
         )
 
-    stage_delta_vs = [
-        DeltaV(Velocity(Scalar(stage_delta_v(i))))
-        for i in range(len(mass_per_stage) - 1)
-    ]
+    stage_delta_vs = [stage_delta_v(i) for i in range(len(mass_per_stage) - 1)]
 
     total_delta_v = DeltaV(
         Velocity(
@@ -137,7 +134,7 @@ if __name__ == "__main__":
     print(
         propellant_mass_from_initial_mass(
             Mass(1000),
-            hohmann_transfer(Distance(Scalar(300)), Distance(Scalar(1000)))[0],
+            hohmann_transfer_delta_v(Distance(Scalar(300)), Distance(Scalar(1000)))[0],
             Velocity(Scalar(3)),
         )
     )

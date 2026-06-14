@@ -1,7 +1,9 @@
 import math
 
 from astronomy_types import (
+    Coordinate3D,
     Distance,
+    Eccentricity,
     EquatorialCoordinates,
     GravitationalParameter,
     OrbitalElements,
@@ -9,6 +11,8 @@ from astronomy_types import (
     PositionVector,
     Radians,
     Scalar,
+    Second,
+    SemiMajorAxis,
     StateVectors,
     Vector3D,
     Velocity,
@@ -16,27 +20,49 @@ from astronomy_types import (
 )
 
 from afmaths.constants import EARTH_MU_KM_CUBED, EARTH_RADIUS_KM, DeltaV
-from afmaths.geometry import semi_major_axis_from_vertex_distances
-from afmaths.operation import add, divide_by, multiply, negate
+from afmaths.geometry import (
+    eccentricity_factor_plus,
+    semi_major_axis_from_vertex_distances,
+)
+from afmaths.operation import add, divide_by, multiply, negate, subtract
+from afmaths.physics.kinematics import propagate_vector_3d
 from afmaths.physics.space.astronomy.coordinate_conversion import (
     nadir_vector,
     zenith_vector,
+)
+from afmaths.physics.space.astronomy.type_conversion_helpers import (
+    position_vector_to_vector3d,
+    velocity_vector_to_vector3d,
 )
 from afmaths.physics.space.celestial_mechanics import (
     angular_momentum,
     orbit_radius,
     orbital_elements_from_state_vectors,
     periapsis,
+    radial_velocity,
     velocity_difference,
     velocity_for_altitude,
     vis_viva,
 )
+from afmaths.physics.space.orbit_propagation import (
+    orbit_state_vector_prediction_from_orbital_elements,
+)
 from afmaths.tensors import (
-    dot_product_3d,
     vector_magnitude,
     vector_negate,
     vector_normalise,
 )
+
+# def trajectory_propagation(
+#     state: StateVectors, perturbations: list[Vector3D]
+# ) -> StateVectors:
+
+#     position = []
+
+#     for p in perturbations:
+#         propagate_vector_3d(
+#             Coordinate3D(state.position.x, state.position.y, state.position.z), p
+#         )
 
 
 def radial(position: PositionVector) -> Vector3D:
@@ -75,52 +101,61 @@ def flight_path_angle(
             math.acos(
                 divide_by(
                     multiply(
-                        vector_magnitude(
-                            Vector3D(
-                                state.position.x, state.position.y, state.position.z
-                            )
-                        )
-                    )(
-                        vector_magnitude(
-                            Vector3D(
-                                state.velocity.x, state.velocity.y, state.velocity.z
-                            )
-                        )
-                    )
+                        vector_magnitude(position_vector_to_vector3d(state.position))
+                    )(vector_magnitude(velocity_vector_to_vector3d(state.velocity)))
                 )(multiply(r_p)(velocity_at_periapsis))
             )
         )
     )
 
 
-def signed_flight_path_angle(state: StateVectors) -> Radians:
-    r = vector_magnitude(Vector3D(state.position.x, state.position.y, state.position.z))
-    v = vector_magnitude(Vector3D(state.velocity.x, state.velocity.y, state.velocity.z))
-
+def flight_path_angle_from_elements(elements: OrbitalElements) -> Radians:
     return Radians(
         Scalar(
-            math.asin(
-                divide_by(multiply(r)(v))(
-                    dot_product_3d(
-                        Vector3D(
-                            state.position.x,
-                            state.position.y,
-                            state.position.z,
-                        ),
-                        Vector3D(state.velocity.x, state.velocity.y, state.velocity.z),
+            math.atan(
+                divide_by(
+                    eccentricity_factor_plus(
+                        multiply(elements.eccentricity)(math.cos(elements.true_anomaly))
                     )
-                )
+                )(multiply(elements.eccentricity)(math.sin(elements.true_anomaly)))
             )
         )
     )
 
 
-def hohmann_transfer(
+def signed_flight_path_angle(state: StateVectors) -> Radians:
+    r = vector_magnitude(position_vector_to_vector3d(state.position))
+    v = vector_magnitude(velocity_vector_to_vector3d(state.velocity))
+
+    return Radians(Scalar(math.asin(divide_by(v)(radial_velocity(state)))))
+
+
+def orbital_position_vector_at_time(
+    orbital_elements: OrbitalElements,
+    time_offset_s: Second = Second(Scalar(0)),
+    gravitational_parameter: GravitationalParameter = EARTH_MU_KM_CUBED,
+) -> PositionVector:
+    return orbit_state_vector_prediction_from_orbital_elements(
+        orbital_elements, time_offset_s, gravitational_parameter
+    ).position
+
+
+def orbital_velocity_vector_at_time(
+    orbital_elements: OrbitalElements,
+    time_offset_s: Second = Second(Scalar(0)),
+    gravitational_parameter: GravitationalParameter = EARTH_MU_KM_CUBED,
+) -> VelocityVector:
+    return orbit_state_vector_prediction_from_orbital_elements(
+        orbital_elements, time_offset_s, gravitational_parameter
+    ).velocity
+
+
+def hohmann_transfer_delta_v(
     initial_altitude_km: Distance,
     target_altitude_km: Distance,
     initial_body_radius: Distance = EARTH_RADIUS_KM,
     gravitational_parameter: GravitationalParameter = EARTH_MU_KM_CUBED,
-) -> tuple[DeltaV, Velocity, Velocity]:
+) -> tuple[DeltaV, DeltaV, DeltaV]:
     """Calculates the delta-v required for a Hohmann transfer"""
     # www.braeunig.us/space/problem.htm#4.19
 
@@ -136,14 +171,35 @@ def hohmann_transfer(
     velocity_on_orbit_at_final_orbit = vis_viva(
         gravitational_parameter, r_b, semi_major_axis_transfer_ellipse
     )
-    initial_velocity_change = velocity_difference(
-        initial_velocity, Velocity(Scalar(velocity_on_orbit_at_initial_orbit))
+    transfer_delta_v = velocity_difference(
+        initial_velocity,
+        Velocity(Scalar(velocity_on_orbit_at_initial_orbit)),
     )
-    final_velocity_change = velocity_difference(
-        velocity_on_orbit_at_final_orbit, final_velocity
+
+    circularise_delta_v = velocity_difference(
+        velocity_on_orbit_at_final_orbit,
+        final_velocity,
     )
-    delta_v = DeltaV(add(initial_velocity_change)(final_velocity_change))
-    return (delta_v, initial_velocity_change, final_velocity_change)
+
+    return (
+        DeltaV(add(transfer_delta_v)(circularise_delta_v)),
+        transfer_delta_v,
+        circularise_delta_v,
+    )
+
+
+def transfer_semi_major_axis(
+    initial_altitude_km: Distance, final_altitude_km: Distance
+) -> SemiMajorAxis:
+    return divide_by(2)(add(initial_altitude_km)(final_altitude_km))
+
+
+def transfer_eccentricity(
+    initial_altitude_km: Distance, final_altitude_km: Distance
+) -> Eccentricity:
+    return divide_by(add(final_altitude_km)(initial_altitude_km))(
+        subtract(initial_altitude_km)(final_altitude_km)
+    )
 
 
 def angle_above_orbital_plane(
@@ -169,7 +225,7 @@ def angle_above_orbital_plane(
 if __name__ == "__main__":
 
     # (0.37539955175032447, 0.19003921507073027, 0.18536033667959417)
-    print(hohmann_transfer(Distance(Scalar(300)), Distance(Scalar(1000))))
+    print(hohmann_transfer_delta_v(Distance(Scalar(300)), Distance(Scalar(1000))))
 
     position = PositionVector(
         Position(Scalar(7000)), Position(Scalar(0.1)), Position(Scalar(0.1))
@@ -192,4 +248,7 @@ if __name__ == "__main__":
     )
     print(
         f"Flight path angle (deg): {math.degrees(signed_flight_path_angle(StateVectors(position, velocity)))}"
+    )
+    print(
+        f"Flight path angle (deg): {math.degrees(flight_path_angle_from_elements(orbital_elements_from_state_vectors(StateVectors(position, velocity))))}"
     )

@@ -1,7 +1,8 @@
 import math
-from typing import NewType
+from typing import Generic, NewType
 
 from astronomy_types import (
+    T,
     Anomaly,
     ArgumentOfPerigee,
     Eccentricity,
@@ -9,6 +10,7 @@ from astronomy_types import (
     Distance,
     Inclination,
     OrbitalElements,
+    PositionVector,
     Radians,
     Ratio,
     RightAscension,
@@ -17,6 +19,7 @@ from astronomy_types import (
     TrueAnomaly,
     Vector3D,
     Velocity,
+    dataclass,
 )
 
 from afmaths.operation import exponentiate, multiply
@@ -42,11 +45,19 @@ EXAMPLE_ELEMENTS = OrbitalElements(
 OTHER_EXAMPLE_ELEMENTS = OrbitalElements(
     Inclination(Radians(Scalar(math.radians(75)))),
     RightAscension(Radians(Scalar(1))),
-    ArgumentOfPerigee(Radians(Scalar(0))),
-    SemiMajorAxis(Distance(Scalar(250000))),
+    ArgumentOfPerigee(Radians(Scalar(0.6))),
+    SemiMajorAxis(Distance(Scalar(260000))),
     Eccentricity(Ratio(Scalar(0.5449006))),
-    TrueAnomaly(Anomaly(Radians(Scalar(30)))),
+    TrueAnomaly(Anomaly(Radians(Scalar(1)))),
 )
+# OTHER_EXAMPLE_ELEMENTS = OrbitalElements(
+#     Inclination(Radians(Scalar(math.radians(0)))),
+#     RightAscension(Radians(Scalar(3.024483909022929))),
+#     ArgumentOfPerigee(Radians(Scalar(0))),
+#     SemiMajorAxis(Distance(Scalar(384748))),
+#     Eccentricity(Ratio(Scalar(0.0549006))),
+#     TrueAnomaly(Anomaly(Radians(Scalar(19)))),
+# )
 SPEED_OF_LIGHT_METRES_PER_SECONDS = 299792458
 PLANCK_CONSTANT = multiply(6.62607004)(exponentiate(-34)(10))
 GRAVITATIONAL_CONSTANT = multiply(6.67430)(exponentiate(-11)(10))  # 6.67430e-11
@@ -58,4 +69,4 @@ Force = NewType("Force", float)
 Area = NewType("Area", Scalar)
 RotationMatrix = NewType("RotationMatrix", Vector3D[Vector3D[Scalar]])
 DeltaV = NewType("DeltaV", Velocity)
-EarthCentredInertial = NewType("EarthCentredInertial", Vector3D[Scalar])
+EarthCentredInertialFrame = NewType("EarthCentredInertialFrame", Vector3D[Scalar])

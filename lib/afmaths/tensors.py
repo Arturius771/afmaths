@@ -1,4 +1,5 @@
 from afmaths.constants import RotationMatrix
+from afmaths.physics.space.astronomy.type_conversion_helpers import vector3d
 
 from .operation import SQUARE, add, divide_by, multiply, negate, square_root, subtract
 from astronomy_types import (
@@ -37,7 +38,7 @@ def vector_magnitude(vector: Vector3D[Scalar]) -> Scalar:
 def vector_normalise(vector: Vector3D) -> Vector3D:
     magnitude = vector_magnitude(vector)
 
-    return Vector3D(
+    return vector3d(
         divide_by(magnitude)(vector.x),
         divide_by(magnitude)(vector.y),
         divide_by(magnitude)(vector.z),
@@ -45,7 +46,7 @@ def vector_normalise(vector: Vector3D) -> Vector3D:
 
 
 def vector_negate(vector: Vector3D) -> Vector3D:
-    return Vector3D(
+    return vector3d(
         negate(vector.x),
         negate(vector.y),
         negate(vector.z),
@@ -70,7 +71,7 @@ def vector_multiplication_3d(
     j = scalar_multiply(vector.y)
     k = scalar_multiply(vector.z)
 
-    return Vector3D(i, j, k)
+    return vector3d(i, j, k)
 
 
 def vector_cross_multiplication_3d(
@@ -94,7 +95,7 @@ def vector_cross_multiplication_3d(
     j = subtract(d)(c)
     k = subtract(f)(e)
 
-    return Vector3D(i, j, k)
+    return vector3d(i, j, k)
 
 
 def rotation_matrix(
@@ -103,9 +104,21 @@ def rotation_matrix(
     z_basis: Vector3D[Scalar],
 ) -> RotationMatrix:
     return RotationMatrix(
-        Vector3D(
-            Vector3D(x_basis.x, y_basis.x, z_basis.x),
-            Vector3D(x_basis.y, y_basis.y, z_basis.y),
-            Vector3D(x_basis.z, y_basis.z, z_basis.z),
+        vector3d(
+            vector3d(
+                x_basis.x,
+                y_basis.x,
+                z_basis.x,
+            ),
+            vector3d(
+                x_basis.y,
+                y_basis.y,
+                z_basis.y,
+            ),
+            vector3d(
+                x_basis.z,
+                y_basis.z,
+                z_basis.z,
+            ),
         )
     )

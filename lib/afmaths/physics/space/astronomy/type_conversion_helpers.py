@@ -4,21 +4,30 @@ import math
 from astronomy_types import (
     DMS,
     HMS,
+    T,
+    Anomaly,
     Coordinate3D,
     Date,
     Day,
     DecimalTime,
     Degrees,
+    EccentricAnomaly,
     FullDate,
     Hour,
+    Inclination,
     Minute,
     Month,
+    Position,
     PositionVector,
     Radians,
     Scalar,
     Second,
+    StateVectors,
     Time,
+    TrueAnomaly,
+    Vector2D,
     Vector3D,
+    Velocity,
     VelocityVector,
     Year,
 )
@@ -121,13 +130,45 @@ def hour_to_hour_string(hour: Hour) -> str:
     return f"{hour:02d}h"
 
 
+def vector2d(x: T, y: T) -> Vector2D[T]:
+    return Vector2D(x, y)
+
+
+def vector3d(
+    x: T,
+    y: T,
+    z: T,
+) -> Vector3D[T]:
+    return Vector3D(x, y, z)
+
+
 def coordinate3d_to_vector3d(coordinates: Coordinate3D) -> Vector3D[Scalar]:
-    return Vector3D(coordinates.x, coordinates.y, coordinates.z)
+    return vector3d(coordinates.x, coordinates.y, coordinates.z)
 
 
 def position_vector_to_vector3d(position_vector: PositionVector) -> Vector3D[Scalar]:
-    return Vector3D(position_vector.x, position_vector.y, position_vector.z)
+    return vector3d(position_vector.x, position_vector.y, position_vector.z)
 
 
 def velocity_vector_to_vector3d(velocity_vector: VelocityVector) -> Vector3D[Scalar]:
-    return Vector3D(velocity_vector.x, velocity_vector.y, velocity_vector.z)
+    return vector3d(velocity_vector.x, velocity_vector.y, velocity_vector.z)
+
+
+def make_velocity_vector(vector: Vector3D) -> VelocityVector:
+    return VelocityVector(Velocity(vector.x), Velocity(vector.y), Velocity(vector.z))
+
+
+def make_position_vector(vector: Vector3D) -> PositionVector:
+    return PositionVector(Position(vector.x), Position(vector.y), Position(vector.z))
+
+
+def make_state_vector(pos: PositionVector, vel: VelocityVector) -> StateVectors:
+    return StateVectors(pos, vel)
+
+
+def make_true_anomaly(val: float) -> TrueAnomaly:
+    return TrueAnomaly(Anomaly(Radians(Scalar(val))))
+
+
+def make_eccentric_anomaly(val: float) -> EccentricAnomaly:
+    return EccentricAnomaly(Anomaly(Radians(Scalar(val))))

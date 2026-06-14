@@ -4,11 +4,15 @@
 
 `clang-format -i *.cpp`
 
-## Compile to an executable binary
+## Compile to library code
 
-`clang++ file.cpp -o file`
+`clang++ -c file.cpp`
+
+## Compile to an executable
+
+`clang++ file.cpp -o file.o`
 or to put in a directory
-`clang++ file.cpp -o ../build/operation`
+`clang++ file.cpp -o ../build/file.o`
 
 ## Execute file
 

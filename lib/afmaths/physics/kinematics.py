@@ -16,6 +16,7 @@ from afmaths.formula import trapezoidal_rule
 from afmaths.geometry import area
 from afmaths.graph import slope_gradiant
 from afmaths.operation import add, multiply
+from afmaths.physics.space.astronomy.type_conversion_helpers import vector3d
 from afmaths.tensors import vector_multiplication_2d, vector_multiplication_3d
 
 
@@ -167,7 +168,7 @@ def displacement_vector(
     origin: Coordinate3D[Scalar],
 ) -> Vector3D[Displacement]:
     """target coordinate − origin coordinate"""
-    return Vector3D(
+    return vector3d(
         Displacement(Scalar(coords.x - origin.x)),
         Displacement(Scalar(coords.y - origin.y)),
         Displacement(Scalar(coords.z - origin.z)),

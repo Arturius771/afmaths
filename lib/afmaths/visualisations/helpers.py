@@ -1,4 +1,4 @@
-from dataclasses import dataclass, replace
+from dataclasses import dataclass
 import datetime
 import math
 
@@ -22,11 +22,11 @@ from astronomy_types import (
     Vector3D,
 )
 
+from afmaths.constants import DeltaV
 from afmaths.geometry import (
     calculate_distance,
     calculate_foci,
     circle_bounding_box,
-    ellipse_bounding_box,
     translate_ellipse_coordinate,
 )
 from afmaths.operation import interval
@@ -41,6 +41,7 @@ from afmaths.physics.space.celestial_mechanics import (
 from afmaths.physics.space.astronomy.type_conversion_helpers import (
     python_datetime_to_fulldate,
     python_timedelta_to_seconds,
+    vector3d,
 )
 from afmaths.physics.space.horizons_api import (
     HorizonsCommandTarget,
@@ -51,6 +52,16 @@ from afmaths.physics.space.orbit_propagation import (
     generate_angles_on_circle,
     orbit_state_vector_prediction_from_orbital_elements,
 )
+
+
+@dataclass(frozen=True)
+class BurnNode:
+    name: str
+    orbital_elements: OrbitalElements
+    eccentric_anomaly: EccentricAnomaly
+    delta_v: DeltaV
+    elapsed_time: Second
+    colour: str = "red"
 
 
 def figure_layout(
@@ -301,7 +312,7 @@ def plot_sphere_surface(
 
     sphere_z = [[centre_z + radius * math.cos(v_j) for v_j in v] for _ in u]
 
-    return Vector3D(sphere_x, sphere_y, sphere_z)
+    return vector3d(sphere_x, sphere_y, sphere_z)
 
 
 def scale_value(value: float | int, distance_scale_km: float) -> float:
@@ -309,10 +320,10 @@ def scale_value(value: float | int, distance_scale_km: float) -> float:
 
 
 def scale_position(position, distance_scale_km: float) -> Vector3D:
-    return Vector3D(
-        x=scale_value(position.x, distance_scale_km),
-        y=scale_value(position.y, distance_scale_km),
-        z=scale_value(position.z, distance_scale_km),
+    return vector3d(
+        scale_value(position.x, distance_scale_km),
+        scale_value(position.y, distance_scale_km),
+        scale_value(position.z, distance_scale_km),
     )
 
 

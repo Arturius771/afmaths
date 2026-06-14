@@ -1,10 +1,11 @@
 from abc import ABC, abstractmethod
-from dataclasses import replace
+from dataclasses import dataclass, replace
+from enum import Enum
 import math
 
 import plotly.graph_objects as go
 
-from afmaths.constants import Mass
+from afmaths.constants import DeltaV, Mass
 from afmaths.geometry import (
     calculate_distance,
     calculate_foci,
@@ -15,16 +16,22 @@ from afmaths.physics.kinematics import position_vector_from_coordinates
 from afmaths.physics.space.astrodynamics import (
     anti_normal,
     anti_radial,
+    hohmann_transfer_delta_v,
     normal,
+    periapsis,
     prograde,
     radial,
     retrograde,
+    transfer_eccentricity,
+    transfer_semi_major_axis,
 )
 from afmaths.physics.space.astronomy.type_conversion_helpers import (
     fulldate_to_string,
     python_datetime_to_fulldate,
+    vector2d,
 )
 from afmaths.physics.space.celestial_mechanics import (
+    apoapsis,
     gravitational_parameter,
     orbital_period,
     true_anomaly_from_eccentric_anomaly,
@@ -32,7 +39,6 @@ from afmaths.physics.space.celestial_mechanics import (
 )
 from afmaths.physics.space.orbit_propagation import (
     eccentric_anomaly_at_time,
-    generate_angles_on_circle,
 )
 from afmaths.visualisations.helpers import (
     BodyPlotConfig,
@@ -48,25 +54,54 @@ from afmaths.visualisations.helpers import (
     make_3d_orbit_figure,
     rotate_around_point,
 )
-
 from astronomy_types import (
     Anomaly,
+    ArgumentOfPerigee,
     Coordinate2D,
     Coordinate3D,
     Distance,
     EccentricAnomaly,
-    MeanAnomaly,
+    Eccentricity,
+    GravitationalParameter,
+    Inclination,
     OrbitalElements,
     Radians,
+    RightAscension,
     Scalar,
     Second,
     SemiMajorAxis,
     StateVectors,
+    TrueAnomaly,
     Vector2D,
     Vector3D,
     Velocity,
     VelocityVector,
 )
+
+
+class TransferApsis(Enum):
+    PERIAPSIS = "periapsis"
+    APOAPSIS = "apoapsis"
+
+
+@dataclass(frozen=True)
+class PerifocalOrbitLine:
+    name: str
+    orbital_elements: OrbitalElements
+    colour: str = "grey"
+    start_eccentric_anomaly: float = 0.0
+    end_eccentric_anomaly: float = 2 * math.pi
+    show_secondary_focus: bool = False
+
+
+@dataclass(frozen=True)
+class BurnNode:
+    name: str
+    orbital_elements: OrbitalElements
+    eccentric_anomaly: EccentricAnomaly
+    delta_v: DeltaV
+    elapsed_time: Second
+    colour: str = "red"
 
 
 class Base3DOrbitPlot(ABC):
@@ -134,7 +169,7 @@ class Base3DOrbitPlot(ABC):
         fig.show()
 
 
-class Base2DOrbitPlot(ABC):
+class Base2DOrbitScene(ABC):
     def __init__(self, settings: OrbitPlot2DSettings):
         self.settings = settings
 
@@ -153,6 +188,188 @@ class Base2DOrbitPlot(ABC):
     def central_body_radius_km(self) -> float:
         pass
 
+    @property
+    def plot_min(self) -> Vector2D:
+        return vector2d(x=self.settings.plot_min_x, y=self.settings.plot_min_y)
+
+    @property
+    def plot_max(self) -> Vector2D:
+        return vector2d(x=self.settings.plot_max_x, y=self.settings.plot_max_y)
+
+    @property
+    def plot_width(self) -> int:
+        return self.settings.plot_width
+
+    @property
+    def plot_height(self) -> int:
+        return self.settings.plot_height
+
+    @property
+    def central_point(self) -> Coordinate2D:
+        return Coordinate2D(self.plot_max.x / 2, self.plot_max.y / 2)
+
+    @property
+    def central_body_radius_plot(self) -> Distance:
+        return Distance(
+            Scalar(self.central_body_radius_km / self.settings.distance_scale_km)
+        )
+
+    def make_title(self) -> str:
+        return self.title_prefix
+
+    def add_central_body(self, fig: go.Figure) -> go.Figure:
+        return figure_planetary_body(
+            fig,
+            self.central_point,
+            self.central_body_radius_plot,
+            self.central_body_name,
+            "Black",
+            "blue",
+            "green",
+        )
+
+    def add_layout(self, fig: go.Figure) -> go.Figure:
+        return figure_layout(
+            fig,
+            self.plot_width,
+            self.plot_height,
+            self.plot_min,
+            self.plot_max,
+        )
+
+    def add_plot_centre(self, fig: go.Figure) -> go.Figure:
+        return figure_plot_centre(
+            fig,
+            self.central_point,
+            Distance(Scalar(0.1)),
+        )
+
+    def show(self) -> None:
+        self.build_figure().show()
+
+    @abstractmethod
+    def build_figure(self) -> go.Figure:
+        pass
+
+
+class Base2DPerifocalGeometry(Base2DOrbitScene):
+    def ellipse_centre_for_elements(self, elements: OrbitalElements) -> Coordinate2D:
+        c = calculate_foci(elements.semi_major_axis, elements.eccentricity)[0]
+
+        return Coordinate2D(
+            self.central_point.x + c.x,
+            self.central_point.y,
+        )
+
+    def secondary_focus_coordinates_for_elements(
+        self,
+        elements: OrbitalElements,
+    ) -> Coordinate2D:
+        c = calculate_foci(
+            elements.semi_major_axis,
+            elements.eccentricity,
+        )[0].x
+
+        unrotated_second_focus = Coordinate2D(
+            self.central_point.x + 2 * c,
+            self.central_point.y,
+        )
+
+        return rotate_around_point(
+            unrotated_second_focus,
+            self.central_point,
+            elements.argument_of_periapsis,
+        )
+
+    def coordinates_for_elements(
+        self,
+        elements: OrbitalElements,
+        eccentric_anomaly: EccentricAnomaly,
+    ) -> Coordinate2D:
+        centre = self.ellipse_centre_for_elements(elements)
+
+        unrotated = translate_ellipse_coordinate(
+            centre,
+            elements.semi_major_axis,
+            semi_minor_axis(
+                elements.semi_major_axis,
+                elements.eccentricity,
+            ),
+            eccentric_anomaly,
+        )
+
+        return rotate_around_point(
+            unrotated,
+            self.central_point,
+            elements.argument_of_periapsis,
+        )
+
+    def add_perifocal_orbit_line(
+        self,
+        fig: go.Figure,
+        orbit_line: PerifocalOrbitLine,
+        steps: int = 200,
+    ) -> None:
+        angles = [
+            orbit_line.start_eccentric_anomaly
+            + (orbit_line.end_eccentric_anomaly - orbit_line.start_eccentric_anomaly)
+            * i
+            / (steps - 1)
+            for i in range(steps)
+        ]
+
+        coordinates = [
+            self.coordinates_for_elements(
+                orbit_line.orbital_elements,
+                EccentricAnomaly(Anomaly(Radians(Scalar(angle)))),
+            )
+            for angle in angles
+        ]
+
+        fig.add_trace(
+            go.Scatter(
+                x=[coordinate.x for coordinate in coordinates],
+                y=[coordinate.y for coordinate in coordinates],
+                mode="lines",
+                name=orbit_line.name,
+                line=dict(color=orbit_line.colour),
+                hoverinfo="name",
+            )
+        )
+
+        if orbit_line.show_secondary_focus:
+            figure_circle(
+                fig,
+                self.secondary_focus_coordinates_for_elements(
+                    orbit_line.orbital_elements
+                ),
+                Distance(Scalar(0.1)),
+                "red",
+                "red",
+            )
+
+
+class Base2DPerifocalOrbitPlot(Base2DPerifocalGeometry):
+    @property
+    @abstractmethod
+    def orbit_lines(self) -> list[PerifocalOrbitLine]:
+        pass
+
+    def build_figure(self) -> go.Figure:
+        fig = go.Figure()
+
+        for orbit_line in self.orbit_lines:
+            self.add_perifocal_orbit_line(fig, orbit_line)
+
+        fig = self.add_central_body(fig)
+        fig = self.add_layout(fig)
+        fig = self.add_plot_centre(fig)
+        fig.update_layout(title=self.make_title())
+
+        return fig
+
+
+class Base2DOrbitPlot(Base2DPerifocalGeometry):
     @property
     @abstractmethod
     def central_body_mass_kg(self) -> float:
@@ -183,34 +400,8 @@ class Base2DOrbitPlot(ABC):
         return [False for _ in self.orbiting_body_names]
 
     @property
-    def plot_min(self) -> Vector2D:
-        return Vector2D(x=self.settings.plot_min_x, y=self.settings.plot_min_y)
-
-    @property
-    def plot_max(self) -> Vector2D:
-        return Vector2D(x=self.settings.plot_max_x, y=self.settings.plot_max_y)
-
-    @property
-    def plot_width(self) -> int:
-        return self.settings.plot_width
-
-    @property
-    def plot_height(self) -> int:
-        return self.settings.plot_height
-
-    @property
     def num_steps(self) -> int:
         return self.settings.slider_steps
-
-    @property
-    def central_point(self) -> Coordinate2D:
-        return Coordinate2D(self.plot_max.x / 2, self.plot_max.y / 2)
-
-    @property
-    def central_body_radius_plot(self) -> Distance:
-        return Distance(
-            Scalar(self.central_body_radius_km / self.settings.distance_scale_km)
-        )
 
     def orbiting_body_radius_plot(self, index: int) -> Distance:
         return Distance(
@@ -312,25 +503,15 @@ class Base2DOrbitPlot(ABC):
         return fig, body_trace_index, label_trace_index, vector_trace_indices
 
     def add_orbit_line(self, fig: go.Figure, index: int) -> None:
-        coordinates = [
-            self.orbiting_body_coordinates(
-                index,
-                EccentricAnomaly(Anomaly(Radians(Scalar(angle)))),
-            )
-            for angle in generate_angles_on_circle(200)
-        ]
-
         orbit_colour = "orange" if self.orbiting_body_is_satellite[index] else "grey"
 
-        fig.add_trace(
-            go.Scatter(
-                x=[coordinate.x for coordinate in coordinates],
-                y=[coordinate.y for coordinate in coordinates],
-                mode="lines",
+        self.add_perifocal_orbit_line(
+            fig,
+            PerifocalOrbitLine(
                 name=f"{self.orbiting_body_names[index]} orbit",
-                line=dict(color=orbit_colour),
-                hoverinfo="skip",
-            )
+                orbital_elements=self.orbital_elements[index],
+                colour=orbit_colour,
+            ),
         )
 
     def add_satellite_direction_traces(
@@ -367,22 +548,8 @@ class Base2DOrbitPlot(ABC):
         return trace_indices
 
     def secondary_focus_coordinates(self, index: int) -> Coordinate2D:
-        elements = self.orbital_elements[index]
-
-        c = calculate_foci(
-            elements.semi_major_axis,
-            elements.eccentricity,
-        )[0].x
-
-        unrotated_second_focus = Coordinate2D(
-            self.central_point.x + 2 * c,
-            self.central_point.y,
-        )
-
-        return rotate_around_point(
-            unrotated_second_focus,
-            self.central_point,
-            elements.argument_of_periapsis,
+        return self.secondary_focus_coordinates_for_elements(
+            self.orbital_elements[index]
         )
 
     def build_figure(self) -> go.Figure:
@@ -403,23 +570,8 @@ class Base2DOrbitPlot(ABC):
             label_trace_indices.append(label_trace_index)
             vector_trace_indices.append(body_vector_trace_indices)
 
-        fig = figure_planetary_body(
-            fig,
-            self.central_point,
-            self.central_body_radius_plot,
-            self.central_body_name,
-            "Black",
-            "blue",
-            "green",
-        )
-
-        fig = figure_layout(
-            fig,
-            self.plot_width,
-            self.plot_height,
-            self.plot_min,
-            self.plot_max,
-        )
+        fig = self.add_central_body(fig)
+        fig = self.add_layout(fig)
 
         fig = figure_slider(
             fig,
@@ -430,21 +582,10 @@ class Base2DOrbitPlot(ABC):
             ),
         )
 
-        fig = figure_plot_centre(
-            fig,
-            self.central_point,
-            Distance(Scalar(0.1)),
-        )
-
+        fig = self.add_plot_centre(fig)
         fig.update_layout(title=self.make_title())
 
         return fig
-
-    def make_title(self) -> str:
-        return self.title_prefix
-
-    def show(self) -> None:
-        self.build_figure().show()
 
     def generate_combined_orbital_slider_data(
         self,
@@ -468,11 +609,9 @@ class Base2DOrbitPlot(ABC):
 
             body_x_updates = []
             body_y_updates = []
-
             label_x_updates = []
             label_y_updates = []
             label_text_updates = []
-
             vector_x_updates = []
             vector_y_updates = []
             vector_update_indices = []
@@ -611,10 +750,8 @@ class Base2DOrbitPlot(ABC):
 
         delta_time = period / 10000
 
-        elements = self.orbital_elements[index]
-
         scaled_elements = replace(
-            elements,
+            self.orbital_elements[index],
             semi_major_axis=SemiMajorAxis(
                 Distance(
                     Scalar(
@@ -640,6 +777,7 @@ class Base2DOrbitPlot(ABC):
                 Second(Scalar(elapsed_time + delta_time)),
             ),
         )
+
         return VelocityVector(
             Velocity(Scalar((next_coordinates.x - current_coordinates.x) / delta_time)),
             Velocity(Scalar((next_coordinates.y - current_coordinates.y) / delta_time)),
@@ -665,35 +803,262 @@ class Base2DOrbitPlot(ABC):
         return min(plot_range_x, plot_range_y) * 0.06
 
     def ellipse_centre(self, index: int) -> Coordinate2D:
-        elements = self.orbital_elements[index]
-        c = calculate_foci(elements.semi_major_axis, elements.eccentricity)[0]
-
-        return Coordinate2D(
-            self.central_point.x + c.x,
-            self.central_point.y,
-        )
+        return self.ellipse_centre_for_elements(self.orbital_elements[index])
 
     def orbiting_body_coordinates(
         self,
         index: int,
         eccentric_anomaly: EccentricAnomaly,
     ) -> Coordinate2D:
-        elements = self.orbital_elements[index]
-
-        centre = self.ellipse_centre(index)
-
-        unrotated = translate_ellipse_coordinate(
-            centre,
-            elements.semi_major_axis,
-            semi_minor_axis(
-                self.orbital_elements[index].semi_major_axis,
-                self.orbital_elements[index].eccentricity,
-            ),
+        return self.coordinates_for_elements(
+            self.orbital_elements[index],
             eccentric_anomaly,
         )
 
-        return rotate_around_point(
-            unrotated,
-            self.central_point,
-            elements.argument_of_periapsis,
+
+def apsis_radius(
+    orbit: OrbitalElements,
+    apsis: TransferApsis,
+) -> Distance:
+    if apsis == TransferApsis.PERIAPSIS:
+        return periapsis(
+            orbit.semi_major_axis,
+            orbit.eccentricity,
         )
+
+    return apoapsis(
+        orbit.semi_major_axis,
+        orbit.eccentricity,
+    )
+
+
+def apsis_eccentric_anomaly(apsis: TransferApsis) -> EccentricAnomaly:
+    if apsis == TransferApsis.PERIAPSIS:
+        return EccentricAnomaly(Anomaly(Radians(Scalar(0))))
+
+    return EccentricAnomaly(Anomaly(Radians(Scalar(math.pi))))
+
+
+def argument_of_periapsis_for_transfer_start(
+    initial_orbit: OrbitalElements,
+    start_apsis: TransferApsis,
+) -> ArgumentOfPerigee:
+    if start_apsis == TransferApsis.PERIAPSIS:
+        return initial_orbit.argument_of_periapsis
+
+    return ArgumentOfPerigee(
+        Radians(Scalar(initial_orbit.argument_of_periapsis + math.pi))
+    )
+
+
+def transfer_orbit_from_apsides(
+    initial_orbit: OrbitalElements,
+    final_orbit: OrbitalElements,
+    start_apsis: TransferApsis,
+    final_apsis: TransferApsis,
+) -> OrbitalElements:
+    start_radius = apsis_radius(initial_orbit, start_apsis)
+    final_radius = apsis_radius(final_orbit, final_apsis)
+
+    return OrbitalElements(
+        initial_orbit.inclination,
+        initial_orbit.right_ascension_of_ascending_node,
+        argument_of_periapsis_for_transfer_start(
+            initial_orbit,
+            start_apsis,
+        ),
+        SemiMajorAxis(
+            transfer_semi_major_axis(
+                start_radius,
+                final_radius,
+            )
+        ),
+        transfer_eccentricity(
+            start_radius,
+            final_radius,
+        ),
+        TrueAnomaly(Anomaly(Radians(Scalar(0)))),
+    )
+
+
+class HohmannTransfer2DPerifocalPlot(Base2DPerifocalOrbitPlot):
+    def __init__(
+        self,
+        settings: OrbitPlot2DSettings,
+        initial_orbit: OrbitalElements,
+        final_orbit: OrbitalElements,
+        initial_altitude_km: Distance,
+        target_altitude_km: Distance,
+        gravitational_parameter: GravitationalParameter,
+        start_apsis: TransferApsis = TransferApsis.PERIAPSIS,
+        final_apsis: TransferApsis = TransferApsis.APOAPSIS,
+        central_body_name: str = "Earth",
+        central_body_radius_km: float = 6_371.0,
+    ):
+        super().__init__(settings)
+        self.initial_orbit = initial_orbit
+        self.final_orbit = final_orbit
+        self.initial_altitude_km = initial_altitude_km
+        self.target_altitude_km = target_altitude_km
+        self.gravitational_parameter = gravitational_parameter
+        self.start_apsis = start_apsis
+        self.final_apsis = final_apsis
+        self._central_body_name = central_body_name
+        self._central_body_radius_km = central_body_radius_km
+
+    @property
+    def title_prefix(self) -> str:
+        return "Hohmann transfer in the perifocal frame"
+
+    @property
+    def central_body_name(self) -> str:
+        return self._central_body_name
+
+    @property
+    def central_body_radius_km(self) -> float:
+        return self._central_body_radius_km
+
+    @property
+    def transfer_orbit(self) -> OrbitalElements:
+        return transfer_orbit_from_apsides(
+            self.initial_orbit,
+            self.final_orbit,
+            self.start_apsis,
+            self.final_apsis,
+        )
+
+    @property
+    def transfer_semi_major_axis_km(self) -> SemiMajorAxis:
+        return SemiMajorAxis(
+            Distance(
+                Scalar(
+                    self.transfer_orbit.semi_major_axis
+                    * self.settings.distance_scale_km
+                )
+            )
+        )
+
+    @property
+    def transfer_period(self) -> Second:
+        return orbital_period(
+            self.transfer_semi_major_axis_km,
+            self.gravitational_parameter,
+        )
+
+    @property
+    def transfer_time(self) -> Second:
+        return Second(Scalar(self.transfer_period / 2))
+
+    @property
+    def orbit_lines(self) -> list[PerifocalOrbitLine]:
+        return [
+            PerifocalOrbitLine(
+                name="Initial orbit",
+                orbital_elements=self.initial_orbit,
+                colour="grey",
+                start_eccentric_anomaly=0,
+                end_eccentric_anomaly=2 * math.pi,
+            ),
+            PerifocalOrbitLine(
+                name="Transfer arc",
+                orbital_elements=self.transfer_orbit,
+                colour="orange",
+                start_eccentric_anomaly=0,
+                end_eccentric_anomaly=math.pi,
+                show_secondary_focus=True,
+            ),
+            PerifocalOrbitLine(
+                name="Final orbit",
+                orbital_elements=self.final_orbit,
+                colour="grey",
+                start_eccentric_anomaly=0,
+                end_eccentric_anomaly=2 * math.pi,
+            ),
+        ]
+
+    @property
+    def delta_v_values(self) -> tuple[DeltaV, DeltaV, DeltaV]:
+        return hohmann_transfer_delta_v(
+            self.initial_altitude_km,
+            self.target_altitude_km,
+            gravitational_parameter=self.gravitational_parameter,
+        )
+
+    @property
+    def burn_nodes(self) -> list[BurnNode]:
+        _, transfer_delta_v, circularise_delta_v = self.delta_v_values
+
+        return [
+            BurnNode(
+                name=f"Transfer burn at initial {self.start_apsis.value}",
+                orbital_elements=self.transfer_orbit,
+                eccentric_anomaly=EccentricAnomaly(Anomaly(Radians(Scalar(0)))),
+                delta_v=transfer_delta_v,
+                elapsed_time=Second(Scalar(0)),
+            ),
+            BurnNode(
+                name=f"Arrival burn at final {self.final_apsis.value}",
+                orbital_elements=self.transfer_orbit,
+                eccentric_anomaly=EccentricAnomaly(Anomaly(Radians(Scalar(math.pi)))),
+                delta_v=circularise_delta_v,
+                elapsed_time=self.transfer_time,
+            ),
+        ]
+
+    def add_burn_node(self, fig: go.Figure, node: BurnNode) -> None:
+        coordinate = self.coordinates_for_elements(
+            node.orbital_elements,
+            node.eccentric_anomaly,
+        )
+
+        fig.add_trace(
+            go.Scatter(
+                x=[coordinate.x],
+                y=[coordinate.y],
+                mode="markers+text",
+                name=node.name,
+                text=[
+                    f"{node.name}<br>"
+                    f"Δv = {node.delta_v:.4f} km/s<br>"
+                    f"t = {node.elapsed_time:.2f} s"
+                ],
+                textposition="top center",
+                marker=dict(
+                    size=12,
+                    color=node.colour,
+                    symbol="x",
+                    line=dict(color=node.colour, width=2),
+                ),
+                hovertext=[
+                    f"{node.name}<br>"
+                    f"Δv = {node.delta_v:.4f} km/s<br>"
+                    f"t = {node.elapsed_time:.2f} s"
+                ],
+                hoverinfo="text",
+            )
+        )
+
+    def build_figure(self) -> go.Figure:
+        fig = go.Figure()
+
+        for orbit_line in self.orbit_lines:
+            self.add_perifocal_orbit_line(fig, orbit_line)
+
+        for burn_node in self.burn_nodes:
+            self.add_burn_node(fig, burn_node)
+
+        fig = self.add_central_body(fig)
+        fig = self.add_layout(fig)
+        fig = self.add_plot_centre(fig)
+
+        total_delta_v, _, _ = self.delta_v_values
+
+        fig.update_layout(
+            title=(
+                f"{self.make_title()}<br>"
+                f"Total Δv = {total_delta_v:.4f} km/s, "
+                f"transfer time = {self.transfer_time:.2f} s"
+            )
+        )
+
+        return fig
