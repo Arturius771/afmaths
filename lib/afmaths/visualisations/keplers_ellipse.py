@@ -1,5 +1,9 @@
 from afmaths.constants import EXAMPLE_ELEMENTS
 from afmaths.geometry import calculate_foci
+from afmaths.visualisations.base import (
+    primary_focus_coordinates_for_elements,
+    secondary_focus_coordinates_for_elements,
+)
 from afmaths.visualisations.helpers import (
     OrbitPlot2DSettings,
     PerifocalOrbitLine,
@@ -12,8 +16,6 @@ from afmaths.visualisations.helpers import (
     go,
     plot_max,
     plot_min,
-    primary_focus_coordinates_for_elements,
-    secondary_focus_coordinates_for_elements,
 )
 from astronomy_types import (
     ArgumentOfPerigee,
