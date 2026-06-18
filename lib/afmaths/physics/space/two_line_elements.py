@@ -8,10 +8,8 @@ from afmaths.physics.space.astronomy.time_functions import (
     julian_to_greenwich_date,
 )
 from astronomy_types import (
-    Anomaly,
     Epoch,
     JulianDate,
-    MeanMotion,
     OrbitalElements,
     Radians,
     RightAscension,
@@ -24,6 +22,8 @@ from astronomy_types import (
     Ratio,
     Degrees,
     Distance,
+    MeanMotion,
+    Anomaly
 )
 
 def mean_motion_from_tle(mean_motion_rev_d) -> MeanMotion:

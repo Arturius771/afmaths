@@ -447,7 +447,7 @@ def argument_of_latitude(
         multiply(position_vector.y)(math.sin(right_ascension_of_ascending_node))
     )
 
-    return Latitude(Radians(Scalar(math.atan2(y, x) % (2 * math.pi))))
+    return Radians(Scalar(math.atan2(y, x) % (2 * math.pi)))
 
 
 def argument_of_periapsis(theta: TrueAnomaly, latitude: Latitude) -> ArgumentOfPerigee:
