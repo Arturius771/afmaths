@@ -221,6 +221,12 @@ def angle_above_orbital_plane(
 
     return Radians(Scalar(math.asin(value)))
 
+def max_latitude(i: Inclination) -> Latitude:
+    # convert to degrees and return
+
+def min_latitude(i: Inclination) -> Latitude:
+    #convert to degrees and negate
+
 def westward_drift(mean_motion: MeanMotion) -> Degrees:
     return Degrees(Scalar(multiply(360)(divide_by(mean_motion)(1))))
 
