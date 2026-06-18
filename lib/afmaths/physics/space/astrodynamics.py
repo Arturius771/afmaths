@@ -221,6 +221,14 @@ def angle_above_orbital_plane(
 
     return Radians(Scalar(math.asin(value)))
 
+def westward_drift(mean_motion: MeanMotion) -> Degrees:
+    return Degrees(Scalar(multiply(360)(divide_by(mean_motion)(1))))
+
+def angular_velocity_from_sidereal_period(sidereal_period: Second = Second(86,164.09)) -> Radians:
+    return divide_by(sidereal_period)(multiply(2)(math.pi))
+
+def westware_drift_from_angular_velocity_and_period(body_angular_velocity: Radians, orbital_period: Second) -> Radians:
+    return multiply(body_angular_velocity)(orbital_period)
 
 # TODO: function(s) to change specific orbital elements
 

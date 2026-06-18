@@ -1,5 +1,6 @@
 import math
 
+from afmaths.operation import divide_by
 from afmaths.physics.space.celestial_mechanics import mean_motion
 from afmaths.physics.space.astronomy.type_conversion_helpers import degrees_to_radians
 from afmaths.physics.space.astronomy.time_functions import (
@@ -25,65 +26,8 @@ from astronomy_types import (
     Distance,
 )
 
-
-def format_tle_exponent(value: float) -> str:
-    if value == 0:
-        return "00000-0"
-
-    exponent = math.floor(math.log10(abs(value))) + 1
-    mantissa = value / (10**exponent)
-
-    return f"{mantissa*1e5:05.0f}{exponent:+d}".replace("+", "")
-
-
-def first_derivative_mean_motion(mean_motion: MeanMotion) -> float:
-    """
-    First derivative of mean motion [rev/day²].
-
-    Cannot be derived from a single orbital state.
-    TLEs commonly use 0 when no propagation fit exists.
-    """
-    return 0.0
-
-
-def second_derivative_mean_motion(mean_motion: MeanMotion) -> float:
-    """
-    Second derivative of mean motion [rev/day³].
-
-    Usually negligible and often represented as zero.
-    """
-    return 0.0
-
-
-def calculate_checksum(line: str) -> int:
-    """Calculates the checksum for one TLE line."""
-    total = 0
-
-    for char in line:
-        if char.isdigit():
-            total += int(char)
-        elif char == "-":
-            total += 1
-
-    return total % 10
-
-
-def julian_date_to_tle_epoch(julian_date: JulianDate) -> str:
-    """Converts a JulianDate to TLE epoch format YYDDD.FFFFFFFF."""
-
-    date = julian_to_greenwich_date(julian_date)
-
-    year = int(date.year)
-
-    day_float = float(date.day)
-    whole_day = math.floor(day_float)
-    fractional_day = day_float - whole_day
-
-    tle_year = year % 100
-    tle_day = date_to_day_number(date) + fractional_day
-
-    return f"{tle_year:02d}{tle_day:012.8f}"
-
+def mean_motion_from_tle(mean_motion_rev_d) -> MeanMotion:
+    return MeanMotion(mean_motion_rev_d * 2 * math.pi * divide_by(24 * 3600)(1))
 
 def two_line_element_from_orbital_elements(
     orbital_elements: OrbitalElements,
@@ -97,29 +41,9 @@ def two_line_element_from_orbital_elements(
 ) -> str:
     """Converts orbital elements to a two line element set string."""
 
-    mean_motion_rad = mean_motion(orbital_elements.semi_major_axis)
-    mean_motion_rev_day = mean_motion_rad * 86400 / (2 * math.pi)
+    tle_epoch = #mean julian data
+    mean_motion_rev_day = # mean motion in rev/d
 
-    first_derivative = first_derivative_mean_motion(mean_motion_rad)
-    second_derivative = second_derivative_mean_motion(mean_motion_rad)
-
-    eccentricity = orbital_elements.eccentricity
-    true_anomaly = orbital_elements.true_anomaly
-
-    eccentric_anomaly = 2 * math.atan2(
-        math.sqrt(1 - eccentricity) * math.sin(true_anomaly / 2),
-        math.sqrt(1 + eccentricity) * math.cos(true_anomaly / 2),
-    )
-
-    mean_anomaly = eccentric_anomaly - eccentricity * math.sin(eccentric_anomaly)
-    mean_anomaly_deg = math.degrees(mean_anomaly) % 360
-
-    tle_epoch = julian_date_to_tle_epoch(epoch)
-
-    ecc = f"{eccentricity:.7f}".split(".")[1]
-    first_derivative_str = f"{first_derivative:.8f}".replace("0.", ".").replace(
-        "-0.", "-."
-    )
 
     line1 = (
         f"1 {catalog_number:05d}{classification} "
