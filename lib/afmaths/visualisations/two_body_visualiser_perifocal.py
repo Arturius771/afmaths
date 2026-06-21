@@ -40,8 +40,10 @@ from afmaths.physics.space.orbit_propagation import eccentric_anomaly_at_time
 from afmaths.physics.space.space_engineering import EXAMPLE_ELEMENTS
 from afmaths.visualisations.base import (
     orbiting_body_coordinates,
-    scaled_elements_for_plot,
+    elements_scaled_to_plot,
+    secondary_focus_coordinates_for_elements,
     semi_major_axis_metres,
+    tangent_vector_for_plot,
     velocity_vector_at_time,
 )
 from afmaths.visualisations.helpers import (
@@ -102,9 +104,14 @@ def add_orbiting_body_2d(
 ) -> tuple[go.Figure, int, int, list[int]]:
     body_trace_index = len(tuple(fig.data))
 
+    plot_elements = elements_scaled_to_plot(
+        elements,
+        settings.distance_scale_km,
+    )
+
     coordinates = orbiting_body_coordinates(
         primary_focus_plot_coordinate,
-        elements,
+        plot_elements,
         EccentricAnomaly(Anomaly(Radians(Scalar(0)))),
     )
 
@@ -151,7 +158,7 @@ def add_orbiting_body_2d(
         primary_focus_plot_coordinate,
         PerifocalOrbitLine(
             name=f"{body_name} orbit",
-            orbital_elements=elements,
+            orbital_elements=plot_elements,
             colour=body_colour,
         ),
     )
@@ -160,7 +167,7 @@ def add_orbiting_body_2d(
         fig,
         secondary_focus_coordinates_for_elements(
             primary_focus_plot_coordinate,
-            elements,
+            plot_elements,
         ),
         Distance(Scalar(0.1)),
         "red",
@@ -174,6 +181,10 @@ def add_orbiting_body_2d(
     )
 
     return fig, body_trace_index, label_trace_index, vector_trace_indices
+
+
+def real_semi_major_axis_metres(elements: OrbitalElements) -> SemiMajorAxis:
+    return SemiMajorAxis(Distance(Scalar(elements.semi_major_axis * 1000)))
 
 
 def generate_combined_orbital_slider_data(
@@ -191,7 +202,7 @@ def generate_combined_orbital_slider_data(
     steps = []
 
     reference_period = orbital_period(
-        semi_major_axis_metres(orbital_elements[0], settings.distance_scale_km),
+        real_semi_major_axis_metres(orbital_elements[0]),
         gravitational_parameter(
             Mass(central_body_mass_kg),
             Mass(orbiting_body_mass_kg[0]),
@@ -212,24 +223,30 @@ def generate_combined_orbital_slider_data(
         vector_update_indices = []
 
         for index, elements in enumerate(orbital_elements):
+
+            plot_elements = elements_scaled_to_plot(
+                elements,
+                settings.distance_scale_km,
+            )
+
             mu = gravitational_parameter(
                 Mass(central_body_mass_kg),
                 Mass(orbiting_body_mass_kg[index]),
             )
 
             eccentric_anomaly_obj = eccentric_anomaly_at_time(
-                scaled_elements_for_plot(elements, settings.distance_scale_km),
+                elements,
                 Second(Scalar(elapsed_time)),
             )
 
             true_anomaly = true_anomaly_from_eccentric_anomaly(
                 eccentric_anomaly_obj,
-                elements.eccentricity,
+                plot_elements.eccentricity,
             )
 
             coordinates = orbiting_body_coordinates(
                 primary_focus_plot_coordinate,
-                elements,
+                plot_elements,
                 eccentric_anomaly_obj,
             )
 
@@ -245,7 +262,7 @@ def generate_combined_orbital_slider_data(
                 gravitational_parameter=mu,
                 orbit_radius=Distance(Scalar(distance_km * 1000)),
                 semi_major_axis=semi_major_axis_metres(
-                    elements,
+                    plot_elements,
                     settings.distance_scale_km,
                 ),
             )
@@ -277,12 +294,10 @@ def generate_combined_orbital_slider_data(
                     ),
                 )
 
-                velocity_vector = velocity_vector_at_time(
+                velocity_vector = tangent_vector_for_plot(
                     primary_focus_plot_coordinate,
-                    elements,
-                    elapsed_time,
-                    settings.distance_scale_km,
-                    mu,
+                    plot_elements,
+                    eccentric_anomaly_obj,
                 )
 
                 direction_vectors = [
@@ -380,52 +395,42 @@ def build_2d_orbit_visualiser_figure(
         label_trace_indices.append(label_trace_index)
         vector_trace_indices.append(body_vector_trace_indices)
 
-    fig = figure_planetary_body(
-        fig,
-        primary_focus_plot_coordinate,
-        central_body_radius_plot(
-            central_body_radius_km,
-            settings.distance_scale_km,
+    return add_plot_centre(
+        figure_slider(
+            figure_layout(
+                figure_planetary_body(
+                    fig,
+                    primary_focus_plot_coordinate,
+                    central_body_radius_plot(
+                        central_body_radius_km,
+                        settings.distance_scale_km,
+                    ),
+                    central_body_name,
+                    "Black",
+                    "blue",
+                    "green",
+                ),
+                settings.plot_width,
+                settings.plot_height,
+                plot_min(settings),
+                plot_max(settings),
+            ),
+            generate_combined_orbital_slider_data(
+                settings,
+                primary_focus_plot_coordinate,
+                central_body_mass_kg,
+                orbiting_body_names,
+                orbiting_body_mass_kg,
+                orbital_elements,
+                orbiting_body_is_satellite,
+                body_trace_indices,
+                label_trace_indices,
+                vector_trace_indices,
+            ),
         ),
-        central_body_name,
-        "Black",
-        "blue",
-        "green",
-    )
-
-    fig = figure_layout(
-        fig,
-        settings.plot_width,
-        settings.plot_height,
-        plot_min(settings),
-        plot_max(settings),
-    )
-
-    fig = figure_slider(
-        fig,
-        generate_combined_orbital_slider_data(
-            settings,
-            primary_focus_plot_coordinate,
-            central_body_mass_kg,
-            orbiting_body_names,
-            orbiting_body_mass_kg,
-            orbital_elements,
-            orbiting_body_is_satellite,
-            body_trace_indices,
-            label_trace_indices,
-            vector_trace_indices,
-        ),
-    )
-
-    fig = add_plot_centre(
-        fig,
         primary_focus_plot_coordinate,
         Distance(Scalar(0.1)),
-    )
-
-    fig.update_layout(title=title)
-
-    return fig
+    ).update_layout(title=title)
 
 
 DISTANCE_SCALE_KM = 12_824.9333333

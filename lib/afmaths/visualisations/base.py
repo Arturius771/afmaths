@@ -281,14 +281,14 @@ def coordinates_for_elements(
 # Subject: unit/scale conversion for orbital elements.
 # Converts plot-scaled OrbitalElements back to physical-ish units by multiplying semi-major axis by distance_scale_km.
 # This is not visualisation rendering; it is a scale adapter and is risky because the unit semantics are easy to confuse.
-def scaled_elements_for_plot(
+def elements_scaled_to_plot(
     elements: OrbitalElements,
     distance_scale_km: float,
 ) -> OrbitalElements:
     return replace(
         elements,
         semi_major_axis=SemiMajorAxis(
-            Distance(Scalar(elements.semi_major_axis * distance_scale_km))
+            Distance(Scalar(elements.semi_major_axis / distance_scale_km))
         ),
     )
 
@@ -320,6 +320,32 @@ def orbiting_body_coordinates(
     )
 
 
+def tangent_vector_for_plot(
+    primary_focus_plot_coordinate: Coordinate2D,
+    plot_elements: OrbitalElements,
+    eccentric_anomaly: EccentricAnomaly,
+) -> VelocityVector:
+    delta = 0.001
+
+    current = orbiting_body_coordinates(
+        primary_focus_plot_coordinate,
+        plot_elements,
+        eccentric_anomaly,
+    )
+
+    next_point = orbiting_body_coordinates(
+        primary_focus_plot_coordinate,
+        plot_elements,
+        EccentricAnomaly(Anomaly(Radians(Scalar(float(eccentric_anomaly) + delta)))),
+    )
+
+    return VelocityVector(
+        Velocity(Scalar(next_point.x - current.x)),
+        Velocity(Scalar(next_point.y - current.y)),
+        Velocity(Scalar(0)),
+    )
+
+
 # Subject: kinematics / numerical orbital velocity approximation.
 # Estimates a 2D velocity vector by finite-differencing two plotted positions separated by period/10000 seconds.
 # This is physics/kinematics and should likely use an existing state-vector/orbit-propagation velocity function instead of deriving velocity from plot coordinates.
@@ -336,7 +362,7 @@ def velocity_vector_at_time(
     )
 
     delta_time = period / 10000
-    scaled_elements = scaled_elements_for_plot(elements, distance_scale_km)
+    scaled_elements = elements_scaled_to_plot(elements, distance_scale_km)
 
     current_coordinates = orbiting_body_coordinates(
         primary_focus_plot_coordinate,
