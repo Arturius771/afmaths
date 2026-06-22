@@ -35,7 +35,7 @@ from afmaths.visualisations.helpers import (
 from afmaths.visualisations.base import coordinates_for_elements
 from astronomy_types import (
     Anomaly,
-    ArgumentOfPerigee,
+    ArgumentOfPeriapsis,
     Coordinate2D,
     Distance,
     EccentricAnomaly,
@@ -349,7 +349,7 @@ def scaled_distance(distance_km: Distance) -> Distance:
 
 
 if __name__ == "__main__":
-    p = ArgumentOfPerigee(Radians(Scalar(math.radians(35))))
+    p = ArgumentOfPeriapsis(Radians(Scalar(math.radians(35))))
     build_hohmann_transfer_2d_perifocal_figure(
         settings=OrbitPlot2DSettings(
             distance_scale_km=DISTANCE_SCALE_KM,

@@ -1,6 +1,6 @@
 import math
 
-from afmaths.physics.space.astronomy.type_conversion_helpers import (
+from afmaths.physics.space.type_conversion_helpers import (
     degrees_to_radians,
     time_to_decimal_time,
 )
@@ -210,8 +210,8 @@ def equatorial_to_ecliptic_coordinates(
     ecliptic_longitude = math.atan2(y, x) % (2 * math.pi)
 
     return EclipticCoordinates(
-        Latitude(Radians(Scalar(ecliptic_latitude))),
-        Longitude(Radians(Scalar(ecliptic_longitude))),
+        Radians(Scalar(ecliptic_latitude)),
+        Radians(Scalar(ecliptic_longitude)),
     )
 
 
@@ -249,8 +249,8 @@ def equatorial_to_galactic_coordinates(
     )
 
     return GalacticCoordinates(
-        Latitude(Radians(Scalar(galactic_latitude))),
-        Longitude(Radians(Scalar(galactic_longitude))),
+        Radians(Scalar(galactic_latitude)),
+        Radians(Scalar(galactic_longitude)),
     )
 
 

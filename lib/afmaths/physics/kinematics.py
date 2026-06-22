@@ -13,11 +13,41 @@ from astronomy_types import (
 )
 
 from afmaths.formula import trapezoidal_rule
-from afmaths.geometry import area
+from afmaths.geometry.geometry import area
 from afmaths.graph import slope_gradiant
 from afmaths.operation import add, multiply
-from afmaths.physics.space.astronomy.type_conversion_helpers import vector3d
+from afmaths.physics.space.type_conversion_helpers import vector3d
 from afmaths.tensors import vector_multiplication_2d, vector_multiplication_3d
+
+
+def position_vector_from_coordinates(
+    coords: Coordinate3D[Scalar],
+    origin: Coordinate3D[Scalar],
+) -> PositionVector:
+    """displacement interpreted as position relative to origin"""
+    v = displacement_vector(coords, origin)
+    return PositionVector(
+        Position(
+            v.x,
+        ),
+        Position(v.y),
+        Position(v.z),
+    )
+
+
+# region Displacement
+
+
+def displacement_vector(
+    coords: Coordinate3D[Scalar],
+    origin: Coordinate3D[Scalar],
+) -> Vector3D[Displacement]:
+    """target coordinate − origin coordinate"""
+    return vector3d(
+        Displacement(Scalar(coords.x - origin.x)),
+        Displacement(Scalar(coords.y - origin.y)),
+        Displacement(Scalar(coords.z - origin.z)),
+    )
 
 
 def velocity_time_displacement_flat(
@@ -49,6 +79,8 @@ def velocity_time_displacement_curve_section(
     return Displacement(Scalar(trapezoidal_rule([start, end])))
 
 
+# endregion
+# region Speed & Velocity
 def velocity_time_average_acceleration_from_slope(
     time_and_velocity1: Coordinate2D, time_and_velocity2: Coordinate2D
 ) -> Acceleration:
@@ -73,6 +105,10 @@ def velocity_time_total_displacement(sorted_points: list[Coordinate2D]) -> Displ
     return Displacement(Scalar(total))
 
 
+# endregion
+
+
+# region Propagation
 def propagate_vector(
     initial: Coordinate2D[float],
     vector: Vector2D,
@@ -115,6 +151,11 @@ def propagate_vector_3d(
         )
 
     return positions
+
+
+# endregion
+
+# region Collission
 
 
 def detect_collision(
@@ -163,28 +204,4 @@ def detect_collision_3d(
     return False, Coordinate3D(0, 0, 0)
 
 
-def displacement_vector(
-    coords: Coordinate3D[Scalar],
-    origin: Coordinate3D[Scalar],
-) -> Vector3D[Displacement]:
-    """target coordinate − origin coordinate"""
-    return vector3d(
-        Displacement(Scalar(coords.x - origin.x)),
-        Displacement(Scalar(coords.y - origin.y)),
-        Displacement(Scalar(coords.z - origin.z)),
-    )
-
-
-def position_vector_from_coordinates(
-    coords: Coordinate3D[Scalar],
-    origin: Coordinate3D[Scalar],
-) -> PositionVector:
-    """displacement interpreted as position relative to origin"""
-    v = displacement_vector(coords, origin)
-    return PositionVector(
-        Position(
-            v.x,
-        ),
-        Position(v.y),
-        Position(v.z),
-    )
+# endregion

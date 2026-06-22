@@ -1,6 +1,6 @@
 import math
 
-from afmaths.physics.space.astronomy.type_conversion_helpers import (
+from afmaths.physics.space.type_conversion_helpers import (
     decimal_time_to_time,
     degrees_to_radians,
 )
@@ -211,7 +211,7 @@ def nutation_from_date(greenwich_date: Date) -> NutationAndObliquity:
     )
 
     return NutationAndObliquity(
-        nutation_longitude=Longitude(degrees_to_radians(nutation_longitude_degrees)),
+        nutation_longitude=degrees_to_radians(nutation_longitude_degrees),
         nutation_obliquity=Obliquity(degrees_to_radians(nutation_obliquity_degrees)),
     )
 
@@ -262,6 +262,6 @@ def aberration_from_date(
     )
 
     return EclipticCoordinates(
-        Latitude(degrees_to_radians(apparent_latitude_degrees)),
-        Longitude(degrees_to_radians(apparent_longitude_degrees)),
+        degrees_to_radians(apparent_latitude_degrees),
+        degrees_to_radians(apparent_longitude_degrees),
     )

@@ -9,12 +9,12 @@ from afmaths.constants import EXAMPLE_ELEMENTS
 from afmaths.physics.space.astrodynamics import angle_above_orbital_plane
 
 
-# ----------
-# Thermal subsystem
-# ----------
+# region Thermal SUbsystem
 def beta_angle(sun: EquatorialCoordinates, orbit: OrbitalElements) -> Radians:
     return angle_above_orbital_plane(sun, orbit)
 
+
+# endregion
 
 if __name__ == "__main__":
     print(

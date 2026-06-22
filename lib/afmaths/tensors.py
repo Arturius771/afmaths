@@ -1,5 +1,5 @@
-from afmaths.constants import RotationMatrix
-from afmaths.physics.space.astronomy.type_conversion_helpers import vector3d
+from afmaths.constants import TransformationMatrix2D, TransformationMatrix3D
+from afmaths.physics.space.type_conversion_helpers import vector3d
 
 from .operation import SQUARE, add, divide_by, multiply, negate, square_root, subtract
 from astronomy_types import (
@@ -10,7 +10,21 @@ from astronomy_types import (
     Velocity,
 )
 
+# region Factories
 
+
+def vector_negate(vector: Vector3D) -> Vector3D:
+    return vector3d(
+        negate(vector.x),
+        negate(vector.y),
+        negate(vector.z),
+    )
+
+
+# endregion
+
+
+# region Vectors
 def dot_product(vector_a: Vector2D[Scalar], vector_b: Vector2D[Scalar]) -> Scalar:
     a = multiply(vector_a.x)(vector_b.x)
     b = multiply(vector_a.y)(vector_b.y)
@@ -45,14 +59,6 @@ def vector_normalise(vector: Vector3D) -> Vector3D:
     )
 
 
-def vector_negate(vector: Vector3D) -> Vector3D:
-    return vector3d(
-        negate(vector.x),
-        negate(vector.y),
-        negate(vector.z),
-    )
-
-
 def vector_multiplication_2d(
     vector: Vector2D[Scalar], scalar: Scalar
 ) -> Vector2D[Scalar]:
@@ -72,6 +78,20 @@ def vector_multiplication_3d(
     k = scalar_multiply(vector.z)
 
     return vector3d(i, j, k)
+
+
+def vector_cross_multiplication(
+    vector_a: Vector2D[Scalar] | Vector2D[Position] | Vector2D[Velocity],
+    vector_b: Vector2D[Scalar] | Vector2D[Position] | Vector2D[Velocity],
+) -> Vector2D[Scalar]:
+    """Returns the cross product of two 3D vectors"""
+
+    value = vector_cross_multiplication_3d(
+        Vector3D[Scalar](vector_a.x, vector_a.y, Scalar(0)),
+        Vector3D[Scalar](vector_b.x, vector_b.y, Scalar(0)),
+    )
+
+    return Vector2D(value.x, value.y)
 
 
 def vector_cross_multiplication_3d(
@@ -98,27 +118,30 @@ def vector_cross_multiplication_3d(
     return vector3d(i, j, k)
 
 
-def rotation_matrix(
-    x_basis: Vector3D[Scalar],
-    y_basis: Vector3D[Scalar],
-    z_basis: Vector3D[Scalar],
-) -> RotationMatrix:
-    return RotationMatrix(
-        vector3d(
-            vector3d(
-                x_basis.x,
-                y_basis.x,
-                z_basis.x,
-            ),
-            vector3d(
-                x_basis.y,
-                y_basis.y,
-                z_basis.y,
-            ),
-            vector3d(
-                x_basis.z,
-                y_basis.z,
-                z_basis.z,
-            ),
-        )
+# endregion
+
+# region Matrices
+
+
+def matrix_vector_multiply_2d(
+    matrix: TransformationMatrix2D,
+    vector: Vector2D[Scalar],
+) -> Vector2D[Scalar]:
+    return Vector2D(
+        dot_product(matrix.x, vector),
+        dot_product(matrix.y, vector),
     )
+
+
+def matrix_vector_multiply_3d(
+    matrix: TransformationMatrix3D,
+    vector: Vector3D[Scalar],
+) -> Vector3D[Scalar]:
+    return vector3d(
+        dot_product_3d(matrix.x, vector),
+        dot_product_3d(matrix.y, vector),
+        dot_product_3d(matrix.z, vector),
+    )
+
+
+# endregion

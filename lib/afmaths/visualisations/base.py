@@ -9,7 +9,7 @@ import plotly.graph_objects as go
 
 from astronomy_types import (
     Anomaly,
-    ArgumentOfPerigee,
+    ArgumentOfPeriapsis,
     Coordinate2D,
     Distance,
     EccentricAnomaly,
@@ -27,11 +27,11 @@ from astronomy_types import (
 )
 
 from afmaths.constants import DeltaV, Mass
-from afmaths.geometry import (
+from afmaths.geometry.geometry import (
     calculate_foci,
     semi_minor_axis,
-    translate_ellipse_coordinate,
 )
+from afmaths.geometry.transformations import translate_ellipse_coordinate
 from afmaths.physics.space.astrodynamics import (
     transfer_eccentricity,
     transfer_semi_major_axis,
@@ -45,7 +45,7 @@ from afmaths.physics.space.celestial_mechanics import (
     periapsis_radius,
     vis_viva,
 )
-from afmaths.physics.space.astronomy.type_conversion_helpers import (
+from afmaths.physics.space.type_conversion_helpers import (
     python_datetime_to_fulldate,
     python_timedelta_to_seconds,
     vector3d,
@@ -119,23 +119,6 @@ class OrbitPlotSettings:
     @property
     def time_offset_seconds(self) -> Second:
         return Second(Scalar(python_timedelta_to_seconds(self.time_offset)))
-
-
-# Subject: planar geometry / coordinate transform.
-# Rotates an absolute 2D point about an absolute centre by angle radians using the standard 2D rotation matrix.
-# This is generic geometry, not celestial mechanics, and could live in a geometry/coordinate-transform module.
-def rotate_around_point(
-    point: Coordinate2D,
-    centre: Coordinate2D,
-    angle: float,
-) -> Coordinate2D:
-    dx = point.x - centre.x
-    dy = point.y - centre.y
-
-    return Coordinate2D(
-        centre.x + dx * math.cos(angle) - dy * math.sin(angle),
-        centre.y + dx * math.sin(angle) + dy * math.cos(angle),
-    )
 
 
 # Subject: planar geometry / coordinate transform.
@@ -346,9 +329,7 @@ def tangent_vector_for_plot(
     )
 
 
-# Subject: kinematics / numerical orbital velocity approximation.
-# Estimates a 2D velocity vector by finite-differencing two plotted positions separated by period/10000 seconds.
-# This is physics/kinematics and should likely use an existing state-vector/orbit-propagation velocity function instead of deriving velocity from plot coordinates.
+# TODO replace with orbital_velocity_vector_at_time
 def velocity_vector_at_time(
     primary_focus_plot_coordinate: Coordinate2D,
     elements: OrbitalElements,
@@ -475,7 +456,7 @@ def transfer_orbit_from_apsides(
     return OrbitalElements(
         initial_orbit.inclination,
         initial_orbit.right_ascension_of_ascending_node,
-        ArgumentOfPerigee(Radians(Scalar(transfer_argument_of_periapsis))),
+        ArgumentOfPeriapsis(Radians(Scalar(transfer_argument_of_periapsis))),
         SemiMajorAxis(
             transfer_semi_major_axis(
                 transfer_periapsis_radius,

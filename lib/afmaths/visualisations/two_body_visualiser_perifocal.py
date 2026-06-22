@@ -20,7 +20,7 @@ from astronomy_types import (
 import plotly.graph_objects as go
 
 from afmaths.constants import OTHER_EXAMPLE_ELEMENTS, Mass
-from afmaths.geometry import calculate_distance
+from afmaths.geometry.geometry import calculate_distance
 from afmaths.physics.kinematics import position_vector_from_coordinates
 from afmaths.physics.space.astrodynamics import (
     anti_normal,
@@ -44,7 +44,6 @@ from afmaths.visualisations.base import (
     secondary_focus_coordinates_for_elements,
     semi_major_axis_metres,
     tangent_vector_for_plot,
-    velocity_vector_at_time,
 )
 from afmaths.visualisations.helpers import (
     OrbitPlot2DSettings,

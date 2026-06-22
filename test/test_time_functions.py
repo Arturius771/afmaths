@@ -19,7 +19,7 @@ from astronomy_types import (
     Year,
 )
 
-from afmaths.physics.space.astronomy.type_conversion_helpers import degrees_to_radians
+from afmaths.physics.space.type_conversion_helpers import degrees_to_radians
 from afmaths.physics.space.astronomy.time_functions import (
     date_of_easter,
     date_to_day_number,
@@ -274,7 +274,7 @@ class TimeTestMethods(unittest.TestCase):
             self,
             greenwich_sidereal_to_local_sidereal_time(
                 make_time(4, 40, 5.23),
-                Longitude(Radians(degrees_to_radians(Degrees(Scalar(-64))))),
+                Radians(degrees_to_radians(Degrees(Scalar(-64)))),
             ),
             0,
             24,
@@ -286,7 +286,7 @@ class TimeTestMethods(unittest.TestCase):
             self,
             local_sidereal_to_greenwich_sidereal_time(
                 make_time(0, 24, 5.23),
-                Longitude(Radians(degrees_to_radians(Degrees(Scalar(-64))))),
+                Radians(degrees_to_radians(Degrees(Scalar(-64)))),
             ),
             4,
             40,

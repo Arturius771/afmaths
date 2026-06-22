@@ -27,7 +27,7 @@ from astronomy_types import (
     DMS,
 )
 
-from afmaths.physics.space.astronomy.type_conversion_helpers import (
+from afmaths.physics.space.type_conversion_helpers import (
     degrees_to_radians,
     dms_to_radians,
     hms_to_radians,
@@ -93,8 +93,8 @@ class CoordinateCorrectionTestMethods(unittest.TestCase):
         )
 
         location = GeographicCoordinates(
-            Latitude(Radians(degrees_to_radians(Degrees(Scalar(30))))),
-            Longitude(Radians(degrees_to_radians(Degrees(Scalar(64))))),
+            Radians(degrees_to_radians(Degrees(Scalar(30)))),
+            Radians(degrees_to_radians(Degrees(Scalar(64)))),
         )
 
         greenwich_date = Date(
@@ -201,8 +201,8 @@ class CoordinateCorrectionTestMethods(unittest.TestCase):
         )
 
         coordinates = EclipticCoordinates(
-            Latitude(dms_to_radians(DMS(-1, 32, 56.4))),
-            Longitude(dms_to_radians(DMS(352, 37, 10.1))),
+            dms_to_radians(DMS(-1, 32, 56.4)),
+            dms_to_radians(DMS(352, 37, 10.1)),
         )
 
         result = aberration_from_date(

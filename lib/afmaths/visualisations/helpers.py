@@ -18,9 +18,9 @@ from astronomy_types import (
     Vector3D,
 )
 
-from afmaths.geometry import circle_bounding_box
+from afmaths.geometry.geometry import circle_bounding_box
 from afmaths.operation import interval
-from afmaths.physics.space.astronomy.type_conversion_helpers import vector3d
+from afmaths.physics.space.type_conversion_helpers import vector3d
 
 
 @dataclass(frozen=True)

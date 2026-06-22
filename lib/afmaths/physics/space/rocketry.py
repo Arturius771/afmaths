@@ -1,7 +1,7 @@
 import math
 
 from afmaths.constants import STANDARD_GRAVITY, Force, Mass, Pressure
-from afmaths.geometry import Area
+from afmaths.geometry.geometry import Area
 from afmaths.operation import (
     add,
     divide_by,
@@ -31,36 +31,24 @@ def ideal_rocket_equation(
     )
 
 
-def propellant_mass_from_initial_mass(
-    initial_mass: Mass, delta_v: DeltaV, effective_exhaust_velocity: Velocity
-) -> Mass:
-    return multiply(initial_mass)(
-        subtract(
-            exponentiate(negate(divide_by(effective_exhaust_velocity)(delta_v)))(math.e)
-        )(1)
-    )
-
-
-def propellant_mass_from_final_mass(
-    final_mass: Mass, delta_v: DeltaV, effective_exhaust_velocity: Velocity
-) -> Mass:
-    return multiply(final_mass)(
-        subtract(1)(
-            exponentiate(divide_by(effective_exhaust_velocity)(delta_v))(math.e)
-        )
-    )
-
-
-def empty_weight(structure_mass: Mass, payload_mass: Mass, motor_mass: Mass) -> Mass:
-    return add(add(structure_mass)(motor_mass))(payload_mass)
-
-
 def total_rocket_mass(empty_weight: Mass, propellant_mass: Mass) -> Mass:
     return add(empty_weight)(propellant_mass)
 
 
 def mass_ratio(empty_weight: Mass, initial_mass: Mass) -> float:
     return divide_by(empty_weight)(initial_mass)
+
+
+def momentum(
+    initial_mass: Mass,
+    delta_mass: Mass,
+    initial_velocity: Velocity,
+    delta_v: Velocity,
+) -> float:
+    return multiply(subtract(delta_mass)(initial_mass))(add(initial_velocity)(delta_v))
+
+
+# region Performance
 
 
 def specific_impulse(force_newtons: float, mass_flow: Rate) -> float:
@@ -104,13 +92,8 @@ def delta_v_for_stages(
     return total_delta_v, stage_delta_vs
 
 
-def momentum(
-    initial_mass: Mass,
-    delta_mass: Mass,
-    initial_velocity: Velocity,
-    delta_v: Velocity,
-) -> float:
-    return multiply(subtract(delta_mass)(initial_mass))(add(initial_velocity)(delta_v))
+def thrust_to_weight(thrust: Force, weight: Mass) -> Ratio:
+    return Ratio(Scalar(ratio(thrust)(weight)))
 
 
 def thrust(
@@ -125,8 +108,36 @@ def thrust(
     )
 
 
-def thrust_to_weight(thrust: Force, weight: Mass) -> Ratio:
-    return Ratio(Scalar(ratio(thrust)(weight)))
+# endregion
+
+# region Propellant
+
+
+def propellant_mass_from_initial_mass(
+    initial_mass: Mass, delta_v: DeltaV, effective_exhaust_velocity: Velocity
+) -> Mass:
+    return multiply(initial_mass)(
+        subtract(
+            exponentiate(negate(divide_by(effective_exhaust_velocity)(delta_v)))(math.e)
+        )(1)
+    )
+
+
+def propellant_mass_from_final_mass(
+    final_mass: Mass, delta_v: DeltaV, effective_exhaust_velocity: Velocity
+) -> Mass:
+    return multiply(final_mass)(
+        subtract(1)(
+            exponentiate(divide_by(effective_exhaust_velocity)(delta_v))(math.e)
+        )
+    )
+
+
+def empty_weight(structure_mass: Mass, payload_mass: Mass, motor_mass: Mass) -> Mass:
+    return add(add(structure_mass)(motor_mass))(payload_mass)
+
+
+# endregion
 
 
 if __name__ == "__main__":

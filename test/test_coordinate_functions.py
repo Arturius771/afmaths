@@ -30,7 +30,7 @@ from astronomy_types import (
     Year,
 )
 
-from afmaths.physics.space.astronomy.type_conversion_helpers import (
+from afmaths.physics.space.type_conversion_helpers import (
     degrees_to_radians,
     dms_to_radians,
     hms_to_radians,
@@ -104,7 +104,7 @@ class CoordinateTestMethods(unittest.TestCase):
             full_date,
             0,
             -4,
-            Longitude(Radians(degrees_to_radians(Degrees(Scalar(-64))))),
+            Radians(degrees_to_radians(Degrees(Scalar(-64)))),
         )
 
         self.assertAlmostEqual(
@@ -124,7 +124,7 @@ class CoordinateTestMethods(unittest.TestCase):
             full_date,
             0,
             -4,
-            Longitude(Radians(degrees_to_radians(Degrees(Scalar(-64))))),
+            Radians(degrees_to_radians(Degrees(Scalar(-64)))),
         )
 
         self.assertAlmostEqual(
@@ -141,7 +141,7 @@ class CoordinateTestMethods(unittest.TestCase):
 
         result = equatorial_to_horizon_coordinates(
             coordinates,
-            Latitude(Radians(degrees_to_radians(Degrees(Scalar(52))))),
+            Radians(degrees_to_radians(Degrees(Scalar(52)))),
         )
 
         assert_angle_degrees(
@@ -164,7 +164,7 @@ class CoordinateTestMethods(unittest.TestCase):
 
         result = horizon_to_equatorial_coordinates(
             coordinates,
-            Latitude(Radians(degrees_to_radians(Degrees(Scalar(52))))),
+            Radians(degrees_to_radians(Degrees(Scalar(52)))),
         )
 
         assert_angle_degrees(
@@ -186,8 +186,8 @@ class CoordinateTestMethods(unittest.TestCase):
 
     def test_ecliptic_to_equatorial_coordinates(self):
         coordinates = EclipticCoordinates(
-            Latitude(dms_to_radians(DMS(4, 52, 31))),
-            Longitude(dms_to_radians(DMS(139, 41, 10))),
+            dms_to_radians(DMS(4, 52, 31)),
+            dms_to_radians(DMS(139, 41, 10)),
         )
 
         result = ecliptic_to_equatorial_coordinates(
@@ -252,8 +252,8 @@ class CoordinateTestMethods(unittest.TestCase):
 
     def test_galactic_to_equatorial_coordinates(self):
         coordinates = GalacticCoordinates(
-            Latitude(dms_to_radians(DMS(51, 7, 20.16))),
-            Longitude(dms_to_radians(DMS(232, 14, 52.38))),
+            dms_to_radians(DMS(51, 7, 20.16)),
+            dms_to_radians(DMS(232, 14, 52.38)),
         )
 
         result = galactic_to_equatorial_coordinates(coordinates)

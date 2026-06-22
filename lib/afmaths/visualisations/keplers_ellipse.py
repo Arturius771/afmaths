@@ -1,5 +1,5 @@
 from afmaths.constants import EXAMPLE_ELEMENTS
-from afmaths.geometry import calculate_foci
+from afmaths.geometry.geometry import calculate_foci
 from afmaths.visualisations.base import (
     primary_focus_coordinates_for_elements,
     secondary_focus_coordinates_for_elements,
@@ -18,7 +18,7 @@ from afmaths.visualisations.helpers import (
     plot_min,
 )
 from astronomy_types import (
-    ArgumentOfPerigee,
+    ArgumentOfPeriapsis,
     Distance,
     Eccentricity,
     Inclination,
@@ -40,7 +40,7 @@ centre_point = plot_centre(settings)
 plot_elements = OrbitalElements(
     Inclination(EXAMPLE_ELEMENTS.inclination),
     RightAscension(EXAMPLE_ELEMENTS.right_ascension_of_ascending_node),
-    ArgumentOfPerigee(EXAMPLE_ELEMENTS.argument_of_periapsis),
+    ArgumentOfPeriapsis(EXAMPLE_ELEMENTS.argument_of_periapsis),
     SemiMajorAxis(
         Distance(Scalar(EXAMPLE_ELEMENTS.semi_major_axis / DISTANCE_SCALE_KM))
     ),

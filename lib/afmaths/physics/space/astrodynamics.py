@@ -1,7 +1,5 @@
 import math
-
 from astronomy_types import (
-    Coordinate3D,
     Distance,
     Eccentricity,
     EquatorialCoordinates,
@@ -22,37 +20,31 @@ from astronomy_types import (
     Degrees,
     MeanMotion,
 )
-
 from afmaths.constants import EARTH_MU_KM_CUBED, EARTH_RADIUS_KM, DeltaV
-from afmaths.geometry import (
+from afmaths.geometry.geometry import (
     eccentricity_factor_plus,
     semi_major_axis_from_vertex_distances,
 )
 from afmaths.operation import add, divide_by, multiply, negate, subtract
-from afmaths.physics.kinematics import propagate_vector_3d
-from afmaths.physics.space.astronomy.coordinate_conversion import (
-    nadir_vector,
-    zenith_vector,
-)
-from afmaths.physics.space.astronomy.type_conversion_helpers import (
+from afmaths.physics.space.type_conversion_helpers import (
     position_vector_to_vector3d,
     velocity_vector_to_vector3d,
 )
 from afmaths.physics.space.celestial_mechanics import (
     angular_momentum,
+    nadir_vector,
     orbit_radius,
     orbital_elements_from_state_vectors,
     periapsis_radius,
     radial_velocity,
     velocity_difference,
-    velocity_for_altitude,
+    velocity_at_altitude,
     vis_viva,
-)
-from afmaths.physics.space.orbit_propagation import (
-    orbit_state_vector_prediction_from_orbital_elements,
+    zenith_vector,
 )
 from afmaths.tensors import (
     vector_magnitude,
+    vector_multiplication_3d,
     vector_negate,
     vector_normalise,
 )
@@ -67,30 +59,6 @@ from afmaths.tensors import (
 #         propagate_vector_3d(
 #             Coordinate3D(state.position.x, state.position.y, state.position.z), p
 #         )
-
-
-def radial(position: PositionVector) -> Vector3D:
-    return zenith_vector(position)
-
-
-def anti_radial(position: PositionVector) -> Vector3D:
-    return nadir_vector(position)
-
-
-def prograde(velocity: VelocityVector) -> Vector3D:
-    return vector_normalise(velocity)
-
-
-def retrograde(velocity: VelocityVector) -> Vector3D:
-    return vector_negate(prograde(velocity))
-
-
-def normal(state: StateVectors) -> Vector3D:
-    return vector_normalise(angular_momentum(state))
-
-
-def anti_normal(state: StateVectors) -> Vector3D:
-    return vector_negate(normal(state))
 
 
 def flight_path_angle(
@@ -134,24 +102,62 @@ def signed_flight_path_angle(state: StateVectors) -> Radians:
     return Radians(Scalar(math.asin(divide_by(v)(radial_velocity(state)))))
 
 
-def orbital_position_vector_at_time(
-    orbital_elements: OrbitalElements,
-    time_offset_s: Second = Second(Scalar(0)),
-    gravitational_parameter: GravitationalParameter = EARTH_MU_KM_CUBED,
-) -> PositionVector:
-    return orbit_state_vector_prediction_from_orbital_elements(
-        orbital_elements, time_offset_s, gravitational_parameter
-    ).position
+def angle_above_orbital_plane(
+    target_object: EquatorialCoordinates,
+    orbit: OrbitalElements,
+) -> Radians:
+    value = math.cos(target_object.declination) * math.sin(
+        orbit.inclination
+    ) * math.sin(
+        orbit.right_ascension_of_ascending_node - target_object.right_ascension
+    ) + math.sin(
+        target_object.declination
+    ) * math.cos(
+        orbit.inclination
+    )
+
+    # Prevent floating point drift errors at values close to +/-1.
+    value = max(-1.0, min(1.0, value))
+
+    return Radians(Scalar(math.asin(value)))
 
 
-def orbital_velocity_vector_at_time(
-    orbital_elements: OrbitalElements,
-    time_offset_s: Second = Second(Scalar(0)),
-    gravitational_parameter: GravitationalParameter = EARTH_MU_KM_CUBED,
-) -> VelocityVector:
-    return orbit_state_vector_prediction_from_orbital_elements(
-        orbital_elements, time_offset_s, gravitational_parameter
-    ).velocity
+def angular_velocity_from_sidereal_period(
+    sidereal_period: Second = Second(Scalar(86164.09)),
+) -> Radians:
+    return divide_by(sidereal_period)(multiply(2)(math.pi))
+
+
+# region Directions
+
+
+def radial(position: PositionVector) -> Vector3D:
+    return zenith_vector(position)
+
+
+def anti_radial(position: PositionVector) -> Vector3D:
+    return nadir_vector(position)
+
+
+def prograde(velocity: VelocityVector) -> Vector3D:
+    return vector_normalise(velocity)
+
+
+def retrograde(velocity: VelocityVector) -> Vector3D:
+    return vector_negate(prograde(velocity))
+
+
+def normal(state: StateVectors) -> Vector3D:
+    return vector_normalise(angular_momentum(state))
+
+
+def anti_normal(state: StateVectors) -> Vector3D:
+    return vector_negate(normal(state))
+
+
+# endregion directions
+
+# region Maneuvers
 
 
 def hohmann_transfer_delta_v(
@@ -167,8 +173,8 @@ def hohmann_transfer_delta_v(
     r_b = orbit_radius(target_altitude_km, initial_body_radius)
 
     semi_major_axis_transfer_ellipse = semi_major_axis_from_vertex_distances(r_a, r_b)
-    initial_velocity = velocity_for_altitude(r_a, gravitational_parameter)
-    final_velocity = velocity_for_altitude(r_b, gravitational_parameter)
+    initial_velocity = velocity_at_altitude(r_a, gravitational_parameter)
+    final_velocity = velocity_at_altitude(r_b, gravitational_parameter)
     velocity_on_orbit_at_initial_orbit = vis_viva(
         gravitational_parameter, r_a, semi_major_axis_transfer_ellipse
     )
@@ -206,24 +212,11 @@ def transfer_eccentricity(
     )
 
 
-def angle_above_orbital_plane(
-    target_object: EquatorialCoordinates,
-    orbit: OrbitalElements,
-) -> Radians:
-    value = math.cos(target_object.declination) * math.sin(
-        orbit.inclination
-    ) * math.sin(
-        orbit.right_ascension_of_ascending_node - target_object.right_ascension
-    ) + math.sin(
-        target_object.declination
-    ) * math.cos(
-        orbit.inclination
-    )
+# TODO: function(s) to change specific orbital elements
 
-    # Prevent floating point drift errors at values close to +/-1.
-    value = max(-1.0, min(1.0, value))
+# endregion
 
-    return Radians(Scalar(math.asin(value)))
+# region Plotting
 
 
 def max_latitude(i: Inclination) -> Latitude:
@@ -238,19 +231,14 @@ def westward_drift(mean_motion: MeanMotion) -> Degrees:
     return Degrees(Scalar(multiply(360)(divide_by(mean_motion)(1))))
 
 
-def angular_velocity_from_sidereal_period(
-    sidereal_period: Second = Second(Scalar(86164.09)),
-) -> Radians:
-    return divide_by(sidereal_period)(multiply(2)(math.pi))
-
-
 def westware_drift_from_angular_velocity_and_period(
     body_angular_velocity: Radians, orbital_period: Second
 ) -> Radians:
     return multiply(body_angular_velocity)(orbital_period)
 
 
-# TODO: function(s) to change specific orbital elements
+# end region
+
 
 if __name__ == "__main__":
 

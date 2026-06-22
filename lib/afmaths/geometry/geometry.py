@@ -1,16 +1,12 @@
 from astronomy_types import (
     Coordinate2D,
     Distance,
-    EccentricAnomaly,
     Eccentricity,
     Ratio,
     Scalar,
     SemiLatusRectum,
     SemiMajorAxis,
     SemiMinorAxis,
-    StateVectors,
-    Vector3D,
-    Velocity,
 )
 from afmaths.constants import Area
 from afmaths.formula import taylor_series
@@ -24,8 +20,6 @@ from afmaths.operation import (
     subtract,
 )
 import math
-
-from afmaths.tensors import dot_product_3d, vector_magnitude
 
 pythagoras = lambda a: lambda b: add(SQUARE(a))(SQUARE(b))
 
@@ -72,66 +66,6 @@ def cosine(angle_degrees: float) -> float:
     return taylor_series(math.radians(angle_degrees))(1, 2, 2)
 
 
-def area(length: float, height: float) -> Area:
-    return multiply(length)(height)
-
-
-# TODO: Check naming, this may be valid for more than just right triangles
-def area_of_right_triangle(base_length: float, height_length: float) -> Area:
-    """Area = base * height / 2"""
-    return HALF(multiply(base_length)(height_length))
-
-
-def area_of_quarter_circle(side_length: float, radius: float) -> Area:
-    """Area = s^2 - ((1/4)*pi*r^2)"""
-    return subtract((divide_by(4)(1)) * math.pi * SQUARE(radius))(SQUARE(side_length))
-
-
-def semi_major_axis_from_vertex_distances(
-    min_vertex_distance: Distance,
-    max_vertex_distance: Distance,
-) -> SemiMajorAxis:
-    """Returns the semi major axis of an ellipse given the lengths of the two axes"""
-    return SemiMajorAxis(HALF(add(min_vertex_distance)(max_vertex_distance)))
-
-
-def circle_bounding_box(
-    coordinates: Coordinate2D, radius: Distance
-) -> tuple[Coordinate2D, Coordinate2D]:
-    """
-    Calculate the bounding box of a circle given its center coordinates and radius.
-
-    Parameters:
-    x (float): The x-coordinate of the circle's center.
-    y (float): The y-coordinate of the circle's center.
-    radius (float): The radius of the circle.
-
-    Returns:
-    tuple: A tuple containing the coordinates of the bounding box in the format (x0, y0, x1, y1).
-    """
-    return ellipse_bounding_box(
-        coordinates, SemiMajorAxis(radius), Eccentricity(Ratio(Scalar(0)))
-    )
-
-
-def ellipse_bounding_box(
-    coordinates: Coordinate2D, a: SemiMajorAxis, e: Eccentricity
-) -> tuple[Coordinate2D, Coordinate2D]:
-    """
-    Returns:
-    tuple: A tuple containing the coordinates of the bounding box in the format (x0, y0, x1, y1).
-    """
-    if e < 0 or e >= 1:
-        raise ValueError("Eccentricity must be in the range [0, 1).")
-
-    b = semi_minor_axis(a, e)
-
-    return (
-        Coordinate2D(coordinates.x - a, coordinates.y - b),
-        Coordinate2D(coordinates.x + a, coordinates.y + b),
-    )
-
-
 # def calculate_semi_minor_axis(
 #     semi_major_axis: SemiMajorAxis, eccentricity: Eccentricity
 # ) -> float:
@@ -169,6 +103,39 @@ def calculate_distance(
     return (
         (coordinates2.x - coordinates1.x) ** 2 + (coordinates2.y - coordinates1.y) ** 2
     ) ** 0.5
+
+
+def geometric_mean_distance(x: Distance, y: Distance) -> Distance:
+    return Distance(Scalar(square_root(multiply(x)(y))))
+
+
+# region Ellipses
+
+
+def semi_minor_axis_from_semi_latus_rectum(
+    semi_latus_rectum: SemiLatusRectum,
+    semi_major_axis: SemiMajorAxis,
+) -> SemiMinorAxis:
+    return SemiMinorAxis(geometric_mean_distance(semi_latus_rectum, semi_major_axis))
+
+
+def semi_minor_axis_from_vertex_distances(
+    nearest_vertex_distance: Distance,
+    farthest_vertex_distance: Distance,
+) -> SemiMinorAxis:
+    return SemiMinorAxis(
+        geometric_mean_distance(nearest_vertex_distance, farthest_vertex_distance)
+    )
+
+
+def eccentricity_factor_minus(e: Eccentricity) -> Scalar:
+    """1 - e"""
+    return subtract(e)(1)  # 1 - e
+
+
+def eccentricity_factor_plus(e: Eccentricity) -> Scalar:
+    """1 + e"""
+    return add(e)(1)  # 1 + e
 
 
 def calculate_foci(
@@ -228,61 +195,68 @@ def semi_minor_axis(a: SemiMajorAxis, e: Eccentricity) -> SemiMinorAxis:
     return multiply(a)(square_root(eccentricity_factor_minus(SQUARE(e))))
 
 
-def geometric_mean_distance(x: Distance, y: Distance) -> Distance:
-    return Distance(Scalar(square_root(multiply(x)(y))))
+def semi_major_axis_from_vertex_distances(
+    min_vertex_distance: Distance,
+    max_vertex_distance: Distance,
+) -> SemiMajorAxis:
+    """Returns the semi major axis of an ellipse given the lengths of the two axes"""
+    return SemiMajorAxis(HALF(add(min_vertex_distance)(max_vertex_distance)))
 
 
-def semi_minor_axis_from_semi_latus_rectum(
-    semi_latus_rectum: SemiLatusRectum,
-    semi_major_axis: SemiMajorAxis,
-) -> SemiMinorAxis:
-    return SemiMinorAxis(geometric_mean_distance(semi_latus_rectum, semi_major_axis))
+def circle_bounding_box(
+    coordinates: Coordinate2D, radius: Distance
+) -> tuple[Coordinate2D, Coordinate2D]:
+    """
+    Calculate the bounding box of a circle given its center coordinates and radius.
 
+    Parameters:
+    x (float): The x-coordinate of the circle's center.
+    y (float): The y-coordinate of the circle's center.
+    radius (float): The radius of the circle.
 
-def semi_minor_axis_from_vertex_distances(
-    nearest_vertex_distance: Distance,
-    farthest_vertex_distance: Distance,
-) -> SemiMinorAxis:
-    return SemiMinorAxis(
-        geometric_mean_distance(nearest_vertex_distance, farthest_vertex_distance)
+    Returns:
+    tuple: A tuple containing the coordinates of the bounding box in the format (x0, y0, x1, y1).
+    """
+    return ellipse_bounding_box(
+        coordinates, SemiMajorAxis(radius), Eccentricity(Ratio(Scalar(0)))
     )
 
 
-def eccentricity_factor_minus(e: Eccentricity) -> Scalar:
-    """1 - e"""
-    return subtract(e)(1)  # 1 - e
+def ellipse_bounding_box(
+    coordinates: Coordinate2D, a: SemiMajorAxis, e: Eccentricity
+) -> tuple[Coordinate2D, Coordinate2D]:
+    """
+    Returns:
+    tuple: A tuple containing the coordinates of the bounding box in the format (x0, y0, x1, y1).
+    """
+    if e < 0 or e >= 1:
+        raise ValueError("Eccentricity must be in the range [0, 1).")
 
+    b = semi_minor_axis(a, e)
 
-def eccentricity_factor_plus(e: Eccentricity) -> Scalar:
-    """1 + e"""
-    return add(e)(1)  # 1 + e
-
-
-def ellipse_perimeter_coordinate_from_eccentric_anomaly(
-    semi_major_axis: SemiMajorAxis,
-    semi_minor_axis: SemiMinorAxis,
-    eccentric_anomaly: EccentricAnomaly,
-) -> Coordinate2D:
-    return Coordinate2D(
-        x=multiply(semi_major_axis)(math.cos(eccentric_anomaly)),
-        y=multiply(semi_minor_axis)(math.sin(eccentric_anomaly)),
+    return (
+        Coordinate2D(coordinates.x - a, coordinates.y - b),
+        Coordinate2D(coordinates.x + a, coordinates.y + b),
     )
 
 
-def translate_ellipse_coordinate(
-    central_point: Coordinate2D,
-    semi_major_axis: SemiMajorAxis,
-    semi_minor_axis: SemiMinorAxis,
-    eccentric_anomaly: EccentricAnomaly,
-) -> Coordinate2D:
+# endregion
 
-    relative = ellipse_perimeter_coordinate_from_eccentric_anomaly(
-        semi_major_axis,
-        semi_minor_axis,
-        eccentric_anomaly,
-    )
 
-    return Coordinate2D(
-        x=central_point.x + relative.x,
-        y=central_point.y + relative.y,
-    )
+# region Areas
+def area(length: float, height: float) -> Area:
+    return multiply(length)(height)
+
+
+# TODO: Check naming, this may be valid for more than just right triangles
+def area_of_right_triangle(base_length: float, height_length: float) -> Area:
+    """Area = base * height / 2"""
+    return HALF(multiply(base_length)(height_length))
+
+
+def area_of_quarter_circle(side_length: float, radius: float) -> Area:
+    """Area = s^2 - ((1/4)*pi*r^2)"""
+    return subtract((divide_by(4)(1)) * math.pi * SQUARE(radius))(SQUARE(side_length))
+
+
+# endregion

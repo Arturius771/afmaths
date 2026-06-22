@@ -4,7 +4,7 @@ from typing import Generic, NewType
 from astronomy_types import (
     T,
     Anomaly,
-    ArgumentOfPerigee,
+    ArgumentOfPeriapsis,
     Eccentricity,
     GravitationalParameter,
     Distance,
@@ -17,6 +17,7 @@ from astronomy_types import (
     Scalar,
     SemiMajorAxis,
     TrueAnomaly,
+    Vector2D,
     Vector3D,
     Velocity,
     dataclass,
@@ -29,7 +30,7 @@ EARTH_RADIUS_KM = Distance(Scalar(6378.0))  # km
 EXAMPLE_ELEMENTS = OrbitalElements(
     Inclination(Radians(Scalar(math.radians(0)))),
     RightAscension(Radians(Scalar(3.024483909022929))),
-    ArgumentOfPerigee(Radians(Scalar(0))),
+    ArgumentOfPeriapsis(Radians(Scalar(0))),
     SemiMajorAxis(Distance(Scalar(384748))),
     Eccentricity(Ratio(Scalar(0.0549006))),
     TrueAnomaly(Anomaly(Radians(Scalar(30)))),
@@ -37,7 +38,7 @@ EXAMPLE_ELEMENTS = OrbitalElements(
 # OTHER_EXAMPLE_ELEMENTS = OrbitalElements(
 #     Inclination(Radians(Scalar(math.radians(5.145)))),
 #     RightAscension(Radians(Scalar(3.024483909022929))),
-#     ArgumentOfPerigee(Radians(Scalar(0))),
+#     ArgumentOfPeriapsis(Radians(Scalar(0))),
 #     SemiMajorAxis(Distance(Scalar(384748))),
 #     Eccentricity(Ratio(Scalar(0.0549006))),
 #     TrueAnomaly(Anomaly(Radians(Scalar(2.987554518980773)))),
@@ -45,7 +46,7 @@ EXAMPLE_ELEMENTS = OrbitalElements(
 OTHER_EXAMPLE_ELEMENTS = OrbitalElements(
     Inclination(Radians(Scalar(math.radians(75)))),
     RightAscension(Radians(Scalar(1))),
-    ArgumentOfPerigee(Radians(Scalar(0.6))),
+    ArgumentOfPeriapsis(Radians(Scalar(0.6))),
     SemiMajorAxis(Distance(Scalar(260000))),
     Eccentricity(Ratio(Scalar(0.5449006))),
     TrueAnomaly(Anomaly(Radians(Scalar(1)))),
@@ -53,7 +54,7 @@ OTHER_EXAMPLE_ELEMENTS = OrbitalElements(
 # OTHER_EXAMPLE_ELEMENTS = OrbitalElements(
 #     Inclination(Radians(Scalar(math.radians(0)))),
 #     RightAscension(Radians(Scalar(3.024483909022929))),
-#     ArgumentOfPerigee(Radians(Scalar(0))),
+#     ArgumentOfPeriapsis(Radians(Scalar(0))),
 #     SemiMajorAxis(Distance(Scalar(384748))),
 #     Eccentricity(Ratio(Scalar(0.0549006))),
 #     TrueAnomaly(Anomaly(Radians(Scalar(19)))),
@@ -67,6 +68,7 @@ Mass = NewType("Mass", float)
 Pressure = NewType("Pressure", float)
 Force = NewType("Force", float)
 Area = NewType("Area", Scalar)
-RotationMatrix = NewType("RotationMatrix", Vector3D[Vector3D[Scalar]])
+TransformationMatrix2D = NewType("TransformationMatrix2D", Vector2D[Vector2D[Scalar]])
+TransformationMatrix3D = NewType("TransformationMatrix3D", Vector3D[Vector3D[Scalar]])
 DeltaV = NewType("DeltaV", Velocity)
 EarthCentredInertialFrame = NewType("EarthCentredInertialFrame", Vector3D[Scalar])

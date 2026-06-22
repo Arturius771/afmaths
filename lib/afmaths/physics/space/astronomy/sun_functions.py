@@ -1,6 +1,6 @@
 import math
 
-from afmaths.physics.space.astronomy.type_conversion_helpers import degrees_to_radians
+from afmaths.physics.space.type_conversion_helpers import degrees_to_radians
 from afmaths.physics.space.astronomy.coordinate_functions import (
     ecliptic_to_equatorial_coordinates,
 )
@@ -77,7 +77,7 @@ def sun_longitude(
     longitude_degrees = sun_longitude_2010(true_anomaly)
     longitude_degrees_corrected = Degrees(Scalar(longitude_degrees % 360))
 
-    return Longitude(Radians(degrees_to_radians(longitude_degrees_corrected)))
+    return Radians(degrees_to_radians(longitude_degrees_corrected))
 
 
 def sun_position_approximate(
@@ -99,7 +99,7 @@ def sun_position_approximate(
 
     return ecliptic_to_equatorial_coordinates(
         EclipticCoordinates(
-            Latitude(Radians(Scalar(0.0))),
+            Radians(Scalar(0.0)),
             longitude,
         ),
         greenwich_date,
