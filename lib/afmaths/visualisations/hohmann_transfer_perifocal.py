@@ -5,18 +5,22 @@ import math
 import plotly.graph_objects as go
 
 from afmaths.constants import DeltaV, EARTH_MU_KM_CUBED
-from afmaths.physics.space.celestial_mechanics import orbit_radius, orbital_period
+from afmaths.physics.space.astrodynamics import (
+    transfer_eccentricity,
+    transfer_semi_major_axis,
+)
+from afmaths.physics.space.celestial_mechanics import (
+    orbit_radius,
+    orbital_period,
+    periapsis_radius,
+    vis_viva,
+)
 from afmaths.visualisations.base import (
-    TransferApsis,
-    apsis_radius,
     burn_direction,
+    coordinates_for_elements,
     delta_v_between_speeds,
     eccentric_anomaly_for_transfer_radius,
-    opposite_apsis,
-    scaled_semi_major_axis_km,
     transfer_arc_angles,
-    transfer_orbit_from_apsides,
-    velocity_at_radius_km_s,
 )
 from afmaths.visualisations.helpers import (
     OrbitPlot2DSettings,
@@ -31,8 +35,9 @@ from afmaths.visualisations.helpers import (
     plot_centre,
     plot_max,
     plot_min,
+    distance_to_scale_distance,
+    scale_distance_to_distance,
 )
-from afmaths.visualisations.base import coordinates_for_elements
 from astronomy_types import (
     Anomaly,
     ArgumentOfPeriapsis,
@@ -60,8 +65,6 @@ def transfer_burn_plot_nodes(
     initial_orbit: OrbitalElements,
     transfer_orbit: OrbitalElements,
     final_orbit: OrbitalElements,
-    start_apsis: TransferApsis,
-    final_apsis: TransferApsis,
     start_radius: Distance,
     final_radius: Distance,
     transfer_start_eccentric_anomaly: EccentricAnomaly,
@@ -69,32 +72,48 @@ def transfer_burn_plot_nodes(
     transfer_time: Second,
     mu: GravitationalParameter,
 ) -> list[PlotNode]:
-    initial_speed = velocity_at_radius_km_s(
-        initial_orbit,
-        start_radius,
-        settings.distance_scale_km,
-        mu,
+    initial_speed = vis_viva(
+        gravitational_parameter=mu,
+        orbit_radius=scale_distance_to_distance(start_radius, settings.distance_scale),
+        semi_major_axis=SemiMajorAxis(
+            scale_distance_to_distance(
+                initial_orbit.semi_major_axis,
+                settings.distance_scale,
+            )
+        ),
     )
 
-    transfer_start_speed = velocity_at_radius_km_s(
-        transfer_orbit,
-        start_radius,
-        settings.distance_scale_km,
-        mu,
+    transfer_start_speed = vis_viva(
+        gravitational_parameter=mu,
+        orbit_radius=scale_distance_to_distance(start_radius, settings.distance_scale),
+        semi_major_axis=SemiMajorAxis(
+            scale_distance_to_distance(
+                transfer_orbit.semi_major_axis,
+                settings.distance_scale,
+            )
+        ),
     )
 
-    transfer_arrival_speed = velocity_at_radius_km_s(
-        transfer_orbit,
-        final_radius,
-        settings.distance_scale_km,
-        mu,
+    transfer_arrival_speed = vis_viva(
+        gravitational_parameter=mu,
+        orbit_radius=scale_distance_to_distance(final_radius, settings.distance_scale),
+        semi_major_axis=SemiMajorAxis(
+            scale_distance_to_distance(
+                transfer_orbit.semi_major_axis,
+                settings.distance_scale,
+            )
+        ),
     )
 
-    final_speed = velocity_at_radius_km_s(
-        final_orbit,
-        final_radius,
-        settings.distance_scale_km,
-        mu,
+    final_speed = vis_viva(
+        gravitational_parameter=mu,
+        orbit_radius=scale_distance_to_distance(final_radius, settings.distance_scale),
+        semi_major_axis=SemiMajorAxis(
+            scale_distance_to_distance(
+                final_orbit.semi_major_axis,
+                settings.distance_scale,
+            )
+        ),
     )
 
     transfer_delta_v = delta_v_between_speeds(
@@ -131,25 +150,25 @@ def transfer_burn_plot_nodes(
 
     return [
         PlotNode(
-            name=f"Transfer burn at initial {start_apsis.value}",
+            name="Arrival burn at final circular orbit",
             coordinate=transfer_burn_coordinate,
             text=(
-                f"Transfer burn at initial {start_apsis.value}<br>"
-                f"Direction = {transfer_direction.value}<br>"
-                f"Δv = {transfer_delta_v:.4f} km/s<br>"
-                f"t = {Second(Scalar(0)):.2f} s"
+                f"Arrival burn at final circular orbit<br>"
+                f"Direction = {arrival_direction.value}<br>"
+                f"Δv = {arrival_delta_v:.4f} km/s<br>"
+                f"t = {transfer_time:.2f} s"
             ),
             colour="red",
             symbol="x",
         ),
         PlotNode(
-            name=f"Arrival burn at final {final_apsis.value}",
+            name="Transfer burn at initial periapsis",
             coordinate=arrival_burn_coordinate,
             text=(
-                f"Arrival burn at final {final_apsis.value}<br>"
-                f"Direction = {arrival_direction.value}<br>"
-                f"Δv = {arrival_delta_v:.4f} km/s<br>"
-                f"t = {transfer_time:.2f} s"
+                f"Transfer burn at initial periapsis<br>"
+                f"Direction = {transfer_direction.value}<br>"
+                f"Δv = {transfer_delta_v:.4f} km/s<br>"
+                f"t = {Second(Scalar(0)):.2f} s"
             ),
             colour="red",
             symbol="x",
@@ -160,29 +179,57 @@ def transfer_burn_plot_nodes(
 def build_hohmann_transfer_2d_perifocal_figure(
     settings: OrbitPlot2DSettings,
     initial_orbit: OrbitalElements,
-    final_orbit: OrbitalElements,
+    final_altitude: Distance,
     gravitational_parameter: GravitationalParameter,
-    start_apsis: TransferApsis = TransferApsis.PERIAPSIS,
-    final_apsis: TransferApsis | None = None,
     central_body_name: str = "Earth",
     central_body_radius_km: float = 6_371.0,
     title_prefix: str = "Hohmann transfer in the perifocal frame",
 ) -> go.Figure:
-    final_apsis = final_apsis or opposite_apsis(start_apsis)
     primary_focus_plot_coordinate = plot_centre(settings)
 
-    transfer_orbit = transfer_orbit_from_apsides(
-        initial_orbit,
-        final_orbit,
-        start_apsis,
-        final_apsis,
+    final_orbit_radius = distance_to_scale_distance(
+        orbit_radius(
+            final_altitude,
+            EARTH_RADIUS_KM,
+        ),
+        settings.distance_scale,
     )
 
-    start_radius = apsis_radius(initial_orbit, start_apsis)
-    final_radius = apsis_radius(final_orbit, final_apsis)
+    final_orbit = OrbitalElements(
+        initial_orbit.inclination,
+        initial_orbit.right_ascension_of_ascending_node,
+        ArgumentOfPeriapsis(Radians(Scalar(0))),
+        SemiMajorAxis(final_orbit_radius),
+        Eccentricity(Ratio(Scalar(0))),
+        TrueAnomaly(Anomaly(Radians(Scalar(0)))),
+    )
+
+    start_radius = periapsis_radius(
+        initial_orbit.semi_major_axis,
+        initial_orbit.eccentricity,
+    )
+
+    final_radius = final_orbit.semi_major_axis
 
     transfer_periapsis_radius = min(start_radius, final_radius)
     transfer_apoapsis_radius = max(start_radius, final_radius)
+
+    transfer_orbit = OrbitalElements(
+        initial_orbit.inclination,
+        initial_orbit.right_ascension_of_ascending_node,
+        initial_orbit.argument_of_periapsis,
+        SemiMajorAxis(
+            transfer_semi_major_axis(
+                transfer_periapsis_radius,
+                transfer_apoapsis_radius,
+            )
+        ),
+        transfer_eccentricity(
+            transfer_periapsis_radius,
+            transfer_apoapsis_radius,
+        ),
+        TrueAnomaly(Anomaly(Radians(Scalar(0)))),
+    )
 
     transfer_start_eccentric_anomaly = eccentric_anomaly_for_transfer_radius(
         start_radius,
@@ -202,9 +249,11 @@ def build_hohmann_transfer_2d_perifocal_figure(
     )
 
     transfer_period = orbital_period(
-        scaled_semi_major_axis_km(
-            transfer_orbit,
-            settings.distance_scale_km,
+        SemiMajorAxis(
+            scale_distance_to_distance(
+                transfer_orbit.semi_major_axis,
+                settings.distance_scale,
+            )
         ),
         gravitational_parameter,
     )
@@ -217,8 +266,6 @@ def build_hohmann_transfer_2d_perifocal_figure(
         initial_orbit,
         transfer_orbit,
         final_orbit,
-        start_apsis,
-        final_apsis,
         start_radius,
         final_radius,
         transfer_start_eccentric_anomaly,
@@ -256,7 +303,7 @@ def build_hohmann_transfer_2d_perifocal_figure(
         fig,
         primary_focus_plot_coordinate,
         PerifocalOrbitLine(
-            name="Final orbit",
+            name="Final circular orbit",
             orbital_elements=final_orbit,
             colour="grey",
         ),
@@ -270,7 +317,7 @@ def build_hohmann_transfer_2d_perifocal_figure(
         primary_focus_plot_coordinate,
         central_body_radius_plot(
             central_body_radius_km,
-            settings.distance_scale_km,
+            settings.distance_scale,
         ),
         central_body_name,
         "Black",
@@ -293,32 +340,56 @@ def build_hohmann_transfer_2d_perifocal_figure(
     )
 
     transfer_delta_v = delta_v_between_speeds(
-        velocity_at_radius_km_s(
-            initial_orbit,
-            start_radius,
-            settings.distance_scale_km,
-            gravitational_parameter,
+        vis_viva(
+            gravitational_parameter=gravitational_parameter,
+            orbit_radius=scale_distance_to_distance(
+                start_radius, settings.distance_scale
+            ),
+            semi_major_axis=SemiMajorAxis(
+                scale_distance_to_distance(
+                    initial_orbit.semi_major_axis,
+                    settings.distance_scale,
+                )
+            ),
         ),
-        velocity_at_radius_km_s(
-            transfer_orbit,
-            start_radius,
-            settings.distance_scale_km,
-            gravitational_parameter,
+        vis_viva(
+            gravitational_parameter=gravitational_parameter,
+            orbit_radius=scale_distance_to_distance(
+                start_radius, settings.distance_scale
+            ),
+            semi_major_axis=SemiMajorAxis(
+                scale_distance_to_distance(
+                    transfer_orbit.semi_major_axis,
+                    settings.distance_scale,
+                )
+            ),
         ),
     )
 
     arrival_delta_v = delta_v_between_speeds(
-        velocity_at_radius_km_s(
-            transfer_orbit,
-            final_radius,
-            settings.distance_scale_km,
-            gravitational_parameter,
+        vis_viva(
+            gravitational_parameter=gravitational_parameter,
+            orbit_radius=scale_distance_to_distance(
+                final_radius, settings.distance_scale
+            ),
+            semi_major_axis=SemiMajorAxis(
+                scale_distance_to_distance(
+                    transfer_orbit.semi_major_axis,
+                    settings.distance_scale,
+                )
+            ),
         ),
-        velocity_at_radius_km_s(
-            final_orbit,
-            final_radius,
-            settings.distance_scale_km,
-            gravitational_parameter,
+        vis_viva(
+            gravitational_parameter=gravitational_parameter,
+            orbit_radius=scale_distance_to_distance(
+                final_radius, settings.distance_scale
+            ),
+            semi_major_axis=SemiMajorAxis(
+                scale_distance_to_distance(
+                    final_orbit.semi_major_axis,
+                    settings.distance_scale,
+                )
+            ),
         ),
     )
 
@@ -327,8 +398,8 @@ def build_hohmann_transfer_2d_perifocal_figure(
     fig.update_layout(
         title=(
             f"{title_prefix}<br>"
-            f"Start = initial {start_apsis.value}, "
-            f"arrival = final {final_apsis.value}<br>"
+            f"Start = initial periapsis, "
+            f"arrival = final circular orbit<br>"
             f"Total Δv = {total_delta_v:.4f} km/s, "
             f"transfer time = {transfer_time:.2f} s"
         )
@@ -340,50 +411,31 @@ def build_hohmann_transfer_2d_perifocal_figure(
 DISTANCE_SCALE_KM = 12_824.9333333
 
 EARTH_RADIUS_KM = Distance(Scalar(6_371.0))
-INITIAL_ALTITUDE_KM = Distance(Scalar(280_000.0))
-TARGET_ALTITUDE_KM = Distance(Scalar(384_400.0 - 6_371.0))
-
-
-def scaled_distance(distance_km: Distance) -> Distance:
-    return Distance(Scalar(distance_km / DISTANCE_SCALE_KM))
+INITIAL_ALTITUDE_KM = Distance(Scalar(140_000.0))
+TARGET_ALTITUDE_KM = Distance(Scalar(400000.0 - EARTH_RADIUS_KM))
 
 
 if __name__ == "__main__":
-    p = ArgumentOfPeriapsis(Radians(Scalar(math.radians(35))))
     build_hohmann_transfer_2d_perifocal_figure(
         settings=OrbitPlot2DSettings(
-            distance_scale_km=DISTANCE_SCALE_KM,
+            distance_scale=DISTANCE_SCALE_KM,
         ),
         initial_orbit=OrbitalElements(
             Inclination(Radians(Scalar(0))),
             RightAscension(Radians(Scalar(0))),
-            p,
+            ArgumentOfPeriapsis(Radians(Scalar(math.radians(10)))),
             SemiMajorAxis(
-                scaled_distance(
+                distance_to_scale_distance(
                     orbit_radius(
                         INITIAL_ALTITUDE_KM,
                         EARTH_RADIUS_KM,
-                    )
+                    ),
+                    DISTANCE_SCALE_KM,
                 )
             ),
             Eccentricity(Ratio(Scalar(0.6))),
             TrueAnomaly(Anomaly(Radians(Scalar(0)))),
         ),
-        final_orbit=OrbitalElements(
-            Inclination(Radians(Scalar(0))),
-            RightAscension(Radians(Scalar(0))),
-            p,
-            SemiMajorAxis(
-                scaled_distance(
-                    orbit_radius(
-                        TARGET_ALTITUDE_KM,
-                        EARTH_RADIUS_KM,
-                    )
-                )
-            ),
-            Eccentricity(Ratio(Scalar(0.1))),
-            TrueAnomaly(Anomaly(Radians(Scalar(0)))),
-        ),
+        final_altitude=TARGET_ALTITUDE_KM,
         gravitational_parameter=EARTH_MU_KM_CUBED,
-        start_apsis=TransferApsis.APOAPSIS,
     ).show()

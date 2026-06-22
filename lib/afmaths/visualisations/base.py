@@ -9,7 +9,6 @@ import plotly.graph_objects as go
 
 from astronomy_types import (
     Anomaly,
-    ArgumentOfPeriapsis,
     Coordinate2D,
     Distance,
     EccentricAnomaly,
@@ -18,10 +17,7 @@ from astronomy_types import (
     Radians,
     Scalar,
     Second,
-    SemiMajorAxis,
     StateVectors,
-    TrueAnomaly,
-    Vector3D,
     Velocity,
     VelocityVector,
 )
@@ -32,18 +28,10 @@ from afmaths.geometry.geometry import (
     semi_minor_axis,
 )
 from afmaths.geometry.transformations import translate_ellipse_coordinate
-from afmaths.physics.space.astrodynamics import (
-    transfer_eccentricity,
-    transfer_semi_major_axis,
-)
 from afmaths.physics.space.celestial_mechanics import (
     EARTH_MU_KM_CUBED,
-    apoapsis_radius,
-    gravitational_parameter,
     orbital_elements_from_state_vectors,
     orbital_period,
-    periapsis_radius,
-    vis_viva,
 )
 from afmaths.physics.space.type_conversion_helpers import (
     python_datetime_to_fulldate,
@@ -62,16 +50,11 @@ from afmaths.physics.space.orbit_propagation import (
 
 from afmaths.visualisations.helpers import (
     OrbitPlot2DSettings,
+    elements_scaled_to_plot,
     plot_centre,
+    scale_distance_to_distance,
+    scale_position,
 )
-
-
-# Subject: orbital mechanics / Hohmann-transfer modelling.
-# Defines which apsis of an orbit is being used as a transfer point.
-# This is not Plotly/visualisation logic; it is domain vocabulary for transfer-orbit calculations.
-class TransferApsis(Enum):
-    PERIAPSIS = "periapsis"
-    APOAPSIS = "apoapsis"
 
 
 # Subject: astrodynamics / manoeuvre modelling.
@@ -261,33 +244,6 @@ def coordinates_for_elements(
     )
 
 
-# Subject: unit/scale conversion for orbital elements.
-# Converts plot-scaled OrbitalElements back to physical-ish units by multiplying semi-major axis by distance_scale_km.
-# This is not visualisation rendering; it is a scale adapter and is risky because the unit semantics are easy to confuse.
-def elements_scaled_to_plot(
-    elements: OrbitalElements,
-    distance_scale_km: float,
-) -> OrbitalElements:
-    return replace(
-        elements,
-        semi_major_axis=SemiMajorAxis(
-            Distance(Scalar(elements.semi_major_axis / distance_scale_km))
-        ),
-    )
-
-
-# Subject: unit conversion / orbital mechanics input preparation.
-# Converts a plot-scaled semi-major axis into metres using distance_scale_km * 1000.
-# This should probably be replaced with explicit unit conversion utilities or avoided by keeping physical units separate from plot units.
-def semi_major_axis_metres(
-    elements: OrbitalElements,
-    distance_scale_km: float,
-) -> SemiMajorAxis:
-    return SemiMajorAxis(
-        Distance(Scalar(elements.semi_major_axis * distance_scale_km * 1000))
-    )
-
-
 # Subject: thin alias for orbital-coordinate calculation.
 # Simply delegates to coordinates_for_elements for an orbiting body's plotted coordinate at a given eccentric anomaly.
 # This adds little value and probably does not need to exist.
@@ -338,7 +294,7 @@ def velocity_vector_at_time(
     mu: GravitationalParameter,
 ) -> VelocityVector:
     period = orbital_period(
-        semi_major_axis_metres(elements, distance_scale_km),
+        elements.semi_major_axis,
         mu,
     )
 
@@ -370,48 +326,6 @@ def velocity_vector_at_time(
     )
 
 
-# Subject: Hohmann-transfer/orbital mechanics utility.
-# Returns apoapsis for periapsis and periapsis for apoapsis, used to choose the other end of a transfer.
-# This is domain logic, not visualisation.
-def opposite_apsis(apsis: TransferApsis) -> TransferApsis:
-    if apsis == TransferApsis.PERIAPSIS:
-        return TransferApsis.APOAPSIS
-
-    return TransferApsis.PERIAPSIS
-
-
-# Subject: celestial mechanics / conic orbit geometry.
-# Returns periapsis_radius or apoapsis_radius for an orbit depending on the requested apsis.
-# This is a small selector over existing celestial_mechanics helpers.
-def apsis_radius(
-    orbit: OrbitalElements,
-    apsis: TransferApsis,
-) -> Distance:
-    if apsis == TransferApsis.PERIAPSIS:
-        return periapsis_radius(
-            orbit.semi_major_axis,
-            orbit.eccentricity,
-        )
-
-    return apoapsis_radius(
-        orbit.semi_major_axis,
-        orbit.eccentricity,
-    )
-
-
-# Subject: orbital geometry / argument of periapsis.
-# Returns the inertial/perifocal plot angle of the selected apsis: argument_of_periapsis for periapsis, plus pi for apoapsis.
-# This is orbital geometry, not plotting, though it is used to orient plotted transfer ellipses.
-def apsis_angle(
-    orbit: OrbitalElements,
-    apsis: TransferApsis,
-) -> float:
-    if apsis == TransferApsis.PERIAPSIS:
-        return orbit.argument_of_periapsis
-
-    return orbit.argument_of_periapsis + math.pi
-
-
 # Subject: Hohmann-transfer geometry / eccentric anomaly selection.
 # Maps a transfer-burn radius to eccentric anomaly 0 at periapsis or pi at apoapsis.
 # This only handles apsidal transfers and belongs with transfer-specific astrodynamics logic.
@@ -428,85 +342,6 @@ def eccentric_anomaly_for_transfer_radius(
 
     raise ValueError(
         "Transfer burn radius must be either transfer periapsis or apoapsis."
-    )
-
-
-# Subject: astrodynamics / Hohmann-style transfer construction.
-# Builds transfer OrbitalElements from the selected apsides of the initial and final orbits: computes radii, transfer semi-major axis/eccentricity, and argument of periapsis orientation.
-# This is definitely not visualisation; it should live in astrodynamics/transfer mechanics if kept.
-def transfer_orbit_from_apsides(
-    initial_orbit: OrbitalElements,
-    final_orbit: OrbitalElements,
-    start_apsis: TransferApsis,
-    final_apsis: TransferApsis,
-) -> OrbitalElements:
-    start_radius = apsis_radius(initial_orbit, start_apsis)
-    final_radius = apsis_radius(final_orbit, final_apsis)
-
-    transfer_periapsis_radius = min(start_radius, final_radius)
-    transfer_apoapsis_radius = max(start_radius, final_radius)
-
-    start_angle = apsis_angle(initial_orbit, start_apsis)
-    transfer_starts_at_periapsis = start_radius == transfer_periapsis_radius
-
-    transfer_argument_of_periapsis = (
-        start_angle if transfer_starts_at_periapsis else start_angle + math.pi
-    )
-
-    return OrbitalElements(
-        initial_orbit.inclination,
-        initial_orbit.right_ascension_of_ascending_node,
-        ArgumentOfPeriapsis(Radians(Scalar(transfer_argument_of_periapsis))),
-        SemiMajorAxis(
-            transfer_semi_major_axis(
-                transfer_periapsis_radius,
-                transfer_apoapsis_radius,
-            )
-        ),
-        transfer_eccentricity(
-            transfer_periapsis_radius,
-            transfer_apoapsis_radius,
-        ),
-        TrueAnomaly(Anomaly(Radians(Scalar(0)))),
-    )
-
-
-# Subject: unit/scale conversion.
-# Converts a plot-scaled Distance back into kilometres by multiplying by distance_scale_km.
-# This is a scale adapter caused by mixing plot units and physical units.
-def scaled_distance_km(
-    distance: Distance,
-    distance_scale_km: float,
-) -> Distance:
-    return Distance(Scalar(distance * distance_scale_km))
-
-
-# Subject: unit/scale conversion for orbital elements.
-# Converts a plot-scaled orbit semi-major axis back into kilometres by multiplying by distance_scale_km.
-# This should probably be replaced by keeping OrbitalElements in real units and scaling only at render time.
-def scaled_semi_major_axis_km(
-    orbit: OrbitalElements,
-    distance_scale_km: float,
-) -> SemiMajorAxis:
-    return SemiMajorAxis(Distance(Scalar(orbit.semi_major_axis * distance_scale_km)))
-
-
-# Subject: celestial mechanics / vis-viva equation.
-# Computes orbital speed at a radius using vis-viva after converting plot-scaled radius and semi-major axis back to kilometre units.
-# The physics is already in vis_viva; this wrapper is mostly unit/scale adaptation and should likely be removed or moved near transfer calculations.
-def velocity_at_radius_km_s(
-    orbit: OrbitalElements,
-    radius: Distance,
-    distance_scale_km: float,
-    mu: GravitationalParameter,
-) -> Velocity:
-    return vis_viva(
-        gravitational_parameter=mu,
-        orbit_radius=scaled_distance_km(radius, distance_scale_km),
-        semi_major_axis=scaled_semi_major_axis_km(
-            orbit,
-            distance_scale_km,
-        ),
     )
 
 
@@ -547,24 +382,6 @@ def transfer_arc_angles(
         return start, end + 2 * math.pi
 
     return start, end
-
-
-# Subject: visualisation scale conversion.
-# Divides a numeric coordinate by distance_scale_km to convert physical coordinates into plot units.
-# This is generic plotting-scale logic.
-def scale_value(value: float | int, distance_scale_km: float) -> float:
-    return float(value) / distance_scale_km
-
-
-# Subject: visualisation scale conversion for 3D vectors.
-# Divides x/y/z position components by distance_scale_km and rebuilds a Vector3D.
-# This is a render-time coordinate scaling helper, not celestial mechanics.
-def scale_position(position, distance_scale_km: float) -> Vector3D:
-    return vector3d(
-        scale_value(position.x, distance_scale_km),
-        scale_value(position.y, distance_scale_km),
-        scale_value(position.z, distance_scale_km),
-    )
 
 
 # Subject: data access / ephemeris query adapter.

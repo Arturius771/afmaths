@@ -40,9 +40,7 @@ from afmaths.physics.space.orbit_propagation import eccentric_anomaly_at_time
 from afmaths.physics.space.space_engineering import EXAMPLE_ELEMENTS
 from afmaths.visualisations.base import (
     orbiting_body_coordinates,
-    elements_scaled_to_plot,
     secondary_focus_coordinates_for_elements,
-    semi_major_axis_metres,
     tangent_vector_for_plot,
 )
 from afmaths.visualisations.helpers import (
@@ -51,6 +49,7 @@ from afmaths.visualisations.helpers import (
     add_perifocal_orbit_line,
     add_plot_centre,
     central_body_radius_plot,
+    elements_scaled_to_plot,
     figure_circle,
     figure_layout,
     figure_planetary_body,
@@ -58,6 +57,7 @@ from afmaths.visualisations.helpers import (
     plot_centre,
     plot_max,
     plot_min,
+    scale_distance_to_distance,
     vector_line,
 )
 
@@ -105,7 +105,7 @@ def add_orbiting_body_2d(
 
     plot_elements = elements_scaled_to_plot(
         elements,
-        settings.distance_scale_km,
+        settings.distance_scale,
     )
 
     coordinates = orbiting_body_coordinates(
@@ -123,7 +123,7 @@ def add_orbiting_body_2d(
             mode="markers",
             name=body_name,
             marker=dict(
-                size=body_radius_km / settings.distance_scale_km + 5,
+                size=body_radius_km / settings.distance_scale + 5,
                 color=body_colour,
                 line=dict(color=body_colour, width=2),
             ),
@@ -225,7 +225,7 @@ def generate_combined_orbital_slider_data(
 
             plot_elements = elements_scaled_to_plot(
                 elements,
-                settings.distance_scale_km,
+                settings.distance_scale,
             )
 
             mu = gravitational_parameter(
@@ -254,15 +254,22 @@ def generate_combined_orbital_slider_data(
                     Coordinate2D(coordinates.x, coordinates.y),
                     primary_focus_plot_coordinate,
                 )
-                * settings.distance_scale_km
+                * settings.distance_scale
             )
 
             velocity_m_s = vis_viva(
                 gravitational_parameter=mu,
                 orbit_radius=Distance(Scalar(distance_km * 1000)),
-                semi_major_axis=semi_major_axis_metres(
-                    plot_elements,
-                    settings.distance_scale_km,
+                semi_major_axis=SemiMajorAxis(
+                    Distance(
+                        Scalar(
+                            scale_distance_to_distance(
+                                plot_elements.semi_major_axis,
+                                settings.distance_scale,
+                            )
+                            * 1000
+                        )
+                    )
                 ),
             )
 
@@ -402,7 +409,7 @@ def build_2d_orbit_visualiser_figure(
                     primary_focus_plot_coordinate,
                     central_body_radius_plot(
                         central_body_radius_km,
-                        settings.distance_scale_km,
+                        settings.distance_scale,
                     ),
                     central_body_name,
                     "Black",
@@ -437,7 +444,7 @@ DISTANCE_SCALE_KM = 12_824.9333333
 
 def main() -> None:
     settings = OrbitPlot2DSettings(
-        distance_scale_km=DISTANCE_SCALE_KM,
+        distance_scale=DISTANCE_SCALE_KM,
     )
 
     build_2d_orbit_visualiser_figure(

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 import math
 
 import plotly.graph_objects as go
@@ -14,6 +14,7 @@ from astronomy_types import (
     PositionVector,
     Radians,
     Scalar,
+    SemiMajorAxis,
     Vector2D,
     Vector3D,
 )
@@ -45,7 +46,7 @@ class PlotNode:
 
 @dataclass(frozen=True)
 class OrbitPlot2DSettings:
-    distance_scale_km: float
+    distance_scale: float
     plot_width: int = 800
     plot_height: int = 800
     plot_min_x: float = 0
@@ -53,6 +54,55 @@ class OrbitPlot2DSettings:
     plot_max_x: float = 70
     plot_max_y: float = 70
     slider_steps: int = 51
+
+
+# Subject: unit/scale conversion.
+# Converts a plot-scaled Distance back into kilometres by multiplying by distance_scale_km.
+# This is a scale adapter caused by mixing plot units and physical units.
+def scale_distance_to_distance(
+    distance: Distance,
+    distance_scale_km: float,
+) -> Distance:
+    return Distance(Scalar(distance * distance_scale_km))
+
+
+def distance_to_scale_distance(distance_km: Distance, scale: float) -> Distance:
+    return Distance(Scalar(distance_km / scale))
+
+
+# Subject: visualisation scale conversion for 3D vectors.
+# Divides x/y/z position components by distance_scale_km and rebuilds a Vector3D.
+# This is a render-time coordinate scaling helper, not celestial mechanics.
+def scale_position(position: PositionVector, distance_scale_km: float) -> Vector3D:
+    return vector3d(
+        distance_to_scale_distance(Distance(position.x), distance_scale_km),
+        distance_to_scale_distance(Distance(position.y), distance_scale_km),
+        distance_to_scale_distance(Distance(position.z), distance_scale_km),
+    )
+
+
+# Subject: unit/scale conversion for orbital elements.
+# Converts plot-scaled OrbitalElements back to physical-ish units by multiplying semi-major axis by distance_scale_km.
+# This is not visualisation rendering; it is a scale adapter and is risky because the unit semantics are easy to confuse.
+def elements_scaled_to_plot(
+    elements: OrbitalElements,
+    scale: float,
+) -> OrbitalElements:
+    return replace(
+        elements,
+        semi_major_axis=SemiMajorAxis(
+            Distance(
+                Scalar(distance_to_scale_distance(elements.semi_major_axis, scale))
+            )
+        ),
+    )
+
+
+def value_to_scale(
+    distance_km: Distance,
+    scale: float,
+) -> Distance:
+    return Distance(Scalar(distance_km / scale))
 
 
 def plot_min(settings: OrbitPlot2DSettings) -> Vector2D:

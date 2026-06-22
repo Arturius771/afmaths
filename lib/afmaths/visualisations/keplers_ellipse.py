@@ -32,7 +32,7 @@ from astronomy_types import (
 DISTANCE_SCALE_KM = 12_824.9333333
 
 settings = OrbitPlot2DSettings(
-    distance_scale_km=DISTANCE_SCALE_KM,
+    distance_scale=DISTANCE_SCALE_KM,
 )
 
 centre_point = plot_centre(settings)
