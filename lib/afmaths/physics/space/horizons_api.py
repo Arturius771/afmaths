@@ -21,7 +21,7 @@ from astronomy_types import (
     Velocity,
 )
 
-from afmaths.physics.space.astronomy.type_conversion_helpers import (
+from afmaths.physics.space.type_conversion_helpers import (
     dms_to_radians,
     fulldate_to_string,
     hms_to_radians,

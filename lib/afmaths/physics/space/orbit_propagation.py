@@ -35,6 +35,7 @@ from afmaths.constants import (
     EXAMPLE_ELEMENTS,
 )
 from afmaths.geometry.geometry import (
+    generate_angles_on_circle,
     semi_minor_axis,
 )
 from afmaths.geometry.transformations import (
@@ -82,14 +83,6 @@ from afmaths.tensors import (
 # region Helpers
 
 
-def generate_angles_on_circle(resolution: int) -> list[Radians]:
-    typed = []
-    for val in interval(0, 2 * math.pi, resolution):
-        typed.append(Radians(Scalar(val)))
-
-    return typed
-
-
 def generate_all_orbit_positions(
     orbital_elements: OrbitalElements,
     resolution: int,
@@ -109,13 +102,6 @@ def generate_all_orbit_positions(
             ).position
         )
     return position_list
-
-
-def vector_from_direction(
-    direction: Vector3D[Scalar],
-    magnitude: Scalar,
-) -> Vector3D[Scalar]:
-    return vector_multiplication_3d(direction, magnitude)
 
 
 # endregion
@@ -231,7 +217,7 @@ def perifocal_position_3d(
 ) -> PositionVector:
     """Calculates the position vector in the perifocal coordinate system"""
     return make_position_vector(
-        vector_from_direction(
+        vector_multiplication_3d(
             vector3d(
                 Scalar(math.cos(orbital_elements.true_anomaly)),
                 Scalar(math.sin(orbital_elements.true_anomaly)),
@@ -255,7 +241,7 @@ def perifocal_velocity_3d(
     """Calculates the velocity vector in the perifocal coordinate system"""
 
     return make_velocity_vector(
-        vector_from_direction(
+        vector_multiplication_3d(
             vector3d(
                 Scalar(-math.sin(true_anomaly)),
                 Scalar(add(eccentricity)(math.cos(true_anomaly))),

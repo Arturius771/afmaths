@@ -216,7 +216,7 @@ def transfer_eccentricity(
 
 # endregion
 
-# region Plotting
+# region Ground Track
 
 
 def max_latitude(i: Inclination) -> Latitude:

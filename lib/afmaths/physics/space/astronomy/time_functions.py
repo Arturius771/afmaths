@@ -18,7 +18,7 @@ from astronomy_types import (
 )
 
 from afmaths.formula import is_divisible
-from afmaths.physics.space.astronomy.type_conversion_helpers import (
+from afmaths.physics.space.type_conversion_helpers import (
     decimal_time_to_time,
     time_to_decimal_time,
 )

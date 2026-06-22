@@ -2,6 +2,7 @@ from astronomy_types import (
     Coordinate2D,
     Distance,
     Eccentricity,
+    Radians,
     Ratio,
     Scalar,
     SemiLatusRectum,
@@ -15,6 +16,7 @@ from afmaths.operation import (
     SQUARE,
     add,
     divide_by,
+    interval,
     multiply,
     square_root,
     subtract,
@@ -238,6 +240,14 @@ def ellipse_bounding_box(
         Coordinate2D(coordinates.x - a, coordinates.y - b),
         Coordinate2D(coordinates.x + a, coordinates.y + b),
     )
+
+
+def generate_angles_on_circle(resolution: int) -> list[Radians]:
+    typed = []
+    for val in interval(0, 2 * math.pi, resolution):
+        typed.append(Radians(Scalar(val)))
+
+    return typed
 
 
 # endregion

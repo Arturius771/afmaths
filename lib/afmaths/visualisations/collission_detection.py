@@ -5,7 +5,7 @@ from astronomy_types import (
 import plotly.graph_objects as go
 
 from afmaths.physics.kinematics import detect_collision, propagate_vector
-from afmaths.physics.space.astronomy.type_conversion_helpers import vector2d
+from afmaths.physics.space.type_conversion_helpers import vector2d
 
 object_a_coordinates = Coordinate2D[float](5, 10)
 object_a_vector = vector2d(0, -1)
