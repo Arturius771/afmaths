@@ -136,10 +136,11 @@ def figure_layout(
     height_px: float,
     plot_start: Vector2D,
     plot_end: Vector2D,
+    title: str,
     zeroline: bool = False,
 ) -> go.Figure:
     return (
-        figure.update_layout(width=width_px, height=height_px)
+        figure.update_layout(width=width_px, height=height_px, title=title)
         .update_xaxes(range=[plot_start.x, plot_end.x], zeroline=zeroline)
         .update_yaxes(
             range=[plot_start.y, plot_end.y],

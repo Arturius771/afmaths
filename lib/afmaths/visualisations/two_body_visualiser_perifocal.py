@@ -420,6 +420,7 @@ def build_2d_orbit_visualiser_figure(
                 settings.plot_height,
                 plot_min(settings),
                 plot_max(settings),
+                title=title,
             ),
             generate_combined_orbital_slider_data(
                 settings,
@@ -436,7 +437,7 @@ def build_2d_orbit_visualiser_figure(
         ),
         primary_focus_plot_coordinate,
         Distance(Scalar(0.1)),
-    ).update_layout(title=title)
+    )
 
 
 DISTANCE_SCALE_KM = 12_824.9333333

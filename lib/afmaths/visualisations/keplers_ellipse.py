@@ -58,6 +58,7 @@ add_plot_node(
                     settings.plot_height,
                     plot_min(settings),
                     plot_max(settings),
+                    title="test",
                 ),
                 centre_point,
                 PerifocalOrbitLine(
@@ -81,4 +82,4 @@ add_plot_node(
             plot_elements,
         ),
     ),
-).update_layout(title="test").show()
+).show()

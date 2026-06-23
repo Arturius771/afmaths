@@ -165,7 +165,7 @@ def hohmann_transfer_delta_v(
     target_altitude_km: Distance,
     initial_body_radius: Distance = EARTH_RADIUS_KM,
     gravitational_parameter: GravitationalParameter = EARTH_MU_KM_CUBED,
-) -> tuple[DeltaV, DeltaV, DeltaV]:
+) -> tuple[DeltaV, DeltaV, DeltaV, str]:
     """Calculates the delta-v required for a Hohmann transfer"""
     # www.braeunig.us/space/problem.htm#4.19
 
@@ -191,10 +191,15 @@ def hohmann_transfer_delta_v(
         final_velocity,
     )
 
+    total = DeltaV(add(transfer_delta_v)(circularise_delta_v))
+
+    direction = "retrograde" if total < 0 else "prograde"
+
     return (
-        DeltaV(add(transfer_delta_v)(circularise_delta_v)),
-        transfer_delta_v,
-        circularise_delta_v,
+        total,
+        DeltaV(transfer_delta_v),
+        DeltaV(circularise_delta_v),
+        direction,
     )
 
 

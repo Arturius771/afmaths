@@ -57,14 +57,6 @@ from afmaths.visualisations.helpers import (
 )
 
 
-# Subject: astrodynamics / manoeuvre modelling.
-# Classifies a burn by whether the target orbital speed is higher or lower than the current speed.
-# This is not visualisation logic; it belongs with transfer / delta-v helpers if reused.
-class BurnDirection(Enum):
-    PROGRADE = "prograde"
-    RETROGRADE = "retrograde"
-
-
 # Subject: visualisation configuration, with astronomy-specific target metadata.
 # Stores the plotting/display inputs for a body: label, Horizons target or elements, physical radius, and visual radius scale.
 # This is mostly visualisation config, but it depends on Horizons/orbital concepts.
@@ -343,19 +335,6 @@ def eccentric_anomaly_for_transfer_radius(
     raise ValueError(
         "Transfer burn radius must be either transfer periapsis or apoapsis."
     )
-
-
-# Subject: manoeuvre classification / astrodynamics.
-# Compares current and target speeds: if the target speed is higher, label the burn prograde; otherwise retrograde.
-# This is transfer/maneuver domain logic, not visualisation.
-def burn_direction(
-    current_speed: Velocity,
-    target_speed: Velocity,
-) -> BurnDirection:
-    if target_speed >= current_speed:
-        return BurnDirection.PROGRADE
-
-    return BurnDirection.RETROGRADE
 
 
 # Subject: kinematics / astrodynamics.
