@@ -58,50 +58,57 @@ from astronomy_types import (
 )
 
 
-def transfer_burn_plot_nodes(
+def transfer_burn_plot_node(
+    name: str,
+    label: str,
     primary_focus_plot_coordinate: Coordinate2D,
     transfer_orbit: OrbitalElements,
-    transfer_delta_v: Velocity,
-    arrival_delta_v: Velocity,
+    eccentric_anomaly: EccentricAnomaly,
+    delta_v: Velocity,
     direction: BurnDirection,
-    transfer_start_eccentric_anomaly: EccentricAnomaly,
-    transfer_arrival_eccentric_anomaly: EccentricAnomaly,
-    transfer_time: Second,
-) -> list[PlotNode]:
-    return [
-        PlotNode(
-            name="Transfer burn at initial periapsis",
-            coordinate=coordinates_for_elements(
-                primary_focus_plot_coordinate,
-                transfer_orbit,
-                transfer_start_eccentric_anomaly,
-            ),
-            text=(
-                f"Transfer burn at initial periapsis<br>"
-                f"Direction = {direction}<br>"
-                f"Δv = {transfer_delta_v:.4f} km/s<br>"
-                f"t = {Second(Scalar(0)):.2f} s"
-            ),
-            colour="red",
-            symbol="x",
+    time: Second,
+) -> PlotNode:
+    return PlotNode(
+        name=name,
+        coordinate=coordinates_for_elements(
+            primary_focus_plot_coordinate,
+            transfer_orbit,
+            eccentric_anomaly,
         ),
-        PlotNode(
-            name="Arrival burn at final circular orbit",
-            coordinate=coordinates_for_elements(
-                primary_focus_plot_coordinate,
-                transfer_orbit,
-                transfer_arrival_eccentric_anomaly,
-            ),
-            text=(
-                f"Arrival burn at final circular orbit<br>"
-                f"Direction = {direction}<br>"
-                f"Δv = {arrival_delta_v:.4f} km/s<br>"
-                f"t = {transfer_time:.2f} s"
-            ),
-            colour="red",
-            symbol="x",
+        text=(
+            f"{label}<br>"
+            f"Direction = {direction}<br>"
+            f"Δv = {delta_v:.4f} km/s<br>"
+            f"t = {time:.2f} s"
         ),
-    ]
+        colour="red",
+        symbol="x",
+    )
+
+
+def plotted_radius_from_primary_focus(
+    primary_focus_plot_coordinate: Coordinate2D,
+    coordinate: Coordinate2D,
+) -> float:
+    return math.hypot(
+        coordinate.x - primary_focus_plot_coordinate.x,
+        coordinate.y - primary_focus_plot_coordinate.y,
+    )
+
+
+def plotted_radius_for_transfer_endpoint(
+    primary_focus_plot_coordinate: Coordinate2D,
+    transfer_orbit: OrbitalElements,
+    eccentric_anomaly: EccentricAnomaly,
+) -> float:
+    return plotted_radius_from_primary_focus(
+        primary_focus_plot_coordinate,
+        coordinates_for_elements(
+            primary_focus_plot_coordinate,
+            transfer_orbit,
+            eccentric_anomaly,
+        ),
+    )
 
 
 def build_hohmann_transfer_2d_perifocal_figure(
@@ -170,22 +177,35 @@ def build_hohmann_transfer_2d_perifocal_figure(
         TrueAnomaly(Anomaly(Radians(Scalar(0)))),
     )
 
-    transfer_start_eccentric_anomaly = eccentric_anomaly_for_transfer_radius(
-        start_radius,
-        transfer_periapsis_radius,
-        transfer_apoapsis_radius,
+    transfer_endpoint_a_eccentric_anomaly = EccentricAnomaly(
+        Anomaly(Radians(Scalar(0)))
     )
 
-    transfer_arrival_eccentric_anomaly = eccentric_anomaly_for_transfer_radius(
-        final_orbit.semi_major_axis,
-        transfer_periapsis_radius,
-        transfer_apoapsis_radius,
+    transfer_endpoint_b_eccentric_anomaly = EccentricAnomaly(
+        Anomaly(Radians(Scalar(math.pi)))
     )
 
-    transfer_arc_start_angle, transfer_arc_end_angle = transfer_arc_angles(
-        transfer_start_eccentric_anomaly,
-        transfer_arrival_eccentric_anomaly,
+    transfer_endpoint_a_radius = plotted_radius_for_transfer_endpoint(
+        primary_focus_plot_coordinate,
+        transfer_orbit,
+        transfer_endpoint_a_eccentric_anomaly,
     )
+
+    transfer_endpoint_b_radius = plotted_radius_for_transfer_endpoint(
+        primary_focus_plot_coordinate,
+        transfer_orbit,
+        transfer_endpoint_b_eccentric_anomaly,
+    )
+
+    endpoint_a_matches_start = abs(transfer_endpoint_a_radius - start_radius)
+    endpoint_b_matches_start = abs(transfer_endpoint_b_radius - start_radius)
+
+    if endpoint_a_matches_start <= endpoint_b_matches_start:
+        transfer_burn_eccentric_anomaly = transfer_endpoint_a_eccentric_anomaly
+        arrival_burn_eccentric_anomaly = transfer_endpoint_b_eccentric_anomaly
+    else:
+        transfer_burn_eccentric_anomaly = transfer_endpoint_b_eccentric_anomaly
+        arrival_burn_eccentric_anomaly = transfer_endpoint_a_eccentric_anomaly
 
     total_delta_v, transfer_delta_v, arrival_delta_v, direction, transfer_time = (
         hohmann_transfer(
@@ -201,21 +221,38 @@ def build_hohmann_transfer_2d_perifocal_figure(
         )
     )
 
-    burn_nodes = transfer_burn_plot_nodes(
-        primary_focus_plot_coordinate=primary_focus_plot_coordinate,
-        transfer_orbit=transfer_orbit,
-        transfer_delta_v=transfer_delta_v,
-        arrival_delta_v=arrival_delta_v,
-        direction=direction,
-        transfer_start_eccentric_anomaly=transfer_start_eccentric_anomaly,
-        transfer_arrival_eccentric_anomaly=transfer_arrival_eccentric_anomaly,
-        transfer_time=transfer_time,
+    fig = add_plot_node(
+        go.Figure(),
+        transfer_burn_plot_node(
+            name="Transfer burn at initial periapsis",
+            label="Transfer burn at initial periapsis",
+            primary_focus_plot_coordinate=primary_focus_plot_coordinate,
+            transfer_orbit=transfer_orbit,
+            eccentric_anomaly=transfer_burn_eccentric_anomaly,
+            delta_v=transfer_delta_v,
+            direction=direction,
+            time=Second(Scalar(0)),
+        ),
     )
 
-    fig = go.Figure()
+    fig = add_plot_node(
+        fig,
+        transfer_burn_plot_node(
+            name="Arrival burn at final circular orbit",
+            label="Arrival burn at final circular orbit",
+            primary_focus_plot_coordinate=primary_focus_plot_coordinate,
+            transfer_orbit=transfer_orbit,
+            eccentric_anomaly=arrival_burn_eccentric_anomaly,
+            delta_v=arrival_delta_v,
+            direction=direction,
+            time=transfer_time,
+        ),
+    )
 
-    for node in burn_nodes:
-        fig = add_plot_node(fig, node)
+    transfer_arc_start_angle, transfer_arc_end_angle = transfer_arc_angles(
+        transfer_burn_eccentric_anomaly,
+        arrival_burn_eccentric_anomaly,
+    )
 
     return add_plot_centre(
         figure_layout(
@@ -278,8 +315,8 @@ def build_hohmann_transfer_2d_perifocal_figure(
 DISTANCE_SCALE_KM = 12_824.9333333
 
 EARTH_RADIUS_KM = Distance(Scalar(6_371.0))
-INITIAL_ALTITUDE_KM = Distance(Scalar(140_000.0))
-TARGET_ALTITUDE_KM = Distance(Scalar(60_000.0))
+INITIAL_ALTITUDE_KM = Distance(Scalar(200_000))
+TARGET_ALTITUDE_KM = Distance(Scalar(140_000))
 
 
 if __name__ == "__main__":

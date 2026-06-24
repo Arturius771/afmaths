@@ -173,9 +173,61 @@ def anti_normal(state: StateVectors) -> Vector3D:
     return vector_negate(normal(state))
 
 
+def burn_direction_at_apsis(
+    initial_altitude: Distance, target_altitude: Distance
+) -> BurnDirection:
+    if initial_altitude > target_altitude:
+        return BurnDirection.RETROGRADE
+    return BurnDirection.PROGRADE
+
+
 # endregion directions
 
 # region Maneuvers
+
+
+def increase_semi_major_axis_at_periapsis(
+    a: SemiMajorAxis,
+    current_altitude: Distance,
+    mu: GravitationalParameter = EARTH_MU_KM_CUBED,
+) -> DeltaV:
+    return velocity_difference(
+        velocity_at_altitude(current_altitude, mu),
+        vis_viva(mu, current_altitude, a),
+    )
+
+
+def increase_semi_major_axis_at_apoapsis(
+    a: SemiMajorAxis,
+    current_altitude: Distance,
+    mu: GravitationalParameter = EARTH_MU_KM_CUBED,
+) -> DeltaV:
+    return velocity_difference(
+        vis_viva(mu, current_altitude, a),
+        velocity_at_altitude(current_altitude, mu),
+    )
+
+
+def decrease_semi_major_axis_at_periapsis(
+    a: SemiMajorAxis,
+    current_altitude: Distance,
+    mu: GravitationalParameter = EARTH_MU_KM_CUBED,
+) -> DeltaV:
+    return velocity_difference(
+        vis_viva(mu, current_altitude, a),
+        velocity_at_altitude(current_altitude, mu),
+    )
+
+
+def decrease_semi_major_axis_at_apoapsis(
+    a: SemiMajorAxis,
+    current_altitude: Distance,
+    mu: GravitationalParameter = EARTH_MU_KM_CUBED,
+) -> DeltaV:
+    return velocity_difference(
+        velocity_at_altitude(current_altitude, mu),
+        vis_viva(mu, current_altitude, a),
+    )
 
 
 def hohmann_transfer(
@@ -184,7 +236,7 @@ def hohmann_transfer(
     initial_body_radius: Distance = EARTH_RADIUS_KM,
     gravitational_parameter: GravitationalParameter = EARTH_MU_KM_CUBED,
 ) -> tuple[DeltaV, DeltaV, DeltaV, BurnDirection, Second]:
-    """Calculates the delta-v required for a Hohmann transfer"""
+    """Calculates the delta-v required for a Hohmann transfer. Assumes a circular initial and final orbit."""
     # www.braeunig.us/space/problem.htm#4.19
 
     r_a = orbit_radius(initial_altitude_km, initial_body_radius)
@@ -192,19 +244,28 @@ def hohmann_transfer(
 
     semi_major_axis_transfer_ellipse = semi_major_axis_from_vertex_distances(r_a, r_b)
 
-    transfer_delta_v = velocity_difference(
-        velocity_at_altitude(r_a, gravitational_parameter),
-        vis_viva(gravitational_parameter, r_a, semi_major_axis_transfer_ellipse),
+    direction = burn_direction_at_apsis(initial_altitude_km, target_altitude_km)
+    transfer_delta_v = (
+        increase_semi_major_axis_at_periapsis(
+            semi_major_axis_transfer_ellipse, r_a, gravitational_parameter
+        )
+        if direction is BurnDirection.PROGRADE
+        else decrease_semi_major_axis_at_apoapsis(
+            semi_major_axis_transfer_ellipse, r_b, gravitational_parameter
+        )
     )
 
-    circularise_delta_v = velocity_difference(
-        vis_viva(gravitational_parameter, r_b, semi_major_axis_transfer_ellipse),
-        velocity_at_altitude(r_b, gravitational_parameter),
+    circularise = (
+        increase_semi_major_axis_at_apoapsis(
+            semi_major_axis_transfer_ellipse, r_b, gravitational_parameter
+        )
+        if direction is BurnDirection.PROGRADE
+        else decrease_semi_major_axis_at_periapsis(
+            semi_major_axis_transfer_ellipse, r_a, gravitational_parameter
+        )
     )
 
-    total = DeltaV(add(transfer_delta_v)(circularise_delta_v))
-
-    direction = BurnDirection.RETROGRADE if total < 0 else BurnDirection.PROGRADE
+    total = DeltaV(add(transfer_delta_v)(circularise))
 
     period = transfer_period(
         gravitational_parameter,
@@ -213,7 +274,13 @@ def hohmann_transfer(
         initial_body_radius,
     )
 
-    return (total, transfer_delta_v, circularise_delta_v, direction, period)
+    return (
+        total,
+        transfer_delta_v,
+        circularise,
+        burn_direction_at_apsis(initial_altitude_km, target_altitude_km),
+        period,
+    )
 
 
 def transfer_period(
@@ -244,7 +311,7 @@ def transfer_eccentricity(
     )
 
 
-def delta_v_inclination_change(
+def inclination_change_at_node(
     velocity_at_node: Velocity,
     current_inclination: Inclination,
     target_inclination: Inclination,
@@ -257,9 +324,7 @@ def delta_v_inclination_change(
     )
 
 
-def delta_v_parabolic_escape(
-    elements: OrbitalElements, mu: GravitationalParameter
-) -> DeltaV:
+def parabolic_escape(elements: OrbitalElements, mu: GravitationalParameter) -> DeltaV:
     velocity_at_periapsis = periapsis_velocity(mu, elements)
     parabolic_escape_velocity = Velocity(
         Scalar(
