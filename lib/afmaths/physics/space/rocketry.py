@@ -20,7 +20,7 @@ from astronomy_types import (
     Velocity,
 )
 
-from afmaths.physics.space.astrodynamics import DeltaV, hohmann_transfer_delta_v
+from afmaths.physics.space.astrodynamics import DeltaV, hohmann_transfer
 
 
 def ideal_rocket_equation(
@@ -145,7 +145,7 @@ if __name__ == "__main__":
     print(
         propellant_mass_from_initial_mass(
             Mass(1000),
-            hohmann_transfer_delta_v(Distance(Scalar(300)), Distance(Scalar(1000)))[0],
+            hohmann_transfer(Distance(Scalar(300)), Distance(Scalar(1000)))[0],
             Velocity(Scalar(3)),
         )
     )

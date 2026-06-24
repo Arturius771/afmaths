@@ -25,7 +25,15 @@ from afmaths.geometry.geometry import (
     eccentricity_factor_plus,
     semi_major_axis_from_vertex_distances,
 )
-from afmaths.operation import add, divide_by, multiply, negate, subtract
+from afmaths.operation import (
+    HALF,
+    add,
+    divide_by,
+    multiply,
+    negate,
+    square_root,
+    subtract,
+)
 from afmaths.physics.space.type_conversion_helpers import (
     position_vector_to_vector3d,
     velocity_vector_to_vector3d,
@@ -35,7 +43,9 @@ from afmaths.physics.space.celestial_mechanics import (
     nadir_vector,
     orbit_radius,
     orbital_elements_from_state_vectors,
+    orbital_period,
     periapsis_radius,
+    periapsis_velocity,
     radial_velocity,
     velocity_difference,
     velocity_at_altitude,
@@ -44,7 +54,6 @@ from afmaths.physics.space.celestial_mechanics import (
 )
 from afmaths.tensors import (
     vector_magnitude,
-    vector_multiplication_3d,
     vector_negate,
     vector_normalise,
 )
@@ -65,8 +74,6 @@ def flight_path_angle(
     state: StateVectors, mu: GravitationalParameter = EARTH_MU_KM_CUBED
 ) -> Radians:
     elements = orbital_elements_from_state_vectors(state)
-    r_p = periapsis_radius(elements.semi_major_axis, elements.eccentricity)
-    velocity_at_periapsis = vis_viva(mu, r_p, elements.semi_major_axis)
 
     return Radians(
         Scalar(
@@ -75,7 +82,13 @@ def flight_path_angle(
                     multiply(
                         vector_magnitude(position_vector_to_vector3d(state.position))
                     )(vector_magnitude(velocity_vector_to_vector3d(state.velocity)))
-                )(multiply(r_p)(velocity_at_periapsis))
+                )(
+                    multiply(
+                        periapsis_radius(
+                            elements.semi_major_axis, elements.eccentricity
+                        )
+                    )(periapsis_velocity(mu, elements))
+                )
             )
         )
     )
@@ -160,7 +173,7 @@ def anti_normal(state: StateVectors) -> Vector3D:
 # region Maneuvers
 
 
-def hohmann_transfer_delta_v(
+def hohmann_transfer(
     initial_altitude_km: Distance,
     target_altitude_km: Distance,
     initial_body_radius: Distance = EARTH_RADIUS_KM,
@@ -173,22 +186,15 @@ def hohmann_transfer_delta_v(
     r_b = orbit_radius(target_altitude_km, initial_body_radius)
 
     semi_major_axis_transfer_ellipse = semi_major_axis_from_vertex_distances(r_a, r_b)
-    initial_velocity = velocity_at_altitude(r_a, gravitational_parameter)
-    final_velocity = velocity_at_altitude(r_b, gravitational_parameter)
-    velocity_on_orbit_at_initial_orbit = vis_viva(
-        gravitational_parameter, r_a, semi_major_axis_transfer_ellipse
-    )
-    velocity_on_orbit_at_final_orbit = vis_viva(
-        gravitational_parameter, r_b, semi_major_axis_transfer_ellipse
-    )
+
     transfer_delta_v = velocity_difference(
-        initial_velocity,
-        Velocity(Scalar(velocity_on_orbit_at_initial_orbit)),
+        velocity_at_altitude(r_a, gravitational_parameter),
+        vis_viva(gravitational_parameter, r_a, semi_major_axis_transfer_ellipse),
     )
 
     circularise_delta_v = velocity_difference(
-        velocity_on_orbit_at_final_orbit,
-        final_velocity,
+        vis_viva(gravitational_parameter, r_b, semi_major_axis_transfer_ellipse),
+        velocity_at_altitude(r_b, gravitational_parameter),
     )
 
     total = DeltaV(add(transfer_delta_v)(circularise_delta_v))
@@ -203,6 +209,20 @@ def hohmann_transfer_delta_v(
     )
 
 
+def transfer_period(
+    mu: GravitationalParameter,
+    initial_altitude_km: Distance,
+    target_altitude_km: Distance,
+    initial_body_radius: Distance = EARTH_RADIUS_KM,
+) -> Second:
+    """Assuming an elliptical transfer orbit."""
+    r_a = orbit_radius(initial_altitude_km, initial_body_radius)
+    r_b = orbit_radius(target_altitude_km, initial_body_radius)
+
+    semi_major_axis_transfer_ellipse = semi_major_axis_from_vertex_distances(r_a, r_b)
+    return HALF(orbital_period(semi_major_axis_transfer_ellipse, mu))
+
+
 def transfer_semi_major_axis(
     initial_altitude_km: Distance, final_altitude_km: Distance
 ) -> SemiMajorAxis:
@@ -215,6 +235,36 @@ def transfer_eccentricity(
     return divide_by(add(final_altitude_km)(initial_altitude_km))(
         subtract(initial_altitude_km)(final_altitude_km)
     )
+
+
+def delta_v_inclination_change(
+    velocity_at_node: Velocity,
+    current_inclination: Inclination,
+    target_inclination: Inclination,
+) -> DeltaV:
+    difference = abs(subtract(target_inclination)(current_inclination))
+    return DeltaV(
+        Velocity(
+            Scalar(multiply(multiply(2)(velocity_at_node))(math.sin(HALF(difference))))
+        )
+    )
+
+
+def delta_v_parabolic_escape(
+    elements: OrbitalElements, mu: GravitationalParameter
+) -> DeltaV:
+    velocity_at_periapsis = periapsis_velocity(mu, elements)
+    parabolic_escape_velocity = Velocity(
+        Scalar(
+            square_root(
+                divide_by(
+                    periapsis_radius(elements.semi_major_axis, elements.eccentricity)
+                )(multiply(2)(mu))
+            )
+        )
+    )
+
+    return velocity_difference(velocity_at_periapsis, parabolic_escape_velocity)
 
 
 # TODO: function(s) to change specific orbital elements
@@ -242,13 +292,13 @@ def westware_drift_from_angular_velocity_and_period(
     return multiply(body_angular_velocity)(orbital_period)
 
 
-# end region
+# endregion
 
 
 if __name__ == "__main__":
 
     # (0.37539955175032447, 0.19003921507073027, 0.18536033667959417)
-    print(hohmann_transfer_delta_v(Distance(Scalar(300)), Distance(Scalar(1000))))
+    print(hohmann_transfer(Distance(Scalar(300)), Distance(Scalar(1000))))
 
     position = PositionVector(
         Position(Scalar(7000)), Position(Scalar(0.1)), Position(Scalar(0.1))

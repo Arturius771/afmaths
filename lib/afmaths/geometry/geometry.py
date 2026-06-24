@@ -114,6 +114,10 @@ def geometric_mean_distance(x: Distance, y: Distance) -> Distance:
 # region Ellipses
 
 
+def semi_latus_rectum(a: SemiMajorAxis, e: Eccentricity) -> SemiLatusRectum:
+    return multiply(a)(eccentricity_factor_minus(SQUARE(e)))
+
+
 def semi_minor_axis_from_semi_latus_rectum(
     semi_latus_rectum: SemiLatusRectum,
     semi_major_axis: SemiMajorAxis,

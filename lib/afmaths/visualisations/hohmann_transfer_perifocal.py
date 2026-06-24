@@ -6,7 +6,8 @@ import plotly.graph_objects as go
 
 from afmaths.constants import EARTH_MU_KM_CUBED
 from afmaths.physics.space.astrodynamics import (
-    hohmann_transfer_delta_v,
+    transfer_period,
+    hohmann_transfer,
     transfer_eccentricity,
     transfer_semi_major_axis,
 )
@@ -186,35 +187,20 @@ def build_hohmann_transfer_2d_perifocal_figure(
         transfer_arrival_eccentric_anomaly,
     )
 
-    transfer_time = Second(
-        Scalar(
-            orbital_period(
-                SemiMajorAxis(
-                    scale_distance_to_distance(
-                        transfer_orbit.semi_major_axis,
-                        settings.distance_scale,
-                    )
-                ),
-                gravitational_parameter,
+    transfer_time = transfer_period(
+        gravitational_parameter, start_radius, final_altitude
+    )
+
+    total_delta_v, transfer_delta_v, arrival_delta_v, direction = hohmann_transfer(
+        initial_altitude_km=Distance(
+            Scalar(
+                scale_distance_to_distance(start_radius, settings.distance_scale)
+                - central_body_radius_km
             )
-            / 2
-        )
-    )
-
-    initial_altitude_km = Distance(
-        Scalar(
-            scale_distance_to_distance(start_radius, settings.distance_scale)
-            - central_body_radius_km
-        )
-    )
-
-    total_delta_v, transfer_delta_v, arrival_delta_v, direction = (
-        hohmann_transfer_delta_v(
-            initial_altitude_km=initial_altitude_km,
-            target_altitude_km=final_altitude,
-            initial_body_radius=Distance(Scalar(central_body_radius_km)),
-            gravitational_parameter=gravitational_parameter,
-        )
+        ),
+        target_altitude_km=final_altitude,
+        initial_body_radius=Distance(Scalar(central_body_radius_km)),
+        gravitational_parameter=gravitational_parameter,
     )
 
     burn_nodes = transfer_burn_plot_nodes(

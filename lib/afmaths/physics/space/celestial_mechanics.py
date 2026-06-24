@@ -26,6 +26,7 @@ from afmaths.geometry.geometry import (
     eccentricity_factor_minus,
     eccentricity_factor_plus,
     eccentricity,
+    semi_latus_rectum,
     semi_minor_axis_from_semi_latus_rectum,
 )
 from afmaths.operation import (
@@ -35,7 +36,6 @@ from afmaths.operation import (
     add,
     divide_by,
     exponentiate,
-    interval,
     multiply,
     newtons_raphson_method,
     ratio,
@@ -43,7 +43,6 @@ from afmaths.operation import (
     subtract,
 )
 from astronomy_types import (
-    Anomaly,
     EccentricAnomaly,
     GravitationalParameter,
     Latitude,
@@ -245,11 +244,33 @@ def time_since_periapsis(
 
 
 def periapsis_radius(a: SemiMajorAxis, e: Eccentricity) -> Distance:
+    """r_p=a(1-e)"""
     return multiply(a)(eccentricity_factor_minus(e))
 
 
 def apoapsis_radius(a: SemiMajorAxis, e: Eccentricity) -> Distance:
+    """r_p=a(1+e)"""
     return multiply(a)(eccentricity_factor_plus(e))
+
+
+def periapsis_velocity(
+    mu: GravitationalParameter, elements: OrbitalElements
+) -> Velocity:
+    return vis_viva(
+        mu,
+        periapsis_radius(elements.semi_major_axis, elements.eccentricity),
+        elements.semi_major_axis,
+    )
+
+
+def apoapsis_velocity(
+    mu: GravitationalParameter, elements: OrbitalElements
+) -> Velocity:
+    return vis_viva(
+        mu,
+        apoapsis_radius(elements.semi_major_axis, elements.eccentricity),
+        elements.semi_major_axis,
+    )
 
 
 def argument_of_latitude(
@@ -266,10 +287,6 @@ def argument_of_latitude(
     )
 
     return Radians(Scalar(math.atan2(y, x) % (2 * math.pi)))
-
-
-def semi_latus_rectum(a: SemiMajorAxis, e: Eccentricity) -> SemiLatusRectum:
-    return multiply(a)(eccentricity_factor_minus(SQUARE(e)))
 
 
 def semi_latus_rectum_from_angular_momentum(
@@ -362,16 +379,22 @@ def orbital_elements_from_state_vectors(
     eccentricity = eccentricity_from_ellipse_equation(
         angular_momentum_vector, semi_major_axis, gravitational_parameter
     )
-    n = mean_motion(semi_major_axis, gravitational_parameter)
-    eccentric_an = eccentric_anomaly(state_vectors, semi_major_axis, n)
-    true_anomaly = true_anomaly_from_eccentric_anomaly(eccentric_an, eccentricity)
-    latitude = argument_of_latitude(raan, inclination, state_vectors.position)
-    argument_of_perigee = argument_of_periapsis(true_anomaly, latitude)
+    true_anomaly = true_anomaly_from_eccentric_anomaly(
+        eccentric_anomaly(
+            state_vectors,
+            semi_major_axis,
+            mean_motion(semi_major_axis, gravitational_parameter),
+        ),
+        eccentricity,
+    )
 
     return OrbitalElements(
         inclination=inclination,
         right_ascension_of_ascending_node=raan,
-        argument_of_periapsis=argument_of_perigee,
+        argument_of_periapsis=argument_of_periapsis(
+            true_anomaly,
+            argument_of_latitude(raan, inclination, state_vectors.position),
+        ),
         semi_major_axis=semi_major_axis,
         eccentricity=eccentricity,
         true_anomaly=true_anomaly,
@@ -603,7 +626,7 @@ def eccentric_anomaly_solved(
 
 if __name__ == "__main__":
 
-    # {'inclination': 0.12166217595729033, 'right_ascension': 3.024483909022929, 'argument_of_perigee': 1.5978995641224425, 'semi_major_axis': 25015.186690979368, 'eccentricity': 0.7079768603248032, 'true_anomaly': 2.987554518980773}
+    # {'inclination': 0.12166217595729033, 'right_ascension': 3.024483909022929, 'argument_of_periapsis': 1.5978995641224425, 'semi_major_axis': 25015.186690979368, 'eccentricity': 0.7079768603248032, 'true_anomaly': 2.987554518980773}
     print(
         orbital_elements_from_state_vectors(
             StateVectors(

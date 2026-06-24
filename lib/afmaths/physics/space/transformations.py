@@ -27,34 +27,34 @@ def transform_perifocal_to_inertial(
 def perifocal_to_inertial_frame_rotation_matrix(
     orbital_elements: OrbitalElements,
 ) -> TransformationMatrix3D:
-    argument_of_perigee = orbital_elements.argument_of_periapsis
+    argument_of_periapsis = orbital_elements.argument_of_periapsis
     right_ascension_of_ascening_node = (
         orbital_elements.right_ascension_of_ascending_node
     )
     inclination = orbital_elements.inclination
 
     p = [
-        math.cos(argument_of_perigee) * math.cos(right_ascension_of_ascening_node)
-        - math.sin(argument_of_perigee)
+        math.cos(argument_of_periapsis) * math.cos(right_ascension_of_ascening_node)
+        - math.sin(argument_of_periapsis)
         * math.cos(inclination)
         * math.sin(right_ascension_of_ascening_node),
-        math.cos(argument_of_perigee) * math.sin(right_ascension_of_ascening_node)
-        + math.sin(argument_of_perigee)
+        math.cos(argument_of_periapsis) * math.sin(right_ascension_of_ascening_node)
+        + math.sin(argument_of_periapsis)
         * math.cos(inclination)
         * math.cos(right_ascension_of_ascening_node),
-        math.sin(argument_of_perigee) * math.sin(inclination),
+        math.sin(argument_of_periapsis) * math.sin(inclination),
     ]
 
     q = [
-        -math.sin(argument_of_perigee) * math.cos(right_ascension_of_ascening_node)
-        - math.cos(argument_of_perigee)
+        -math.sin(argument_of_periapsis) * math.cos(right_ascension_of_ascening_node)
+        - math.cos(argument_of_periapsis)
         * math.cos(inclination)
         * math.sin(right_ascension_of_ascening_node),
-        -math.sin(argument_of_perigee) * math.sin(right_ascension_of_ascening_node)
-        + math.cos(argument_of_perigee)
+        -math.sin(argument_of_periapsis) * math.sin(right_ascension_of_ascening_node)
+        + math.cos(argument_of_periapsis)
         * math.cos(inclination)
         * math.cos(right_ascension_of_ascening_node),
-        math.cos(argument_of_perigee) * math.sin(inclination),
+        math.cos(argument_of_periapsis) * math.sin(inclination),
     ]
 
     w = [
