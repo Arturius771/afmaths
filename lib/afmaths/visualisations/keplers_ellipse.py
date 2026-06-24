@@ -5,8 +5,8 @@ from afmaths.visualisations.base import (
     secondary_focus_coordinates_for_elements,
 )
 from afmaths.visualisations.helpers import (
-    OrbitPlot2DSettings,
-    PerifocalOrbitLine,
+    PlotOrbital2DSettings,
+    PlotPerifocalOrbitLine,
     PlotNode,
     add_perifocal_orbit_line,
     add_plot_node,
@@ -31,7 +31,7 @@ from astronomy_types import (
 
 DISTANCE_SCALE_KM = 12_824.9333333
 
-settings = OrbitPlot2DSettings(
+settings = PlotOrbital2DSettings(
     distance_scale=DISTANCE_SCALE_KM,
 )
 
@@ -61,7 +61,7 @@ add_plot_node(
                     title="test",
                 ),
                 centre_point,
-                PerifocalOrbitLine(
+                PlotPerifocalOrbitLine(
                     name="Initial orbit",
                     orbital_elements=plot_elements,
                     colour="grey",

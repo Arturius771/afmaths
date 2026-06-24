@@ -25,7 +25,7 @@ from afmaths.physics.space.type_conversion_helpers import vector3d
 
 
 @dataclass(frozen=True)
-class PerifocalOrbitLine:
+class PlotPerifocalOrbitLine:
     name: str
     orbital_elements: OrbitalElements
     colour: str = "grey"
@@ -45,7 +45,7 @@ class PlotNode:
 
 
 @dataclass(frozen=True)
-class OrbitPlot2DSettings:
+class PlotOrbital2DSettings:
     distance_scale: float
     plot_width: int = 800
     plot_height: int = 800
@@ -105,15 +105,15 @@ def value_to_scale(
     return Distance(Scalar(distance_km / scale))
 
 
-def plot_min(settings: OrbitPlot2DSettings) -> Vector2D:
+def plot_min(settings: PlotOrbital2DSettings) -> Vector2D:
     return Vector2D(x=settings.plot_min_x, y=settings.plot_min_y)
 
 
-def plot_max(settings: OrbitPlot2DSettings) -> Vector2D:
+def plot_max(settings: PlotOrbital2DSettings) -> Vector2D:
     return Vector2D(x=settings.plot_max_x, y=settings.plot_max_y)
 
 
-def plot_centre(settings: OrbitPlot2DSettings) -> Coordinate2D:
+def plot_centre(settings: PlotOrbital2DSettings) -> Coordinate2D:
     min_point = plot_min(settings)
     max_point = plot_max(settings)
 
@@ -282,7 +282,7 @@ def add_plot_node(
 def add_perifocal_orbit_line(
     fig: go.Figure,
     primary_focus_plot_coordinate: Coordinate2D,
-    orbit_line: PerifocalOrbitLine,
+    orbit_line: PlotPerifocalOrbitLine,
     steps: int = 200,
 ) -> go.Figure:
     from afmaths.visualisations.base import (
@@ -329,7 +329,7 @@ def add_perifocal_orbit_line(
     return fig
 
 
-def direction_vector_length(settings: OrbitPlot2DSettings) -> float:
+def direction_vector_length(settings: PlotOrbital2DSettings) -> float:
     p_min = plot_min(settings)
     p_max = plot_max(settings)
 
@@ -342,7 +342,7 @@ def direction_vector_length(settings: OrbitPlot2DSettings) -> float:
 def vector_line(
     start: Coordinate2D,
     direction: Vector3D,
-    settings: OrbitPlot2DSettings,
+    settings: PlotOrbital2DSettings,
 ) -> tuple[list[float], list[float]]:
     length = direction_vector_length(settings)
 

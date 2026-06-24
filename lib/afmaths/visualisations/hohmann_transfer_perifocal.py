@@ -4,7 +4,7 @@ import math
 
 import plotly.graph_objects as go
 
-from afmaths.constants import EARTH_MU_KM_CUBED
+from afmaths.constants import EARTH_MU_KM_CUBED, BurnDirection
 from afmaths.physics.space.astrodynamics import (
     transfer_period,
     hohmann_transfer,
@@ -22,8 +22,8 @@ from afmaths.visualisations.base import (
     transfer_arc_angles,
 )
 from afmaths.visualisations.helpers import (
-    OrbitPlot2DSettings,
-    PerifocalOrbitLine,
+    PlotOrbital2DSettings,
+    PlotPerifocalOrbitLine,
     PlotNode,
     add_perifocal_orbit_line,
     add_plot_centre,
@@ -63,7 +63,7 @@ def transfer_burn_plot_nodes(
     transfer_orbit: OrbitalElements,
     transfer_delta_v: Velocity,
     arrival_delta_v: Velocity,
-    direction: str,
+    direction: BurnDirection,
     transfer_start_eccentric_anomaly: EccentricAnomaly,
     transfer_arrival_eccentric_anomaly: EccentricAnomaly,
     transfer_time: Second,
@@ -105,7 +105,7 @@ def transfer_burn_plot_nodes(
 
 
 def build_hohmann_transfer_2d_perifocal_figure(
-    settings: OrbitPlot2DSettings,
+    settings: PlotOrbital2DSettings,
     initial_orbit: OrbitalElements,
     final_altitude: Distance,
     gravitational_parameter: GravitationalParameter,
@@ -187,20 +187,18 @@ def build_hohmann_transfer_2d_perifocal_figure(
         transfer_arrival_eccentric_anomaly,
     )
 
-    transfer_time = transfer_period(
-        gravitational_parameter, start_radius, final_altitude
-    )
-
-    total_delta_v, transfer_delta_v, arrival_delta_v, direction = hohmann_transfer(
-        initial_altitude_km=Distance(
-            Scalar(
-                scale_distance_to_distance(start_radius, settings.distance_scale)
-                - central_body_radius_km
-            )
-        ),
-        target_altitude_km=final_altitude,
-        initial_body_radius=Distance(Scalar(central_body_radius_km)),
-        gravitational_parameter=gravitational_parameter,
+    total_delta_v, transfer_delta_v, arrival_delta_v, direction, transfer_time = (
+        hohmann_transfer(
+            initial_altitude_km=Distance(
+                Scalar(
+                    scale_distance_to_distance(start_radius, settings.distance_scale)
+                    - central_body_radius_km
+                )
+            ),
+            target_altitude_km=final_altitude,
+            initial_body_radius=Distance(Scalar(central_body_radius_km)),
+            gravitational_parameter=gravitational_parameter,
+        )
     )
 
     burn_nodes = transfer_burn_plot_nodes(
@@ -227,14 +225,14 @@ def build_hohmann_transfer_2d_perifocal_figure(
                         add_perifocal_orbit_line(
                             fig,
                             primary_focus_plot_coordinate,
-                            PerifocalOrbitLine(
+                            PlotPerifocalOrbitLine(
                                 name="Initial orbit",
                                 orbital_elements=initial_orbit,
                                 colour="grey",
                             ),
                         ),
                         primary_focus_plot_coordinate,
-                        PerifocalOrbitLine(
+                        PlotPerifocalOrbitLine(
                             name="Transfer arc",
                             orbital_elements=transfer_orbit,
                             colour="orange",
@@ -244,7 +242,7 @@ def build_hohmann_transfer_2d_perifocal_figure(
                         ),
                     ),
                     primary_focus_plot_coordinate,
-                    PerifocalOrbitLine(
+                    PlotPerifocalOrbitLine(
                         name="Final circular orbit",
                         orbital_elements=final_orbit,
                         colour="grey",
@@ -286,7 +284,7 @@ TARGET_ALTITUDE_KM = Distance(Scalar(60_000.0))
 
 if __name__ == "__main__":
     build_hohmann_transfer_2d_perifocal_figure(
-        settings=OrbitPlot2DSettings(
+        settings=PlotOrbital2DSettings(
             distance_scale=DISTANCE_SCALE_KM,
             plot_width=1000,
             plot_height=1000,

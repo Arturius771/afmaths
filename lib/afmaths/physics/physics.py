@@ -28,13 +28,6 @@ from afmaths.physics.kinematics import (
 )
 
 
-@dataclass(frozen=True)
-class TriangleDescription:
-    start: Coordinate2D
-    peak: Coordinate2D
-    end: Coordinate2D
-
-
 def dynamic_pressure(fluid_mass_density: float, flow_speed: float) -> float:
     """Calculates the dynamic pressure of a fluid"""
     return multiply(HALF(fluid_mass_density))(SQUARE(flow_speed))

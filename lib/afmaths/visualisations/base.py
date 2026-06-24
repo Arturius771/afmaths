@@ -49,7 +49,7 @@ from afmaths.physics.space.orbit_propagation import (
 )
 
 from afmaths.visualisations.helpers import (
-    OrbitPlot2DSettings,
+    PlotOrbital2DSettings,
     elements_scaled_to_plot,
     plot_centre,
     scale_distance_to_distance,
@@ -176,7 +176,7 @@ def local_to_plot_coordinate_for_elements(
 # Computes where the primary focus of an orbit should appear on the plot by mapping the local primary focus to the plot centre.
 # This is mostly a visualisation adapter around orbital geometry.
 def primary_focus_coordinates_for_elements(
-    settings: OrbitPlot2DSettings,
+    settings: PlotOrbital2DSettings,
     elements: OrbitalElements,
 ) -> Coordinate2D:
     return local_to_plot_coordinate_for_elements(

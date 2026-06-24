@@ -6,6 +6,7 @@ from astronomy_types import (
     Anomaly,
     ArgumentOfPeriapsis,
     Eccentricity,
+    Enum,
     GravitationalParameter,
     Distance,
     Inclination,
@@ -72,3 +73,12 @@ TransformationMatrix2D = NewType("TransformationMatrix2D", Vector2D[Vector2D[Sca
 TransformationMatrix3D = NewType("TransformationMatrix3D", Vector3D[Vector3D[Scalar]])
 DeltaV = NewType("DeltaV", Velocity)
 EarthCentredInertialFrame = NewType("EarthCentredInertialFrame", Vector3D[Scalar])
+
+
+class BurnDirection(Enum):
+    PROGRADE = "prograde"
+    RETROGRADE = "retrograde"
+    RADIAL = "radial"
+    ANTIRADIAl = "antiradial"
+    NORMAL = "normal"
+    ANTINORMAL = "antinormal"

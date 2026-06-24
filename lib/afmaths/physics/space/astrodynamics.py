@@ -20,7 +20,12 @@ from astronomy_types import (
     Degrees,
     MeanMotion,
 )
-from afmaths.constants import EARTH_MU_KM_CUBED, EARTH_RADIUS_KM, DeltaV
+from afmaths.constants import (
+    EARTH_MU_KM_CUBED,
+    EARTH_RADIUS_KM,
+    BurnDirection,
+    DeltaV,
+)
 from afmaths.geometry.geometry import (
     eccentricity_factor_plus,
     semi_major_axis_from_vertex_distances,
@@ -178,7 +183,7 @@ def hohmann_transfer(
     target_altitude_km: Distance,
     initial_body_radius: Distance = EARTH_RADIUS_KM,
     gravitational_parameter: GravitationalParameter = EARTH_MU_KM_CUBED,
-) -> tuple[DeltaV, DeltaV, DeltaV, str]:
+) -> tuple[DeltaV, DeltaV, DeltaV, BurnDirection, Second]:
     """Calculates the delta-v required for a Hohmann transfer"""
     # www.braeunig.us/space/problem.htm#4.19
 
@@ -199,14 +204,16 @@ def hohmann_transfer(
 
     total = DeltaV(add(transfer_delta_v)(circularise_delta_v))
 
-    direction = "retrograde" if total < 0 else "prograde"
+    direction = BurnDirection.RETROGRADE if total < 0 else BurnDirection.PROGRADE
 
-    return (
-        total,
-        DeltaV(transfer_delta_v),
-        DeltaV(circularise_delta_v),
-        direction,
+    period = transfer_period(
+        gravitational_parameter,
+        initial_altitude_km,
+        target_altitude_km,
+        initial_body_radius,
     )
+
+    return (total, transfer_delta_v, circularise_delta_v, direction, period)
 
 
 def transfer_period(

@@ -44,8 +44,8 @@ from afmaths.visualisations.base import (
     tangent_vector_for_plot,
 )
 from afmaths.visualisations.helpers import (
-    OrbitPlot2DSettings,
-    PerifocalOrbitLine,
+    PlotOrbital2DSettings,
+    PlotPerifocalOrbitLine,
     add_perifocal_orbit_line,
     add_plot_centre,
     central_body_radius_plot,
@@ -95,7 +95,7 @@ def add_satellite_direction_traces(
 def add_orbiting_body_2d(
     fig: go.Figure,
     primary_focus_plot_coordinate: Coordinate2D,
-    settings: OrbitPlot2DSettings,
+    settings: PlotOrbital2DSettings,
     body_name: str,
     body_radius_km: float,
     elements: OrbitalElements,
@@ -155,7 +155,7 @@ def add_orbiting_body_2d(
     add_perifocal_orbit_line(
         fig,
         primary_focus_plot_coordinate,
-        PerifocalOrbitLine(
+        PlotPerifocalOrbitLine(
             name=f"{body_name} orbit",
             orbital_elements=plot_elements,
             colour=body_colour,
@@ -187,7 +187,7 @@ def real_semi_major_axis_metres(elements: OrbitalElements) -> SemiMajorAxis:
 
 
 def generate_combined_orbital_slider_data(
-    settings: OrbitPlot2DSettings,
+    settings: PlotOrbital2DSettings,
     primary_focus_plot_coordinate: Coordinate2D,
     central_body_mass_kg: float,
     orbiting_body_names: list[str],
@@ -350,7 +350,7 @@ def generate_combined_orbital_slider_data(
 
 
 def build_2d_orbit_visualiser_figure(
-    settings: OrbitPlot2DSettings,
+    settings: PlotOrbital2DSettings,
     central_body_name: str,
     central_body_radius_km: float,
     central_body_mass_kg: float,
@@ -444,7 +444,7 @@ DISTANCE_SCALE_KM = 12_824.9333333
 
 
 def main() -> None:
-    settings = OrbitPlot2DSettings(
+    settings = PlotOrbital2DSettings(
         distance_scale=DISTANCE_SCALE_KM,
     )
 
