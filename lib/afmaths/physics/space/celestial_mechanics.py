@@ -200,19 +200,23 @@ def vis_viva(
     )
 
 
+def gravity_at_radius(radius: Distance, mu: GravitationalParameter) -> Scalar:
+    return gravitational_acceleration(mu, radius)
+
+
 def gravity_at_altitude(
     altitude: Distance,
     initial_body_radius: Distance,
     mu: GravitationalParameter,
 ) -> Scalar:
     # From MSE SFM Exercise 1
-    return gravitational_acceleration(
-        mu,
+    return gravity_at_radius(
         orbit_radius(altitude, initial_body_radius),
+        mu,
     )
 
 
-def velocity_at_altitude(
+def velocity_at_radius(
     orbit_radius: Distance,
     gravitational_parameter: GravitationalParameter = EARTH_MU_KM_CUBED,
 ) -> Velocity:
@@ -225,6 +229,10 @@ def orbit_radius(
     altitude: Distance, initial_body_radius: Distance = EARTH_RADIUS_KM
 ) -> Distance:
     return add(altitude)(initial_body_radius)
+
+
+def orbit_altitude(orbit_radius: Distance, body_radius: Distance) -> Distance:
+    return Distance(subtract(body_radius)(orbit_radius))
 
 
 def orbital_period(a: SemiMajorAxis, g: GravitationalParameter) -> Second:

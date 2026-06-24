@@ -18,8 +18,6 @@ from astronomy_types import (
     HorizontalCoordinates,
     Hour,
     HourAngle,
-    Latitude,
-    Longitude,
     Minute,
     Month,
     Radians,

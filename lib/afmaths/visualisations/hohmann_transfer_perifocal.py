@@ -6,19 +6,16 @@ import plotly.graph_objects as go
 
 from afmaths.constants import EARTH_MU_KM_CUBED, BurnDirection
 from afmaths.physics.space.astrodynamics import (
-    transfer_period,
-    hohmann_transfer,
+    hohmann_transfer_from_radii,
     transfer_eccentricity,
     transfer_semi_major_axis,
 )
 from afmaths.physics.space.celestial_mechanics import (
     orbit_radius,
-    orbital_period,
     periapsis_radius,
 )
 from afmaths.visualisations.base import (
     coordinates_for_elements,
-    eccentric_anomaly_for_transfer_radius,
     transfer_arc_angles,
 )
 from afmaths.visualisations.helpers import (
@@ -117,22 +114,23 @@ def build_hohmann_transfer_2d_perifocal_figure(
     final_altitude: Distance,
     gravitational_parameter: GravitationalParameter,
     central_body_name: str = "Earth",
-    central_body_radius_km: float = 6_371.0,
+    central_body_radius_km: Distance = Distance(Scalar(6_371.0)),
     title_prefix: str = "Hohmann transfer in the perifocal frame",
 ) -> go.Figure:
     primary_focus_plot_coordinate = plot_centre(settings)
-
-    final_radius = orbit_radius(
-        final_altitude,
-        Distance(Scalar(central_body_radius_km)),
-    )
 
     final_orbit = OrbitalElements(
         initial_orbit.inclination,
         initial_orbit.right_ascension_of_ascending_node,
         ArgumentOfPeriapsis(Radians(Scalar(0))),
         SemiMajorAxis(
-            distance_to_scale_distance(final_radius, settings.distance_scale)
+            distance_to_scale_distance(
+                orbit_radius(
+                    final_altitude,
+                    Distance(Scalar(central_body_radius_km)),
+                ),
+                settings.distance_scale,
+            )
         ),
         Eccentricity(Ratio(Scalar(0))),
         TrueAnomaly(Anomaly(Radians(Scalar(0)))),
@@ -208,16 +206,14 @@ def build_hohmann_transfer_2d_perifocal_figure(
         arrival_burn_eccentric_anomaly = transfer_endpoint_a_eccentric_anomaly
 
     total_delta_v, transfer_delta_v, arrival_delta_v, direction, transfer_time = (
-        hohmann_transfer(
-            initial_altitude_km=Distance(
+        hohmann_transfer_from_radii(
+            initial_radius=Distance(
                 Scalar(
                     scale_distance_to_distance(start_radius, settings.distance_scale)
-                    - central_body_radius_km
                 )
             ),
-            target_altitude_km=final_altitude,
-            initial_body_radius=Distance(Scalar(central_body_radius_km)),
-            gravitational_parameter=gravitational_parameter,
+            target_radius=orbit_radius(final_altitude, central_body_radius_km),
+            mu=gravitational_parameter,
         )
     )
 
@@ -339,7 +335,7 @@ if __name__ == "__main__":
                     DISTANCE_SCALE_KM,
                 )
             ),
-            Eccentricity(Ratio(Scalar(0.2))),
+            Eccentricity(Ratio(Scalar(0.0))),
             TrueAnomaly(Anomaly(Radians(Scalar(0)))),
         ),
         final_altitude=TARGET_ALTITUDE_KM,

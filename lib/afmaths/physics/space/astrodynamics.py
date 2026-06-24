@@ -45,7 +45,9 @@ from afmaths.physics.space.type_conversion_helpers import (
 )
 from afmaths.physics.space.celestial_mechanics import (
     angular_momentum,
+    apoapsis_radius,
     nadir_vector,
+    orbit_altitude,
     orbit_radius,
     orbital_elements_from_state_vectors,
     orbital_period,
@@ -53,7 +55,7 @@ from afmaths.physics.space.celestial_mechanics import (
     periapsis_velocity,
     radial_velocity,
     velocity_difference,
-    velocity_at_altitude,
+    velocity_at_radius,
     vis_viva,
     zenith_vector,
 )
@@ -173,10 +175,8 @@ def anti_normal(state: StateVectors) -> Vector3D:
     return vector_negate(normal(state))
 
 
-def burn_direction_at_apsis(
-    initial_altitude: Distance, target_altitude: Distance
-) -> BurnDirection:
-    if initial_altitude > target_altitude:
+def burn_direction_at_apsis(initial: Distance, target: Distance) -> BurnDirection:
+    if initial > target:
         return BurnDirection.RETROGRADE
     return BurnDirection.PROGRADE
 
@@ -188,126 +188,158 @@ def burn_direction_at_apsis(
 
 def increase_semi_major_axis_at_periapsis(
     a: SemiMajorAxis,
-    current_altitude: Distance,
+    current_radius: Distance,
     mu: GravitationalParameter = EARTH_MU_KM_CUBED,
 ) -> DeltaV:
     return velocity_difference(
-        velocity_at_altitude(current_altitude, mu),
-        vis_viva(mu, current_altitude, a),
+        velocity_at_radius(current_radius, mu),
+        vis_viva(mu, current_radius, a),
     )
 
 
 def increase_semi_major_axis_at_apoapsis(
     a: SemiMajorAxis,
-    current_altitude: Distance,
+    current_radius: Distance,
     mu: GravitationalParameter = EARTH_MU_KM_CUBED,
 ) -> DeltaV:
     return velocity_difference(
-        vis_viva(mu, current_altitude, a),
-        velocity_at_altitude(current_altitude, mu),
+        vis_viva(mu, current_radius, a),
+        velocity_at_radius(current_radius, mu),
     )
 
 
 def decrease_semi_major_axis_at_periapsis(
     a: SemiMajorAxis,
-    current_altitude: Distance,
+    current_radius: Distance,
     mu: GravitationalParameter = EARTH_MU_KM_CUBED,
 ) -> DeltaV:
     return velocity_difference(
-        vis_viva(mu, current_altitude, a),
-        velocity_at_altitude(current_altitude, mu),
+        vis_viva(mu, current_radius, a),
+        velocity_at_radius(current_radius, mu),
     )
 
 
 def decrease_semi_major_axis_at_apoapsis(
     a: SemiMajorAxis,
-    current_altitude: Distance,
+    current_radius: Distance,
     mu: GravitationalParameter = EARTH_MU_KM_CUBED,
 ) -> DeltaV:
     return velocity_difference(
-        velocity_at_altitude(current_altitude, mu),
-        vis_viva(mu, current_altitude, a),
+        velocity_at_radius(current_radius, mu),
+        vis_viva(mu, current_radius, a),
     )
 
 
-def hohmann_transfer(
-    initial_altitude_km: Distance,
-    target_altitude_km: Distance,
+def hohmann_transfer_from_orbital_elements(
+    initial_orbit: OrbitalElements,
+    final_orbit: OrbitalElements,
     initial_body_radius: Distance = EARTH_RADIUS_KM,
-    gravitational_parameter: GravitationalParameter = EARTH_MU_KM_CUBED,
+    mu: GravitationalParameter = EARTH_MU_KM_CUBED,
+) -> tuple[DeltaV, DeltaV, DeltaV, BurnDirection, Second]:
+    """Assume a circular obit for initial and final."""
+    return hohmann_transfer(
+        orbit_altitude(
+            periapsis_radius(initial_orbit.semi_major_axis, initial_orbit.eccentricity),
+            initial_body_radius,
+        ),
+        orbit_altitude(
+            apoapsis_radius(final_orbit.semi_major_axis, final_orbit.eccentricity),
+            initial_body_radius,
+        ),
+        initial_body_radius,
+        mu,
+    )
+
+
+def hohmann_transfer_from_radii(
+    initial_radius: Distance,
+    target_radius: Distance,
+    mu: GravitationalParameter = EARTH_MU_KM_CUBED,
 ) -> tuple[DeltaV, DeltaV, DeltaV, BurnDirection, Second]:
     """Calculates the delta-v required for a Hohmann transfer. Assumes a circular initial and final orbit."""
     # www.braeunig.us/space/problem.htm#4.19
 
-    r_a = orbit_radius(initial_altitude_km, initial_body_radius)
-    r_b = orbit_radius(target_altitude_km, initial_body_radius)
+    semi_major_axis_transfer_ellipse = semi_major_axis_from_vertex_distances(
+        initial_radius, target_radius
+    )
 
-    semi_major_axis_transfer_ellipse = semi_major_axis_from_vertex_distances(r_a, r_b)
-
-    direction = burn_direction_at_apsis(initial_altitude_km, target_altitude_km)
+    direction = burn_direction_at_apsis(initial_radius, target_radius)
     transfer_delta_v = (
         increase_semi_major_axis_at_periapsis(
-            semi_major_axis_transfer_ellipse, r_a, gravitational_parameter
+            semi_major_axis_transfer_ellipse, initial_radius, mu
         )
         if direction is BurnDirection.PROGRADE
         else decrease_semi_major_axis_at_apoapsis(
-            semi_major_axis_transfer_ellipse, r_b, gravitational_parameter
+            semi_major_axis_transfer_ellipse, target_radius, mu
         )
     )
 
     circularise = (
         increase_semi_major_axis_at_apoapsis(
-            semi_major_axis_transfer_ellipse, r_b, gravitational_parameter
+            semi_major_axis_transfer_ellipse, target_radius, mu
         )
         if direction is BurnDirection.PROGRADE
         else decrease_semi_major_axis_at_periapsis(
-            semi_major_axis_transfer_ellipse, r_a, gravitational_parameter
+            semi_major_axis_transfer_ellipse, initial_radius, mu
         )
     )
 
     total = DeltaV(add(transfer_delta_v)(circularise))
 
     period = transfer_period(
-        gravitational_parameter,
-        initial_altitude_km,
-        target_altitude_km,
-        initial_body_radius,
+        mu,
+        initial_radius,
+        target_radius,
     )
 
     return (
         total,
         transfer_delta_v,
         circularise,
-        burn_direction_at_apsis(initial_altitude_km, target_altitude_km),
+        burn_direction_at_apsis(initial_radius, target_radius),
         period,
+    )
+
+
+def hohmann_transfer(
+    initial_altitude: Distance,
+    target_altitude: Distance,
+    initial_body_radius: Distance = EARTH_RADIUS_KM,
+    mu: GravitationalParameter = EARTH_MU_KM_CUBED,
+) -> tuple[DeltaV, DeltaV, DeltaV, BurnDirection, Second]:
+    """Calculates the delta-v required for a Hohmann transfer. Assumes a circular initial and final orbit."""
+    # www.braeunig.us/space/problem.htm#4.19
+
+    return hohmann_transfer_from_radii(
+        orbit_radius(initial_altitude, initial_body_radius),
+        orbit_radius(target_altitude, initial_body_radius),
+        mu,
     )
 
 
 def transfer_period(
     mu: GravitationalParameter,
-    initial_altitude_km: Distance,
-    target_altitude_km: Distance,
-    initial_body_radius: Distance = EARTH_RADIUS_KM,
+    initial_radius: Distance,
+    final_radius: Distance,
 ) -> Second:
     """Assuming an elliptical transfer orbit."""
-    r_a = orbit_radius(initial_altitude_km, initial_body_radius)
-    r_b = orbit_radius(target_altitude_km, initial_body_radius)
 
-    semi_major_axis_transfer_ellipse = semi_major_axis_from_vertex_distances(r_a, r_b)
-    return HALF(orbital_period(semi_major_axis_transfer_ellipse, mu))
+    return HALF(
+        orbital_period(transfer_semi_major_axis(initial_radius, final_radius), mu)
+    )
 
 
 def transfer_semi_major_axis(
-    initial_altitude_km: Distance, final_altitude_km: Distance
+    initial_radius: Distance, final_radius: Distance
 ) -> SemiMajorAxis:
-    return divide_by(2)(add(initial_altitude_km)(final_altitude_km))
+    return semi_major_axis_from_vertex_distances(initial_radius, final_radius)
 
 
 def transfer_eccentricity(
-    initial_altitude_km: Distance, final_altitude_km: Distance
+    initial_radius: Distance, final_radius: Distance
 ) -> Eccentricity:
-    return divide_by(add(final_altitude_km)(initial_altitude_km))(
-        subtract(initial_altitude_km)(final_altitude_km)
+    return divide_by(add(final_radius)(initial_radius))(
+        subtract(initial_radius)(final_radius)
     )
 
 
