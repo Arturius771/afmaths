@@ -18,6 +18,7 @@ from afmaths.operation import (
     divide_by,
     interval,
     multiply,
+    negate,
     square_root,
     subtract,
 )
@@ -271,6 +272,35 @@ def area_of_right_triangle(base_length: float, height_length: float) -> Area:
 def area_of_quarter_circle(side_length: float, radius: float) -> Area:
     """Area = s^2 - ((1/4)*pi*r^2)"""
     return subtract((divide_by(4)(1)) * math.pi * SQUARE(radius))(SQUARE(side_length))
+
+
+# endregion
+
+# region Rotation Rules
+
+
+def coordinate_90(coord: Coordinate2D) -> Coordinate2D:
+    return Coordinate2D(negate(coord.y), coord.x)
+
+
+def coordinate_180(coord: Coordinate2D) -> Coordinate2D:
+    return Coordinate2D(negate(coord.x), negate(coord.y))
+
+
+def coordinate_270(coord: Coordinate2D) -> Coordinate2D:
+    return Coordinate2D(coord.y, negate(coord.x))
+
+
+def coordinate_minus_90(coord: Coordinate2D) -> Coordinate2D:
+    return coordinate_270(coord)
+
+
+def coordinate_minus_180(coord: Coordinate2D) -> Coordinate2D:
+    return coordinate_180(coord)
+
+
+def coordinate_minus_270(coord: Coordinate2D) -> Coordinate2D:
+    return coordinate_90(coord)
 
 
 # endregion
