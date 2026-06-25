@@ -515,7 +515,7 @@ if __name__ == "__main__":
         original_orbit=original_orbit,
         # 1 rad -> 5 rad has forward Δν = 4 rad.
         # Since 4 > 3.14, it is treated as "behind" and uses a higher phase orbit.
-        initial_true_anomaly=TrueAnomaly(Anomaly(Radians(Scalar(1.0)))),
-        desired_true_anomaly=TrueAnomaly(Anomaly(Radians(Scalar(5.0)))),
+        initial_true_anomaly=TrueAnomaly(Anomaly(Radians(Scalar(0.5)))),
+        desired_true_anomaly=TrueAnomaly(Anomaly(Radians(Scalar(1.0)))),
         gravitational_parameter=EARTH_MU_KM_CUBED,
     ).show()
