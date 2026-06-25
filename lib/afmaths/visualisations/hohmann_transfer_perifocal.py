@@ -5,7 +5,7 @@ import math
 import plotly.graph_objects as go
 
 from afmaths.constants import EARTH_MU_KM_CUBED, BurnDirection
-from afmaths.physics.space.astrodynamics import (
+from afmaths.physics.space.engineering.astrodynamics import (
     hohmann_transfer_from_radii,
     transfer_eccentricity,
     transfer_semi_major_axis,
@@ -60,7 +60,7 @@ def transfer_burn_plot_node(
     label: str,
     primary_focus_plot_coordinate: Coordinate2D,
     transfer_orbit: OrbitalElements,
-    eccentric_anomaly: EccentricAnomaly,
+    E: EccentricAnomaly,
     delta_v: Velocity,
     direction: BurnDirection,
     time: Second,
@@ -70,7 +70,7 @@ def transfer_burn_plot_node(
         coordinate=coordinates_for_elements(
             primary_focus_plot_coordinate,
             transfer_orbit,
-            eccentric_anomaly,
+            E,
         ),
         text=(
             f"{label}<br>"
@@ -96,14 +96,14 @@ def plotted_radius_from_primary_focus(
 def plotted_radius_for_transfer_endpoint(
     primary_focus_plot_coordinate: Coordinate2D,
     transfer_orbit: OrbitalElements,
-    eccentric_anomaly: EccentricAnomaly,
+    E: EccentricAnomaly,
 ) -> float:
     return plotted_radius_from_primary_focus(
         primary_focus_plot_coordinate,
         coordinates_for_elements(
             primary_focus_plot_coordinate,
             transfer_orbit,
-            eccentric_anomaly,
+            E,
         ),
     )
 
@@ -224,7 +224,7 @@ def build_hohmann_transfer_2d_perifocal_figure(
             label="Transfer burn at initial periapsis",
             primary_focus_plot_coordinate=primary_focus_plot_coordinate,
             transfer_orbit=transfer_orbit,
-            eccentric_anomaly=transfer_burn_eccentric_anomaly,
+            E=transfer_burn_eccentric_anomaly,
             delta_v=transfer_delta_v,
             direction=direction,
             time=Second(Scalar(0)),
@@ -238,7 +238,7 @@ def build_hohmann_transfer_2d_perifocal_figure(
             label="Arrival burn at final circular orbit",
             primary_focus_plot_coordinate=primary_focus_plot_coordinate,
             transfer_orbit=transfer_orbit,
-            eccentric_anomaly=arrival_burn_eccentric_anomaly,
+            E=arrival_burn_eccentric_anomaly,
             delta_v=arrival_delta_v,
             direction=direction,
             time=transfer_time,

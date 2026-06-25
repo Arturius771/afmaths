@@ -2,6 +2,7 @@ from dataclasses import dataclass
 import math
 from afmaths.constants import GRAVITATIONAL_CONSTANT, SPEED_OF_LIGHT_METRES_PER_SECONDS
 from afmaths.operation import (
+    DOUBLE,
     HALF,
     SQUARE,
     divide_by,
@@ -66,7 +67,7 @@ def calculate_schwarzschild_radius(mass: float) -> float:
     :rtype: float
     """
     return divide_by(SQUARE(SPEED_OF_LIGHT_METRES_PER_SECONDS))(
-        multiply(multiply(2)(GRAVITATIONAL_CONSTANT))(mass)
+        multiply(DOUBLE(GRAVITATIONAL_CONSTANT))(mass)
     )
 
 

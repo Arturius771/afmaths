@@ -1,6 +1,8 @@
+from dataclasses import replace
 import math
 from astronomy_types import (
     Distance,
+    EccentricAnomaly,
     Eccentricity,
     EquatorialCoordinates,
     GravitationalParameter,
@@ -8,10 +10,12 @@ from astronomy_types import (
     Position,
     PositionVector,
     Radians,
+    Ratio,
     Scalar,
     Second,
     SemiMajorAxis,
     StateVectors,
+    TrueAnomaly,
     Vector3D,
     Velocity,
     VelocityVector,
@@ -27,10 +31,12 @@ from afmaths.constants import (
     DeltaV,
 )
 from afmaths.geometry.geometry import (
+    eccentricity_factor_minus,
     eccentricity_factor_plus,
     semi_major_axis_from_vertex_distances,
 )
 from afmaths.operation import (
+    DOUBLE,
     HALF,
     add,
     divide_by,
@@ -45,15 +51,20 @@ from afmaths.physics.space.type_conversion_helpers import (
 )
 from afmaths.physics.space.celestial_mechanics import (
     angular_momentum,
+    angular_momentum_magnitude,
     apoapsis_radius,
+    eccentricity_from_apsides,
+    kepler_equation,
     nadir_vector,
     orbit_altitude,
     orbit_radius,
+    orbit_state_vector_prediction_from_orbital_elements,
     orbital_elements_from_state_vectors,
     orbital_period,
     periapsis_radius,
     periapsis_velocity,
     radial_velocity,
+    semi_major_axis_from_period,
     velocity_difference,
     velocity_at_radius,
     vis_viva,
@@ -145,7 +156,7 @@ def angle_above_orbital_plane(
 def angular_velocity_from_sidereal_period(
     sidereal_period: Second = Second(Scalar(86164.09)),
 ) -> Radians:
-    return divide_by(sidereal_period)(multiply(2)(math.pi))
+    return divide_by(sidereal_period)(DOUBLE(math.pi))
 
 
 # region Directions
@@ -184,6 +195,8 @@ def burn_direction_at_apsis(initial: Distance, target: Distance) -> BurnDirectio
 # endregion directions
 
 # region Maneuvers
+
+# TODO: function(s) to change specific orbital elements
 
 
 def increase_semi_major_axis_at_periapsis(
@@ -301,6 +314,17 @@ def hohmann_transfer_from_radii(
     )
 
 
+def inclination_change_at_node(
+    velocity_at_node: Velocity,
+    current_inclination: Inclination,
+    target_inclination: Inclination,
+) -> DeltaV:
+    difference = abs(subtract(target_inclination)(current_inclination))
+    return DeltaV(
+        Velocity(Scalar(multiply(DOUBLE(velocity_at_node))(math.sin(HALF(difference)))))
+    )
+
+
 def hohmann_transfer(
     initial_altitude: Distance,
     target_altitude: Distance,
@@ -315,6 +339,24 @@ def hohmann_transfer(
         orbit_radius(target_altitude, initial_body_radius),
         mu,
     )
+
+
+def parabolic_escape(elements: OrbitalElements, mu: GravitationalParameter) -> DeltaV:
+    velocity_at_periapsis = periapsis_velocity(mu, elements)
+    parabolic_escape_velocity = Velocity(
+        Scalar(
+            square_root(
+                divide_by(
+                    periapsis_radius(elements.semi_major_axis, elements.eccentricity)
+                )(DOUBLE(mu))
+            )
+        )
+    )
+
+    return velocity_difference(velocity_at_periapsis, parabolic_escape_velocity)
+
+
+# region Transfer Orbit
 
 
 def transfer_period(
@@ -338,40 +380,197 @@ def transfer_semi_major_axis(
 def transfer_eccentricity(
     initial_radius: Distance, final_radius: Distance
 ) -> Eccentricity:
-    return divide_by(add(final_radius)(initial_radius))(
-        subtract(initial_radius)(final_radius)
+    return Eccentricity(
+        Ratio(Scalar(abs(eccentricity_from_apsides(initial_radius, final_radius))))
     )
 
 
-def inclination_change_at_node(
-    velocity_at_node: Velocity,
-    current_inclination: Inclination,
-    target_inclination: Inclination,
-) -> DeltaV:
-    difference = abs(subtract(target_inclination)(current_inclination))
-    return DeltaV(
-        Velocity(
-            Scalar(multiply(multiply(2)(velocity_at_node))(math.sin(HALF(difference))))
+# region ## Phase Orbit
+
+
+def phase_eccentric_anomaly(
+    original_eccentricity: Eccentricity, true_anomaly_delta: TrueAnomaly
+) -> EccentricAnomaly:
+    return DOUBLE(
+        math.atan(
+            multiply(
+                square_root(
+                    divide_by(eccentricity_factor_plus(original_eccentricity))(
+                        eccentricity_factor_minus(original_eccentricity)
+                    )
+                )
+            )(math.tan(HALF(true_anomaly_delta)))
         )
     )
 
 
-def parabolic_escape(elements: OrbitalElements, mu: GravitationalParameter) -> DeltaV:
-    velocity_at_periapsis = periapsis_velocity(mu, elements)
-    parabolic_escape_velocity = Velocity(
-        Scalar(
-            square_root(
-                divide_by(
-                    periapsis_radius(elements.semi_major_axis, elements.eccentricity)
-                )(multiply(2)(mu))
+def phase_angle_time(
+    E_phase_orbit: EccentricAnomaly,
+    original_period: Second,
+    original_eccentricity: Eccentricity,
+) -> Second:
+    return multiply(divide_by(DOUBLE(math.pi))(original_period))(
+        kepler_equation(E_phase_orbit, original_eccentricity)
+    )
+
+
+def phase_period(original_period: Second, phase_angle_time: Second) -> Second:
+    return subtract(phase_angle_time)(original_period)
+
+
+def phase_semi_major_axis(
+    original_orbit: OrbitalElements,
+    true_anomaly_delta: TrueAnomaly,
+    mu: GravitationalParameter,
+) -> SemiMajorAxis:
+    return semi_major_axis_from_period(
+        phase_period(
+            orbital_period(original_orbit.semi_major_axis, mu),
+            phase_angle_time(
+                phase_eccentric_anomaly(
+                    original_orbit.eccentricity, true_anomaly_delta
+                ),
+                orbital_period(original_orbit.semi_major_axis, mu),
+                original_orbit.eccentricity,
+            ),
+        ),
+        mu,
+    )
+
+
+def phase_periapsis(
+    phase_semi_major_axis: SemiMajorAxis,
+    original_orbit: OrbitalElements,
+) -> Distance:
+    # 2a=r_{a}+r_{p}
+    two_a = DOUBLE(phase_semi_major_axis)
+
+    if phase_semi_major_axis > original_orbit.semi_major_axis:
+        # Phase orbit starts at periapsis
+        phase_periapsis = periapsis_radius(
+            original_orbit.semi_major_axis,
+            original_orbit.eccentricity,
+        )
+    else:
+        # Phase orbit starts at apoapsis
+        phase_apoapsis = apoapsis_radius(
+            original_orbit.semi_major_axis,
+            original_orbit.eccentricity,
+        )
+        phase_periapsis = subtract(phase_apoapsis)(two_a)
+
+    return phase_periapsis
+
+
+def phase_apoapsis(
+    phase_semi_major_axis: SemiMajorAxis,
+    original_orbit: OrbitalElements,
+) -> Distance:
+    # 2a=r_{a}+r_{p}
+    two_a = DOUBLE(phase_semi_major_axis)
+
+    if phase_semi_major_axis > original_orbit.semi_major_axis:
+        # Phase orbit starts at periapsis
+        phase_periapsis = periapsis_radius(
+            original_orbit.semi_major_axis,
+            original_orbit.eccentricity,
+        )
+        phase_apoapsis = subtract(phase_periapsis)(two_a)
+
+    else:
+        # Phase orbit starts at apoapsis
+        phase_apoapsis = apoapsis_radius(
+            original_orbit.semi_major_axis,
+            original_orbit.eccentricity,
+        )
+
+    return phase_apoapsis
+
+
+def phase_eccentricity(
+    phase_semi_major_axis: SemiMajorAxis,
+    original_orbit: OrbitalElements,
+) -> Eccentricity:
+
+    return transfer_eccentricity(
+        phase_periapsis(phase_semi_major_axis, original_orbit),
+        phase_apoapsis(phase_semi_major_axis, original_orbit),
+    )
+
+
+def phase_angular_momentum(
+    phase_periapsis: Distance, phase_apoapsis: Distance, mu: GravitationalParameter
+) -> Scalar:
+    return multiply(square_root(DOUBLE(mu)))(
+        square_root(
+            divide_by(add(phase_apoapsis)(phase_periapsis))(
+                multiply(phase_apoapsis)(phase_periapsis)
             )
         )
     )
 
-    return velocity_difference(velocity_at_periapsis, parabolic_escape_velocity)
+
+def phase_delta_v(
+    phase_semi_major_axis: Distance,
+    phase_angular_momentum: Scalar,
+    original_orbit: OrbitalElements,
+) -> DeltaV:
+    if phase_semi_major_axis > original_orbit.semi_major_axis:
+        # Phase orbit starts at periapsis
+        poi = periapsis_radius(
+            original_orbit.semi_major_axis,
+            original_orbit.eccentricity,
+        )
+
+    else:
+        # Phase orbit starts at apoapsis
+        poi = apoapsis_radius(
+            original_orbit.semi_major_axis,
+            original_orbit.eccentricity,
+        )
+
+    divide_by_r = divide_by(poi)
+
+    return subtract(
+        divide_by_r(
+            angular_momentum_magnitude(
+                angular_momentum(
+                    orbit_state_vector_prediction_from_orbital_elements(original_orbit)
+                )
+            )
+        )
+    )(divide_by_r(phase_angular_momentum))
 
 
-# TODO: function(s) to change specific orbital elements
+def phase_orbit(
+    original_orbit: OrbitalElements,
+    true_anomaly_delta: TrueAnomaly,
+    mu: GravitationalParameter = EARTH_MU_KM_CUBED,
+) -> tuple[DeltaV, DeltaV, OrbitalElements]:
+
+    p_a = phase_semi_major_axis(original_orbit, true_anomaly_delta, mu)
+
+    # This is the delta v to get from one orbit to the other, so half of the total required.
+    poi_delta_v = phase_delta_v(
+        p_a,
+        phase_angular_momentum(
+            phase_periapsis(p_a, original_orbit),
+            phase_apoapsis(p_a, original_orbit),
+            mu,
+        ),
+        original_orbit,
+    )
+
+    return (
+        poi_delta_v,  # DeltaV to move orbit
+        DOUBLE(poi_delta_v),  # Total DeltaV
+        replace(
+            original_orbit,
+            semi_major_axis=p_a,
+            eccentricity=phase_eccentricity(p_a, original_orbit),
+        ),
+    )
+
 
 # endregion
 

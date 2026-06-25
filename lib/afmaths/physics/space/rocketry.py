@@ -20,7 +20,7 @@ from astronomy_types import (
     Velocity,
 )
 
-from afmaths.physics.space.astrodynamics import DeltaV, hohmann_transfer
+from afmaths.physics.space.engineering.astrodynamics import DeltaV, hohmann_transfer
 
 
 def ideal_rocket_equation(

@@ -22,15 +22,15 @@ from afmaths.tensors import (
 
 def translate_ellipse_coordinate(
     central_point: Coordinate2D,
-    semi_major_axis: SemiMajorAxis,
-    semi_minor_axis: SemiMinorAxis,
-    eccentric_anomaly: EccentricAnomaly,
+    a: SemiMajorAxis,
+    b: SemiMinorAxis,
+    E: EccentricAnomaly,
 ) -> Coordinate2D:
 
     relative = ellipse_perimeter_coordinate_from_eccentric_anomaly(
-        semi_major_axis,
-        semi_minor_axis,
-        eccentric_anomaly,
+        a,
+        b,
+        E,
     )
 
     return Coordinate2D(
@@ -40,13 +40,13 @@ def translate_ellipse_coordinate(
 
 
 def ellipse_perimeter_coordinate_from_eccentric_anomaly(
-    semi_major_axis: SemiMajorAxis,
-    semi_minor_axis: SemiMinorAxis,
-    eccentric_anomaly: EccentricAnomaly,
+    a: SemiMajorAxis,
+    b: SemiMinorAxis,
+    E: EccentricAnomaly,
 ) -> Coordinate2D:
     return Coordinate2D(
-        x=multiply(semi_major_axis)(math.cos(eccentric_anomaly)),
-        y=multiply(semi_minor_axis)(math.sin(eccentric_anomaly)),
+        x=multiply(a)(math.cos(E)),
+        y=multiply(b)(math.sin(E)),
     )
 
 

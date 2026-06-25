@@ -181,7 +181,9 @@ def semi_major_axis_from_nearest_vertex_distance(
     float: The semi-major axis of the ellipse.
     """
     return SemiMajorAxis(
-        Distance(Scalar(nearest_vertex_distance / (eccentricity_factor_minus(e))))
+        Distance(
+            Scalar(divide_by(eccentricity_factor_minus(e))(nearest_vertex_distance))
+        )
     )
 
 

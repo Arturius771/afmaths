@@ -28,12 +28,12 @@ from afmaths.physics.space.engineering.astrodynamics import (
     retrograde,
 )
 from afmaths.physics.space.celestial_mechanics import (
+    eccentric_anomaly_at_time,
     gravitational_parameter,
     orbital_period,
     true_anomaly_from_eccentric_anomaly,
     vis_viva,
 )
-from afmaths.physics.space.orbit_propagation import eccentric_anomaly_at_time
 from afmaths.physics.space.engineering.thermal_subsystem import EXAMPLE_ELEMENTS
 from afmaths.visualisations.base import (
     orbiting_body_coordinates,

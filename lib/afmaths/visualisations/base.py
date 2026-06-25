@@ -30,6 +30,9 @@ from afmaths.geometry.geometry import (
 from afmaths.geometry.transformations import translate_ellipse_coordinate
 from afmaths.physics.space.celestial_mechanics import (
     EARTH_MU_KM_CUBED,
+    eccentric_anomaly_at_time,
+    generate_all_orbit_positions,
+    orbit_state_vector_prediction_from_orbital_elements,
     orbital_elements_from_state_vectors,
     orbital_period,
 )
@@ -41,11 +44,6 @@ from afmaths.physics.space.type_conversion_helpers import (
 from afmaths.physics.space.horizons_api import (
     HorizonsCommandTarget,
     get_object_state_vectors_from_horizon,
-)
-from afmaths.physics.space.orbit_propagation import (
-    eccentric_anomaly_at_time,
-    generate_all_orbit_positions,
-    orbit_state_vector_prediction_from_orbital_elements,
 )
 
 from afmaths.visualisations.helpers import (
@@ -220,13 +218,13 @@ def ellipse_centre_for_elements(
 def coordinates_for_elements(
     primary_focus_plot_coordinate: Coordinate2D,
     elements: OrbitalElements,
-    eccentric_anomaly: EccentricAnomaly,
+    E: EccentricAnomaly,
 ) -> Coordinate2D:
     local_coordinate = translate_ellipse_coordinate(
         Coordinate2D(Scalar(0), Scalar(0)),
         elements.semi_major_axis,
         semi_minor_axis(elements.semi_major_axis, elements.eccentricity),
-        eccentric_anomaly,
+        E,
     )
 
     return local_to_plot_coordinate_for_elements(
@@ -242,32 +240,32 @@ def coordinates_for_elements(
 def orbiting_body_coordinates(
     primary_focus_plot_coordinate: Coordinate2D,
     elements: OrbitalElements,
-    eccentric_anomaly: EccentricAnomaly,
+    E: EccentricAnomaly,
 ) -> Coordinate2D:
     return coordinates_for_elements(
         primary_focus_plot_coordinate,
         elements,
-        eccentric_anomaly,
+        E,
     )
 
 
 def tangent_vector_for_plot(
     primary_focus_plot_coordinate: Coordinate2D,
     plot_elements: OrbitalElements,
-    eccentric_anomaly: EccentricAnomaly,
+    E: EccentricAnomaly,
 ) -> VelocityVector:
     delta = 0.001
 
     current = orbiting_body_coordinates(
         primary_focus_plot_coordinate,
         plot_elements,
-        eccentric_anomaly,
+        E,
     )
 
     next_point = orbiting_body_coordinates(
         primary_focus_plot_coordinate,
         plot_elements,
-        EccentricAnomaly(Anomaly(Radians(Scalar(float(eccentric_anomaly) + delta)))),
+        EccentricAnomaly(Anomaly(Radians(Scalar(float(E) + delta)))),
     )
 
     return VelocityVector(

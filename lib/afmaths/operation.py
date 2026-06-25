@@ -58,6 +58,7 @@ def half():
 SQUARE = square()
 CUBE = exponentiate(3)
 HALF = half()
+DOUBLE = multiply(2)
 
 
 def factorial(number: int):
