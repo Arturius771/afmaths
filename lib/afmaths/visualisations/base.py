@@ -433,7 +433,7 @@ def add_orbiting_body_to_traces(
 
     orbital_elements = orbital_elements_from_state_vectors(
         horizon_state_vectors[0],
-        gravitational_parameter=settings.gravitational_parameter,
+        mu=settings.gravitational_parameter,
     )
 
     model_current_state = orbit_state_vector_prediction_from_orbital_elements(

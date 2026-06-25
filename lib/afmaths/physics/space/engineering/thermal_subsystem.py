@@ -6,10 +6,9 @@ from astronomy_types import (
 )
 
 from afmaths.constants import EXAMPLE_ELEMENTS
-from afmaths.physics.space.astrodynamics import angle_above_orbital_plane
+from afmaths.physics.space.engineering.astrodynamics import angle_above_orbital_plane
 
 
-# region Thermal SUbsystem
 def beta_angle(sun: EquatorialCoordinates, orbit: OrbitalElements) -> Radians:
     return angle_above_orbital_plane(sun, orbit)
 

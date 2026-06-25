@@ -120,10 +120,10 @@ def semi_latus_rectum(a: SemiMajorAxis, e: Eccentricity) -> SemiLatusRectum:
 
 
 def semi_minor_axis_from_semi_latus_rectum(
-    semi_latus_rectum: SemiLatusRectum,
-    semi_major_axis: SemiMajorAxis,
+    l: SemiLatusRectum,
+    a: SemiMajorAxis,
 ) -> SemiMinorAxis:
-    return SemiMinorAxis(geometric_mean_distance(semi_latus_rectum, semi_major_axis))
+    return SemiMinorAxis(geometric_mean_distance(l, a))
 
 
 def semi_minor_axis_from_vertex_distances(

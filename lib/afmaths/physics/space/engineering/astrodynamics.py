@@ -386,8 +386,8 @@ def min_latitude(i: Inclination) -> Latitude:
     return Degrees(Scalar(negate(math.degrees(i))))
 
 
-def westward_drift(mean_motion: MeanMotion) -> Degrees:
-    return Degrees(Scalar(multiply(360)(divide_by(mean_motion)(1))))
+def westward_drift(n: MeanMotion) -> Degrees:
+    return Degrees(Scalar(multiply(360)(divide_by(n)(1))))
 
 
 def westware_drift_from_angular_velocity_and_period(

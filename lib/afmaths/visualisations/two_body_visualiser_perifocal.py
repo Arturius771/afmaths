@@ -6,15 +6,12 @@ from astronomy_types import (
     Coordinate3D,
     Distance,
     EccentricAnomaly,
-    GravitationalParameter,
     OrbitalElements,
     Radians,
     Scalar,
     Second,
     SemiMajorAxis,
     StateVectors,
-    Velocity,
-    VelocityVector,
 )
 
 import plotly.graph_objects as go
@@ -22,7 +19,7 @@ import plotly.graph_objects as go
 from afmaths.constants import OTHER_EXAMPLE_ELEMENTS, Mass
 from afmaths.geometry.geometry import calculate_distance
 from afmaths.physics.kinematics import position_vector_from_coordinates
-from afmaths.physics.space.astrodynamics import (
+from afmaths.physics.space.engineering.astrodynamics import (
     anti_normal,
     anti_radial,
     normal,
@@ -37,7 +34,7 @@ from afmaths.physics.space.celestial_mechanics import (
     vis_viva,
 )
 from afmaths.physics.space.orbit_propagation import eccentric_anomaly_at_time
-from afmaths.physics.space.space_engineering import EXAMPLE_ELEMENTS
+from afmaths.physics.space.engineering.thermal_subsystem import EXAMPLE_ELEMENTS
 from afmaths.visualisations.base import (
     orbiting_body_coordinates,
     secondary_focus_coordinates_for_elements,
@@ -258,9 +255,9 @@ def generate_combined_orbital_slider_data(
             )
 
             velocity_m_s = vis_viva(
-                gravitational_parameter=mu,
-                orbit_radius=Distance(Scalar(distance_km * 1000)),
-                semi_major_axis=SemiMajorAxis(
+                mu=mu,
+                radius=Distance(Scalar(distance_km * 1000)),
+                a=SemiMajorAxis(
                     Distance(
                         Scalar(
                             scale_distance_to_distance(

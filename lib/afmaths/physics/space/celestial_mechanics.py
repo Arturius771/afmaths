@@ -171,68 +171,62 @@ def zenith_vector(position: PositionVector) -> Vector3D:
 
 
 def orbit_equation(
-    semi_major_axis: SemiMajorAxis,
-    eccentricity: Eccentricity,
-    true_anomaly: TrueAnomaly,
+    a: SemiMajorAxis,
+    e: Eccentricity,
+    theta: TrueAnomaly,
 ) -> Distance:
     # Trajectory equation: r = p / (1 + e * cos(theta))
     # Kepler's first law: r = a * (1 - e^2) / (1 + e * cos(theta))
     """Calculates the instantaneos radius of an orbit at a given true anomaly"""
-    return divide_by(
-        eccentricity_factor_plus(multiply(eccentricity)(math.cos(true_anomaly)))
-    )(semi_latus_rectum(semi_major_axis, eccentricity))
+    return divide_by(eccentricity_factor_plus(multiply(e)(math.cos(theta))))(
+        semi_latus_rectum(a, e)
+    )
 
 
 def vis_viva(
-    gravitational_parameter: GravitationalParameter,
-    orbit_radius: Distance,
-    semi_major_axis: SemiMajorAxis,
+    mu: GravitationalParameter,
+    radius: Distance,
+    a: SemiMajorAxis,
 ) -> Velocity:
     """Calculates the velocity of an object in an elliptical orbit using the vis-viva equation."""
     return Velocity(
         Scalar(
-            square_root(
-                multiply(gravitational_parameter)(
-                    subtract(divide_by(semi_major_axis)(1))(divide_by(orbit_radius)(2))
-                )
-            )
+            square_root(multiply(mu)(subtract(divide_by(a)(1))(divide_by(radius)(2))))
         )
     )
 
 
-def gravity_at_radius(radius: Distance, mu: GravitationalParameter) -> Scalar:
-    return gravitational_acceleration(mu, radius)
+def gravity_at_radius(r: Distance, mu: GravitationalParameter) -> Scalar:
+    return gravitational_acceleration(mu, r)
 
 
 def gravity_at_altitude(
-    altitude: Distance,
+    alt: Distance,
     initial_body_radius: Distance,
     mu: GravitationalParameter,
 ) -> Scalar:
     # From MSE SFM Exercise 1
     return gravity_at_radius(
-        orbit_radius(altitude, initial_body_radius),
+        orbit_radius(alt, initial_body_radius),
         mu,
     )
 
 
 def velocity_at_radius(
-    orbit_radius: Distance,
-    gravitational_parameter: GravitationalParameter = EARTH_MU_KM_CUBED,
+    radius: Distance,
+    mu: GravitationalParameter = EARTH_MU_KM_CUBED,
 ) -> Velocity:
-    return Velocity(
-        Scalar(square_root(divide_by(orbit_radius)(gravitational_parameter)))
-    )
+    return Velocity(Scalar(square_root(divide_by(radius)(mu))))
 
 
 def orbit_radius(
-    altitude: Distance, initial_body_radius: Distance = EARTH_RADIUS_KM
+    alt: Distance, initial_body_radius: Distance = EARTH_RADIUS_KM
 ) -> Distance:
-    return add(altitude)(initial_body_radius)
+    return add(alt)(initial_body_radius)
 
 
-def orbit_altitude(orbit_radius: Distance, body_radius: Distance) -> Distance:
-    return Distance(subtract(body_radius)(orbit_radius))
+def orbit_altitude(radius: Distance, body_radius: Distance) -> Distance:
+    return Distance(subtract(body_radius)(radius))
 
 
 def orbital_period(a: SemiMajorAxis, g: GravitationalParameter) -> Second:
@@ -282,16 +276,16 @@ def apoapsis_velocity(
 
 
 def argument_of_latitude(
-    right_ascension_of_ascending_node: RightAscension,
-    inclination: Inclination,
+    raan: RightAscension,
+    i: Inclination,
     position_vector: PositionVector,
 ) -> Latitude:
     # u = np.arctan2(r[2] / np.sin(i), r[0] * np.cos(Omega) + r[1] * np.sin(Omega))
     # if u < 0:
     #     u += 2 * np.pi
-    y = divide_by(math.sin(inclination))(position_vector.z)
-    x = add(multiply(position_vector.x)(math.cos(right_ascension_of_ascending_node)))(
-        multiply(position_vector.y)(math.sin(right_ascension_of_ascending_node))
+    y = divide_by(math.sin(i))(position_vector.z)
+    x = add(multiply(position_vector.x)(math.cos(raan)))(
+        multiply(position_vector.y)(math.sin(raan))
     )
 
     return Radians(Scalar(math.atan2(y, x) % (2 * math.pi)))
@@ -299,18 +293,14 @@ def argument_of_latitude(
 
 def semi_latus_rectum_from_angular_momentum(
     angular_momentum_magnitude: Scalar,
-    gravitational_parameter: GravitationalParameter,
+    mu: GravitationalParameter,
 ) -> SemiLatusRectum:
-    return divide_by(gravitational_parameter)(SQUARE(angular_momentum_magnitude))
+    return divide_by(mu)(SQUARE(angular_momentum_magnitude))
 
 
-def mean_angular_rate(
-    semi_major_axis: SemiMajorAxis, gravitational_parameter: GravitationalParameter
-) -> Rate:
+def mean_angular_rate(a: SemiMajorAxis, mu: GravitationalParameter) -> Rate:
     # From MSE SFM Exercise 1
-    return Rate(
-        Scalar(square_root(divide_by(CUBE(semi_major_axis))(gravitational_parameter)))
-    )
+    return Rate(Scalar(square_root(divide_by(CUBE(a))(mu))))
 
 
 def angular_momentum(state_vectors: StateVectors) -> Vector3D[Scalar]:
@@ -355,12 +345,12 @@ def radial_velocity(state: StateVectors) -> Velocity:
 
 
 def mean_motion(
-    semi_major_axis: SemiMajorAxis,
-    gravitational_parameter: GravitationalParameter = EARTH_MU_KM_CUBED,
+    a: SemiMajorAxis,
+    mu: GravitationalParameter = EARTH_MU_KM_CUBED,
 ) -> MeanMotion:
     """Calculates the mean motion of an orbit from the semi major axis in radians per second"""
     # n = np.sqrt(mu / np.power(a, 3))
-    return MeanMotion((mean_angular_rate(semi_major_axis, gravitational_parameter)))
+    return MeanMotion((mean_angular_rate(a, mu)))
 
 
 # endregion
@@ -370,7 +360,7 @@ def mean_motion(
 
 def orbital_elements_from_state_vectors(
     state_vectors: StateVectors,
-    gravitational_parameter: GravitationalParameter = EARTH_MU_KM_CUBED,
+    mu: GravitationalParameter = EARTH_MU_KM_CUBED,
 ) -> OrbitalElements:
     """Calculates the orbital elements of an orbit from the state vectors (position and velocity)"""
     # From TUB MSE SFM Exercise 2 solution
@@ -381,17 +371,15 @@ def orbital_elements_from_state_vectors(
     raan = right_ascension_of_ascending_node_from_angular_momentum_vector(
         angular_momentum_vector
     )
-    semi_major_axis = semi_major_axis_from_state_vectors(
-        state_vectors, gravitational_parameter
-    )
+    semi_major_axis = semi_major_axis_from_state_vectors(state_vectors, mu)
     eccentricity = eccentricity_from_ellipse_equation(
-        angular_momentum_vector, semi_major_axis, gravitational_parameter
+        angular_momentum_vector, semi_major_axis, mu
     )
     true_anomaly = true_anomaly_from_eccentric_anomaly(
         eccentric_anomaly(
             state_vectors,
             semi_major_axis,
-            mean_motion(semi_major_axis, gravitational_parameter),
+            mean_motion(semi_major_axis, mu),
         ),
         eccentricity,
     )
@@ -425,19 +413,20 @@ def argument_of_periapsis(
 
 def eccentricity_from_ellipse_equation(
     angular_momentum_vector: Vector3D[Scalar],
-    semi_major_axis: SemiMajorAxis,
-    gravitational_parameter: GravitationalParameter = EARTH_MU_KM_CUBED,
+    a: SemiMajorAxis,
+    mu: GravitationalParameter = EARTH_MU_KM_CUBED,
 ) -> Eccentricity:
-    h = angular_momentum_magnitude(angular_momentum_vector)
 
-    p = semi_latus_rectum_from_angular_momentum(
-        h,
-        gravitational_parameter,
+    return eccentricity(
+        a,
+        semi_minor_axis_from_semi_latus_rectum(
+            semi_latus_rectum_from_angular_momentum(
+                angular_momentum_magnitude(angular_momentum_vector),
+                mu,
+            ),
+            a,
+        ),
     )
-
-    b = semi_minor_axis_from_semi_latus_rectum(p, semi_major_axis)
-
-    return eccentricity(semi_major_axis, b)
 
 
 # endregion
@@ -493,7 +482,7 @@ def right_ascension_of_ascending_node_from_angular_momentum_vector(
 
 def semi_major_axis_from_state_vectors(
     state_vectors: StateVectors,
-    gravitational_parameter: GravitationalParameter = EARTH_MU_KM_CUBED,
+    mu: GravitationalParameter = EARTH_MU_KM_CUBED,
 ) -> SemiMajorAxis:
     """Calculates the semi major axis of an orbit from the position and velocity vectors"""
     # r_norm = np.linalg.norm(r)
@@ -505,7 +494,7 @@ def semi_major_axis_from_state_vectors(
     r = vector_magnitude(position_vector_to_vector3d(state_vectors.position))
     v = vector_magnitude(velocity_vector_to_vector3d(state_vectors.velocity))
     # This is a rearranged vis-viva equation
-    a = subtract(divide_by(gravitational_parameter)(SQUARE(v)))(divide_by(r)(2))
+    a = subtract(divide_by(mu)(SQUARE(v)))(divide_by(r)(2))
     return SemiMajorAxis(exponentiate(-1)(a))
 
 
@@ -515,16 +504,16 @@ def semi_major_axis_from_state_vectors(
 
 
 def true_anomaly_from_eccentric_anomaly(
-    E_rad: EccentricAnomaly, eccentricity: Eccentricity
+    E_rad: EccentricAnomaly, e: Eccentricity
 ) -> TrueAnomaly:
     # theta = np.arctan2(np.sqrt(1 - np.square(e)) * np.sin(E), np.cos(E) - e)
     sin_E = math.sin(E_rad)
     cos_E = math.cos(E_rad)
 
-    sqrt_term = square_root(eccentricity_factor_minus(SQUARE(eccentricity)))
+    sqrt_term = square_root(eccentricity_factor_minus(SQUARE(e)))
 
     y = multiply(sqrt_term)(sin_E)  # √(1 - e²) * sin(E)
-    x = subtract(eccentricity)(cos_E)
+    x = subtract(e)(cos_E)
 
     theta = math.atan2(y, x) % (2 * math.pi)
 
@@ -553,7 +542,7 @@ def true_anomaly(eccentricity: Eccentricity, mean_anomaly: MeanAnomaly) -> TrueA
 
 
 def newtons_method(
-    E_i_guess: EccentricAnomaly, eccentricity: Eccentricity, mean_anomaly: MeanAnomaly
+    E_i_guess: EccentricAnomaly, e: Eccentricity, M: MeanAnomaly
 ) -> EccentricAnomaly:
     """Performs one iteration of Newton's method to solve Kepler's equation for the eccentric anomaly.
 
@@ -564,16 +553,16 @@ def newtons_method(
     return make_eccentric_anomaly(
         newtons_raphson_method(
             E_i_guess,
-            subtract(mean_anomaly)(kepler_equation(E_i_guess, eccentricity)),
-            subtract(multiply(eccentricity)(math.cos(E_i_guess)))(1),
+            subtract(M)(kepler_equation(E_i_guess, e)),
+            subtract(multiply(e)(math.cos(E_i_guess)))(1),
         )
     )
 
 
 def eccentric_anomaly(
     state: StateVectors,
-    semi_major_axis: SemiMajorAxis,
-    mean_motion: MeanMotion,
+    a: SemiMajorAxis,
+    n: MeanMotion,
 ) -> EccentricAnomaly:
     # E = np.arctan2(np.dot(r, v) / (np.square(a) * n), 1 - r_norm / a)
     pos_3d = position_vector_to_vector3d(state.position)
@@ -583,9 +572,7 @@ def eccentric_anomaly(
         pos_3d,
         velocity_vector_to_vector3d(state.velocity),
     )
-    x = multiply(SQUARE(semi_major_axis))(
-        multiply(mean_motion)((subtract(divide_by(semi_major_axis)(radius))(1)))
-    )
+    x = multiply(SQUARE(a))(multiply(n)((subtract(divide_by(a)(radius))(1))))
 
     return make_eccentric_anomaly(math.atan2(y, x) % (2 * math.pi))
 
@@ -605,21 +592,21 @@ def eccentric_anomaly_from_true_anomaly(
 
 def eccentric_anomaly_solved(
     iteration_func,
-    eccentricity: Eccentricity,
-    mean_anomaly: MeanAnomaly,
+    e: Eccentricity,
+    M: MeanAnomaly,
     tolerance=1e-6,
     max_iterations=100,
 ) -> tuple[EccentricAnomaly, list]:
     history = []  # TODO: make this more structured
 
-    E_i = EccentricAnomaly(mean_anomaly)
+    E_i = EccentricAnomaly(M)
     delta_E = float("inf")
 
     iteration = 0
     history.append((iteration, E_i, math.degrees(E_i), None))
 
     while iteration < max_iterations and abs(delta_E) > tolerance:
-        E_next = iteration_func(E_i, eccentricity, mean_anomaly)
+        E_next = iteration_func(E_i, e, M)
         delta_E = E_next - E_i
         iteration += 1
 

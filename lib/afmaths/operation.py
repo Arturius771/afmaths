@@ -3,40 +3,48 @@ from typing import Callable
 from astronomy_types import Ratio
 
 
-def add(num1: float):
+def add(num1: float) -> Callable:
     return lambda num2: num1 + num2
 
 
-def subtract(value: float):
+def subtract(value: float) -> Callable:
     return lambda from_value: from_value - value
 
 
-def multiply(num1: float):
+def multiply(num1: float) -> Callable:
     return lambda num2: num1 * num2
 
 
-def divide_by(denominator: float):
+def multiply_by_repeated_addition(num1: float) -> Callable:
+    return lambda num2: summation(lambda _: num1, 1, num2)
+
+
+def divide_by(denominator: float) -> Callable:
     return lambda numerator: numerator / denominator
 
 
-def exponentiate(exponent: float):
+def exponentiate(exponent: float) -> Callable:
     return lambda num: num**exponent
 
 
-def square_root(num: float):
+def exponentiate_by_repeated_multiplication(num1: float) -> Callable:
+    return lambda num2: product(lambda _: num1, 1, num2)
+
+
+def square_root(num: float) -> float:
     return math.sqrt(num)  # TODO: use herons_method()
 
 
-def square():
+def square() -> Callable:
     """Squares a number"""
     return exponentiate(2)
 
 
-def negate(value: float):
+def negate(value: float) -> float:
     return -value
 
 
-def absolute(value: float):
+def absolute(value: float) -> float:
     return abs(value)
 
 
@@ -52,7 +60,7 @@ CUBE = exponentiate(3)
 HALF = half()
 
 
-def factorial(number: int) -> int:
+def factorial(number: int):
     """
     Calculates the factorial of a number.
     """
@@ -60,7 +68,7 @@ def factorial(number: int) -> int:
     result = 1
 
     for i in range(number, 0, -1):
-        result: int = multiply(result)(i)
+        result = multiply(result)(i)
         working_string = f"{working_string} {i} x"
 
     working_string = f"{number}! = {working_string[:-1]} = {result}"
@@ -107,7 +115,7 @@ def reduce(
     return reduction
 
 
-def ratio(num1: float):
+def ratio(num1: float) -> Callable:
     """Returns a function that calculates the ratio of num1 to num2."""
     return lambda num2: Ratio(divide_by(num2)(num1))
 
@@ -120,8 +128,8 @@ def summation(
     """Function that takes a rule, and then iteratively adds according to that rule."""
     total = 0.0
 
-    for val in range(start_index, stop_index + 1):
-        total += sum_rule(val)
+    for val in range(round(start_index), round(stop_index + 1)):
+        total = add(sum_rule(val))(total)
 
     return total
 
@@ -133,8 +141,8 @@ def product(
 ) -> float:
     total = 1.0
 
-    for val in range(start_index, stop_index + 1):
-        total *= product_function(val)
+    for val in range(round(start_index), round(stop_index + 1)):
+        total = multiply_by_repeated_addition(product_function(val))(total)
 
     return total
 
@@ -150,3 +158,5 @@ def newtons_raphson_method(
 
 if __name__ == "__main__":
     print(reduce(lambda a, b: subtract(b)(a))([1, 2, 3, 5, 6]))
+    print(multiply_by_repeated_addition(2.5)(3))
+    print(exponentiate_by_repeated_multiplication(5)(2))
