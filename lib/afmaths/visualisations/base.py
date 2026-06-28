@@ -10,14 +10,12 @@ import plotly.graph_objects as go
 from astronomy_types import (
     Anomaly,
     Coordinate2D,
-    Distance,
     EccentricAnomaly,
     GravitationalParameter,
     OrbitalElements,
     Radians,
     Scalar,
     Second,
-    StateVectors,
     Velocity,
     VelocityVector,
 )
@@ -30,16 +28,13 @@ from afmaths.geometry.geometry import (
 from afmaths.geometry.transformations import translate_ellipse_coordinate
 from afmaths.physics.space.celestial_mechanics import (
     EARTH_MU_KM_CUBED,
-    eccentric_anomaly_at_time,
     generate_all_orbit_positions,
-    orbit_state_vector_prediction_from_orbital_elements,
+    orbit_state_vector_prediction,
     orbital_elements_from_state_vectors,
-    orbital_period,
 )
 from afmaths.physics.space.type_conversion_helpers import (
     python_datetime_to_fulldate,
     python_timedelta_to_seconds,
-    vector3d,
 )
 from afmaths.physics.space.horizons_api import (
     HorizonsCommandTarget,
@@ -48,9 +43,7 @@ from afmaths.physics.space.horizons_api import (
 
 from afmaths.visualisations.helpers import (
     PlotOrbital2DSettings,
-    elements_scaled_to_plot,
     plot_centre,
-    scale_distance_to_distance,
     scale_position,
 )
 
@@ -120,30 +113,6 @@ def translate_coordinate(
     )
 
 
-# Subject: conic geometry / orbital-elements geometry.
-# Uses semi-major axis and eccentricity from OrbitalElements to compute the ellipse foci, then returns the primary focus in local perifocal ellipse coordinates.
-# This is celestial/orbital geometry through the back door; it wraps calculate_foci and probably belongs near orbital-element geometry helpers.
-def local_primary_focus_for_elements(elements: OrbitalElements) -> Coordinate2D:
-    primary_focus, _ = calculate_foci(
-        elements.semi_major_axis,
-        elements.eccentricity,
-    )
-
-    return primary_focus
-
-
-# Subject: conic geometry / orbital-elements geometry.
-# Uses semi-major axis and eccentricity from OrbitalElements to compute the ellipse foci, then returns the secondary focus in local perifocal ellipse coordinates.
-# This is orbital geometry, not visualisation; it wraps calculate_foci.
-def local_secondary_focus_for_elements(elements: OrbitalElements) -> Coordinate2D:
-    _, secondary_focus = calculate_foci(
-        elements.semi_major_axis,
-        elements.eccentricity,
-    )
-
-    return secondary_focus
-
-
 # Subject: coordinate transform between orbital/perifocal coordinates and plot coordinates.
 # Converts a local ellipse coordinate into the plot frame by: shifting it relative to the primary focus, rotating by argument of periapsis, then translating to the plotted primary focus.
 # This mixes orbital frame semantics with generic 2D transforms; likely belongs in an orbit-coordinate-transform helper rather than visualisation helpers.
@@ -152,11 +121,14 @@ def local_to_plot_coordinate_for_elements(
     elements: OrbitalElements,
     local_coordinate: Coordinate2D,
 ) -> Coordinate2D:
-    local_primary_focus = local_primary_focus_for_elements(elements)
+    primary_focus, _ = calculate_foci(
+        elements.semi_major_axis,
+        elements.eccentricity,
+    )
 
     local_relative_to_primary_focus = Coordinate2D(
-        local_coordinate.x - local_primary_focus.x,
-        local_coordinate.y - local_primary_focus.y,
+        local_coordinate.x - primary_focus.x,
+        local_coordinate.y - primary_focus.y,
     )
 
     rotated = rotate_relative_coordinate(
@@ -180,7 +152,10 @@ def primary_focus_coordinates_for_elements(
     return local_to_plot_coordinate_for_elements(
         plot_centre(settings),
         elements,
-        local_primary_focus_for_elements(elements),
+        calculate_foci(
+            elements.semi_major_axis,
+            elements.eccentricity,
+        )[0],
     )
 
 
@@ -194,21 +169,10 @@ def secondary_focus_coordinates_for_elements(
     return local_to_plot_coordinate_for_elements(
         primary_focus_plot_coordinate,
         elements,
-        local_secondary_focus_for_elements(elements),
-    )
-
-
-# Subject: orbital geometry projected into plot coordinates.
-# Computes the plotted centre of the orbital ellipse by transforming the local ellipse origin into the plot frame.
-# This is conic/orbit geometry plus a plotting-frame transform, not pure Plotly logic.
-def ellipse_centre_for_elements(
-    primary_focus_plot_coordinate: Coordinate2D,
-    elements: OrbitalElements,
-) -> Coordinate2D:
-    return local_to_plot_coordinate_for_elements(
-        primary_focus_plot_coordinate,
-        elements,
-        Coordinate2D(Scalar(0), Scalar(0)),
+        calculate_foci(
+            elements.semi_major_axis,
+            elements.eccentricity,
+        )[1],
     )
 
 
@@ -234,21 +198,6 @@ def coordinates_for_elements(
     )
 
 
-# Subject: thin alias for orbital-coordinate calculation.
-# Simply delegates to coordinates_for_elements for an orbiting body's plotted coordinate at a given eccentric anomaly.
-# This adds little value and probably does not need to exist.
-def orbiting_body_coordinates(
-    primary_focus_plot_coordinate: Coordinate2D,
-    elements: OrbitalElements,
-    E: EccentricAnomaly,
-) -> Coordinate2D:
-    return coordinates_for_elements(
-        primary_focus_plot_coordinate,
-        elements,
-        E,
-    )
-
-
 def tangent_vector_for_plot(
     primary_focus_plot_coordinate: Coordinate2D,
     plot_elements: OrbitalElements,
@@ -256,13 +205,13 @@ def tangent_vector_for_plot(
 ) -> VelocityVector:
     delta = 0.001
 
-    current = orbiting_body_coordinates(
+    current = coordinates_for_elements(
         primary_focus_plot_coordinate,
         plot_elements,
         E,
     )
 
-    next_point = orbiting_body_coordinates(
+    next_point = coordinates_for_elements(
         primary_focus_plot_coordinate,
         plot_elements,
         EccentricAnomaly(Anomaly(Radians(Scalar(float(E) + delta)))),
@@ -273,76 +222,6 @@ def tangent_vector_for_plot(
         Velocity(Scalar(next_point.y - current.y)),
         Velocity(Scalar(0)),
     )
-
-
-# TODO replace with orbital_velocity_vector_at_time
-def velocity_vector_at_time(
-    primary_focus_plot_coordinate: Coordinate2D,
-    elements: OrbitalElements,
-    elapsed_time: float,
-    distance_scale_km: float,
-    mu: GravitationalParameter,
-) -> VelocityVector:
-    period = orbital_period(
-        elements.semi_major_axis,
-        mu,
-    )
-
-    delta_time = period / 10000
-    scaled_elements = elements_scaled_to_plot(elements, distance_scale_km)
-
-    current_coordinates = orbiting_body_coordinates(
-        primary_focus_plot_coordinate,
-        elements,
-        eccentric_anomaly_at_time(
-            scaled_elements,
-            Second(Scalar(elapsed_time)),
-        ),
-    )
-
-    next_coordinates = orbiting_body_coordinates(
-        primary_focus_plot_coordinate,
-        elements,
-        eccentric_anomaly_at_time(
-            scaled_elements,
-            Second(Scalar(elapsed_time + delta_time)),
-        ),
-    )
-
-    return VelocityVector(
-        Velocity(Scalar((next_coordinates.x - current_coordinates.x) / delta_time)),
-        Velocity(Scalar((next_coordinates.y - current_coordinates.y) / delta_time)),
-        Velocity(Scalar(0)),
-    )
-
-
-# Subject: Hohmann-transfer geometry / eccentric anomaly selection.
-# Maps a transfer-burn radius to eccentric anomaly 0 at periapsis or pi at apoapsis.
-# This only handles apsidal transfers and belongs with transfer-specific astrodynamics logic.
-def eccentric_anomaly_for_transfer_radius(
-    radius: Distance,
-    transfer_periapsis_radius: Distance,
-    transfer_apoapsis_radius: Distance,
-) -> EccentricAnomaly:
-    if radius == transfer_periapsis_radius:
-        return EccentricAnomaly(Anomaly(Radians(Scalar(0))))
-
-    if radius == transfer_apoapsis_radius:
-        return EccentricAnomaly(Anomaly(Radians(Scalar(math.pi))))
-
-    raise ValueError(
-        "Transfer burn radius must be either transfer periapsis or apoapsis."
-    )
-
-
-# Subject: kinematics / astrodynamics.
-# Computes scalar delta-v as the absolute difference between two speeds.
-# This is basic manoeuvre physics and should probably live with astrodynamics/delta-v helpers.
-def delta_v_between_speeds(
-    first_speed: Velocity,
-    second_speed: Velocity,
-) -> DeltaV:
-    return DeltaV(Velocity(Scalar(abs(second_speed - first_speed))))
 
 
 # Subject: plotting adapter for transfer arcs.
@@ -359,21 +238,6 @@ def transfer_arc_angles(
         return start, end + 2 * math.pi
 
     return start, end
-
-
-# Subject: data access / ephemeris query adapter.
-# Calls the Horizons API wrapper for a target, centre, start time, and stop time derived from OrbitPlotSettings.
-# This is not visualisation or mechanics; it is an IO/data-fetching adapter.
-def get_horizon_state_vectors(
-    target: HorizonsCommandTarget,
-    settings: OrbitPlotSettings,
-) -> list[StateVectors]:
-    return get_object_state_vectors_from_horizon(
-        target=target,
-        centre=settings.centre,
-        start_time=python_datetime_to_fulldate(settings.start_time),
-        stop_time=python_datetime_to_fulldate(settings.stop_time),
-    )
 
 
 # Subject: visualisation plus orbit propagation.
@@ -421,9 +285,11 @@ def add_orbiting_body_to_traces(
 ) -> None:
     from afmaths.visualisations.helpers import add_body_surface
 
-    horizon_state_vectors = get_horizon_state_vectors(
-        HorizonsCommandTarget(body.target),
-        settings,
+    horizon_state_vectors = get_object_state_vectors_from_horizon(
+        target=HorizonsCommandTarget(body.target),
+        centre=settings.centre,
+        start_time=python_datetime_to_fulldate(settings.start_time),
+        stop_time=python_datetime_to_fulldate(settings.stop_time),
     )
 
     if len(horizon_state_vectors) < 1:
@@ -434,7 +300,7 @@ def add_orbiting_body_to_traces(
         mu=settings.gravitational_parameter,
     )
 
-    model_current_state = orbit_state_vector_prediction_from_orbital_elements(
+    model_current_state = orbit_state_vector_prediction(
         orbital_elements,
         Second(Scalar(0)),
         settings.gravitational_parameter,
@@ -467,7 +333,7 @@ def add_orbiting_body_to_traces(
     if not settings.add_prediction_to_orbit:
         return
 
-    model_prediction_state = orbit_state_vector_prediction_from_orbital_elements(
+    model_prediction_state = orbit_state_vector_prediction(
         orbital_elements,
         settings.time_offset_seconds,
         settings.gravitational_parameter,

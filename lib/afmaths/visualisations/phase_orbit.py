@@ -348,17 +348,7 @@ def build_phase_orbit_2d_perifocal_figure(
     """
     primary_focus_plot_coordinate = plot_centre(settings)
 
-    forward_delta_rad = forward_true_anomaly_delta_rad(
-        initial_true_anomaly,
-        desired_true_anomaly,
-    )
-
     signed_phase_delta = phase_true_anomaly_delta(
-        initial_true_anomaly,
-        desired_true_anomaly,
-    )
-
-    direction_label = phase_direction_label(
         initial_true_anomaly,
         desired_true_anomaly,
     )
@@ -369,24 +359,9 @@ def build_phase_orbit_2d_perifocal_figure(
         gravitational_parameter,
     )
 
-    original_period = orbital_period(
-        original_orbit.semi_major_axis,
-        gravitational_parameter,
-    )
-
     calculated_phase_period = orbital_period(
         phase_orbit_elements.semi_major_axis,
         gravitational_parameter,
-    )
-
-    physical_phase_periapsis = phase_periapsis(
-        phase_orbit_elements.semi_major_axis,
-        original_orbit,
-    )
-
-    physical_phase_apoapsis = phase_apoapsis(
-        phase_orbit_elements.semi_major_axis,
-        original_orbit,
     )
 
     original_orbit_for_plot = scale_orbital_elements_for_plot(
@@ -399,37 +374,6 @@ def build_phase_orbit_2d_perifocal_figure(
         Distance(Scalar(settings.distance_scale)),
     )
 
-    initial_reference_node = true_anomaly_plot_node(
-        name="Initial reference anomaly",
-        label="Initial reference",
-        primary_focus_plot_coordinate=primary_focus_plot_coordinate,
-        orbital_elements=original_orbit_for_plot,
-        true_anomaly_value=initial_true_anomaly,
-        colour="blue",
-        symbol="circle",
-    )
-
-    desired_reference_node = true_anomaly_plot_node(
-        name="Desired reference anomaly",
-        label="Desired reference",
-        primary_focus_plot_coordinate=primary_focus_plot_coordinate,
-        orbital_elements=original_orbit_for_plot,
-        true_anomaly_value=desired_true_anomaly,
-        colour="green",
-        symbol="diamond",
-    )
-
-    poi_node = poi_plot_node(
-        name="POI at shared apsis",
-        primary_focus_plot_coordinate=primary_focus_plot_coordinate,
-        phase_orbit_for_plot=phase_orbit_for_plot,
-        phase_orbit_elements=phase_orbit_elements,
-        original_orbit=original_orbit,
-        distance_scale=Distance(Scalar(settings.distance_scale)),
-        delta_v=delta_v,
-        phase_period=calculated_phase_period,
-    )
-
     return add_plot_centre(
         figure_layout(
             figure_planetary_body(
@@ -437,10 +381,40 @@ def build_phase_orbit_2d_perifocal_figure(
                     add_perifocal_orbit_line(
                         add_plot_node(
                             add_plot_node(
-                                add_plot_node(go.Figure(), initial_reference_node),
-                                desired_reference_node,
+                                add_plot_node(
+                                    go.Figure(),
+                                    true_anomaly_plot_node(
+                                        name="Initial reference anomaly",
+                                        label="Initial reference",
+                                        primary_focus_plot_coordinate=primary_focus_plot_coordinate,
+                                        orbital_elements=original_orbit_for_plot,
+                                        true_anomaly_value=initial_true_anomaly,
+                                        colour="blue",
+                                        symbol="circle",
+                                    ),
+                                ),
+                                true_anomaly_plot_node(
+                                    name="Desired reference anomaly",
+                                    label="Desired reference",
+                                    primary_focus_plot_coordinate=primary_focus_plot_coordinate,
+                                    orbital_elements=original_orbit_for_plot,
+                                    true_anomaly_value=desired_true_anomaly,
+                                    colour="green",
+                                    symbol="diamond",
+                                ),
                             ),
-                            poi_node,
+                            poi_plot_node(
+                                name="POI at shared apsis",
+                                primary_focus_plot_coordinate=primary_focus_plot_coordinate,
+                                phase_orbit_for_plot=phase_orbit_for_plot,
+                                phase_orbit_elements=phase_orbit_elements,
+                                original_orbit=original_orbit,
+                                distance_scale=Distance(
+                                    Scalar(settings.distance_scale)
+                                ),
+                                delta_v=delta_v,
+                                phase_period=calculated_phase_period,
+                            ),
                         ),
                         primary_focus_plot_coordinate,
                         PlotPerifocalOrbitLine(
@@ -475,13 +449,26 @@ def build_phase_orbit_2d_perifocal_figure(
                 f"{title_prefix}<br>"
                 f"Initial ν = {initial_true_anomaly:.3f} rad, "
                 f"desired ν = {desired_true_anomaly:.3f} rad, "
-                f"forward Δν = {forward_delta_rad:.3f} rad<br>"
+                f"forward Δν = {forward_true_anomaly_delta_rad(
+                    initial_true_anomaly,
+                    desired_true_anomaly,
+                ):.3f} rad<br>"
                 f"Signed phase Δν = {signed_phase_delta:.3f} rad "
-                f"({direction_label}), cutoff = {AHEAD_BEHIND_CUTOFF_RAD:.2f} rad<br>"
-                f"Original period = {original_period:.2f} s, "
+                f"({phase_direction_label(
+                        initial_true_anomaly,
+                        desired_true_anomaly,
+                    )
+                }), cutoff = {AHEAD_BEHIND_CUTOFF_RAD:.2f} rad<br>"
+                f"Original period = {orbital_period( original_orbit.semi_major_axis, gravitational_parameter,):.2f} s, "
                 f"phase period = {calculated_phase_period:.2f} s<br>"
-                f"Phase periapsis = {physical_phase_periapsis:.2f} km, "
-                f"phase apoapsis = {physical_phase_apoapsis:.2f} km, "
+                f"Phase periapsis = {phase_periapsis(
+                    phase_orbit_elements.semi_major_axis,
+                    original_orbit,
+                ):.2f} km, "
+                f"phase apoapsis = {phase_apoapsis(
+                    phase_orbit_elements.semi_major_axis,
+                    original_orbit,
+                ):.2f} km, "
                 f"Δv = {delta_v:.4f} km/s"
             ),
         ),

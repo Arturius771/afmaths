@@ -21,7 +21,7 @@ from astronomy_types import (
 
 from afmaths.geometry.geometry import circle_bounding_box
 from afmaths.operation import interval
-from afmaths.physics.space.type_conversion_helpers import vector3d
+from afmaths.physics.space.type_conversion_helpers import make_vector3d
 
 
 @dataclass(frozen=True)
@@ -74,7 +74,7 @@ def distance_to_scale_distance(distance_km: Distance, scale: float) -> Distance:
 # Divides x/y/z position components by distance_scale_km and rebuilds a Vector3D.
 # This is a render-time coordinate scaling helper, not celestial mechanics.
 def scale_position(position: PositionVector, distance_scale_km: float) -> Vector3D:
-    return vector3d(
+    return make_vector3d(
         distance_to_scale_distance(Distance(position.x), distance_scale_km),
         distance_to_scale_distance(Distance(position.y), distance_scale_km),
         distance_to_scale_distance(Distance(position.z), distance_scale_km),
@@ -374,7 +374,7 @@ def plot_sphere_surface(
 
     sphere_z = [[centre_z + radius * math.cos(v_j) for v_j in v] for _ in u]
 
-    return vector3d(sphere_x, sphere_y, sphere_z)
+    return make_vector3d(sphere_x, sphere_y, sphere_z)
 
 
 def scaled_radius(

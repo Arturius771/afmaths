@@ -11,7 +11,7 @@ from astronomy_types import (
     Scalar,
     Second,
     SemiMajorAxis,
-    StateVectors,
+    StateVector,
 )
 
 import plotly.graph_objects as go
@@ -30,13 +30,14 @@ from afmaths.physics.space.engineering.astrodynamics import (
 from afmaths.physics.space.celestial_mechanics import (
     eccentric_anomaly_at_time,
     gravitational_parameter,
+    orbit_equation,
     orbital_period,
     true_anomaly_from_eccentric_anomaly,
     vis_viva,
 )
 from afmaths.physics.space.engineering.thermal_subsystem import EXAMPLE_ELEMENTS
 from afmaths.visualisations.base import (
-    orbiting_body_coordinates,
+    coordinates_for_elements,
     secondary_focus_coordinates_for_elements,
     tangent_vector_for_plot,
 )
@@ -105,7 +106,7 @@ def add_orbiting_body_2d(
         settings.distance_scale,
     )
 
-    coordinates = orbiting_body_coordinates(
+    coordinates = coordinates_for_elements(
         primary_focus_plot_coordinate,
         plot_elements,
         EccentricAnomaly(Anomaly(Radians(Scalar(0)))),
@@ -237,37 +238,25 @@ def generate_combined_orbital_slider_data(
 
             true_anomaly = true_anomaly_from_eccentric_anomaly(
                 eccentric_anomaly_obj,
-                plot_elements.eccentricity,
+                elements.eccentricity,
             )
 
-            coordinates = orbiting_body_coordinates(
+            coordinates = coordinates_for_elements(
                 primary_focus_plot_coordinate,
                 plot_elements,
                 eccentric_anomaly_obj,
             )
 
-            distance_km = (
-                calculate_distance(
-                    Coordinate2D(coordinates.x, coordinates.y),
-                    primary_focus_plot_coordinate,
-                )
-                * settings.distance_scale
+            distance_km = orbit_equation(
+                elements.semi_major_axis,
+                elements.eccentricity,
+                true_anomaly,
             )
 
             velocity_m_s = vis_viva(
                 mu=mu,
                 radius=Distance(Scalar(distance_km * 1000)),
-                a=SemiMajorAxis(
-                    Distance(
-                        Scalar(
-                            scale_distance_to_distance(
-                                plot_elements.semi_major_axis,
-                                settings.distance_scale,
-                            )
-                            * 1000
-                        )
-                    )
-                ),
+                a=real_semi_major_axis_metres(elements),
             )
 
             velocity_km_s = velocity_m_s / 1000
@@ -308,8 +297,8 @@ def generate_combined_orbital_slider_data(
                     anti_radial(position_vector),
                     prograde(velocity_vector),
                     retrograde(velocity_vector),
-                    normal(StateVectors(position_vector, velocity_vector)),
-                    anti_normal(StateVectors(position_vector, velocity_vector)),
+                    normal(StateVector(position_vector, velocity_vector)),
+                    anti_normal(StateVector(position_vector, velocity_vector)),
                 ]
 
                 for direction_vector, trace_index in zip(

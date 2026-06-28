@@ -16,7 +16,7 @@ from astronomy_types import (
     Position,
     RightAscension,
     Scalar,
-    StateVectors,
+    StateVector,
     Vector3D,
     Velocity,
 )
@@ -240,7 +240,7 @@ def quote_horizons(value: str) -> str:
     return f"'{value}'"
 
 
-def parse_state_vector_rows(rows: list[str]) -> list[StateVectors]:
+def parse_state_vector_rows(rows: list[str]) -> list[StateVector]:
     state_vectors = []
 
     index = 0
@@ -261,7 +261,7 @@ def parse_state_vector_rows(rows: list[str]) -> list[StateVectors]:
             vz = Velocity(Scalar(float(velocity_parts[5])))
 
             state_vectors.append(
-                StateVectors(
+                StateVector(
                     position=Vector3D(x=x, y=y, z=z),
                     velocity=Vector3D(x=vx, y=vy, z=vz),
                 )
@@ -281,7 +281,7 @@ def get_object_state_vectors_from_horizon(
     step_size: str = "1d",
     centre: HorizonsCommandTarget = HorizonsCommandTarget.EARTH,
     response_format: HorizonsFormat = HorizonsFormat.JSON,
-) -> list[StateVectors]:
+) -> list[StateVector]:
     query = HorizonsObserverQuery(
         target=target,
         start_time=start_time,

@@ -13,7 +13,7 @@ from astronomy_types import (
 
 from afmaths.constants import TransformationMatrix2D, TransformationMatrix3D
 from afmaths.operation import add, multiply, negate, subtract
-from afmaths.physics.space.type_conversion_helpers import vector2d, vector3d
+from afmaths.physics.space.type_conversion_helpers import make_vector2d, make_vector3d
 from afmaths.tensors import (
     matrix_vector_multiply_2d,
     matrix_vector_multiply_3d,
@@ -55,18 +55,18 @@ def rotate_point_around_centre(
     angle: Degrees,
     centre: Coordinate2D = Coordinate2D(0, 0),
 ) -> Coordinate2D:
-    relative_point = vector2d(
+    relative_point = make_vector2d(
         Scalar(subtract(point.x)(centre.x)),
         Scalar(subtract(point.y)(centre.y)),
     )
 
     rotated = orthonormal_frame_transform(
         rotation_matrix_2d(
-            vector2d(
+            make_vector2d(
                 Scalar(math.cos(angle)),
                 Scalar(negate(math.sin(angle))),
             ),
-            vector2d(
+            make_vector2d(
                 Scalar(math.sin(angle)),
                 Scalar(math.cos(angle)),
             ),
@@ -108,12 +108,12 @@ def rotation_matrix_2d(
     y_basis: Vector2D[Scalar],
 ) -> TransformationMatrix2D:
     return TransformationMatrix2D(
-        vector2d(
-            vector2d(
+        make_vector2d(
+            make_vector2d(
                 x_basis.x,
                 y_basis.x,
             ),
-            vector2d(
+            make_vector2d(
                 x_basis.y,
                 y_basis.y,
             ),
@@ -127,18 +127,18 @@ def rotation_matrix_3d(
     z_basis: Vector3D[Scalar],
 ) -> TransformationMatrix3D:
     return TransformationMatrix3D(
-        vector3d(
-            vector3d(
+        make_vector3d(
+            make_vector3d(
                 x_basis.x,
                 y_basis.x,
                 z_basis.x,
             ),
-            vector3d(
+            make_vector3d(
                 x_basis.y,
                 y_basis.y,
                 z_basis.y,
             ),
-            vector3d(
+            make_vector3d(
                 x_basis.z,
                 y_basis.z,
                 z_basis.z,

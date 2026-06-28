@@ -1,6 +1,6 @@
 import math
 
-from afmaths.constants import STANDARD_GRAVITY, Force, Mass, Pressure
+from afmaths.constants import STANDARD_GRAVITY, Force, Mass, Momentum, Pressure
 from afmaths.geometry.geometry import Area
 from afmaths.operation import (
     add,
@@ -13,6 +13,7 @@ from afmaths.operation import (
     summation,
 )
 from astronomy_types import (
+    Acceleration,
     Distance,
     Rate,
     Ratio,
@@ -20,32 +21,34 @@ from astronomy_types import (
     Velocity,
 )
 
+from afmaths.physics.physics import (
+    net_acceleration,
+    force,
+    pushing_to_resisting_force_ratio,
+    momentum,
+)
 from afmaths.physics.space.engineering.astrodynamics import DeltaV, hohmann_transfer
 
 
-def ideal_rocket_equation(
-    effective_exhaust_velocity: Velocity, initial_mass: Mass, final_mass: Mass
+def tsiolkovsky_ideal_rocket_equation(
+    effective_exhaust_velocity: Velocity, initial_mass: Mass, dry_mass: Mass
 ) -> DeltaV:
-    return multiply(math.log(mass_ratio(final_mass, initial_mass)))(
+    return multiply(math.log(rocket_mass_ratio(dry_mass, initial_mass)))(
         effective_exhaust_velocity
     )
 
 
-def total_rocket_mass(empty_weight: Mass, propellant_mass: Mass) -> Mass:
-    return add(empty_weight)(propellant_mass)
-
-
-def mass_ratio(empty_weight: Mass, initial_mass: Mass) -> float:
-    return divide_by(empty_weight)(initial_mass)
-
-
-def momentum(
+def final_momentum(
     initial_mass: Mass,
     delta_mass: Mass,
     initial_velocity: Velocity,
     delta_v: Velocity,
-) -> float:
-    return multiply(subtract(delta_mass)(initial_mass))(add(initial_velocity)(delta_v))
+) -> Momentum:
+    """After shedding mass and gaining velocity"""
+    return momentum(
+        mass=(subtract(delta_mass)(initial_mass)),
+        velocity=(add(initial_velocity)(delta_v)),
+    )
 
 
 # region Performance
@@ -55,7 +58,7 @@ def specific_impulse(force_newtons: float, mass_flow: Rate) -> float:
     return divide_by(multiply(mass_flow)(STANDARD_GRAVITY))(force_newtons)
 
 
-def specific_impulse_from_exhause_velocity(exhaust_velocity: Velocity) -> float:
+def specific_impulse_from_exhaust_velocity(exhaust_velocity: Velocity) -> float:
     return divide_by(STANDARD_GRAVITY)(exhaust_velocity)
 
 
@@ -69,7 +72,7 @@ def delta_v_for_stages(
 ) -> tuple[DeltaV, list[DeltaV]]:
 
     def stage_delta_v(i: int) -> DeltaV:
-        return ideal_rocket_equation(
+        return tsiolkovsky_ideal_rocket_equation(
             effective_exhaust_velocity,
             mass_per_stage[i],
             mass_per_stage[i + 1],
@@ -92,8 +95,15 @@ def delta_v_for_stages(
     return total_delta_v, stage_delta_vs
 
 
-def thrust_to_weight(thrust: Force, weight: Mass) -> Ratio:
-    return Ratio(Scalar(ratio(thrust)(weight)))
+def thrust_to_weight(
+    thrust: Force,
+    mass: Mass,
+    gravitational_acceleration: Acceleration = STANDARD_GRAVITY,
+) -> Ratio:
+    """Greater than 1 to achieve flight"""
+    return pushing_to_resisting_force_ratio(
+        thrust, force(mass, gravitational_acceleration)
+    )
 
 
 def thrust(
@@ -110,31 +120,77 @@ def thrust(
 
 # endregion
 
-# region Propellant
+
+# region Equations of Mass
+
+
+def dry_mass(structure_mass: Mass, payload_mass: Mass, motor_mass: Mass) -> Mass:
+    return add(add(structure_mass)(motor_mass))(payload_mass)
 
 
 def propellant_mass_from_initial_mass(
-    initial_mass: Mass, delta_v: DeltaV, effective_exhaust_velocity: Velocity
+    full_mass: Mass, delta_v: DeltaV, effective_exhaust_velocity: Velocity
 ) -> Mass:
-    return multiply(initial_mass)(
+    return multiply(full_mass)(
         subtract(
             exponentiate(negate(divide_by(effective_exhaust_velocity)(delta_v)))(math.e)
         )(1)
     )
 
 
-def propellant_mass_from_final_mass(
-    final_mass: Mass, delta_v: DeltaV, effective_exhaust_velocity: Velocity
+def propellant_mass_from_dry_mass(
+    dry_mass: Mass, delta_v: DeltaV, effective_exhaust_velocity: Velocity
 ) -> Mass:
-    return multiply(final_mass)(
+    return multiply(dry_mass)(
         subtract(1)(
             exponentiate(divide_by(effective_exhaust_velocity)(delta_v))(math.e)
         )
     )
 
 
-def empty_weight(structure_mass: Mass, payload_mass: Mass, motor_mass: Mass) -> Mass:
-    return add(add(structure_mass)(motor_mass))(payload_mass)
+def full_mass(dry_mass: Mass, propellant_mass: Mass) -> Mass:
+    return add(dry_mass)(propellant_mass)
+
+
+def rocket_mass_ratio(dry_mass: Mass, full_mass: Mass) -> Ratio:
+    return divide_by(dry_mass)(full_mass)
+
+
+def payload_mass_ratio(
+    propellant_mass: Mass, structure_mass: Mass, payload_mass: Mass
+) -> Ratio:
+    return divide_by(add(structure_mass)(propellant_mass))(payload_mass)
+
+
+def mass_ratio_from_ratio(
+    structural_coefficient: Ratio, payload_mass_ratio: Ratio
+) -> Ratio:
+    add_payload_ratio = add(payload_mass_ratio)
+    return divide_by(add_payload_ratio(structural_coefficient))(add_payload_ratio(1))
+
+
+def rocket_acceleration(
+    thrust: Force, mass: Mass, standard_g: Acceleration = STANDARD_GRAVITY
+) -> Acceleration:
+    return net_acceleration(thrust, mass, standard_g)
+
+
+def required_mass_ratio(delta_v: DeltaV, effective_exhaust_velocity: Velocity) -> Ratio:
+    """How much lighter the rocket must be to complete a burn with the required DeltaV"""
+    return exponentiate(divide_by(effective_exhaust_velocity)(delta_v))(math.e)
+
+
+def structural_coefficient(structure_mass: Mass, propellant_mass: Mass) -> Ratio:
+    return divide_by(add(structure_mass)(propellant_mass))(structure_mass)
+
+
+def payload_mass_for_delta_v(
+    propellant_mass: Mass, required_mass_ratio: Ratio, dry_non_payload_mass: Mass
+) -> Mass:
+    """P = (M_p / (R-1)) - D"""
+    return subtract(dry_non_payload_mass)(
+        divide_by(subtract(1)(required_mass_ratio))(propellant_mass)
+    )
 
 
 # endregion
@@ -161,3 +217,22 @@ if __name__ == "__main__":
 
     print(f"Total Δv: {total_delta_v}")
     print(f"Stage Δvs: {stage_delta_vs}")
+
+    print(
+        payload_mass_for_delta_v(
+            Mass(5000),
+            required_mass_ratio(
+                DeltaV(Velocity(Scalar(10_000))), Velocity(Scalar(500))
+            ),
+            Mass(500),
+        )
+    )
+
+    print(thrust_to_weight(Force(Scalar(5_000)), Mass(500)))
+
+    print(
+        rocket_acceleration(
+            Force(Scalar(5_000)),
+            Mass(500),
+        )
+    )

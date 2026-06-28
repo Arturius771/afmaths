@@ -1,5 +1,5 @@
 from afmaths.constants import TransformationMatrix2D, TransformationMatrix3D
-from afmaths.physics.space.type_conversion_helpers import vector3d
+from afmaths.physics.space.type_conversion_helpers import make_vector3d
 
 from .operation import SQUARE, add, divide_by, multiply, negate, square_root, subtract
 from astronomy_types import (
@@ -14,7 +14,7 @@ from astronomy_types import (
 
 
 def vector_negate(vector: Vector3D) -> Vector3D:
-    return vector3d(
+    return make_vector3d(
         negate(vector.x),
         negate(vector.y),
         negate(vector.z),
@@ -52,7 +52,7 @@ def vector_magnitude(vector: Vector3D[Scalar]) -> Scalar:
 def vector_normalise(vector: Vector3D) -> Vector3D:
     magnitude = vector_magnitude(vector)
 
-    return vector3d(
+    return make_vector3d(
         divide_by(magnitude)(vector.x),
         divide_by(magnitude)(vector.y),
         divide_by(magnitude)(vector.z),
@@ -77,7 +77,7 @@ def vector_multiplication_3d(
     j = scalar_multiply(vector.y)
     k = scalar_multiply(vector.z)
 
-    return vector3d(i, j, k)
+    return make_vector3d(i, j, k)
 
 
 def vector_cross_multiplication(
@@ -115,7 +115,23 @@ def vector_cross_multiplication_3d(
     j = subtract(d)(c)
     k = subtract(f)(e)
 
-    return vector3d(i, j, k)
+    return make_vector3d(i, j, k)
+
+
+def vector_subtract(vector_a: Vector3D, vector_b: Vector3D) -> Vector3D:
+    return Vector3D(
+        subtract(vector_b.x)(vector_a.x),
+        subtract(vector_b.y)(vector_a.y),
+        subtract(vector_b.z)(vector_a.z),
+    )
+
+
+def vector_add(vector_a: Vector3D, vector_b: Vector3D) -> Vector3D:
+    return Vector3D(
+        add(vector_b.x)(vector_a.x),
+        add(vector_b.y)(vector_a.y),
+        add(vector_b.z)(vector_a.z),
+    )
 
 
 # endregion
@@ -137,7 +153,7 @@ def matrix_vector_multiply_3d(
     matrix: TransformationMatrix3D,
     vector: Vector3D[Scalar],
 ) -> Vector3D[Scalar]:
-    return vector3d(
+    return make_vector3d(
         dot_product_3d(matrix.x, vector),
         dot_product_3d(matrix.y, vector),
         dot_product_3d(matrix.z, vector),

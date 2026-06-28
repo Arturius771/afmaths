@@ -1,72 +1,84 @@
 import math
-from afmaths.constants import EarthCentredInertialFrame, TransformationMatrix3D
+from afmaths.constants import TransformationMatrix3D
 from astronomy_types import OrbitalElements, Scalar, Vector3D
 from afmaths.geometry.transformations import (
     orthonormal_frame_transform_3d,
     rotation_matrix_3d,
 )
-from afmaths.physics.space.type_conversion_helpers import vector3d
+from afmaths.physics.space.type_conversion_helpers import make_vector3d
 
 
-def transform_perifocal_to_inertial(
-    perifocal_to_eci_rotation_matrix: TransformationMatrix3D,
+def transform_perifocal_vector_to_element_reference_frame(
+    orbital_elements: OrbitalElements,
     perifocal_vector: Vector3D[Scalar],
-) -> EarthCentredInertialFrame:
+) -> Vector3D[Scalar]:
     """Transforms a vector from the perifocal coordinate system to the ECI coordinate system using the provided transformation matrix"""
-    # TODO: reuse
-    return EarthCentredInertialFrame(
-        orthonormal_frame_transform_3d(
-            perifocal_to_eci_rotation_matrix, perifocal_vector
-        )
+    return orthonormal_frame_transform_3d(
+        perifocal_to_element_reference_frame_transformation(orbital_elements),
+        perifocal_vector,
     )
 
 
 # region Factories
 
 
-def perifocal_to_inertial_frame_rotation_matrix(
+def perifocal_to_element_reference_frame_transformation(
     orbital_elements: OrbitalElements,
 ) -> TransformationMatrix3D:
-    argument_of_periapsis = orbital_elements.argument_of_periapsis
-    right_ascension_of_ascening_node = (
-        orbital_elements.right_ascension_of_ascending_node
-    )
-    inclination = orbital_elements.inclination
+    """
+    Build the transformation matrix from the orbit's perifocal frame (PQW) to the reference frame used by the orbital elements.
+
+    If Ω, i, ω are GCRS-referenced:
+        perifocal → GCRS
+
+    If Ω, i, ω are EME2000-referenced:
+        perifocal → EME2000
+
+    If Ω, i, ω are TEME-referenced:
+        perifocal → TEME"""
 
     p = [
-        math.cos(argument_of_periapsis) * math.cos(right_ascension_of_ascening_node)
-        - math.sin(argument_of_periapsis)
-        * math.cos(inclination)
-        * math.sin(right_ascension_of_ascening_node),
-        math.cos(argument_of_periapsis) * math.sin(right_ascension_of_ascening_node)
-        + math.sin(argument_of_periapsis)
-        * math.cos(inclination)
-        * math.cos(right_ascension_of_ascening_node),
-        math.sin(argument_of_periapsis) * math.sin(inclination),
+        math.cos(orbital_elements.argument_of_periapsis)
+        * math.cos(orbital_elements.right_ascension_of_ascending_node)
+        - math.sin(orbital_elements.argument_of_periapsis)
+        * math.cos(orbital_elements.inclination)
+        * math.sin(orbital_elements.right_ascension_of_ascending_node),
+        math.cos(orbital_elements.argument_of_periapsis)
+        * math.sin(orbital_elements.right_ascension_of_ascending_node)
+        + math.sin(orbital_elements.argument_of_periapsis)
+        * math.cos(orbital_elements.inclination)
+        * math.cos(orbital_elements.right_ascension_of_ascending_node),
+        math.sin(orbital_elements.argument_of_periapsis)
+        * math.sin(orbital_elements.inclination),
     ]
 
     q = [
-        -math.sin(argument_of_periapsis) * math.cos(right_ascension_of_ascening_node)
-        - math.cos(argument_of_periapsis)
-        * math.cos(inclination)
-        * math.sin(right_ascension_of_ascening_node),
-        -math.sin(argument_of_periapsis) * math.sin(right_ascension_of_ascening_node)
-        + math.cos(argument_of_periapsis)
-        * math.cos(inclination)
-        * math.cos(right_ascension_of_ascening_node),
-        math.cos(argument_of_periapsis) * math.sin(inclination),
+        -math.sin(orbital_elements.argument_of_periapsis)
+        * math.cos(orbital_elements.right_ascension_of_ascending_node)
+        - math.cos(orbital_elements.argument_of_periapsis)
+        * math.cos(orbital_elements.inclination)
+        * math.sin(orbital_elements.right_ascension_of_ascending_node),
+        -math.sin(orbital_elements.argument_of_periapsis)
+        * math.sin(orbital_elements.right_ascension_of_ascending_node)
+        + math.cos(orbital_elements.argument_of_periapsis)
+        * math.cos(orbital_elements.inclination)
+        * math.cos(orbital_elements.right_ascension_of_ascending_node),
+        math.cos(orbital_elements.argument_of_periapsis)
+        * math.sin(orbital_elements.inclination),
     ]
 
     w = [
-        math.sin(inclination) * math.sin(right_ascension_of_ascening_node),
-        -math.sin(inclination) * math.cos(right_ascension_of_ascening_node),
-        math.cos(inclination),
+        math.sin(orbital_elements.inclination)
+        * math.sin(orbital_elements.right_ascension_of_ascending_node),
+        -math.sin(orbital_elements.inclination)
+        * math.cos(orbital_elements.right_ascension_of_ascending_node),
+        math.cos(orbital_elements.inclination),
     ]
 
     return rotation_matrix_3d(
-        vector3d(Scalar(p[0]), Scalar(p[1]), Scalar(p[2])),
-        vector3d(Scalar(q[0]), Scalar(q[1]), Scalar(q[2])),
-        vector3d(Scalar(w[0]), Scalar(w[1]), Scalar(w[2])),
+        make_vector3d(Scalar(p[0]), Scalar(p[1]), Scalar(p[2])),
+        make_vector3d(Scalar(q[0]), Scalar(q[1]), Scalar(q[2])),
+        make_vector3d(Scalar(w[0]), Scalar(w[1]), Scalar(w[2])),
     )
 
 

@@ -35,6 +35,12 @@ def euclid(m: int, n: int) -> int:
     return euclid(n, remainder)
 
 
+def euclidian_distance(a: Coordinate2D, b: Coordinate2D) -> Distance:
+    return Distance(
+        Scalar(square_root(add(SQUARE(subtract(b.x)(a.x)))(SQUARE(subtract(b.y)(a.y)))))
+    )
+
+
 def sieve_of_eratosthenes(n: int) -> list[int]:
     """Finds prime numbers up to n"""
     # https://www.youtube.com/watch?v=fwxjMKBMR7s

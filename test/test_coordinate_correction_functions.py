@@ -14,8 +14,6 @@ from astronomy_types import (
     HMS,
     Hour,
     JulianDate,
-    Latitude,
-    Longitude,
     Minute,
     Month,
     Radians,

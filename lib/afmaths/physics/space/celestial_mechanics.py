@@ -13,8 +13,7 @@ from afmaths.geometry.transformations import (
     ellipse_perimeter_coordinate_from_eccentric_anomaly,
 )
 from afmaths.physics.space.transformations import (
-    perifocal_to_inertial_frame_rotation_matrix,
-    transform_perifocal_to_inertial,
+    transform_perifocal_vector_to_element_reference_frame,
 )
 from afmaths.physics.space.type_conversion_helpers import (
     degrees_to_radians,
@@ -24,8 +23,8 @@ from afmaths.physics.space.type_conversion_helpers import (
     make_true_anomaly,
     make_velocity_vector,
     position_vector_to_vector3d,
-    vector2d,
-    vector3d,
+    make_vector2d,
+    make_vector3d,
     velocity_vector_to_vector3d,
 )
 from afmaths.tensors import (
@@ -83,7 +82,7 @@ from astronomy_types import (
     SemiLatusRectum,
     SemiMajorAxis,
     Eccentricity,
-    StateVectors,
+    StateVector,
     TrueAnomaly,
     Scalar,
     Vector2D,
@@ -139,12 +138,12 @@ def generate_all_orbit_positions(
     position_list = []
     for true_anomaly in generate_angles_on_circle(resolution):
         position_list.append(
-            orbit_state_vector_prediction_from_orbital_elements(
+            orbit_state_vector_prediction(
                 replace(
                     orbital_elements,
                     true_anomaly=true_anomaly,
                 ),
-                gravitational_parameter=gravitational_parameter,
+                mu=gravitational_parameter,
             ).position
         )
     return position_list
@@ -185,7 +184,7 @@ def perifocal_position_2d(
 ) -> Vector2D[Scalar]:
 
     return vector_multiplication_2d(
-        vector2d(
+        make_vector2d(
             Scalar(math.cos(orbital_elements.true_anomaly)),
             Scalar(math.sin(orbital_elements.true_anomaly)),
         ),
@@ -197,13 +196,13 @@ def perifocal_position_2d(
     )
 
 
-def perifocal_position_3d(
+def position_vector_perifocal_system(
     orbital_elements: OrbitalElements,
 ) -> PositionVector:
     """Calculates the position vector in the perifocal coordinate system"""
     return make_position_vector(
         vector_multiplication_3d(
-            vector3d(
+            make_vector3d(
                 Scalar(math.cos(orbital_elements.true_anomaly)),
                 Scalar(math.sin(orbital_elements.true_anomaly)),
                 Scalar(0),
@@ -217,7 +216,7 @@ def perifocal_position_3d(
     )
 
 
-def perifocal_velocity_3d(
+def velocity_vector_perifocal_system(
     true_anomaly: TrueAnomaly,
     eccentricity: Eccentricity,
     semi_major_axis: SemiMajorAxis,
@@ -227,7 +226,7 @@ def perifocal_velocity_3d(
 
     return make_velocity_vector(
         vector_multiplication_3d(
-            vector3d(
+            make_vector3d(
                 Scalar(-math.sin(true_anomaly)),
                 Scalar(add(eccentricity)(math.cos(true_anomaly))),
                 Scalar(0),
@@ -286,10 +285,10 @@ def gravitational_acceleration(mu: GravitationalParameter, radius: Distance) -> 
     return divide_by(SQUARE(radius))(mu)
 
 
-def kepler_equation(E: EccentricAnomaly, eccentricity: Eccentricity) -> MeanAnomaly:
+def kepler_equation(E: EccentricAnomaly, e: Eccentricity) -> MeanAnomaly:
     """Kepler equation."""
     # M = E - e * np.sin(E)
-    return subtract(multiply(eccentricity)(math.sin(E)))(E)
+    return subtract(multiply(e)(math.sin(E)))(E)
 
 
 # endregion
@@ -365,7 +364,7 @@ def velocity_difference(initial_velocity: Velocity, final_velocity: Velocity) ->
     return subtract(initial_velocity)(final_velocity)
 
 
-def radial_velocity(state: StateVectors) -> Velocity:
+def radial_velocity(state: StateVector) -> Velocity:
     position = position_vector_to_vector3d(state.position)
 
     return Velocity(
@@ -425,12 +424,14 @@ def orbit_altitude(radius: Distance, body_radius: Distance) -> Distance:
 
 
 # region ## Angular Momentum
+
+
 def mean_angular_rate(a: SemiMajorAxis, mu: GravitationalParameter) -> Rate:
     # From MSE SFM Exercise 1
     return Rate(Scalar(square_root(divide_by(CUBE(a))(mu))))
 
 
-def angular_momentum(state_vectors: StateVectors) -> Vector3D[Scalar]:
+def angular_momentum(state_vectors: StateVector) -> Vector3D[Scalar]:
     # From MSE SFM Exercise 2
     return vector_cross_multiplication_3d(
         state_vectors.position, state_vectors.velocity
@@ -442,12 +443,20 @@ def angular_momentum_magnitude(angular_momentum_vector: Vector3D[Scalar]) -> Sca
     return vector_magnitude(angular_momentum_vector)
 
 
-def instantaneous_angular_velocity(state_vectors: StateVectors) -> Scalar:
+def instantaneous_angular_velocity(state_vectors: StateVector) -> Scalar:
     # From MSE SFM Exercise 1
     h = angular_momentum_magnitude(angular_momentum(state_vectors))
     r = vector_magnitude(position_vector_to_vector3d(state_vectors.position))
 
     return divide_by(SQUARE(r))(h)
+
+
+def angular_momentum_magnitude_from_apsides(
+    periapsis: Distance, apoapsis: Distance, mu: GravitationalParameter
+) -> Scalar:
+    return multiply(square_root(DOUBLE(mu)))(
+        square_root(divide_by(add(apoapsis)(periapsis))(multiply(apoapsis)(periapsis)))
+    )
 
 
 # region ##Apsides
@@ -499,7 +508,7 @@ def apoapsis_velocity(
 
 
 def orbital_elements_from_state_vectors(
-    state_vectors: StateVectors,
+    state_vectors: StateVector,
     mu: GravitationalParameter = EARTH_MU_KM_CUBED,
 ) -> OrbitalElements:
     """Calculates the orbital elements of an orbit from the state vectors (position and velocity)"""
@@ -537,12 +546,46 @@ def orbital_elements_from_state_vectors(
     )
 
 
-def orbit_state_vector_prediction_from_orbital_elements(
+def orbit_state_vector_from_orbital_elements(
     orbital_elements: OrbitalElements,
-    time_offset_s: Second = Second(Scalar(0)),
-    gravitational_parameter: GravitationalParameter = EARTH_MU_KM_CUBED,
-) -> StateVectors:
-    """Calculates the state vectors (position and velocity) of an orbit from the orbital elements at a given time offset from the current position in the orbit"""
+    mu: GravitationalParameter = EARTH_MU_KM_CUBED,
+) -> StateVector:
+    """Calculates the state vectors (position and velocity) of an orbit from the orbital elements.
+
+    The reference frame for the state vector will match the reference frame for the orbital elements.
+    """
+
+    perifocal_position_gaussian = position_vector_perifocal_system(orbital_elements)
+
+    perifocal_velocity_gaussian = velocity_vector_perifocal_system(
+        orbital_elements.true_anomaly,
+        orbital_elements.eccentricity,
+        orbital_elements.semi_major_axis,
+        mu,
+    )
+
+    return make_state_vector(
+        make_position_vector(
+            transform_perifocal_vector_to_element_reference_frame(
+                orbital_elements,
+                position_vector_to_vector3d(perifocal_position_gaussian),
+            )
+        ),
+        make_velocity_vector(
+            transform_perifocal_vector_to_element_reference_frame(
+                orbital_elements,
+                velocity_vector_to_vector3d(perifocal_velocity_gaussian),
+            )
+        ),
+    )
+
+
+def orbit_state_vector_prediction(
+    orbital_elements: OrbitalElements,
+    time_offset: Second = Second(Scalar(0)),
+    mu: GravitationalParameter = EARTH_MU_KM_CUBED,
+) -> StateVector:
+    """Calculates the state vectors (position and velocity) of an orbit from the orbital elements at a given time offset from the current position in the orbit."""
 
     initial_mean_anomaly = kepler_equation(
         eccentric_anomaly_from_true_anomaly(
@@ -554,47 +597,21 @@ def orbit_state_vector_prediction_from_orbital_elements(
     true_anomaly_at_offset = true_anomaly_at_time(
         orbital_elements.eccentricity,
         initial_mean_anomaly,
-        time_offset_s,
-        mean_motion(orbital_elements.semi_major_axis, gravitational_parameter),
+        time_offset,
+        mean_motion(orbital_elements.semi_major_axis, mu),
     )
 
-    perifocal_position_gaussian = perifocal_position_3d(
-        replace(orbital_elements, true_anomaly=true_anomaly_at_offset)
-    )
-
-    perifocal_velocity_gaussian = perifocal_velocity_3d(
-        true_anomaly_at_offset,
-        orbital_elements.eccentricity,
-        orbital_elements.semi_major_axis,
-        gravitational_parameter,
-    )
-
-    eci_rotation_matrix = perifocal_to_inertial_frame_rotation_matrix(orbital_elements)
-
-    return make_state_vector(
-        make_position_vector(
-            transform_perifocal_to_inertial(
-                eci_rotation_matrix,
-                position_vector_to_vector3d(perifocal_position_gaussian),
-            )
-        ),
-        make_velocity_vector(
-            transform_perifocal_to_inertial(
-                eci_rotation_matrix,
-                velocity_vector_to_vector3d(perifocal_velocity_gaussian),
-            )
-        ),
+    return orbit_state_vector_from_orbital_elements(
+        replace(orbital_elements, true_anomaly=true_anomaly_at_offset), mu
     )
 
 
 def orbital_position_vector_at_time(
     orbital_elements: OrbitalElements,
-    time_offset_s: Second = Second(Scalar(0)),
-    gravitational_parameter: GravitationalParameter = EARTH_MU_KM_CUBED,
+    time_offset: Second = Second(Scalar(0)),
+    mu: GravitationalParameter = EARTH_MU_KM_CUBED,
 ) -> PositionVector:
-    return orbit_state_vector_prediction_from_orbital_elements(
-        orbital_elements, time_offset_s, gravitational_parameter
-    ).position
+    return orbit_state_vector_prediction(orbital_elements, time_offset, mu).position
 
 
 def orbital_velocity_vector_at_time(
@@ -602,7 +619,7 @@ def orbital_velocity_vector_at_time(
     time_offset_s: Second = Second(Scalar(0)),
     gravitational_parameter: GravitationalParameter = EARTH_MU_KM_CUBED,
 ) -> VelocityVector:
-    return orbit_state_vector_prediction_from_orbital_elements(
+    return orbit_state_vector_prediction(
         orbital_elements, time_offset_s, gravitational_parameter
     ).velocity
 
@@ -687,7 +704,7 @@ def right_ascension_of_ascending_node_from_angular_momentum_vector(
 
 
 def semi_major_axis_from_state_vectors(
-    state_vectors: StateVectors,
+    state_vectors: StateVector,
     mu: GravitationalParameter = EARTH_MU_KM_CUBED,
 ) -> SemiMajorAxis:
     """Calculates the semi major axis of an orbit from the position and velocity vectors"""
@@ -782,7 +799,7 @@ def newtons_method(
 
 
 def eccentric_anomaly(
-    state: StateVectors,
+    state: StateVector,
     a: SemiMajorAxis,
     n: MeanMotion,
 ) -> EccentricAnomaly:
@@ -890,7 +907,7 @@ if __name__ == "__main__":
     # {'inclination': 0.12166217595729033, 'right_ascension': 3.024483909022929, 'argument_of_periapsis': 1.5978995641224425, 'semi_major_axis': 25015.186690979368, 'eccentricity': 0.7079768603248032, 'true_anomaly': 2.987554518980773}
     print(
         orbital_elements_from_state_vectors(
-            StateVectors(
+            StateVector(
                 PositionVector(
                     Position(Scalar(10000)),
                     Position(Scalar(40000)),
@@ -905,7 +922,7 @@ if __name__ == "__main__":
 
     # {'position_vector': [-1753.131769017119, 1070.9950241554125, -6564.0676605044755], 'velocity_vector': [-3.478980009547892, 6.473396036204375, 1.986162313733967]}
     print(
-        orbit_state_vector_prediction_from_orbital_elements(
+        orbit_state_vector_prediction(
             OrbitalElements(
                 Inclination(degrees_to_radians(Degrees(Scalar(98.371)))),
                 RightAscension(degrees_to_radians(Degrees(Scalar(120.534)))),
@@ -918,11 +935,11 @@ if __name__ == "__main__":
         )
     )
 
-    # StateVectors(position=Vector3D(x=10000.000000000027, y=39999.999999999985, z=-5000.0), velocity=Vector3D(x=-1.4999999999999996, y=1.0000000000000016, z=-0.1000000000000002))
+    # StateVector(position=Vector3D(x=10000.000000000027, y=39999.999999999985, z=-5000.0), velocity=Vector3D(x=-1.4999999999999996, y=1.0000000000000016, z=-0.1000000000000002))
     print(
-        orbit_state_vector_prediction_from_orbital_elements(
+        orbit_state_vector_prediction(
             orbital_elements_from_state_vectors(
-                StateVectors(
+                StateVector(
                     PositionVector(
                         Position(Scalar(10000)),
                         Position(Scalar(40000)),

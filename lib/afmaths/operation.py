@@ -27,8 +27,8 @@ def exponentiate(exponent: float) -> Callable:
     return lambda num: num**exponent
 
 
-def exponentiate_by_repeated_multiplication(num1: float) -> Callable:
-    return lambda num2: product(lambda _: num1, 1, num2)
+def exponentiate_by_repeated_multiplication(exponent: int) -> Callable:
+    return lambda num: product(lambda _: num, 1, exponent)
 
 
 def square_root(num: float) -> float:
