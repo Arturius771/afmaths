@@ -30,7 +30,6 @@ from afmaths.physics.space.engineering.astrodynamics import (
 from afmaths.physics.space.celestial_mechanics import (
     eccentric_anomaly_at_time,
     gravitational_parameter,
-    orbit_equation,
     orbital_period,
     true_anomaly_from_eccentric_anomaly,
     vis_viva,
@@ -238,7 +237,7 @@ def generate_combined_orbital_slider_data(
 
             true_anomaly = true_anomaly_from_eccentric_anomaly(
                 eccentric_anomaly_obj,
-                elements.eccentricity,
+                plot_elements.eccentricity,
             )
 
             coordinates = coordinates_for_elements(
@@ -247,16 +246,28 @@ def generate_combined_orbital_slider_data(
                 eccentric_anomaly_obj,
             )
 
-            distance_km = orbit_equation(
-                elements.semi_major_axis,
-                elements.eccentricity,
-                true_anomaly,
+            distance_km = (
+                calculate_distance(
+                    Coordinate2D(coordinates.x, coordinates.y),
+                    primary_focus_plot_coordinate,
+                )
+                * settings.distance_scale
             )
 
             velocity_m_s = vis_viva(
                 mu=mu,
                 radius=Distance(Scalar(distance_km * 1000)),
-                a=real_semi_major_axis_metres(elements),
+                a=SemiMajorAxis(
+                    Distance(
+                        Scalar(
+                            scale_distance_to_distance(
+                                plot_elements.semi_major_axis,
+                                settings.distance_scale,
+                            )
+                            * 1000
+                        )
+                    )
+                ),
             )
 
             velocity_km_s = velocity_m_s / 1000
