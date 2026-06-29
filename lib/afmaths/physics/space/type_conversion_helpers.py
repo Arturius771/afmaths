@@ -32,29 +32,27 @@ from astronomy_types import (
 )
 
 
-def degrees_to_radians(value: Degrees) -> Radians:
-    return Radians(Scalar(math.radians(float(value))))
+def degrees_to_radians(degrees: Degrees) -> Radians:
+    return Radians(Scalar(math.radians(float(degrees))))
 
 
-def dms_to_degrees(value: DMS) -> Degrees:
-    sign = -1 if value.degrees < 0 else 1
+def dms_to_degrees(dms: DMS) -> Degrees:
+    sign = -1 if dms.degrees < 0 else 1
     return Degrees(
-        Scalar(sign * (abs(value.degrees) + value.minutes / 60 + value.seconds / 3600))
+        Scalar(sign * (abs(dms.degrees) + dms.minutes / 60 + dms.seconds / 3600))
     )
 
 
-def dms_to_radians(value: DMS) -> Radians:
-    return degrees_to_radians(dms_to_degrees(value))
+def dms_to_radians(dms: DMS) -> Radians:
+    return degrees_to_radians(dms_to_degrees(dms))
 
 
-def hms_to_degrees(value: HMS) -> Degrees:
-    return Degrees(
-        Scalar(15 * (value.hours + value.minutes / 60 + value.seconds / 3600))
-    )
+def hms_to_degrees(hms: HMS) -> Degrees:
+    return Degrees(Scalar(15 * (hms.hours + hms.minutes / 60 + hms.seconds / 3600)))
 
 
-def hms_to_radians(value: HMS) -> Radians:
-    return degrees_to_radians(hms_to_degrees(value))
+def hms_to_radians(hms: HMS) -> Radians:
+    return degrees_to_radians(hms_to_degrees(hms))
 
 
 def hours_to_degrees(hours: DecimalTime) -> Degrees:
@@ -73,8 +71,8 @@ def time_to_decimal_time(time: Time) -> DecimalTime:
     return DecimalTime(Scalar(unsigned_decimal))
 
 
-def decimal_time_to_time(decimal_value: DecimalTime) -> Time:
-    unsigned_decimal = abs(float(decimal_value))
+def decimal_time_to_time(time: DecimalTime) -> Time:
+    unsigned_decimal = abs(float(time))
 
     total_seconds = unsigned_decimal * 3600
     rounded_seconds = round(total_seconds % 60, 2)
@@ -93,7 +91,7 @@ def decimal_time_to_time(decimal_value: DecimalTime) -> Time:
 
 
 def make_date(year: Year, month: Month, day: Day) -> Date:
-    return Date(year=Year(year), month=Month(month), day=Day(Scalar(day)))
+    return Date(Year(year), Month(month), Day(Scalar(day)))
 
 
 def make_time(hms: HMS) -> Time:

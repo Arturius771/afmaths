@@ -8,13 +8,11 @@ from afmaths.operation import (
     exponentiate,
     multiply,
     negate,
-    ratio,
     subtract,
     summation,
 )
 from astronomy_types import (
     Acceleration,
-    Distance,
     Rate,
     Ratio,
     Scalar,
@@ -194,45 +192,3 @@ def payload_mass_for_delta_v(
 
 
 # endregion
-
-
-if __name__ == "__main__":
-
-    print(
-        propellant_mass_from_initial_mass(
-            Mass(1000),
-            hohmann_transfer(Distance(Scalar(300)), Distance(Scalar(1000)))[0],
-            Velocity(Scalar(3)),
-        )
-    )
-
-    total_delta_v, stage_delta_vs = delta_v_for_stages(
-        mass_per_stage=[
-            Mass(1000),  # launch mass
-            Mass(500),  # after stage 1 burn
-            Mass(200),  # after stage 2 burn
-        ],
-        effective_exhaust_velocity=Velocity(Scalar(3000)),
-    )
-
-    print(f"Total Δv: {total_delta_v}")
-    print(f"Stage Δvs: {stage_delta_vs}")
-
-    print(
-        payload_mass_for_delta_v(
-            Mass(5000),
-            required_mass_ratio(
-                DeltaV(Velocity(Scalar(10_000))), Velocity(Scalar(500))
-            ),
-            Mass(500),
-        )
-    )
-
-    print(thrust_to_weight(Force(Scalar(5_000)), Mass(500)))
-
-    print(
-        rocket_acceleration(
-            Force(Scalar(5_000)),
-            Mass(500),
-        )
-    )

@@ -12,7 +12,6 @@ from astronomy_types import (
     Distance,
     Inclination,
     OrbitalElements,
-    PositionVector,
     Radians,
     Ratio,
     RightAscension,
