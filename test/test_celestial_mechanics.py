@@ -1,6 +1,8 @@
 import unittest
 
+from afmaths.constants import Force, Mass
 from afmaths.physics.space.celestial_mechanics import (
+    orbit_centripetal_force,
     orbit_state_vector_prediction,
     orbital_elements_from_state_vectors,
 )
@@ -150,6 +152,25 @@ class CelestialMechanicsTestMethods(unittest.TestCase):
             result.velocity.z,
             -0.1000000000000002,
             places=2,
+        )
+
+    def test_orbit_centripetal_force(self):
+        self.assertEqual(
+            orbit_centripetal_force(
+                Velocity(Scalar(2)),
+                Distance(Scalar(4)),
+                Mass(Scalar(10)),
+            ),
+            Force(Scalar(10)),
+        )
+
+        self.assertEqual(
+            orbit_centripetal_force(
+                Velocity(Scalar(20)),
+                Distance(Scalar(4124)),
+                Mass(Scalar(11.4)),
+            ),
+            Force(Scalar(1.1057225994180406)),
         )
 
 

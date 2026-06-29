@@ -4,19 +4,20 @@ import math
 from afmaths.constants import (
     EARTH_MU_KM_CUBED,
     EARTH_RADIUS_KM,
-    EXAMPLE_ELEMENTS,
     GRAVITATIONAL_CONSTANT,
+    Area,
     DeltaV,
+    Force,
     Mass,
 )
 from afmaths.geometry.transformations import (
     ellipse_perimeter_coordinate_from_eccentric_anomaly,
 )
+from afmaths.physics.physics import centripetal_acceleration, centripetal_force
 from afmaths.physics.space.transformations import (
     transform_perifocal_vector_to_element_reference_frame,
 )
 from afmaths.physics.space.type_conversion_helpers import (
-    degrees_to_radians,
     make_eccentric_anomaly,
     make_position_vector,
     make_state_vector,
@@ -61,6 +62,7 @@ from afmaths.operation import (
     subtract,
 )
 from astronomy_types import (
+    Acceleration,
     Anomaly,
     Coordinate2D,
     Degrees,
@@ -281,7 +283,9 @@ def univesal_gravitation(
     )
 
 
-def gravitational_acceleration(mu: GravitationalParameter, radius: Distance) -> Scalar:
+def gravitational_acceleration_at_radius(
+    mu: GravitationalParameter, radius: Distance
+) -> Acceleration:
     return divide_by(SQUARE(radius))(mu)
 
 
@@ -289,6 +293,10 @@ def kepler_equation(E: EccentricAnomaly, e: Eccentricity) -> MeanAnomaly:
     """Kepler equation."""
     # M = E - e * np.sin(E)
     return subtract(multiply(e)(math.sin(E)))(E)
+
+
+def orbit_centripetal_force(velocity: Velocity, radius: Distance, mass: Mass) -> Force:
+    return centripetal_force(centripetal_acceleration(velocity, radius), mass)
 
 
 # endregion
@@ -332,7 +340,7 @@ def argument_of_latitude(
 
 def swept_area_of_ellipse(
     angular_momentum: Scalar, time_since_periapsis: Second
-) -> Scalar:
+) -> Area:
     # From MSE SFM Exercise 1
     return multiply(HALF(angular_momentum))(time_since_periapsis)
 
@@ -360,8 +368,8 @@ def vis_viva(
     )
 
 
-def velocity_difference(initial_velocity: Velocity, final_velocity: Velocity) -> DeltaV:
-    return subtract(initial_velocity)(final_velocity)
+def delta_v(initial_velocity: Velocity, final_velocity: Velocity) -> DeltaV:
+    return abs(subtract(initial_velocity)(final_velocity))
 
 
 def radial_velocity(state: StateVector) -> Velocity:
@@ -390,19 +398,15 @@ def orbit_equation(
     )
 
 
-def gravity_at_radius(r: Distance, mu: GravitationalParameter) -> Scalar:
-    return gravitational_acceleration(mu, r)
-
-
-def gravity_at_altitude(
+def gravitational_acceleration_at_altitude(
     alt: Distance,
     initial_body_radius: Distance,
     mu: GravitationalParameter,
-) -> Scalar:
+) -> Acceleration:
     # From MSE SFM Exercise 1
-    return gravity_at_radius(
-        orbit_radius(alt, initial_body_radius),
+    return gravitational_acceleration_at_radius(
         mu,
+        orbit_radius(alt, initial_body_radius),
     )
 
 

@@ -64,7 +64,7 @@ from afmaths.physics.space.celestial_mechanics import (
     radial_velocity,
     semi_major_axis_from_period,
     time_since_periapsis,
-    velocity_difference,
+    delta_v,
     velocity_at_radius,
     vis_viva,
     zenith_vector,
@@ -203,7 +203,7 @@ def increase_semi_major_axis_at_periapsis(
     current_radius: Distance,
     mu: GravitationalParameter = EARTH_MU_KM_CUBED,
 ) -> DeltaV:
-    return velocity_difference(
+    return delta_v(
         velocity_at_radius(current_radius, mu),
         vis_viva(mu, current_radius, a),
     )
@@ -214,7 +214,7 @@ def increase_semi_major_axis_at_apoapsis(
     current_radius: Distance,
     mu: GravitationalParameter = EARTH_MU_KM_CUBED,
 ) -> DeltaV:
-    return velocity_difference(
+    return delta_v(
         vis_viva(mu, current_radius, a),
         velocity_at_radius(current_radius, mu),
     )
@@ -225,7 +225,7 @@ def decrease_semi_major_axis_at_periapsis(
     current_radius: Distance,
     mu: GravitationalParameter = EARTH_MU_KM_CUBED,
 ) -> DeltaV:
-    return velocity_difference(
+    return delta_v(
         vis_viva(mu, current_radius, a),
         velocity_at_radius(current_radius, mu),
     )
@@ -236,7 +236,7 @@ def decrease_semi_major_axis_at_apoapsis(
     current_radius: Distance,
     mu: GravitationalParameter = EARTH_MU_KM_CUBED,
 ) -> DeltaV:
-    return velocity_difference(
+    return delta_v(
         velocity_at_radius(current_radius, mu),
         vis_viva(mu, current_radius, a),
     )
@@ -352,7 +352,7 @@ def parabolic_escape(elements: OrbitalElements, mu: GravitationalParameter) -> D
         )
     )
 
-    return velocity_difference(velocity_at_periapsis, parabolic_escape_velocity)
+    return delta_v(velocity_at_periapsis, parabolic_escape_velocity)
 
 
 # region Transfer Orbit
@@ -521,7 +521,7 @@ def phase_delta_v(
         phase_semi_major_axis,
     )
 
-    return velocity_difference(original_velocity, phase_velocity)
+    return delta_v(original_velocity, phase_velocity)
 
 
 def phase_orbit(
