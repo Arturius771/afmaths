@@ -571,35 +571,3 @@ def westware_drift_from_angular_velocity_and_period(
 
 
 # endregion
-
-
-if __name__ == "__main__":
-
-    # (0.37539955175032447, 0.19003921507073027, 0.18536033667959417)
-    print(hohmann_transfer(Distance(Scalar(300)), Distance(Scalar(1000))))
-
-    position = PositionVector(
-        Position(Scalar(7000)), Position(Scalar(0.1)), Position(Scalar(0.1))
-    )
-
-    velocity = VelocityVector(
-        Velocity(Scalar(0.1)), Velocity(Scalar(7.5)), Velocity(Scalar(0.1))
-    )
-
-    print(f"Radial      : {radial(position)}")
-    print(f"Anti-radial : {anti_radial(position)}")
-    print(f"Zenith      : {zenith_vector(position)}")
-    print(f"Nadir       : {nadir_vector(position)}")
-    print(f"Prograde    : {prograde(velocity)}")
-    print(f"Retrograde  : {retrograde(velocity)}")
-    print(f"Normal      : {normal(StateVector(position, velocity))}")
-    print(f"Anti-normal : {anti_normal(StateVector(position, velocity))}")
-    print(
-        f"Flight path angle (deg): {math.degrees(flight_path_angle(StateVector(position, velocity)))}"
-    )
-    print(
-        f"Flight path angle (deg): {math.degrees(signed_flight_path_angle(StateVector(position, velocity)))}"
-    )
-    print(
-        f"Flight path angle (deg): {math.degrees(flight_path_angle_from_elements(orbital_elements_from_state_vectors(StateVector(position, velocity))))}"
-    )

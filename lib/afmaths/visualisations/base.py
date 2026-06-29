@@ -25,7 +25,7 @@ from afmaths.geometry.geometry import (
     calculate_foci,
     semi_minor_axis,
 )
-from afmaths.geometry.transformations import translate_ellipse_coordinate
+from afmaths.geometry.transformations import translate_ellipse
 from afmaths.physics.space.celestial_mechanics import (
     EARTH_MU_KM_CUBED,
     generate_all_orbit_positions,
@@ -184,7 +184,7 @@ def coordinates_for_elements(
     elements: OrbitalElements,
     E: EccentricAnomaly,
 ) -> Coordinate2D:
-    local_coordinate = translate_ellipse_coordinate(
+    local_coordinate = translate_ellipse(
         Coordinate2D(Scalar(0), Scalar(0)),
         elements.semi_major_axis,
         semi_minor_axis(elements.semi_major_axis, elements.eccentricity),

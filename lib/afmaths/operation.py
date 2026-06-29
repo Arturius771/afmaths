@@ -85,12 +85,12 @@ def termial(number: int) -> int:
     return HALF(multiply(number)(add(number)(1)))
 
 
-def interval(start: float, end: float, n: int) -> list[float]:
+def interval(start: float, end: float, number_of_intervals: int) -> list[float]:
     """Creates n evenly spaced points between a and b."""
-    if n < 2:
+    if number_of_intervals < 2:
         return [start]
-    step = (end - start) / (n - 1)
-    return [start + i * step for i in range(n)]
+    step = (subtract(start)(end)) / (subtract(1)(number_of_intervals))
+    return [start + i * step for i in range(number_of_intervals)]
 
 
 # Apply a function of two arguments cumulatively to the items of an iterable, from left to right.
@@ -155,9 +155,3 @@ def newtons_raphson_method(
     # E_i - (E_i - eccentricity * math.sin(E_i) - mean_anomaly)
     # M = E - e * np.sin(E)
     return subtract(divide_by(derivative)(function))(first_term)
-
-
-if __name__ == "__main__":
-    print(reduce(lambda a, b: subtract(b)(a))([1, 2, 3, 5, 6]))
-    print(multiply_by_repeated_addition(2.5)(3))
-    print(exponentiate_by_repeated_multiplication(5)(2))

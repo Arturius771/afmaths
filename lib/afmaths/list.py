@@ -66,7 +66,3 @@ def dataplotter(number_list: list[float]) -> tuple:
         list_median(number_list),
         quartiles(number_list),
     )
-
-
-if __name__ == "__main__":
-    print(dataplotter([53, 2, 3, 4, 6]))

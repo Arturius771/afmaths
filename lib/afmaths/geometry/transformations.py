@@ -2,6 +2,7 @@ import math
 
 from astronomy_types import (
     Coordinate2D,
+    Coordinate3D,
     Degrees,
     Scalar,
     SemiMajorAxis,
@@ -20,7 +21,17 @@ from afmaths.tensors import (
 )
 
 
-def translate_ellipse_coordinate(
+def translate_coordinate(coord: Coordinate2D, offset: Vector2D) -> Coordinate2D:
+    return Coordinate2D(x=add(coord.x)(offset.x), y=add(coord.y)(offset.y))
+
+
+def translate_coordinate_3d(coord: Coordinate3D, offset: Vector3D) -> Coordinate3D:
+    return Coordinate3D(
+        x=add(coord.x)(offset.x), y=add(coord.y)(offset.y), z=add(coord.z)(offset.z)
+    )
+
+
+def translate_ellipse(
     central_point: Coordinate2D,
     a: SemiMajorAxis,
     b: SemiMinorAxis,
@@ -33,10 +44,7 @@ def translate_ellipse_coordinate(
         E,
     )
 
-    return Coordinate2D(
-        x=central_point.x + relative.x,
-        y=central_point.y + relative.y,
-    )
+    return translate_coordinate(central_point, make_vector2d(relative.x, relative.y))
 
 
 def ellipse_perimeter_coordinate_from_eccentric_anomaly(

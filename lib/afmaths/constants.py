@@ -25,7 +25,7 @@ from astronomy_types import (
     dataclass,
 )
 
-from afmaths.operation import exponentiate, multiply
+from afmaths.operation import exponentiate, multiply, negate
 
 EARTH_MU_KM_CUBED = GravitationalParameter(Scalar(398600.5))  # km^3 / s^2
 EARTH_RADIUS_KM = Distance(Scalar(6378.0))  # km
@@ -62,9 +62,10 @@ OTHER_EXAMPLE_ELEMENTS = OrbitalElements(
 #     TrueAnomaly(Anomaly(Radians(Scalar(19)))),
 # )
 SPEED_OF_LIGHT_METRES_PER_SECONDS = 299792458
-PLANCK_CONSTANT = multiply(6.62607004)(exponentiate(-34)(10))
-GRAVITATIONAL_CONSTANT = multiply(6.67430)(exponentiate(-11)(10))  # 6.67430e-11
+PLANCK_CONSTANT = multiply(6.62607004)(exponentiate(negate(34))(10))
+GRAVITATIONAL_CONSTANT = multiply(6.67430)(exponentiate(negate(11))(10))  # 6.67430e-11
 STANDARD_GRAVITY = Acceleration(Scalar(9.80665))  # m/s
+STEFAN_BOLTZMANN_CONSTANT = multiply(5.670367)(exponentiate(negate(8))(10))
 
 Mass = NewType("Mass", float)
 Pressure = NewType("Pressure", float)

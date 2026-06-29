@@ -18,7 +18,7 @@ MOON_RADIUS_KM = 1_737.4
 EARTH_GRAVITATIONAL_PARAMETER = GravitationalParameter(Scalar(398_600.4418))
 
 
-def main() -> None:
+if __name__ == "__main__":
     settings = OrbitPlotSettings(
         centre=HorizonsCommandTarget.EARTH,
         gravitational_parameter=EARTH_GRAVITATIONAL_PARAMETER,
@@ -44,7 +44,3 @@ def main() -> None:
             )
         ],
     ).show()
-
-
-if __name__ == "__main__":
-    main()

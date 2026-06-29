@@ -3,7 +3,7 @@ import math
 from afmaths.constants import (
     GRAVITATIONAL_CONSTANT,
     SPEED_OF_LIGHT_METRES_PER_SECONDS,
-    STANDARD_GRAVITY,
+    Area,
     Force,
     Mass,
     Momentum,

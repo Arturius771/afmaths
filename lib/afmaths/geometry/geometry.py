@@ -11,6 +11,7 @@ from astronomy_types import (
 )
 from afmaths.constants import Area
 from afmaths.formula import taylor_series
+from afmaths.geometry.transformations import translate_coordinate
 from afmaths.operation import (
     HALF,
     SQUARE,
@@ -24,7 +25,11 @@ from afmaths.operation import (
 )
 import math
 
-pythagoras = lambda a: lambda b: add(SQUARE(a))(SQUARE(b))
+from afmaths.physics.space.type_conversion_helpers import make_vector2d, make_vector3d
+
+
+def pythagoras_theorem(a):
+    return lambda b: square_root(add(SQUARE(a))(SQUARE(b)))
 
 
 def euclid(m: int, n: int) -> int:
@@ -56,23 +61,23 @@ def sieve_of_eratosthenes(n: int) -> list[int]:
     return primes
 
 
-def tangent(angle_degrees: float) -> float:
-    """Returns a value in radians"""
-    return divide_by(cosine(angle_degrees))(sine(angle_degrees))
+# def tangent(angle_degrees: float) -> float:
+#     """Returns a value in radians"""
+#     return divide_by(cosine(angle_degrees))(sine(angle_degrees))
 
 
-def arctangent(radians):
-    return math.degrees(math.atan(radians))
+# def arctangent(radians):
+#     return math.degrees(math.atan(radians))
 
 
-def sine(angle_degrees: float) -> float:
-    """Returns a value in radians"""
-    return taylor_series(math.radians(angle_degrees))(math.radians(angle_degrees), 2, 3)
+# def sine(angle_degrees: float) -> float:
+#     """Returns a value in radians"""
+#     return taylor_series(math.radians(angle_degrees))(math.radians(angle_degrees), 2, 3)
 
 
-def cosine(angle_degrees: float) -> float:
-    """Returns a value in radians"""
-    return taylor_series(math.radians(angle_degrees))(1, 2, 2)
+# def cosine(angle_degrees: float) -> float:
+#     """Returns a value in radians"""
+#     return taylor_series(math.radians(angle_degrees))(1, 2, 2)
 
 
 # def calculate_semi_minor_axis(
@@ -152,7 +157,7 @@ def eccentricity_factor_plus(e: Eccentricity) -> Scalar:
 
 
 def calculate_foci(
-    a: SemiMajorAxis, e: Eccentricity
+    a: SemiMajorAxis, e: Eccentricity, ellipse_centre: Coordinate2D = Coordinate2D(0, 0)
 ) -> tuple[Coordinate2D, Coordinate2D]:
     """
     Calculate the coordinates of the foci of an ellipse given its semi-major axis and eccentricity.
@@ -169,7 +174,14 @@ def calculate_foci(
 
     c = a * e
     # [X1, Y1] = (-c, 0) and [X2, Y2] = (c, 0) for an ellipse centered at the origin
-    return (Coordinate2D(-c, 0), Coordinate2D(c, 0))
+    return (
+        translate_coordinate(
+            Coordinate2D(-c, 0), make_vector2d(ellipse_centre.x, ellipse_centre.y)
+        ),
+        translate_coordinate(
+            Coordinate2D(c, 0), make_vector2d(ellipse_centre.x, ellipse_centre.y)
+        ),
+    )
 
 
 def semi_major_axis_from_nearest_vertex_distance(

@@ -11,6 +11,9 @@ from afmaths.operation import (
     multiply,
     multiply_by_repeated_addition,
     negate,
+    newtons_raphson_method,
+    ratio,
+    reduce,
     square,
     square_root,
     subtract,
@@ -18,7 +21,7 @@ from afmaths.operation import (
 )
 
 
-class CoordinateTestMethods(unittest.TestCase):
+class OperatioTestMethods(unittest.TestCase):
     def test_add(self):
         result = add(5)(6)
 
@@ -34,10 +37,18 @@ class CoordinateTestMethods(unittest.TestCase):
 
         self.assertEqual(result, 1112)
 
+        result = multiply(10)(2)
+
+        self.assertEqual(result, 20)
+
     def test_multiply_by_repeated_addition(self):
         result = multiply_by_repeated_addition(556)(2)
 
         self.assertEqual(result, 1112)
+
+        result = multiply_by_repeated_addition(10)(2)
+
+        self.assertEqual(result, 20)
 
     def test_divide(self):
         result = divide_by(7)(41)
@@ -88,6 +99,21 @@ class CoordinateTestMethods(unittest.TestCase):
         result = interval(0, 10, 5)
 
         self.assertEqual(result, [0.0, 2.5, 5.0, 7.5, 10.0])
+
+    def test_ratio(self):
+        result = ratio(5)(10)
+
+        self.assertEqual(result, 0.5)
+
+    def test_newtons_raphson_method(self):
+        result = newtons_raphson_method(60, subtract(5)(4), 3)
+
+        self.assertEqual(result, 60.333333333333336)
+
+    def test_reduce(self):
+        result = reduce(lambda a, b: subtract(b)(a))([1, 2, 3, 5, 6])
+
+        self.assertEqual(result, -15)
 
 
 if __name__ == "__main__":

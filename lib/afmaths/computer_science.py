@@ -1,5 +1,7 @@
 import math
-from .geometry import pythagoras
+
+from afmaths.geometry.geometry import pythagoras_theorem
+
 from .operation import (
     HALF,
     add,
@@ -22,7 +24,7 @@ def compressed_file_size(uncompressed_size):
 
 def diagonal_pixel_length(length_in_pixels):
     return lambda width_in_pixels: math.floor(
-        pythagoras(length_in_pixels)(width_in_pixels)
+        pythagoras_theorem(length_in_pixels)(width_in_pixels)
     )
 
 
@@ -116,9 +118,8 @@ def ml_activation_function(input: float, threshold: float = 0):
 
 def byte_to_ascii_text(input: int) -> str:
     # https://www.rapidtables.com/convert/number/binary-to-ascii.html
-    value = byte_to_decimal(input)
 
-    return chr(value)
+    return chr(byte_to_decimal(input))
 
 
 def byte_to_decimal(input: int) -> int:

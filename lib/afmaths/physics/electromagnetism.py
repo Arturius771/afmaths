@@ -1,4 +1,4 @@
-from afmaths.constants import PLANCK_CONSTANT
+from afmaths.constants import PLANCK_CONSTANT, STEFAN_BOLTZMANN_CONSTANT, Area
 from afmaths.formula import inverse_square_law
 from afmaths.operation import SQUARE, divide_by, exponentiate, multiply
 
@@ -37,3 +37,14 @@ def photon_energy_from_wavelength(wavelength_in_micrometer: float) -> float:
 def photon_energy_from_frequency(frequency_in_hertz: float) -> float:
     """Returns photon energy in joules"""
     return multiply(PLANCK_CONSTANT)(frequency_in_hertz)
+
+
+def stefan_boltzmann_law(
+    emission_coefficient: float, surface_area: Area, temperature: float
+) -> float:
+    """Returns the amount of power radiated in Watts by a black body."""
+    return multiply(STEFAN_BOLTZMANN_CONSTANT)(
+        multiply(emission_coefficient)(
+            multiply(surface_area)(exponentiate(4)(temperature))
+        )
+    )
