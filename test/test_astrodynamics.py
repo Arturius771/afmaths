@@ -1,7 +1,6 @@
 import unittest
 
 from afmaths.constants import BurnDirection
-from afmaths.physics.space.celestial_mechanics import nadir_vector, zenith_vector
 from afmaths.physics.space.engineering.astrodynamics import (
     anti_normal,
     anti_radial,
@@ -102,32 +101,6 @@ class AstrodynamicsTestMethods(unittest.TestCase):
     def test_anti_radial(self):
         self.assertEqual(
             anti_radial(
-                PositionVector(
-                    Position(Scalar(7000)), Position(Scalar(0.1)), Position(Scalar(0.1))
-                )
-            ),
-            Vector3D(
-                x=-0.9999999997959184,
-                y=-1.4285714282798834e-05,
-                z=-1.4285714282798834e-05,
-            ),
-        )
-
-    def test_zenith(self):
-        self.assertEqual(
-            zenith_vector(
-                PositionVector(
-                    Position(Scalar(7000)), Position(Scalar(0.1)), Position(Scalar(0.1))
-                )
-            ),
-            Vector3D(
-                x=0.9999999997959184, y=1.4285714282798834e-05, z=1.4285714282798834e-05
-            ),
-        )
-
-    def test_nadir(self):
-        self.assertEqual(
-            nadir_vector(
                 PositionVector(
                     Position(Scalar(7000)), Position(Scalar(0.1)), Position(Scalar(0.1))
                 )

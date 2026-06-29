@@ -11,7 +11,6 @@ from afmaths.list import (
     list_sum,
     quartiles,
 )
-from afmaths.statistics import probability_of_outcome_percentage
 
 
 class ListTestMethods(unittest.TestCase):
