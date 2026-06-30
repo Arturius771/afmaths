@@ -1,11 +1,11 @@
 import math
-from afmaths.constants import TransformationMatrix3D
 from astronomy_types import OrbitalElements, Scalar, Vector3D
 from afmaths.geometry.transformations import (
     orthonormal_frame_transform_3d,
     rotation_matrix_3d,
 )
 from afmaths.physics.space.type_conversion_helpers import make_vector3d
+from afmaths.types import TransformationMatrix3D
 
 
 def transform_perifocal_vector_to_element_reference_frame(

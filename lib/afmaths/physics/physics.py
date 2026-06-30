@@ -1,15 +1,10 @@
-from dataclasses import dataclass
 import math
-from afmaths.constants import (
-    GRAVITATIONAL_CONSTANT,
-    SPEED_OF_LIGHT_METRES_PER_SECONDS,
-    Area,
+from afmaths.types import (
     Force,
     Mass,
     Momentum,
 )
 from afmaths.operation import (
-    DOUBLE,
     HALF,
     SQUARE,
     divide_by,

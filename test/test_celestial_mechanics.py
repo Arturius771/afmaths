@@ -1,6 +1,6 @@
 import unittest
 
-from afmaths.constants import Force, Mass
+from afmaths.types import Force, Mass
 from afmaths.physics.space.celestial_mechanics import (
     orbit_centripetal_force,
     orbit_state_vector_prediction,

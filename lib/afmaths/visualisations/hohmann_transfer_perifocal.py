@@ -3,6 +3,7 @@ from __future__ import annotations
 import math
 
 import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 
 from afmaths.constants import EARTH_MU_KM_CUBED
 from afmaths.physics.space.engineering.astrodynamics import (

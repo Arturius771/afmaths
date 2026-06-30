@@ -5,10 +5,6 @@ from afmaths.constants import (
     EARTH_MU_KM_CUBED,
     EARTH_RADIUS_KM,
     GRAVITATIONAL_CONSTANT,
-    Area,
-    DeltaV,
-    Force,
-    Mass,
 )
 from afmaths.geometry.transformations import (
     ellipse_perimeter_coordinate_from_eccentric_anomaly,
@@ -93,6 +89,8 @@ from astronomy_types import (
     VelocityVector,
     Distance,
 )
+
+from afmaths.types import Area, DeltaV, Force, Mass
 
 ## Check if this belongs in geometry.py
 # def true_anomaly_from_eccentric_anomaly(
@@ -899,10 +897,10 @@ def semi_latus_rectum_from_angular_momentum(
 
 
 def mean_anomaly_at_time(
-    mean_anomaly: MeanAnomaly, time_offset_s: Second, mean_motion: MeanMotion
+    M: MeanAnomaly, time_offset_s: Second, n: MeanMotion
 ) -> MeanAnomaly:
     """Calculates the mean anomaly at a given time offset from the current mean motion and mean anomaly"""
-    return add(mean_anomaly)(multiply(mean_motion)(time_offset_s))
+    return add(M)(multiply(n)(time_offset_s))
 
 
 # endregion

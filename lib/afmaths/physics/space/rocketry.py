@@ -1,6 +1,6 @@
 import math
 
-from afmaths.constants import STANDARD_GRAVITY, Force, Mass, Momentum, Pressure
+from afmaths.constants import STANDARD_GRAVITY
 from afmaths.geometry.geometry import Area
 from afmaths.operation import (
     add,
@@ -26,6 +26,7 @@ from afmaths.physics.physics import (
     momentum,
 )
 from afmaths.physics.space.engineering.astrodynamics import DeltaV, hohmann_transfer
+from afmaths.types import Force, Mass, Momentum, Pressure
 
 
 def tsiolkovsky_ideal_rocket_equation(

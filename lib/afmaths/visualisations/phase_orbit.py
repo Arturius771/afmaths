@@ -5,7 +5,7 @@ from dataclasses import replace
 
 import plotly.graph_objects as go
 
-from afmaths.constants import EARTH_MU_KM_CUBED, DeltaV
+from afmaths.constants import EARTH_MU_KM_CUBED
 from afmaths.physics.space.engineering.astrodynamics import (
     phase_apoapsis,
     phase_orbit,
@@ -16,6 +16,7 @@ from afmaths.physics.space.celestial_mechanics import (
     orbital_period,
     periapsis_radius,
 )
+from afmaths.types import DeltaV
 from afmaths.visualisations.base import coordinates_for_elements
 from afmaths.visualisations.helpers import (
     PlotOrbital2DSettings,
@@ -447,13 +448,13 @@ def build_phase_orbit_2d_perifocal_figure(
             plot_max(settings),
             title=(
                 f"{title_prefix}<br>"
-                f"Initial ν = {initial_true_anomaly:.3f} rad, "
-                f"desired ν = {desired_true_anomaly:.3f} rad, "
-                f"forward Δν = {forward_true_anomaly_delta_rad(
+                f"Initial ta = {initial_true_anomaly:.3f} rad, "
+                f"desired ta = {desired_true_anomaly:.3f} rad, "
+                f"forward Δta = {forward_true_anomaly_delta_rad(
                     initial_true_anomaly,
                     desired_true_anomaly,
                 ):.3f} rad<br>"
-                f"Signed phase Δν = {signed_phase_delta:.3f} rad "
+                f"Signed phase Δta = {signed_phase_delta:.3f} rad "
                 f"({phase_direction_label(
                         initial_true_anomaly,
                         desired_true_anomaly,

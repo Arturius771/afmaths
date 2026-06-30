@@ -20,7 +20,7 @@ from astronomy_types import (
     VelocityVector,
 )
 
-from afmaths.constants import DeltaV, Mass
+from afmaths.types import DeltaV, Mass
 from afmaths.geometry.geometry import (
     calculate_foci,
     semi_minor_axis,

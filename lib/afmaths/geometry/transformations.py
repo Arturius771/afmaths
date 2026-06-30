@@ -12,13 +12,13 @@ from astronomy_types import (
     Vector3D,
 )
 
-from afmaths.constants import TransformationMatrix2D, TransformationMatrix3D
 from afmaths.operation import add, multiply, negate, subtract
 from afmaths.physics.space.type_conversion_helpers import make_vector2d, make_vector3d
 from afmaths.tensors import (
     matrix_vector_multiply_2d,
     matrix_vector_multiply_3d,
 )
+from afmaths.types import TransformationMatrix2D, TransformationMatrix3D
 
 
 def translate_coordinate(coord: Coordinate2D, offset: Vector2D) -> Coordinate2D:
