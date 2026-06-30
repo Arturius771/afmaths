@@ -1,6 +1,10 @@
 import math
 from typing import Callable
-from astronomy_types import Ratio
+from astronomy_types import Coordinate2D, Ratio
+
+from afmaths.types import Percentage
+
+# region Basic Operations
 
 
 def add(num1: float) -> Callable:
@@ -49,6 +53,8 @@ def absolute(value: float) -> float:
 
 
 # def ratio(num1): return  lambda num2: divide(num1)(num2) # TODO: provide as {numerator and denominator object?}
+
+# region Helpers
 
 
 def half():
@@ -146,6 +152,93 @@ def product(
         total = multiply_by_repeated_addition(product_function(val))(total)
 
     return total
+
+
+def ratio_to_percentage(ratio: Ratio) -> Percentage:
+    return multiply(100)(ratio)
+
+
+def sigmoid(input: float, bias: float = 0) -> float:
+    """Calculates the sigmoid of a value"""
+    # TM358 Section Block 1 section 5
+    return divide_by(add(1)(exponentiate(add(bias)(-input))(math.e)))(1)
+
+
+# region Formula
+
+
+def taylor_series(value):
+    """Calculates the Taylor series of a value"""
+
+    # Written for sin and cos functions so may not be generic for pure Taylor Series functions.
+    def steps(
+        initial_value_in_series, increment=1, initial_denmoninator=1, steps=3, sign=-1
+    ):
+        taylor = [initial_value_in_series]
+        for _ in range(steps):
+            exponent = exponentiate(initial_denmoninator)
+            division = divide_by(factorial(initial_denmoninator))
+            taylor.append(division(exponent(value)))
+            initial_denmoninator += increment
+
+        for index in range(len(taylor)):
+            sign = -1 if sign == +1 else +1
+            taylor[index] = taylor[index] * sign
+
+        # from functools import reduce
+        return reduce(lambda a, b: a + b)(taylor)
+
+    return steps
+
+
+def herons_method(value: float):
+    """
+    O(log precision) method for calculating square roots. The square roots of two values (eg. 25, 2982186) will be calculated in the same number of cycles to the same precision
+    """
+    # www.youtube.com/watch?v=l2TCgS_eLwA
+    initial_estimate = value / 2
+    current_step = initial_estimate
+    epsilon = value * exponentiate(-9)(10)
+
+    while True:
+        next_step = 1 / 2 * (current_step + (value / current_step))
+        if next_step < epsilon:
+            break
+        current_step = next_step
+
+    return current_step
+
+
+def trapezoidal_rule(curve: list[Coordinate2D]) -> float:
+    if len(curve) < 2:
+        return 0.0
+
+    curve = sorted(curve, key=lambda point: point.x)
+
+    def trap(n: int) -> float:
+        left = curve[n]  # x_k, f(x_k)
+        right = curve[n + 1]  # x_{k+1}, f(x_{k+1})
+
+        width = right.x - left.x  # x_{k+1} - x_k
+
+        average_height = (left.y + right.y) / 2
+        # (f(x_k) + f(x_{k+1})) / 2
+
+        return multiply(width)(average_height)
+
+    return summation(trap, 0, len(curve) - 2)
+
+
+def power_rule_string(symbol: float, exponent: float) -> str:
+    return f"f({symbol}^{{{exponent}}}) = {exponent} * {symbol}^{{{exponent - 1}}}"
+
+
+def is_divisible(num: int, factor: int) -> bool:
+
+    if num == 0:
+        raise ValueError("Cannot divide by zero")
+
+    return num % factor == 0
 
 
 def newtons_raphson_method(

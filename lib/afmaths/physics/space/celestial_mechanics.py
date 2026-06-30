@@ -169,7 +169,9 @@ def propagate_orbit_2d(
         ),
     )
 
-    E, _ = eccentric_anomaly_solved(newtons_method, orbital_elements.eccentricity, M)
+    E, _ = eccentric_anomaly_solved(
+        newtons_method_eccentric_anomaly, orbital_elements.eccentricity, M
+    )
 
     return ellipse_perimeter_coordinate_from_eccentric_anomaly(
         orbital_elements.semi_major_axis,
@@ -763,7 +765,7 @@ def true_anomaly_at_angle(
 
 def true_anomaly(eccentricity: Eccentricity, mean_anomaly: MeanAnomaly) -> TrueAnomaly:
     eccentric_anomaly, _ = eccentric_anomaly_solved(
-        newtons_method, eccentricity, mean_anomaly
+        newtons_method_eccentric_anomaly, eccentricity, mean_anomaly
     )
 
     return true_anomaly_from_eccentric_anomaly(eccentric_anomaly, eccentricity)
@@ -784,7 +786,7 @@ def true_anomaly_at_time(
 # region ## Eccentric Anomaly
 
 
-def newtons_method(
+def newtons_method_eccentric_anomaly(
     E_i_guess: EccentricAnomaly, e: Eccentricity, M: MeanAnomaly
 ) -> EccentricAnomaly:
     """Performs one iteration of Newton's method to solve Kepler's equation for the eccentric anomaly.

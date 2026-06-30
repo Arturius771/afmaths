@@ -1,6 +1,6 @@
 import unittest
 
-from afmaths.constants import DeltaV, Force, Mass
+from afmaths.types import DeltaV, Force, Mass
 from afmaths.physics.space.engineering.astrodynamics import hohmann_transfer
 from afmaths.physics.space.rocketry import (
     delta_v_for_stages,

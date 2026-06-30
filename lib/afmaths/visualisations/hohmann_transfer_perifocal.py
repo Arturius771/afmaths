@@ -4,7 +4,7 @@ import math
 
 import plotly.graph_objects as go
 
-from afmaths.constants import EARTH_MU_KM_CUBED, BurnDirection
+from afmaths.constants import EARTH_MU_KM_CUBED
 from afmaths.physics.space.engineering.astrodynamics import (
     hohmann_transfer_from_radii,
     transfer_eccentricity,
@@ -14,6 +14,7 @@ from afmaths.physics.space.celestial_mechanics import (
     orbit_radius,
     periapsis_radius,
 )
+from afmaths.types import BurnDirection
 from afmaths.visualisations.base import (
     coordinates_for_elements,
     transfer_arc_angles,

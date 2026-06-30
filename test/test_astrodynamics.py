@@ -1,6 +1,5 @@
 import unittest
 
-from afmaths.constants import BurnDirection
 from afmaths.physics.space.engineering.astrodynamics import (
     anti_normal,
     anti_radial,
@@ -20,6 +19,8 @@ from astronomy_types import (
     Velocity,
     VelocityVector,
 )
+
+from afmaths.types import BurnDirection
 
 
 class AstrodynamicsTestMethods(unittest.TestCase):

@@ -21,7 +21,6 @@ from astronomy_types import (
     Vector2D,
     Vector3D,
     Velocity,
-    dataclass,
 )
 
 from afmaths.operation import exponentiate, multiply, negate
@@ -65,23 +64,3 @@ PLANCK_CONSTANT = multiply(6.62607004)(exponentiate(negate(34))(10))
 GRAVITATIONAL_CONSTANT = multiply(6.67430)(exponentiate(negate(11))(10))  # 6.67430e-11
 STANDARD_GRAVITY = Acceleration(Scalar(9.80665))  # m/s
 STEFAN_BOLTZMANN_CONSTANT = multiply(5.670367)(exponentiate(negate(8))(10))
-
-Mass = NewType("Mass", float)
-Pressure = NewType("Pressure", float)
-Force = NewType("Force", float)
-Area = NewType("Area", Scalar)
-TransformationMatrix2D = NewType("TransformationMatrix2D", Vector2D[Vector2D[Scalar]])
-TransformationMatrix3D = NewType("TransformationMatrix3D", Vector3D[Vector3D[Scalar]])
-DeltaV = NewType("DeltaV", Velocity)
-EarthCentredInertialFrame = NewType("EarthCentredInertialFrame", Vector3D[Scalar])
-Momentum = NewType("Momentum", Scalar)
-Force = NewType("Force", Scalar)
-
-
-class BurnDirection(Enum):
-    PROGRADE = "prograde"
-    RETROGRADE = "retrograde"
-    RADIAL = "radial"
-    ANTIRADIAl = "antiradial"
-    NORMAL = "normal"
-    ANTINORMAL = "antinormal"

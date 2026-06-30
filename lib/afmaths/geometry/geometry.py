@@ -9,8 +9,7 @@ from astronomy_types import (
     SemiMajorAxis,
     SemiMinorAxis,
 )
-from afmaths.constants import Area
-from afmaths.formula import taylor_series
+from afmaths.types import Area
 from afmaths.geometry.transformations import translate_coordinate
 from afmaths.operation import (
     HALF,

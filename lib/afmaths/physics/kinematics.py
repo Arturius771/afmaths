@@ -12,10 +12,9 @@ from astronomy_types import (
     Velocity,
 )
 
-from afmaths.formula import trapezoidal_rule
 from afmaths.geometry.geometry import area
 from afmaths.graph import slope_gradiant
-from afmaths.operation import add, multiply
+from afmaths.operation import add, multiply, trapezoidal_rule
 from afmaths.physics.space.type_conversion_helpers import make_vector3d
 from afmaths.tensors import vector_multiplication_2d, vector_multiplication_3d
 

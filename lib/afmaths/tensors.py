@@ -1,6 +1,5 @@
-from afmaths.constants import TransformationMatrix2D, TransformationMatrix3D
 from afmaths.physics.space.type_conversion_helpers import make_vector3d
-
+from afmaths.types import TransformationMatrix2D, TransformationMatrix3D
 from .operation import SQUARE, add, divide_by, multiply, negate, square_root, subtract
 from astronomy_types import (
     Position,
