@@ -3,7 +3,7 @@ import unittest
 from afmaths.types import Force, Mass
 from afmaths.physics.space.celestial_mechanics import (
     orbit_centripetal_force,
-    orbit_state_vector_prediction,
+    state_vector_at_time,
     orbital_elements_from_state_vectors,
 )
 from astronomy_types import (
@@ -65,7 +65,7 @@ class CelestialMechanicsTestMethods(unittest.TestCase):
         self.assertAlmostEqual(result.true_anomaly, 2.987554518980773, places=6)
 
     def test_orbit_state_vector_prediction(self):
-        result = orbit_state_vector_prediction(
+        result = state_vector_at_time(
             OrbitalElements(
                 Inclination(degrees_to_radians(Degrees(Scalar(98.371)))),
                 RightAscension(degrees_to_radians(Degrees(Scalar(120.534)))),
@@ -107,7 +107,7 @@ class CelestialMechanicsTestMethods(unittest.TestCase):
             places=2,
         )
 
-        result = orbit_state_vector_prediction(
+        result = state_vector_at_time(
             orbital_elements_from_state_vectors(
                 StateVector(
                     PositionVector(

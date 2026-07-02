@@ -16,7 +16,7 @@ from astronomy_types import (
 
 import plotly.graph_objects as go
 
-from afmaths.constants import OTHER_EXAMPLE_ELEMENTS, Mass
+from afmaths.constants import OTHER_EXAMPLE_ELEMENTS
 from afmaths.geometry.geometry import calculate_distance
 from afmaths.physics.kinematics import position_vector_from_coordinates
 from afmaths.physics.space.engineering.astrodynamics import (
@@ -35,8 +35,10 @@ from afmaths.physics.space.celestial_mechanics import (
     vis_viva,
 )
 from afmaths.physics.space.engineering.thermal_subsystem import EXAMPLE_ELEMENTS
+from afmaths.types import Mass
 from afmaths.visualisations.base import (
     coordinates_for_elements,
+    scale_orbital_elements_for_plot,
     secondary_focus_coordinates_for_elements,
     tangent_vector_for_plot,
 )
@@ -46,7 +48,6 @@ from afmaths.visualisations.helpers import (
     add_perifocal_orbit_line,
     add_plot_centre,
     central_body_radius_plot,
-    elements_scaled_to_plot,
     figure_circle,
     figure_layout,
     figure_planetary_body,
@@ -100,9 +101,9 @@ def add_orbiting_body_2d(
 ) -> tuple[go.Figure, int, int, list[int]]:
     body_trace_index = len(tuple(fig.data))
 
-    plot_elements = elements_scaled_to_plot(
+    plot_elements = scale_orbital_elements_for_plot(
         elements,
-        settings.distance_scale,
+        Distance(Scalar(settings.distance_scale)),
     )
 
     coordinates = coordinates_for_elements(
@@ -220,9 +221,9 @@ def generate_combined_orbital_slider_data(
 
         for index, elements in enumerate(orbital_elements):
 
-            plot_elements = elements_scaled_to_plot(
+            plot_elements = scale_orbital_elements_for_plot(
                 elements,
-                settings.distance_scale,
+                Distance(Scalar(settings.distance_scale)),
             )
 
             mu = gravitational_parameter(
@@ -437,7 +438,7 @@ def build_2d_orbit_visualiser_figure(
     )
 
 
-DISTANCE_SCALE_KM = 12_824.9333333
+DISTANCE_SCALE_KM = 17_000.0
 
 
 def main() -> None:

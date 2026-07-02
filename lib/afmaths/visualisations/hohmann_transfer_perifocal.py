@@ -3,8 +3,6 @@ from __future__ import annotations
 import math
 
 import plotly.graph_objects as go
-from plotly.subplots import make_subplots
-
 from afmaths.constants import EARTH_MU_KM_CUBED
 from afmaths.physics.space.engineering.astrodynamics import (
     hohmann_transfer_from_radii,
@@ -18,6 +16,8 @@ from afmaths.physics.space.celestial_mechanics import (
 from afmaths.types import BurnDirection
 from afmaths.visualisations.base import (
     coordinates_for_elements,
+    eccentric_anomaly,
+    plotted_radius_for_eccentric_anomaly,
     transfer_arc_angles,
 )
 from afmaths.visualisations.helpers import (
@@ -82,31 +82,6 @@ def transfer_burn_plot_node(
         ),
         colour="red",
         symbol="x",
-    )
-
-
-def plotted_radius_from_primary_focus(
-    primary_focus_plot_coordinate: Coordinate2D,
-    coordinate: Coordinate2D,
-) -> float:
-    return math.hypot(
-        coordinate.x - primary_focus_plot_coordinate.x,
-        coordinate.y - primary_focus_plot_coordinate.y,
-    )
-
-
-def plotted_radius_for_transfer_endpoint(
-    primary_focus_plot_coordinate: Coordinate2D,
-    transfer_orbit: OrbitalElements,
-    E: EccentricAnomaly,
-) -> float:
-    return plotted_radius_from_primary_focus(
-        primary_focus_plot_coordinate,
-        coordinates_for_elements(
-            primary_focus_plot_coordinate,
-            transfer_orbit,
-            E,
-        ),
     )
 
 
@@ -177,21 +152,16 @@ def build_hohmann_transfer_2d_perifocal_figure(
         TrueAnomaly(Anomaly(Radians(Scalar(0)))),
     )
 
-    transfer_endpoint_a_eccentric_anomaly = EccentricAnomaly(
-        Anomaly(Radians(Scalar(0)))
-    )
+    transfer_endpoint_a_eccentric_anomaly = eccentric_anomaly(0.0)
+    transfer_endpoint_b_eccentric_anomaly = eccentric_anomaly(math.pi)
 
-    transfer_endpoint_b_eccentric_anomaly = EccentricAnomaly(
-        Anomaly(Radians(Scalar(math.pi)))
-    )
-
-    transfer_endpoint_a_radius = plotted_radius_for_transfer_endpoint(
+    transfer_endpoint_a_radius = plotted_radius_for_eccentric_anomaly(
         primary_focus_plot_coordinate,
         transfer_orbit,
         transfer_endpoint_a_eccentric_anomaly,
     )
 
-    transfer_endpoint_b_radius = plotted_radius_for_transfer_endpoint(
+    transfer_endpoint_b_radius = plotted_radius_for_eccentric_anomaly(
         primary_focus_plot_coordinate,
         transfer_orbit,
         transfer_endpoint_b_eccentric_anomaly,

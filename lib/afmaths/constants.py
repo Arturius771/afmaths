@@ -28,12 +28,12 @@ from afmaths.operation import exponentiate, multiply, negate
 EARTH_MU_KM_CUBED = GravitationalParameter(Scalar(398600.5))  # km^3 / s^2
 EARTH_RADIUS_KM = Distance(Scalar(6378.0))  # km
 EXAMPLE_ELEMENTS = OrbitalElements(
-    Inclination(Radians(Scalar(math.radians(0)))),
+    Inclination(Radians(Scalar(math.radians(1.145)))),
     RightAscension(Radians(Scalar(3.024483909022929))),
-    ArgumentOfPeriapsis(Radians(Scalar(0))),
+    ArgumentOfPeriapsis(Radians(Scalar(1.5))),
     SemiMajorAxis(Distance(Scalar(384748))),
-    Eccentricity(Ratio(Scalar(0.0549006))),
-    TrueAnomaly(Anomaly(Radians(Scalar(30)))),
+    Eccentricity(Ratio(Scalar(0.3549006))),
+    TrueAnomaly(Anomaly(Radians(Scalar(4.1)))),
 )
 # OTHER_EXAMPLE_ELEMENTS = OrbitalElements(
 #     Inclination(Radians(Scalar(math.radians(5.145)))),
@@ -64,3 +64,4 @@ PLANCK_CONSTANT = multiply(6.62607004)(exponentiate(negate(34))(10))
 GRAVITATIONAL_CONSTANT = multiply(6.67430)(exponentiate(negate(11))(10))  # 6.67430e-11
 STANDARD_GRAVITY = Acceleration(Scalar(9.80665))  # m/s
 STEFAN_BOLTZMANN_CONSTANT = multiply(5.670367)(exponentiate(negate(8))(10))
+UNIT_VECTOR_XY_PLANE = Vector3D[Scalar](Scalar(0), Scalar(0), Scalar(1))

@@ -6,6 +6,7 @@ from astronomy_types import (
     HMS,
     T,
     Anomaly,
+    Coordinate2D,
     Coordinate3D,
     Date,
     Day,
@@ -151,11 +152,11 @@ def velocity_vector_to_vector3d(velocity_vector: VelocityVector) -> Vector3D[Sca
     return make_vector3d(velocity_vector.x, velocity_vector.y, velocity_vector.z)
 
 
-def make_velocity_vector(vector: Vector3D) -> VelocityVector:
+def vector_to_velocity_vector(vector: Vector3D) -> VelocityVector:
     return VelocityVector(Velocity(vector.x), Velocity(vector.y), Velocity(vector.z))
 
 
-def make_position_vector(vector: Vector3D) -> PositionVector:
+def vector_to_position_vector(vector: Vector3D) -> PositionVector:
     return PositionVector(Position(vector.x), Position(vector.y), Position(vector.z))
 
 
@@ -169,3 +170,11 @@ def make_true_anomaly(val: float) -> TrueAnomaly:
 
 def make_eccentric_anomaly(val: float) -> EccentricAnomaly:
     return EccentricAnomaly(Anomaly(Radians(Scalar(val))))
+
+
+def vector_to_coordinate3d(vector: Vector3D) -> Coordinate3D:
+    return Coordinate3D(vector.x, vector.y, vector.z)
+
+
+def vector_to_coordinate2d(vector: Vector2D) -> Coordinate2D:
+    return Coordinate2D(vector.x, vector.y)

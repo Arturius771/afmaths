@@ -1,8 +1,6 @@
 from __future__ import annotations
 
 import math
-from dataclasses import replace
-
 import plotly.graph_objects as go
 
 from afmaths.constants import EARTH_MU_KM_CUBED
@@ -17,7 +15,15 @@ from afmaths.physics.space.celestial_mechanics import (
     periapsis_radius,
 )
 from afmaths.types import DeltaV
-from afmaths.visualisations.base import coordinates_for_elements
+from afmaths.visualisations.base import (
+    coordinates_for_elements,
+    eccentric_anomaly,
+    eccentric_anomaly_from_true_anomaly,
+    normalise_angle_rad,
+    plotted_radius_for_eccentric_anomaly,
+    scale_orbital_elements_for_plot,
+    true_anomaly,
+)
 from afmaths.visualisations.helpers import (
     PlotOrbital2DSettings,
     PlotPerifocalOrbitLine,
@@ -53,18 +59,6 @@ from astronomy_types import (
 )
 
 AHEAD_BEHIND_CUTOFF_RAD = 3.14
-
-
-def normalise_angle_rad(angle: float) -> float:
-    return angle % (2 * math.pi)
-
-
-def eccentric_anomaly(value: float) -> EccentricAnomaly:
-    return EccentricAnomaly(Anomaly(Radians(Scalar(value))))
-
-
-def true_anomaly(value: float) -> TrueAnomaly:
-    return TrueAnomaly(Anomaly(Radians(Scalar(value))))
 
 
 def forward_true_anomaly_delta_rad(
@@ -120,60 +114,6 @@ def phase_direction_label(
         return "ahead"
 
     return "behind"
-
-
-def eccentric_anomaly_from_true_anomaly(
-    eccentricity: Eccentricity,
-    true_anomaly_value: TrueAnomaly,
-) -> EccentricAnomaly:
-    """Convert true anomaly to eccentric anomaly, preserving the correct quadrant."""
-    E = 2 * math.atan2(
-        math.sqrt(1 - eccentricity) * math.sin(true_anomaly_value / 2),
-        math.sqrt(1 + eccentricity) * math.cos(true_anomaly_value / 2),
-    )
-
-    return eccentric_anomaly(normalise_angle_rad(E))
-
-
-def scale_orbital_elements_for_plot(
-    orbital_elements: OrbitalElements,
-    distance_scale: Distance,
-) -> OrbitalElements:
-    """Scale only the distance component of orbital elements for plotting."""
-    return replace(
-        orbital_elements,
-        semi_major_axis=SemiMajorAxis(
-            distance_to_scale_distance(
-                orbital_elements.semi_major_axis,
-                distance_scale,
-            )
-        ),
-    )
-
-
-def plotted_radius_from_primary_focus(
-    primary_focus_plot_coordinate: Coordinate2D,
-    coordinate: Coordinate2D,
-) -> float:
-    return math.hypot(
-        coordinate.x - primary_focus_plot_coordinate.x,
-        coordinate.y - primary_focus_plot_coordinate.y,
-    )
-
-
-def plotted_radius_for_eccentric_anomaly(
-    primary_focus_plot_coordinate: Coordinate2D,
-    orbital_elements: OrbitalElements,
-    E: EccentricAnomaly,
-) -> float:
-    return plotted_radius_from_primary_focus(
-        primary_focus_plot_coordinate,
-        coordinates_for_elements(
-            primary_focus_plot_coordinate,
-            orbital_elements,
-            E,
-        ),
-    )
 
 
 def true_anomaly_plot_node(

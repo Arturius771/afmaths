@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, replace
-from enum import Enum
 import datetime
 import math
 
@@ -10,47 +9,60 @@ import plotly.graph_objects as go
 from astronomy_types import (
     Anomaly,
     Coordinate2D,
+    Distance,
     EccentricAnomaly,
     GravitationalParameter,
     OrbitalElements,
+    PositionVector,
     Radians,
     Scalar,
     Second,
+    SemiMajorAxis,
+    TrueAnomaly,
     Velocity,
     VelocityVector,
 )
 
-from afmaths.types import DeltaV, Mass
-from afmaths.geometry.geometry import (
-    calculate_foci,
-    semi_minor_axis,
-)
+from afmaths.geometry.geometry import calculate_foci, semi_minor_axis
 from afmaths.geometry.transformations import translate_ellipse
 from afmaths.physics.space.celestial_mechanics import (
     EARTH_MU_KM_CUBED,
+    apoapsis_true_anomaly,
     generate_all_orbit_positions,
-    orbit_state_vector_prediction,
     orbital_elements_from_state_vectors,
-)
-from afmaths.physics.space.type_conversion_helpers import (
-    python_datetime_to_fulldate,
-    python_timedelta_to_seconds,
+    perifocal_position_at_ascending_node,
+    perifocal_position_at_descending_node,
+    perifocal_position_vector,
+    periapsis_true_anomaly,
+    state_vector_at_time,
 )
 from afmaths.physics.space.horizons_api import (
     HorizonsCommandTarget,
     get_object_state_vectors_from_horizon,
 )
-
+from afmaths.physics.space.type_conversion_helpers import (
+    make_true_anomaly,
+    python_datetime_to_fulldate,
+    python_timedelta_to_seconds,
+)
 from afmaths.visualisations.helpers import (
+    PlotNode,
     PlotOrbital2DSettings,
+    add_plot_node,
+    add_plot_nodes,
+    figure_layout,
+    figure_orbit_line,
     plot_centre,
+    plot_max,
+    plot_min,
     scale_position,
+    distance_to_scale_distance,
 )
 
 
 # Subject: visualisation configuration, with astronomy-specific target metadata.
-# Stores the plotting/display inputs for a body: label, Horizons target or elements, physical radius, and visual radius scale.
-# This is mostly visualisation config, but it depends on Horizons/orbital concepts.
+# Stores display inputs for a body: label, Horizons target/orbital elements,
+# physical radius, and visual radius scale.
 @dataclass(frozen=True)
 class BodyPlotConfig:
     name: str
@@ -60,8 +72,8 @@ class BodyPlotConfig:
 
 
 # Subject: visualisation configuration, with time/orbit-propagation settings.
-# Stores the 3D orbit plot setup: centre body, gravitational parameter, scale, orbit sample count, and time interval.
-# The time_offset_seconds property is a unit conversion for propagation, so the class straddles plotting config and orbital simulation config.
+# Stores the 3D orbit plot setup and exposes unit/time adapters needed by
+# propagation code.
 @dataclass(frozen=True)
 class OrbitPlotSettings:
     centre: HorizonsCommandTarget
@@ -72,24 +84,66 @@ class OrbitPlotSettings:
     time_offset: datetime.timedelta
     add_prediction_to_orbit: bool = True
 
-    # Subject: time interval convenience for ephemeris/orbit propagation.
-    # Computes the stop datetime by adding the configured time offset to the start time.
-    # Not visualisation-specific.
     @property
     def stop_time(self) -> datetime.datetime:
         return self.start_time + self.time_offset
 
-    # Subject: unit conversion for propagation.
-    # Converts the configured datetime.timedelta into the astronomy_types Second wrapper.
-    # This is a unit adapter for physics/orbit-propagation calls.
     @property
     def time_offset_seconds(self) -> Second:
         return Second(Scalar(python_timedelta_to_seconds(self.time_offset)))
 
 
+# Subject: angle construction.
+# Lightweight adapter from plain radians into the project anomaly wrapper type.
+def eccentric_anomaly(value: float) -> EccentricAnomaly:
+    return EccentricAnomaly(Anomaly(Radians(Scalar(value))))
+
+
+# Subject: angle construction.
+# Lightweight adapter from plain radians into the project anomaly wrapper type.
+def true_anomaly(value: float) -> TrueAnomaly:
+    return TrueAnomaly(Anomaly(Radians(Scalar(value))))
+
+
+# Subject: angle normalisation.
+# Generic radian normalisation for visualisation logic that compares orbit angles.
+def normalise_angle_rad(angle: float) -> float:
+    return angle % (2 * math.pi)
+
+
+# Subject: anomaly conversion.
+# Converts true anomaly to eccentric anomaly for elliptical orbit visualisations.
+def eccentric_anomaly_from_true_anomaly(
+    eccentricity: float,
+    true_anomaly_value: TrueAnomaly,
+) -> EccentricAnomaly:
+    E = 2 * math.atan2(
+        math.sqrt(1 - eccentricity) * math.sin(true_anomaly_value / 2),
+        math.sqrt(1 + eccentricity) * math.cos(true_anomaly_value / 2),
+    )
+
+    return eccentric_anomaly(normalise_angle_rad(E))
+
+
+# Subject: plot-unit adapter for orbital elements.
+# Scales only the distance component of orbital elements for 2D visualisations.
+def scale_orbital_elements_for_plot(
+    orbital_elements: OrbitalElements,
+    distance_scale: Distance,
+) -> OrbitalElements:
+    return replace(
+        orbital_elements,
+        semi_major_axis=SemiMajorAxis(
+            distance_to_scale_distance(
+                orbital_elements.semi_major_axis,
+                distance_scale,
+            )
+        ),
+    )
+
+
 # Subject: planar geometry / coordinate transform.
-# Rotates a 2D vector/relative coordinate about the origin by angle radians using the standard 2D rotation matrix.
-# Generic coordinate transform; not specifically visualisation or orbital mechanics.
+# Rotates a 2D vector/relative coordinate about the origin by angle radians.
 def rotate_relative_coordinate(
     coordinate: Coordinate2D,
     angle: float,
@@ -102,7 +156,6 @@ def rotate_relative_coordinate(
 
 # Subject: planar geometry / coordinate transform.
 # Translates a local 2D coordinate by adding an origin offset.
-# Generic geometry helper; not celestial mechanics and not Plotly-specific.
 def translate_coordinate(
     origin: Coordinate2D,
     coordinate: Coordinate2D,
@@ -113,9 +166,11 @@ def translate_coordinate(
     )
 
 
-# Subject: coordinate transform between orbital/perifocal coordinates and plot coordinates.
-# Converts a local ellipse coordinate into the plot frame by: shifting it relative to the primary focus, rotating by argument of periapsis, then translating to the plotted primary focus.
-# This mixes orbital frame semantics with generic 2D transforms; likely belongs in an orbit-coordinate-transform helper rather than visualisation helpers.
+# Subject: ellipse-centre local coordinate -> plot coordinate transform.
+# Input local_coordinate is expressed in the local ellipse-centred coordinate system
+# used by translate_ellipse/calculate_foci. It is shifted to the primary-focus
+# origin, rotated by argument of periapsis, then translated to the plotted primary
+# focus. This preserves compatibility with add_perifocal_orbit_line.
 def local_to_plot_coordinate_for_elements(
     primary_focus_plot_coordinate: Coordinate2D,
     elements: OrbitalElements,
@@ -131,20 +186,45 @@ def local_to_plot_coordinate_for_elements(
         local_coordinate.y - primary_focus.y,
     )
 
-    rotated = rotate_relative_coordinate(
-        local_relative_to_primary_focus,
-        elements.argument_of_periapsis,
-    )
-
     return translate_coordinate(
         primary_focus_plot_coordinate,
-        rotated,
+        rotate_relative_coordinate(
+            local_relative_to_primary_focus,
+            elements.argument_of_periapsis,
+        ),
+    )
+
+
+# Subject: focus-origin perifocal coordinate -> plot coordinate transform.
+# Input coordinate is already expressed relative to the primary focus/central body,
+# which is the natural frame of perifocal position vectors.
+def perifocal_coordinate_to_plot_coordinate(
+    primary_focus_plot_coordinate: Coordinate2D,
+    elements: OrbitalElements,
+    coordinate: Coordinate2D,
+) -> Coordinate2D:
+    return translate_coordinate(
+        primary_focus_plot_coordinate,
+        rotate_relative_coordinate(coordinate, elements.argument_of_periapsis),
+    )
+
+
+# Subject: focus-origin perifocal position vector -> plot coordinate transform.
+def position_to_plot_coordinate(
+    primary_focus_plot_coordinate: Coordinate2D,
+    elements: OrbitalElements,
+    position: PositionVector,
+) -> Coordinate2D:
+    return perifocal_coordinate_to_plot_coordinate(
+        primary_focus_plot_coordinate,
+        elements,
+        Coordinate2D(Scalar(position.x), Scalar(position.y)),
     )
 
 
 # Subject: orbital geometry projected into plot coordinates.
-# Computes where the primary focus of an orbit should appear on the plot by mapping the local primary focus to the plot centre.
-# This is mostly a visualisation adapter around orbital geometry.
+# Maps the local primary focus to the plot centre; this is the central body point
+# in these 2D orbital-plane plots.
 def primary_focus_coordinates_for_elements(
     settings: PlotOrbital2DSettings,
     elements: OrbitalElements,
@@ -160,8 +240,7 @@ def primary_focus_coordinates_for_elements(
 
 
 # Subject: orbital geometry projected into plot coordinates.
-# Computes the plotted location of the secondary focus by transforming the local secondary focus into the plot frame.
-# This is visualisation-adapter logic over celestial/conic geometry.
+# Compatibility helper for ellipse-centre based plotting functions.
 def secondary_focus_coordinates_for_elements(
     primary_focus_plot_coordinate: Coordinate2D,
     elements: OrbitalElements,
@@ -176,9 +255,26 @@ def secondary_focus_coordinates_for_elements(
     )
 
 
-# Subject: orbital geometry / perifocal coordinate conversion.
-# Converts an eccentric anomaly into a local ellipse coordinate using semi-major/minor axes, then maps that coordinate into the plot frame.
-# This is a core orbital-coordinate helper; the underlying calculation should probably reuse a celestial-mechanics/orbit-position helper if one exists.
+# Subject: focus-origin orbital geometry projected into plot coordinates.
+# Computes the secondary focus using the focus-to-focus distance, then applies the
+# same focus-origin transform as the nodes/apsides/current position.
+def secondary_focus_plot_coordinate(
+    primary_focus_plot_coordinate: Coordinate2D,
+    elements: OrbitalElements,
+) -> Coordinate2D:
+    distance_between_foci = 2 * elements.semi_major_axis * elements.eccentricity
+
+    return perifocal_coordinate_to_plot_coordinate(
+        primary_focus_plot_coordinate,
+        elements,
+        Coordinate2D(Scalar(-distance_between_foci), Scalar(0)),
+    )
+
+
+# Subject: orbital geometry / eccentric-anomaly plotting.
+# Converts an eccentric anomaly into a local ellipse coordinate and maps it into
+# the plot frame. This follows the ellipse-centre convention used by transfer arc
+# visualisations.
 def coordinates_for_elements(
     primary_focus_plot_coordinate: Coordinate2D,
     elements: OrbitalElements,
@@ -198,6 +294,232 @@ def coordinates_for_elements(
     )
 
 
+# Subject: orbital geometry / true-anomaly plotting.
+# Uses the focus-origin perifocal position vector and the same plot transform used
+# by nodes and apsides.
+def plot_coordinate_for_true_anomaly(
+    primary_focus_plot_coordinate: Coordinate2D,
+    elements: OrbitalElements,
+    true_anomaly_value: TrueAnomaly,
+) -> Coordinate2D:
+    return position_to_plot_coordinate(
+        primary_focus_plot_coordinate,
+        elements,
+        perifocal_position_vector(
+            replace(elements, true_anomaly=true_anomaly_value)
+        ),
+    )
+
+
+# Subject: orbital geometry / apsides projected into plot coordinates.
+def periapsis_plot_coordinate(
+    primary_focus_plot_coordinate: Coordinate2D,
+    elements: OrbitalElements,
+) -> Coordinate2D:
+    return plot_coordinate_for_true_anomaly(
+        primary_focus_plot_coordinate,
+        elements,
+        periapsis_true_anomaly(),
+    )
+
+
+# Subject: orbital geometry / apsides projected into plot coordinates.
+def apoapsis_plot_coordinate(
+    primary_focus_plot_coordinate: Coordinate2D,
+    elements: OrbitalElements,
+) -> Coordinate2D:
+    return plot_coordinate_for_true_anomaly(
+        primary_focus_plot_coordinate,
+        elements,
+        apoapsis_true_anomaly(),
+    )
+
+
+# Subject: orbital geometry / nodes projected into plot coordinates.
+def ascending_node_plot_coordinate(
+    primary_focus_plot_coordinate: Coordinate2D,
+    elements: OrbitalElements,
+) -> Coordinate2D:
+    return position_to_plot_coordinate(
+        primary_focus_plot_coordinate,
+        elements,
+        perifocal_position_at_ascending_node(elements),
+    )
+
+
+# Subject: orbital geometry / nodes projected into plot coordinates.
+def descending_node_plot_coordinate(
+    primary_focus_plot_coordinate: Coordinate2D,
+    elements: OrbitalElements,
+) -> Coordinate2D:
+    return position_to_plot_coordinate(
+        primary_focus_plot_coordinate,
+        elements,
+        perifocal_position_at_descending_node(elements),
+    )
+
+
+# Subject: orbital geometry / current spacecraft position projected into plot coordinates.
+def current_position_plot_coordinate(
+    primary_focus_plot_coordinate: Coordinate2D,
+    elements: OrbitalElements,
+) -> Coordinate2D:
+    return position_to_plot_coordinate(
+        primary_focus_plot_coordinate,
+        elements,
+        perifocal_position_vector(elements),
+    )
+
+
+# Subject: orbital geometry / focus-origin orbit sampling.
+# Generates a 2D orbital-plane line using true anomaly and the same transform as
+# the marker points. This avoids mixing ellipse-centre and focus-origin pipelines.
+def orbit_plot_coordinates(
+    primary_focus_plot_coordinate: Coordinate2D,
+    elements: OrbitalElements,
+    resolution: int,
+) -> list[Coordinate2D]:
+    if resolution < 3:
+        raise ValueError("resolution must be at least 3")
+
+    return [
+        plot_coordinate_for_true_anomaly(
+            primary_focus_plot_coordinate,
+            elements,
+            make_true_anomaly(2 * math.pi * index / resolution),
+        )
+        for index in range(resolution + 1)
+    ]
+
+
+# Subject: orbital geometry / derived plot markers.
+def keplerian_element_plot_nodes(
+    primary_focus_plot_coordinate: Coordinate2D,
+    elements: OrbitalElements,
+) -> list[PlotNode]:
+    return [
+        PlotNode("primary focus", primary_focus_plot_coordinate),
+        PlotNode(
+            "secondary focus",
+            secondary_focus_plot_coordinate(primary_focus_plot_coordinate, elements),
+        ),
+        PlotNode("periapsis", periapsis_plot_coordinate(primary_focus_plot_coordinate, elements)),
+        PlotNode("apoapsis", apoapsis_plot_coordinate(primary_focus_plot_coordinate, elements)),
+        PlotNode(
+            "ascending node",
+            ascending_node_plot_coordinate(primary_focus_plot_coordinate, elements),
+        ),
+        PlotNode(
+            "descending node",
+            descending_node_plot_coordinate(primary_focus_plot_coordinate, elements),
+        ),
+        PlotNode(
+            "current position",
+            current_position_plot_coordinate(primary_focus_plot_coordinate, elements),
+        ),
+    ]
+
+
+# Subject: high-level 2D orbital-plane figure composition.
+# Builds a single, internally consistent Keplerian-element ellipse plot using the
+# focus-origin transform for the orbit line and all markers.
+def build_keplerian_elements_2d_figure(
+    settings: PlotOrbital2DSettings,
+    elements: OrbitalElements,
+    orbit_resolution: int = 720,
+    title_prefix: str = "2D orbital-plane ellipse",
+) -> go.Figure:
+    primary_focus_plot_coordinate = plot_centre(settings)
+    coordinates = orbit_plot_coordinates(
+        primary_focus_plot_coordinate,
+        elements,
+        orbit_resolution,
+    )
+
+    nodes = keplerian_element_plot_nodes(
+        primary_focus_plot_coordinate,
+        elements,
+    )
+
+    node_by_name = {node.name: node.coordinate for node in nodes}
+
+    title = (
+        f"{title_prefix}"
+        f"<br>a={float(elements.semi_major_axis):.2f}, "
+        f"e={float(elements.eccentricity):.4f}, "
+        f"i={math.degrees(elements.inclination):.2f}°, "
+        f"Ω={math.degrees(elements.right_ascension_of_ascending_node):.2f}°, "
+        f"ω={math.degrees(elements.argument_of_periapsis):.2f}°, "
+        f"ν={math.degrees(elements.true_anomaly):.2f}°"
+    )
+
+    fig = figure_layout(
+        go.Figure(),
+        settings.plot_width,
+        settings.plot_height,
+        plot_min(settings),
+        plot_max(settings),
+        title=title,
+    )
+
+    fig = figure_orbit_line(
+        fig,
+        coordinates,
+        name="orbit",
+        colour="grey",
+    )
+
+    fig.add_trace(
+        go.Scatter(
+            x=[node_by_name["descending node"].x, node_by_name["ascending node"].x],
+            y=[node_by_name["descending node"].y, node_by_name["ascending node"].y],
+            mode="lines",
+            name="line of nodes",
+            line={"color": "black", "width": 1, "dash": "dash"},
+        )
+    )
+
+    fig.add_trace(
+        go.Scatter(
+            x=[node_by_name["apoapsis"].x, node_by_name["periapsis"].x],
+            y=[node_by_name["apoapsis"].y, node_by_name["periapsis"].y],
+            mode="lines",
+            name="apsis line",
+            line={"color": "grey", "width": 1, "dash": "dot"},
+        )
+    )
+
+    return add_plot_nodes(fig, nodes)
+
+
+# Subject: orbit-plot measurement.
+def plotted_radius_from_primary_focus(
+    primary_focus_plot_coordinate: Coordinate2D,
+    coordinate: Coordinate2D,
+) -> float:
+    return math.hypot(
+        coordinate.x - primary_focus_plot_coordinate.x,
+        coordinate.y - primary_focus_plot_coordinate.y,
+    )
+
+
+# Subject: orbit-plot measurement.
+def plotted_radius_for_eccentric_anomaly(
+    primary_focus_plot_coordinate: Coordinate2D,
+    orbital_elements: OrbitalElements,
+    E: EccentricAnomaly,
+) -> float:
+    return plotted_radius_from_primary_focus(
+        primary_focus_plot_coordinate,
+        coordinates_for_elements(
+            primary_focus_plot_coordinate,
+            orbital_elements,
+            E,
+        ),
+    )
+
+
+# Subject: visualisation tangent approximation.
 def tangent_vector_for_plot(
     primary_focus_plot_coordinate: Coordinate2D,
     plot_elements: OrbitalElements,
@@ -214,7 +536,7 @@ def tangent_vector_for_plot(
     next_point = coordinates_for_elements(
         primary_focus_plot_coordinate,
         plot_elements,
-        EccentricAnomaly(Anomaly(Radians(Scalar(float(E) + delta)))),
+        eccentric_anomaly(float(E) + delta),
     )
 
     return VelocityVector(
@@ -224,9 +546,9 @@ def tangent_vector_for_plot(
     )
 
 
-# Subject: plotting adapter for transfer arcs.
-# Normalises start/end eccentric anomaly values so Plotly draws the intended arc across the 2π wrap boundary.
-# This is visualisation-specific handling of orbital angle data.
+# Subject: transfer-arc plotting.
+# Normalises start/end eccentric anomaly values so Plotly draws the intended arc
+# across a 2π wrap boundary.
 def transfer_arc_angles(
     start_eccentric_anomaly: EccentricAnomaly,
     arrival_eccentric_anomaly: EccentricAnomaly,
@@ -241,8 +563,8 @@ def transfer_arc_angles(
 
 
 # Subject: visualisation plus orbit propagation.
-# Generates orbit positions from OrbitalElements, scales them to plot units, and returns a Plotly 3D line trace.
-# This mixes orbital propagation with Plotly rendering; ideally propagation happens outside and this function only receives coordinates.
+# Generates orbit positions from OrbitalElements, scales them to plot units, and
+# returns a Plotly 3D line trace.
 def add_orbit_line_trace(
     name: str,
     orbital_elements: OrbitalElements,
@@ -275,8 +597,8 @@ def add_orbit_line_trace(
 
 
 # Subject: high-level 3D orbit visualisation orchestration.
-# Fetches Horizons state vectors, converts them to orbital elements, propagates current/predicted states, and appends orbit/body Plotly traces.
-# This heavily mixes ephemeris IO, celestial mechanics, propagation, scaling, and rendering. It is not a base helper.
+# Fetches Horizons state vectors, derives orbital elements, propagates current and
+# predicted states, and appends orbit/body traces.
 def add_orbiting_body_to_traces(
     traces: list,
     body: BodyPlotConfig,
@@ -300,7 +622,7 @@ def add_orbiting_body_to_traces(
         mu=settings.gravitational_parameter,
     )
 
-    model_current_state = orbit_state_vector_prediction(
+    model_current_state = state_vector_at_time(
         orbital_elements,
         Second(Scalar(0)),
         settings.gravitational_parameter,
@@ -333,7 +655,7 @@ def add_orbiting_body_to_traces(
     if not settings.add_prediction_to_orbit:
         return
 
-    model_prediction_state = orbit_state_vector_prediction(
+    model_prediction_state = state_vector_at_time(
         orbital_elements,
         settings.time_offset_seconds,
         settings.gravitational_parameter,
@@ -354,9 +676,7 @@ def add_orbiting_body_to_traces(
     )
 
 
-# Subject: high-level visualisation composition.
-# Builds a complete 3D orbit figure by creating the central body trace, adding each orbiting body, and applying the final 3D layout.
-# This is a demo/figure-builder function, not core physics; it could stay in a specific 3D visualiser module.
+# Subject: high-level 3D visualisation composition.
 def build_3d_orbit_figure(
     settings: OrbitPlotSettings,
     title: str,

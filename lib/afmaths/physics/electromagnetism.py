@@ -1,6 +1,7 @@
-from afmaths.constants import PLANCK_CONSTANT, STEFAN_BOLTZMANN_CONSTANT, Area
-from afmaths.formula import inverse_square_law
+from afmaths.constants import PLANCK_CONSTANT, STEFAN_BOLTZMANN_CONSTANT
 from afmaths.operation import SQUARE, divide_by, exponentiate, multiply
+from afmaths.physics.physics import inverse_square_law
+from afmaths.types import Area
 
 
 def flux_density(luminosity: float, distance_metres: float) -> float:

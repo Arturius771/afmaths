@@ -57,8 +57,8 @@ class PlotOrbital2DSettings:
 
 
 # Subject: unit/scale conversion.
-# Converts a plot-scaled Distance back into kilometres by multiplying by distance_scale_km.
-# This is a scale adapter caused by mixing plot units and physical units.
+# Converts a plot-scaled distance back into physical distance units by multiplying
+# by the distance scale. This is a visualisation/physics unit adapter.
 def scale_distance_to_distance(
     distance: Distance,
     distance_scale_km: float,
@@ -66,6 +66,8 @@ def scale_distance_to_distance(
     return Distance(Scalar(distance * distance_scale_km))
 
 
+# Subject: unit/scale conversion.
+# Converts a physical distance into plot units by dividing by the distance scale.
 def distance_to_scale_distance(distance_km: Distance, scale: float) -> Distance:
     return Distance(Scalar(distance_km / scale))
 
@@ -82,8 +84,7 @@ def scale_position(position: PositionVector, distance_scale_km: float) -> Vector
 
 
 # Subject: unit/scale conversion for orbital elements.
-# Converts plot-scaled OrbitalElements back to physical-ish units by multiplying semi-major axis by distance_scale_km.
-# This is not visualisation rendering; it is a scale adapter and is risky because the unit semantics are easy to confuse.
+# Converts the semi-major axis of OrbitalElements into plot units.
 def elements_scaled_to_plot(
     elements: OrbitalElements,
     scale: float,
@@ -91,28 +92,31 @@ def elements_scaled_to_plot(
     return replace(
         elements,
         semi_major_axis=SemiMajorAxis(
-            Distance(
-                Scalar(distance_to_scale_distance(elements.semi_major_axis, scale))
-            )
+            distance_to_scale_distance(elements.semi_major_axis, scale)
         ),
     )
 
 
+# Subject: unit/scale conversion.
+# Backwards-compatible alias for distance_to_scale_distance.
 def value_to_scale(
     distance_km: Distance,
     scale: float,
 ) -> Distance:
-    return Distance(Scalar(distance_km / scale))
+    return distance_to_scale_distance(distance_km, scale)
 
 
+# Subject: plot bounds.
 def plot_min(settings: PlotOrbital2DSettings) -> Vector2D:
     return Vector2D(x=settings.plot_min_x, y=settings.plot_min_y)
 
 
+# Subject: plot bounds.
 def plot_max(settings: PlotOrbital2DSettings) -> Vector2D:
     return Vector2D(x=settings.plot_max_x, y=settings.plot_max_y)
 
 
+# Subject: plot bounds.
 def plot_centre(settings: PlotOrbital2DSettings) -> Coordinate2D:
     min_point = plot_min(settings)
     max_point = plot_max(settings)
@@ -123,6 +127,7 @@ def plot_centre(settings: PlotOrbital2DSettings) -> Coordinate2D:
     )
 
 
+# Subject: visualisation scale conversion.
 def central_body_radius_plot(
     central_body_radius_km: float,
     distance_scale_km: float,
@@ -130,6 +135,7 @@ def central_body_radius_plot(
     return Distance(Scalar(central_body_radius_km / distance_scale_km))
 
 
+# Subject: Plotly 2D layout.
 def figure_layout(
     figure: go.Figure,
     width_px: float,
@@ -150,6 +156,7 @@ def figure_layout(
     )
 
 
+# Subject: Plotly 2D primitive.
 def figure_circle(
     figure: go.Figure,
     coordinates: Coordinate2D,
@@ -170,6 +177,7 @@ def figure_circle(
     )
 
 
+# Subject: Plotly 2D primitive.
 def add_plot_centre(
     figure: go.Figure,
     coordinates: Coordinate2D,
@@ -186,6 +194,7 @@ def add_plot_centre(
     )
 
 
+# Subject: Plotly 2D primitive.
 def figure_planetary_body(
     figure: go.Figure,
     coordinates: Coordinate2D,
@@ -229,6 +238,7 @@ def figure_planetary_body(
     )
 
 
+# Subject: Plotly 2D line trace.
 def figure_orbit_line(
     figure: go.Figure,
     coordinates: list[Coordinate2D],
@@ -247,10 +257,12 @@ def figure_orbit_line(
     )
 
 
+# Subject: Plotly slider composition.
 def figure_slider(figure: go.Figure, slider_steps: list[dict]) -> go.Figure:
     return figure.update_layout(sliders=[dict(steps=slider_steps)])
 
 
+# Subject: Plotly 2D marker/text trace.
 def add_plot_node(
     fig: go.Figure,
     node: PlotNode,
@@ -279,12 +291,25 @@ def add_plot_node(
     return fig
 
 
+# Subject: Plotly 2D marker/text composition.
+def add_plot_nodes(fig: go.Figure, nodes: list[PlotNode]) -> go.Figure:
+    for node in nodes:
+        fig = add_plot_node(fig, node)
+
+    return fig
+
+
+# Subject: orbit visualisation adapter.
+# Samples a perifocal ellipse by eccentric anomaly and draws it in the plot frame.
 def add_perifocal_orbit_line(
     fig: go.Figure,
     primary_focus_plot_coordinate: Coordinate2D,
     orbit_line: PlotPerifocalOrbitLine,
     steps: int = 200,
 ) -> go.Figure:
+    if steps < 2:
+        raise ValueError("steps must be at least 2")
+
     from afmaths.visualisations.base import (
         coordinates_for_elements,
         secondary_focus_coordinates_for_elements,
@@ -329,6 +354,7 @@ def add_perifocal_orbit_line(
     return fig
 
 
+# Subject: vector visualisation.
 def direction_vector_length(settings: PlotOrbital2DSettings) -> float:
     p_min = plot_min(settings)
     p_max = plot_max(settings)
@@ -339,6 +365,7 @@ def direction_vector_length(settings: PlotOrbital2DSettings) -> float:
     return min(plot_range_x, plot_range_y) * 0.06
 
 
+# Subject: vector visualisation.
 def vector_line(
     start: Coordinate2D,
     direction: Vector3D,
@@ -352,6 +379,7 @@ def vector_line(
     )
 
 
+# Subject: 3D surface geometry for visualisation.
 def plot_sphere_surface(
     radius: Distance,
     centre: PositionVector | None = None,
@@ -377,6 +405,7 @@ def plot_sphere_surface(
     return make_vector3d(sphere_x, sphere_y, sphere_z)
 
 
+# Subject: visualisation scale conversion.
 def scaled_radius(
     radius_km: float,
     radius_scale: float,
@@ -385,6 +414,7 @@ def scaled_radius(
     return Distance(Scalar((radius_km * radius_scale) / distance_scale_km))
 
 
+# Subject: Plotly 3D surface trace.
 def add_body_surface(
     name: str,
     radius_km: float,
@@ -408,6 +438,7 @@ def add_body_surface(
     )
 
 
+# Subject: Plotly 3D layout composition.
 def make_3d_orbit_figure(
     traces: list,
     title: str,
