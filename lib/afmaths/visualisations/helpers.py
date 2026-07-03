@@ -49,10 +49,10 @@ class PlotOrbital2DSettings:
     distance_scale: float
     plot_width: int = 800
     plot_height: int = 800
-    plot_min_x: float = 0
-    plot_min_y: float = 0
-    plot_max_x: float = 70
-    plot_max_y: float = 70
+    plot_min_x: float = -35
+    plot_min_y: float = -35
+    plot_max_x: float = 35
+    plot_max_y: float = 35
     slider_steps: int = 51
 
 
@@ -125,6 +125,13 @@ def plot_centre(settings: PlotOrbital2DSettings) -> Coordinate2D:
         min_point.x + (max_point.x - min_point.x) / 2,
         min_point.y + (max_point.y - min_point.y) / 2,
     )
+
+
+# Subject: plot origin.
+# The physical origin of 2D orbital-plane plots. For Keplerian orbits this is
+# the primary focus, i.e. the central body position.
+def plot_origin() -> Coordinate2D:
+    return Coordinate2D(Scalar(0), Scalar(0))
 
 
 # Subject: visualisation scale conversion.

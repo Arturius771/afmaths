@@ -15,7 +15,7 @@ Force = NewType("Force", Scalar)
 Percentage = NewType("Percentage", float)
 
 
-class BurnDirection(Enum):
+class OrbitalDirection(Enum):
     PROGRADE = "prograde"
     RETROGRADE = "retrograde"
     RADIAL = "radial"

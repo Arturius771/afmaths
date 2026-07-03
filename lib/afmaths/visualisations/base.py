@@ -23,7 +23,7 @@ from astronomy_types import (
     VelocityVector,
 )
 
-from afmaths.geometry.geometry import calculate_foci, semi_minor_axis
+from afmaths.geometry.geometry import semi_minor_axis
 from afmaths.geometry.transformations import translate_ellipse
 from afmaths.physics.space.celestial_mechanics import (
     EARTH_MU_KM_CUBED,
@@ -52,7 +52,7 @@ from afmaths.visualisations.helpers import (
     add_plot_nodes,
     figure_layout,
     figure_orbit_line,
-    plot_centre,
+    plot_origin,
     plot_max,
     plot_min,
     scale_position,
@@ -166,20 +166,37 @@ def translate_coordinate(
     )
 
 
-# Subject: ellipse-centre local coordinate -> plot coordinate transform.
+# Subject: ellipse-centre local coordinate -> focus-origin plot transform.
 # Input local_coordinate is expressed in the local ellipse-centred coordinate system
-# used by translate_ellipse/calculate_foci. It is shifted to the primary-focus
-# origin, rotated by argument of periapsis, then translated to the plotted primary
-# focus. This preserves compatibility with add_perifocal_orbit_line.
+# used by translate_ellipse. It is shifted so that the periapsis-side focus is
+# the origin, rotated by argument of periapsis, then translated to the plotted
+# primary focus. This keeps ω aligned with periapsis rather than apoapsis.
+def primary_focus_local_coordinate_for_elements(
+    elements: OrbitalElements,
+) -> Coordinate2D:
+    return Coordinate2D(
+        Scalar(elements.semi_major_axis * elements.eccentricity),
+        Scalar(0),
+    )
+
+
+# Subject: orbital geometry.
+# Returns the opposite focus in the same ellipse-centred local coordinate system.
+def secondary_focus_local_coordinate_for_elements(
+    elements: OrbitalElements,
+) -> Coordinate2D:
+    return Coordinate2D(
+        Scalar(-elements.semi_major_axis * elements.eccentricity),
+        Scalar(0),
+    )
+
+
 def local_to_plot_coordinate_for_elements(
     primary_focus_plot_coordinate: Coordinate2D,
     elements: OrbitalElements,
     local_coordinate: Coordinate2D,
 ) -> Coordinate2D:
-    primary_focus, _ = calculate_foci(
-        elements.semi_major_axis,
-        elements.eccentricity,
-    )
+    primary_focus = primary_focus_local_coordinate_for_elements(elements)
 
     local_relative_to_primary_focus = Coordinate2D(
         local_coordinate.x - primary_focus.x,
@@ -195,47 +212,18 @@ def local_to_plot_coordinate_for_elements(
     )
 
 
-# Subject: focus-origin perifocal coordinate -> plot coordinate transform.
-# Input coordinate is already expressed relative to the primary focus/central body,
-# which is the natural frame of perifocal position vectors.
-def perifocal_coordinate_to_plot_coordinate(
-    primary_focus_plot_coordinate: Coordinate2D,
-    elements: OrbitalElements,
-    coordinate: Coordinate2D,
-) -> Coordinate2D:
-    return translate_coordinate(
-        primary_focus_plot_coordinate,
-        rotate_relative_coordinate(coordinate, elements.argument_of_periapsis),
-    )
-
-
 # Subject: focus-origin perifocal position vector -> plot coordinate transform.
 def position_to_plot_coordinate(
     primary_focus_plot_coordinate: Coordinate2D,
     elements: OrbitalElements,
     position: PositionVector,
 ) -> Coordinate2D:
-    return perifocal_coordinate_to_plot_coordinate(
+    return translate_coordinate(
         primary_focus_plot_coordinate,
-        elements,
-        Coordinate2D(Scalar(position.x), Scalar(position.y)),
-    )
-
-
-# Subject: orbital geometry projected into plot coordinates.
-# Maps the local primary focus to the plot centre; this is the central body point
-# in these 2D orbital-plane plots.
-def primary_focus_coordinates_for_elements(
-    settings: PlotOrbital2DSettings,
-    elements: OrbitalElements,
-) -> Coordinate2D:
-    return local_to_plot_coordinate_for_elements(
-        plot_centre(settings),
-        elements,
-        calculate_foci(
-            elements.semi_major_axis,
-            elements.eccentricity,
-        )[0],
+        rotate_relative_coordinate(
+            Coordinate2D(Scalar(position.x), Scalar(position.y)),
+            elements.argument_of_periapsis,
+        ),
     )
 
 
@@ -248,10 +236,7 @@ def secondary_focus_coordinates_for_elements(
     return local_to_plot_coordinate_for_elements(
         primary_focus_plot_coordinate,
         elements,
-        calculate_foci(
-            elements.semi_major_axis,
-            elements.eccentricity,
-        )[1],
+        secondary_focus_local_coordinate_for_elements(elements),
     )
 
 
@@ -264,10 +249,12 @@ def secondary_focus_plot_coordinate(
 ) -> Coordinate2D:
     distance_between_foci = 2 * elements.semi_major_axis * elements.eccentricity
 
-    return perifocal_coordinate_to_plot_coordinate(
+    return translate_coordinate(
         primary_focus_plot_coordinate,
-        elements,
-        Coordinate2D(Scalar(-distance_between_foci), Scalar(0)),
+        rotate_relative_coordinate(
+            Coordinate2D(Scalar(-distance_between_foci), Scalar(0)),
+            elements.argument_of_periapsis,
+        ),
     )
 
 
@@ -305,9 +292,7 @@ def plot_coordinate_for_true_anomaly(
     return position_to_plot_coordinate(
         primary_focus_plot_coordinate,
         elements,
-        perifocal_position_vector(
-            replace(elements, true_anomaly=true_anomaly_value)
-        ),
+        perifocal_position_vector(replace(elements, true_anomaly=true_anomaly_value)),
     )
 
 
@@ -403,8 +388,14 @@ def keplerian_element_plot_nodes(
             "secondary focus",
             secondary_focus_plot_coordinate(primary_focus_plot_coordinate, elements),
         ),
-        PlotNode("periapsis", periapsis_plot_coordinate(primary_focus_plot_coordinate, elements)),
-        PlotNode("apoapsis", apoapsis_plot_coordinate(primary_focus_plot_coordinate, elements)),
+        PlotNode(
+            "periapsis",
+            periapsis_plot_coordinate(primary_focus_plot_coordinate, elements),
+        ),
+        PlotNode(
+            "apoapsis",
+            apoapsis_plot_coordinate(primary_focus_plot_coordinate, elements),
+        ),
         PlotNode(
             "ascending node",
             ascending_node_plot_coordinate(primary_focus_plot_coordinate, elements),
@@ -429,7 +420,7 @@ def build_keplerian_elements_2d_figure(
     orbit_resolution: int = 720,
     title_prefix: str = "2D orbital-plane ellipse",
 ) -> go.Figure:
-    primary_focus_plot_coordinate = plot_centre(settings)
+    primary_focus_plot_coordinate = plot_origin()
     coordinates = orbit_plot_coordinates(
         primary_focus_plot_coordinate,
         elements,

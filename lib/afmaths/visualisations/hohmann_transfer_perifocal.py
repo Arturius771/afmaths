@@ -13,7 +13,7 @@ from afmaths.physics.space.celestial_mechanics import (
     orbit_radius,
     periapsis_radius,
 )
-from afmaths.types import BurnDirection
+from afmaths.types import OrbitalDirection
 from afmaths.visualisations.base import (
     coordinates_for_elements,
     eccentric_anomaly,
@@ -31,7 +31,7 @@ from afmaths.visualisations.helpers import (
     distance_to_scale_distance,
     figure_layout,
     figure_planetary_body,
-    plot_centre,
+    plot_origin,
     plot_max,
     plot_min,
     scale_distance_to_distance,
@@ -64,7 +64,7 @@ def transfer_burn_plot_node(
     transfer_orbit: OrbitalElements,
     E: EccentricAnomaly,
     delta_v: Velocity,
-    direction: BurnDirection,
+    direction: OrbitalDirection,
     time: Second,
 ) -> PlotNode:
     return PlotNode(
@@ -94,7 +94,7 @@ def build_hohmann_transfer_2d_perifocal_figure(
     central_body_radius_km: Distance = Distance(Scalar(6_371.0)),
     title_prefix: str = "Hohmann transfer in the perifocal frame",
 ) -> go.Figure:
-    primary_focus_plot_coordinate = plot_centre(settings)
+    primary_focus_plot_coordinate = plot_origin()
 
     final_orbit = OrbitalElements(
         initial_orbit.inclination,

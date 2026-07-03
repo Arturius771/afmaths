@@ -21,6 +21,9 @@ from astronomy_types import (
     Velocity,
 )
 
+from afmaths.physics.space.celestial_mechanics import (
+    orbital_elements_from_state_vectors,
+)
 from afmaths.physics.space.type_conversion_helpers import (
     dms_to_radians,
     fulldate_to_string,
@@ -323,3 +326,16 @@ if __name__ == "__main__":
 
     for state_vector in state_vectors:
         print(state_vector)
+
+    coordinates = orbital_elements_from_state_vectors(
+        get_object_state_vectors_from_horizon(
+            target=HorizonsCommandTarget.MOON,
+            start_time=python_datetime_to_fulldate(datetime.datetime.now()),
+            stop_time=python_datetime_to_fulldate(
+                datetime.datetime.now() + datetime.timedelta(days=1)
+            ),
+            step_size="1h",
+        )[0]
+    )
+
+    print(coordinates)

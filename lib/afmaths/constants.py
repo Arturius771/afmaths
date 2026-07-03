@@ -27,6 +27,14 @@ from afmaths.operation import exponentiate, multiply, negate
 
 EARTH_MU_KM_CUBED = GravitationalParameter(Scalar(398600.5))  # km^3 / s^2
 EARTH_RADIUS_KM = Distance(Scalar(6378.0))  # km
+MOON_ELEMENTS = OrbitalElements(
+    Inclination(Radians(Scalar(0.08956146531375098))),
+    RightAscension(Radians(Scalar(5.765000161307142))),
+    ArgumentOfPeriapsis(Radians(Scalar(1.9751206723485106))),
+    SemiMajorAxis(Distance(Scalar(388470.7933846703))),
+    Eccentricity(Ratio(Scalar(0.04483641146974054))),
+    TrueAnomaly(Anomaly(Radians(Scalar(4.171189773145077)))),
+)
 EXAMPLE_ELEMENTS = OrbitalElements(
     Inclination(Radians(Scalar(math.radians(1.145)))),
     RightAscension(Radians(Scalar(3.024483909022929))),

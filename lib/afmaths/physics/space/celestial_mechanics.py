@@ -93,7 +93,7 @@ from astronomy_types import (
     Distance,
 )
 
-from afmaths.types import Area, DeltaV, Force, Mass
+from afmaths.types import Area, DeltaV, Force, Mass, OrbitalDirection
 
 ## Check if this belongs in geometry.py
 # def true_anomaly_from_eccentric_anomaly(
@@ -161,6 +161,29 @@ def nadir_vector(position: PositionVector) -> Vector3D:
 
 def zenith_vector(position: PositionVector) -> Vector3D:
     return vector_normalise(position)
+
+
+def orbital_direction_from_inclination(i: Inclination) -> OrbitalDirection:
+    half_pi = HALF(math.pi)
+    three_half_pi = multiply(3)(half_pi)
+
+    prograde = i < half_pi or i > three_half_pi
+    retrograde = half_pi < i < three_half_pi
+    equatorial = i == 0 or i == math.pi
+    polar = i == half_pi or i == three_half_pi
+
+    if prograde and not equatorial and not polar:
+        return OrbitalDirection.PROGRADE
+    elif retrograde and not equatorial and not polar:
+        return OrbitalDirection.RETROGRADE
+    elif equatorial:
+        return OrbitalDirection.RADIAL
+    elif polar:
+        return OrbitalDirection.NORMAL
+    else:
+        raise ValueError(
+            f"Inclination {i} is somehow not valid for determining orbital direction."
+        )
 
 
 # endregion

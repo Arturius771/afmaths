@@ -35,7 +35,7 @@ from afmaths.visualisations.helpers import (
     distance_to_scale_distance,
     figure_layout,
     figure_planetary_body,
-    plot_centre,
+    plot_origin,
     plot_max,
     plot_min,
 )
@@ -287,7 +287,7 @@ def build_phase_orbit_2d_perifocal_figure(
 
     The plotting copies of the orbits are scaled internally.
     """
-    primary_focus_plot_coordinate = plot_centre(settings)
+    primary_focus_plot_coordinate = plot_origin()
 
     signed_phase_delta = phase_true_anomaly_delta(
         initial_true_anomaly,

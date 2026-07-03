@@ -28,7 +28,7 @@ from afmaths.constants import (
     EARTH_MU_KM_CUBED,
     EARTH_RADIUS_KM,
 )
-from afmaths.types import BurnDirection, DeltaV
+from afmaths.types import OrbitalDirection, DeltaV
 from afmaths.geometry.geometry import (
     eccentricity_factor_plus,
     semi_major_axis_from_vertex_distances,
@@ -160,34 +160,34 @@ def angular_velocity_from_sidereal_period(
 # region Directions
 
 
-def radial(position: PositionVector) -> Vector3D:
-    return zenith_vector(position)
+def radial(position: PositionVector) -> tuple[Vector3D, OrbitalDirection]:
+    return (zenith_vector(position), OrbitalDirection.RADIAL)
 
 
-def anti_radial(position: PositionVector) -> Vector3D:
-    return nadir_vector(position)
+def anti_radial(position: PositionVector) -> tuple[Vector3D, OrbitalDirection]:
+    return (nadir_vector(position), OrbitalDirection.ANTIRADIAl)
 
 
-def prograde(velocity: VelocityVector) -> Vector3D:
-    return vector_normalise(velocity)
+def prograde(velocity: VelocityVector) -> tuple[Vector3D, OrbitalDirection]:
+    return (vector_normalise(velocity), OrbitalDirection.PROGRADE)
 
 
-def retrograde(velocity: VelocityVector) -> Vector3D:
-    return vector_negate(prograde(velocity))
+def retrograde(velocity: VelocityVector) -> tuple[Vector3D, OrbitalDirection]:
+    return (vector_negate(prograde(velocity)[0]), OrbitalDirection.RETROGRADE)
 
 
-def normal(state: StateVector) -> Vector3D:
-    return vector_normalise(angular_momentum(state))
+def normal(state: StateVector) -> tuple[Vector3D, OrbitalDirection]:
+    return (vector_normalise(angular_momentum(state)), OrbitalDirection.NORMAL)
 
 
-def anti_normal(state: StateVector) -> Vector3D:
-    return vector_negate(normal(state))
+def anti_normal(state: StateVector) -> tuple[Vector3D, OrbitalDirection]:
+    return (vector_negate(normal(state)[0]), OrbitalDirection.ANTINORMAL)
 
 
-def burn_direction_at_apsis(initial: Distance, target: Distance) -> BurnDirection:
+def burn_direction_at_apsis(initial: Distance, target: Distance) -> OrbitalDirection:
     if initial > target:
-        return BurnDirection.RETROGRADE
-    return BurnDirection.PROGRADE
+        return OrbitalDirection.RETROGRADE
+    return OrbitalDirection.PROGRADE
 
 
 # endregion directions
@@ -246,7 +246,7 @@ def hohmann_transfer_from_orbital_elements(
     final_orbit: OrbitalElements,
     initial_body_radius: Distance = EARTH_RADIUS_KM,
     mu: GravitationalParameter = EARTH_MU_KM_CUBED,
-) -> tuple[DeltaV, DeltaV, DeltaV, BurnDirection, Second]:
+) -> tuple[DeltaV, DeltaV, DeltaV, OrbitalDirection, Second]:
     """Assume a circular obit for initial and final."""
     return hohmann_transfer(
         orbit_altitude(
@@ -266,7 +266,7 @@ def hohmann_transfer_from_radii(
     initial_radius: Distance,
     target_radius: Distance,
     mu: GravitationalParameter = EARTH_MU_KM_CUBED,
-) -> tuple[DeltaV, DeltaV, DeltaV, BurnDirection, Second]:
+) -> tuple[DeltaV, DeltaV, DeltaV, OrbitalDirection, Second]:
     """Calculates the delta-v required for a Hohmann transfer. Assumes a circular initial and final orbit."""
     # www.braeunig.us/space/problem.htm#4.19
 
@@ -279,7 +279,7 @@ def hohmann_transfer_from_radii(
         increase_semi_major_axis_at_periapsis(
             semi_major_axis_transfer_ellipse, initial_radius, mu
         )
-        if direction is BurnDirection.PROGRADE
+        if direction is OrbitalDirection.PROGRADE
         else decrease_semi_major_axis_at_apoapsis(
             semi_major_axis_transfer_ellipse, target_radius, mu
         )
@@ -289,7 +289,7 @@ def hohmann_transfer_from_radii(
         increase_semi_major_axis_at_apoapsis(
             semi_major_axis_transfer_ellipse, target_radius, mu
         )
-        if direction is BurnDirection.PROGRADE
+        if direction is OrbitalDirection.PROGRADE
         else decrease_semi_major_axis_at_periapsis(
             semi_major_axis_transfer_ellipse, initial_radius, mu
         )
@@ -328,7 +328,7 @@ def hohmann_transfer(
     target_altitude: Distance,
     initial_body_radius: Distance = EARTH_RADIUS_KM,
     mu: GravitationalParameter = EARTH_MU_KM_CUBED,
-) -> tuple[DeltaV, DeltaV, DeltaV, BurnDirection, Second]:
+) -> tuple[DeltaV, DeltaV, DeltaV, OrbitalDirection, Second]:
     """Calculates the delta-v required for a Hohmann transfer. Assumes a circular initial and final orbit."""
     # www.braeunig.us/space/problem.htm#4.19
 

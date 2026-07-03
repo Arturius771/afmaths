@@ -1,8 +1,10 @@
+import math
 import unittest
 
-from afmaths.types import Force, Mass
+from afmaths.types import Force, Mass, OrbitalDirection
 from afmaths.physics.space.celestial_mechanics import (
     orbit_centripetal_force,
+    orbital_direction_from_inclination,
     state_vector_at_time,
     orbital_elements_from_state_vectors,
 )
@@ -171,6 +173,40 @@ class CelestialMechanicsTestMethods(unittest.TestCase):
                 Mass(Scalar(11.4)),
             ),
             Force(Scalar(1.1057225994180406)),
+        )
+
+    def test_orbital_direction_from_inclination(self):
+        self.assertEqual(
+            orbital_direction_from_inclination(Inclination(Radians(Scalar(0)))),
+            OrbitalDirection.RADIAL,
+        )
+        self.assertEqual(
+            orbital_direction_from_inclination(
+                Inclination(Radians(Scalar(math.pi / 2)))
+            ),
+            OrbitalDirection.NORMAL,
+        )
+        self.assertEqual(
+            orbital_direction_from_inclination(Inclination(Radians(Scalar(math.pi)))),
+            OrbitalDirection.RADIAL,
+        )
+        self.assertEqual(
+            orbital_direction_from_inclination(
+                Inclination(Radians(Scalar(3 * math.pi / 2)))
+            ),
+            OrbitalDirection.NORMAL,
+        )
+        self.assertEqual(
+            orbital_direction_from_inclination(
+                Inclination(Radians(Scalar(math.pi / 4)))
+            ),
+            OrbitalDirection.PROGRADE,
+        )
+        self.assertEqual(
+            orbital_direction_from_inclination(
+                Inclination(Radians(Scalar(5 * math.pi / 4)))
+            ),
+            OrbitalDirection.RETROGRADE,
         )
 
 

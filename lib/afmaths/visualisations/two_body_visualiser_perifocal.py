@@ -16,7 +16,7 @@ from astronomy_types import (
 
 import plotly.graph_objects as go
 
-from afmaths.constants import OTHER_EXAMPLE_ELEMENTS
+from afmaths.constants import MOON_ELEMENTS, OTHER_EXAMPLE_ELEMENTS
 from afmaths.geometry.geometry import calculate_distance
 from afmaths.physics.kinematics import position_vector_from_coordinates
 from afmaths.physics.space.engineering.astrodynamics import (
@@ -52,7 +52,7 @@ from afmaths.visualisations.helpers import (
     figure_layout,
     figure_planetary_body,
     figure_slider,
-    plot_centre,
+    plot_origin,
     plot_max,
     plot_min,
     scale_distance_to_distance,
@@ -319,7 +319,7 @@ def generate_combined_orbital_slider_data(
                 ):
                     xs, ys = vector_line(
                         coordinates,
-                        direction_vector,
+                        direction_vector[0],
                         settings,
                     )
 
@@ -374,7 +374,7 @@ def build_2d_orbit_visualiser_figure(
             "orbital_elements, and orbiting_body_is_satellite must have the same length"
         )
 
-    primary_focus_plot_coordinate = plot_centre(settings)
+    primary_focus_plot_coordinate = plot_origin()
 
     fig = go.Figure()
 
@@ -455,7 +455,7 @@ def main() -> None:
         orbiting_body_radius_km=[1_737.4, 1_737.4],
         orbiting_body_mass_kg=[7.346e22, 1000],
         orbiting_body_is_satellite=[False, True],
-        orbital_elements=[EXAMPLE_ELEMENTS, OTHER_EXAMPLE_ELEMENTS],
+        orbital_elements=[MOON_ELEMENTS, OTHER_EXAMPLE_ELEMENTS],
         title="Earth-Moon system",
     ).show()
 

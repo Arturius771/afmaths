@@ -20,7 +20,7 @@ from astronomy_types import (
     VelocityVector,
 )
 
-from afmaths.types import BurnDirection
+from afmaths.types import OrbitalDirection
 
 
 class AstrodynamicsTestMethods(unittest.TestCase):
@@ -48,7 +48,7 @@ class AstrodynamicsTestMethods(unittest.TestCase):
 
         self.assertEqual(
             result[3],
-            BurnDirection.PROGRADE,
+            OrbitalDirection.PROGRADE,
         )
 
         self.assertAlmostEqual(
@@ -78,7 +78,7 @@ class AstrodynamicsTestMethods(unittest.TestCase):
 
         self.assertEqual(
             result[3],
-            BurnDirection.RETROGRADE,
+            OrbitalDirection.RETROGRADE,
         )
 
         self.assertAlmostEqual(
@@ -93,7 +93,7 @@ class AstrodynamicsTestMethods(unittest.TestCase):
                 PositionVector(
                     Position(Scalar(7000)), Position(Scalar(0.1)), Position(Scalar(0.1))
                 )
-            ),
+            )[0],
             Vector3D(
                 x=0.9999999997959184, y=1.4285714282798834e-05, z=1.4285714282798834e-05
             ),
@@ -105,7 +105,7 @@ class AstrodynamicsTestMethods(unittest.TestCase):
                 PositionVector(
                     Position(Scalar(7000)), Position(Scalar(0.1)), Position(Scalar(0.1))
                 )
-            ),
+            )[0],
             Vector3D(
                 x=-0.9999999997959184,
                 y=-1.4285714282798834e-05,
@@ -114,13 +114,18 @@ class AstrodynamicsTestMethods(unittest.TestCase):
         )
 
     def test_prograde(self):
+        result = prograde(
+            VelocityVector(
+                Velocity(Scalar(0.1)), Velocity(Scalar(7.5)), Velocity(Scalar(0.1))
+            )
+        )
         self.assertEqual(
-            prograde(
-                VelocityVector(
-                    Velocity(Scalar(0.1)), Velocity(Scalar(7.5)), Velocity(Scalar(0.1))
-                )
-            ),
+            result[0],
             Vector3D(x=0.0133309635948745, y=0.9998222696155874, z=0.0133309635948745),
+        )
+        self.assertEqual(
+            result[1],
+            OrbitalDirection.PROGRADE,
         )
 
     def test_retrograde(self):
@@ -129,7 +134,7 @@ class AstrodynamicsTestMethods(unittest.TestCase):
                 VelocityVector(
                     Velocity(Scalar(0.1)), Velocity(Scalar(7.5)), Velocity(Scalar(0.1))
                 )
-            ),
+            )[0],
             Vector3D(
                 x=-0.0133309635948745, y=-0.9998222696155874, z=-0.0133309635948745
             ),
@@ -150,7 +155,7 @@ class AstrodynamicsTestMethods(unittest.TestCase):
                         Velocity(Scalar(0.1)),
                     ),
                 )
-            ),
+            )[0],
             Vector3D(
                 x=-1.4093988070694925e-05, y=-0.013331960418386137, z=0.9999111253670309
             ),
@@ -171,7 +176,7 @@ class AstrodynamicsTestMethods(unittest.TestCase):
                         Velocity(Scalar(0.1)),
                     ),
                 )
-            ),
+            )[0],
             Vector3D(
                 x=1.4093988070694925e-05, y=0.013331960418386137, z=-0.9999111253670309
             ),
