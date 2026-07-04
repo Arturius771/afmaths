@@ -15,28 +15,31 @@ from afmaths.physics.space.transformations import (
     transform_perifocal_vector_to_element_reference_frame,
 )
 from afmaths.physics.space.type_conversion_helpers import (
+    coordinate3d_from_vector,
     make_eccentric_anomaly,
-    vector_to_coordinate2d,
-    vector_to_position_vector,
+    coordinate2d_from_vector,
+    position_from_vector,
     make_state_vector,
     make_true_anomaly,
-    vector_to_velocity_vector,
-    position_vector_to_vector3d,
+    velocity_from_vector,
+    vector3d_from_position,
     make_vector2d,
     make_vector3d,
-    velocity_vector_to_vector3d,
+    vector3d_from_velocity,
 )
 from afmaths.tensors import (
     dot_product_3d,
     vector_cross_multiplication_3d,
-    vector_magnitude,
+    vector_magnitude_3d,
     vector_multiplication_2d,
     vector_multiplication_3d,
     vector_negate,
     vector_normalise,
+    vector_subtract_3d,
 )
 
 from afmaths.geometry.geometry import (
+    calculate_distance_3d,
     eccentricity_factor_minus,
     eccentricity_factor_plus,
     eccentricity,
@@ -133,7 +136,7 @@ from afmaths.types import Area, DeltaV, Force, Mass, OrbitalDirection
 
 def generate_all_orbit_positions(
     orbital_elements: OrbitalElements,
-    resolution: int,
+    resolution: int = 50,
     gravitational_parameter: GravitationalParameter = EARTH_MU_KM_CUBED,
 ) -> list[PositionVector]:
     if resolution < 5:
@@ -264,6 +267,13 @@ def mean_motion(
     return MeanMotion((mean_angular_rate(a, mu)))
 
 
+def distance_between_positions(pos1: PositionVector, pos2: PositionVector) -> Distance:
+    return calculate_distance_3d(
+        coordinate3d_from_vector(vector3d_from_position(pos1)),
+        coordinate3d_from_vector(vector3d_from_position(pos2)),
+    )
+
+
 # region ## Latitude
 
 
@@ -277,16 +287,14 @@ def argument_of_latitude_from_true_anomaly(
 def argument_of_latitude(
     raan: RightAscension,
     i: Inclination,
-    position_vector: PositionVector,
+    position: PositionVector,
 ) -> Latitude:
     """Finds the latitude of the satellite in the orbital plane from the position vector and the right ascension of the ascending node."""
     # u = np.arctan2(r[2] / np.sin(i), r[0] * np.cos(Omega) + r[1] * np.sin(Omega))
     # if u < 0:
     #     u += 2 * np.pi
-    y = divide_by(math.sin(i))(position_vector.z)
-    x = add(multiply(position_vector.x)(math.cos(raan)))(
-        multiply(position_vector.y)(math.sin(raan))
-    )
+    y = divide_by(math.sin(i))(position.z)
+    x = add(multiply(position.x)(math.cos(raan)))(multiply(position.y)(math.sin(raan)))
 
     return Radians(Scalar(math.atan2(y, x) % (2 * math.pi)))
 
@@ -310,11 +318,11 @@ def delta_v(initial_velocity: Velocity, final_velocity: Velocity) -> DeltaV:
 
 
 def radial_velocity(state: StateVector) -> Velocity:
-    position = position_vector_to_vector3d(state.position)
+    position = vector3d_from_position(state.position)
 
     return Velocity(
-        divide_by(vector_magnitude(position))(
-            dot_product_3d(position, velocity_vector_to_vector3d(state.velocity))
+        divide_by(vector_magnitude_3d(position))(
+            dot_product_3d(position, vector3d_from_velocity(state.velocity))
         )
     )
 
@@ -337,27 +345,27 @@ def orbit_equation(
 
 def gravitational_acceleration_at_altitude(
     alt: Distance,
-    initial_body_radius: Distance,
+    central_body_radius: Distance,
     mu: GravitationalParameter,
 ) -> Acceleration:
     # From MSE SFM Exercise 1
     return gravitational_acceleration_at_radius(
         mu,
-        orbit_radius(alt, initial_body_radius),
+        orbit_radius(alt, central_body_radius),
     )
 
 
 def velocity_at_radius(
-    radius: Distance,
+    r: Distance,
     mu: GravitationalParameter = EARTH_MU_KM_CUBED,
 ) -> Velocity:
-    return Velocity(Scalar(square_root(divide_by(radius)(mu))))
+    return Velocity(Scalar(square_root(divide_by(r)(mu))))
 
 
 def orbit_radius(
-    alt: Distance, initial_body_radius: Distance = EARTH_RADIUS_KM
+    alt: Distance, central_body_radius: Distance = EARTH_RADIUS_KM
 ) -> Distance:
-    return add(alt)(initial_body_radius)
+    return add(alt)(central_body_radius)
 
 
 def orbit_altitude(radius: Distance, body_radius: Distance) -> Distance:
@@ -381,13 +389,13 @@ def angular_momentum(state_vectors: StateVector) -> Vector3D[Scalar]:
 
 def angular_momentum_magnitude(angular_momentum_vector: Vector3D[Scalar]) -> Scalar:
     # From MSE SFM Exercise 1
-    return vector_magnitude(angular_momentum_vector)
+    return vector_magnitude_3d(angular_momentum_vector)
 
 
 def instantaneous_angular_velocity(state_vectors: StateVector) -> Scalar:
     # From MSE SFM Exercise 1
     h = angular_momentum_magnitude(angular_momentum(state_vectors))
-    r = vector_magnitude(position_vector_to_vector3d(state_vectors.position))
+    r = vector_magnitude_3d(vector3d_from_position(state_vectors.position))
 
     return divide_by(SQUARE(r))(h)
 
@@ -577,16 +585,16 @@ def state_vector_from_orbital_elements(
     )
 
     return make_state_vector(
-        vector_to_position_vector(
+        position_from_vector(
             transform_perifocal_vector_to_element_reference_frame(
                 orbital_elements,
-                position_vector_to_vector3d(perifocal_position_gaussian),
+                vector3d_from_position(perifocal_position_gaussian),
             )
         ),
-        vector_to_velocity_vector(
+        velocity_from_vector(
             transform_perifocal_vector_to_element_reference_frame(
                 orbital_elements,
-                velocity_vector_to_vector3d(perifocal_velocity_gaussian),
+                vector3d_from_velocity(perifocal_velocity_gaussian),
             )
         ),
     )
@@ -650,7 +658,7 @@ def propagate_orbit_to_time_2d(
     )
 
 
-def orbital_position_vector_at_time(
+def position_vector_at_time(
     orbital_elements: OrbitalElements,
     time_offset: Second = Second(Scalar(0)),
     mu: GravitationalParameter = EARTH_MU_KM_CUBED,
@@ -658,7 +666,7 @@ def orbital_position_vector_at_time(
     return state_vector_at_time(orbital_elements, time_offset, mu).position
 
 
-def orbital_velocity_vector_at_time(
+def velocity_vector_at_time(
     orbital_elements: OrbitalElements,
     time_offset_s: Second = Second(Scalar(0)),
     gravitational_parameter: GravitationalParameter = EARTH_MU_KM_CUBED,
@@ -685,7 +693,7 @@ def perifocal_position_coordinate_2d(
 
     pqw = perifocal_radial_unit_vector(orbital_elements.true_anomaly)
 
-    return vector_to_coordinate2d(
+    return coordinate2d_from_vector(
         vector_multiplication_2d(
             make_vector2d(
                 pqw.x,
@@ -704,7 +712,7 @@ def perifocal_position_vector(
     orbital_elements: OrbitalElements,
 ) -> PositionVector:
     """Calculates the position vector in the perifocal coordinate system"""
-    return vector_to_position_vector(
+    return position_from_vector(
         vector_multiplication_3d(
             perifocal_radial_unit_vector(orbital_elements.true_anomaly),
             orbit_equation(
@@ -724,7 +732,7 @@ def perifocal_velocity_vector(
 ) -> VelocityVector:
     """Calculates the velocity vector in the perifocal coordinate system"""
 
-    return vector_to_velocity_vector(
+    return velocity_from_vector(
         vector_multiplication_3d(
             make_vector3d(
                 Scalar(negate(math.sin(true_anomaly))),
@@ -820,7 +828,7 @@ def right_ascension_of_ascending_node_from_angular_momentum_vector(
     """
     n = ascending_node_vector_from_angular_momentum_vector(angular_momentum_vector)
 
-    divide_by_vector_magnitude = divide_by(vector_magnitude(n))
+    divide_by_vector_magnitude = divide_by(vector_magnitude_3d(n))
     if n.y >= 0:
         return RightAscension(
             Radians(Scalar(math.acos(divide_by_vector_magnitude(n.x))))
@@ -851,8 +859,8 @@ def semi_major_axis_from_state_vectors(
     # a = 1 / (2 / r_norm - np.square(v_norm) / mu)
     # 1e-3 * a
 
-    r = vector_magnitude(position_vector_to_vector3d(state_vectors.position))
-    v = vector_magnitude(velocity_vector_to_vector3d(state_vectors.velocity))
+    r = vector_magnitude_3d(vector3d_from_position(state_vectors.position))
+    v = vector_magnitude_3d(vector3d_from_velocity(state_vectors.velocity))
     # This is a rearranged vis-viva equation
     a = subtract(divide_by(mu)(SQUARE(v)))(divide_by(r)(2))
     return SemiMajorAxis(exponentiate(-1)(a))
@@ -940,12 +948,12 @@ def eccentric_anomaly(
     n: MeanMotion,
 ) -> EccentricAnomaly:
     # E = np.arctan2(np.dot(r, v) / (np.square(a) * n), 1 - r_norm / a)
-    pos_3d = position_vector_to_vector3d(state.position)
-    radius = vector_magnitude(pos_3d)
+    pos_3d = vector3d_from_position(state.position)
+    radius = vector_magnitude_3d(pos_3d)
 
     y = dot_product_3d(
         pos_3d,
-        velocity_vector_to_vector3d(state.velocity),
+        vector3d_from_velocity(state.velocity),
     )
     x = multiply(SQUARE(a))(multiply(n)((subtract(divide_by(a)(radius))(1))))
 

@@ -42,13 +42,12 @@ from afmaths.physics.space.horizons_api import (
 )
 from afmaths.physics.space.type_conversion_helpers import (
     make_true_anomaly,
-    python_datetime_to_fulldate,
-    python_timedelta_to_seconds,
+    fulldate_from_python_datetime,
+    seconds_from_python_timedelta,
 )
 from afmaths.visualisations.helpers import (
     PlotNode,
     PlotOrbital2DSettings,
-    add_plot_node,
     add_plot_nodes,
     figure_layout,
     figure_orbit_line,
@@ -90,7 +89,7 @@ class OrbitPlotSettings:
 
     @property
     def time_offset_seconds(self) -> Second:
-        return Second(Scalar(python_timedelta_to_seconds(self.time_offset)))
+        return Second(Scalar(seconds_from_python_timedelta(self.time_offset)))
 
 
 # Subject: angle construction.
@@ -601,8 +600,8 @@ def add_orbiting_body_to_traces(
     horizon_state_vectors = get_object_state_vectors_from_horizon(
         target=HorizonsCommandTarget(body.target),
         centre=settings.centre,
-        start_time=python_datetime_to_fulldate(settings.start_time),
-        stop_time=python_datetime_to_fulldate(settings.stop_time),
+        start_time=fulldate_from_python_datetime(settings.start_time),
+        stop_time=fulldate_from_python_datetime(settings.stop_time),
     )
 
     if len(horizon_state_vectors) < 1:

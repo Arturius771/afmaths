@@ -19,7 +19,7 @@ from afmaths.physics.space.type_conversion_helpers import make_vector3d
 from afmaths.tensors import vector_multiplication_2d, vector_multiplication_3d
 
 
-def position_vector_from_coordinates(
+def position_displacement(
     coords: Coordinate3D[Scalar],
     origin: Coordinate3D[Scalar],
 ) -> PositionVector:

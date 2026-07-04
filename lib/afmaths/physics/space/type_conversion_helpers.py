@@ -33,38 +33,78 @@ from astronomy_types import (
 )
 
 
-def degrees_to_radians(degrees: Degrees) -> Radians:
+# region Factories
+def make_vector2d(x: T, y: T) -> Vector2D[T]:
+    return Vector2D(x, y)
+
+
+def make_vector3d(
+    x: T,
+    y: T,
+    z: T,
+) -> Vector3D[T]:
+    return Vector3D(x, y, z)
+
+
+def make_date(year: Year, month: Month, day: Day) -> Date:
+    return Date(Year(year), Month(month), Day(Scalar(day)))
+
+
+def make_time(hms: HMS) -> Time:
+    return Time(
+        hour=Hour(hms.hours),
+        minute=Minute(hms.minutes),
+        second=Second(Scalar(hms.seconds)),
+    )
+
+
+def make_state_vector(pos: PositionVector, vel: VelocityVector) -> StateVector:
+    return StateVector(pos, vel)
+
+
+def make_true_anomaly(val: float) -> TrueAnomaly:
+    return TrueAnomaly(Anomaly(Radians(Scalar(val))))
+
+
+def make_eccentric_anomaly(val: float) -> EccentricAnomaly:
+    return EccentricAnomaly(Anomaly(Radians(Scalar(val))))
+
+
+# region Type Conversion
+
+
+def radians_from_degrees(degrees: Degrees) -> Radians:
     return Radians(Scalar(math.radians(float(degrees))))
 
 
-def dms_to_degrees(dms: DMS) -> Degrees:
+def degrees_from_dms(dms: DMS) -> Degrees:
     sign = -1 if dms.degrees < 0 else 1
     return Degrees(
         Scalar(sign * (abs(dms.degrees) + dms.minutes / 60 + dms.seconds / 3600))
     )
 
 
-def dms_to_radians(dms: DMS) -> Radians:
-    return degrees_to_radians(dms_to_degrees(dms))
+def radians_from_dms(dms: DMS) -> Radians:
+    return radians_from_degrees(degrees_from_dms(dms))
 
 
-def hms_to_degrees(hms: HMS) -> Degrees:
+def degrees_from_hms(hms: HMS) -> Degrees:
     return Degrees(Scalar(15 * (hms.hours + hms.minutes / 60 + hms.seconds / 3600)))
 
 
-def hms_to_radians(hms: HMS) -> Radians:
-    return degrees_to_radians(hms_to_degrees(hms))
+def radians_from_hms(hms: HMS) -> Radians:
+    return radians_from_degrees(degrees_from_hms(hms))
 
 
-def hours_to_degrees(hours: DecimalTime) -> Degrees:
+def degrees_from_hours(hours: DecimalTime) -> Degrees:
     return Degrees(Scalar(float(hours) * 15))
 
 
-def degrees_to_hours(degrees: Degrees) -> DecimalTime:
+def hours_from_degrees(degrees: Degrees) -> DecimalTime:
     return DecimalTime(Scalar(float(degrees) / 15))
 
 
-def time_to_decimal_time(time: Time) -> DecimalTime:
+def decimal_time_from_time(time: Time) -> DecimalTime:
     unsigned_decimal = (
         int(time.hour) + int(time.minute) / 60 + float(time.second) / 3600
     )
@@ -72,7 +112,7 @@ def time_to_decimal_time(time: Time) -> DecimalTime:
     return DecimalTime(Scalar(unsigned_decimal))
 
 
-def decimal_time_to_time(time: DecimalTime) -> Time:
+def time_from_decimal_time(time: DecimalTime) -> Time:
     unsigned_decimal = abs(float(time))
 
     total_seconds = unsigned_decimal * 3600
@@ -91,19 +131,7 @@ def decimal_time_to_time(time: DecimalTime) -> Time:
     )
 
 
-def make_date(year: Year, month: Month, day: Day) -> Date:
-    return Date(Year(year), Month(month), Day(Scalar(day)))
-
-
-def make_time(hms: HMS) -> Time:
-    return Time(
-        hour=Hour(hms.hours),
-        minute=Minute(hms.minutes),
-        second=Second(Scalar(hms.seconds)),
-    )
-
-
-def python_datetime_to_fulldate(date: datetime.datetime) -> FullDate:
+def fulldate_from_python_datetime(date: datetime.datetime) -> FullDate:
     return FullDate(
         date=make_date(
             year=Year(date.year), month=Month(date.month), day=Day(Scalar(date.day))
@@ -112,69 +140,49 @@ def python_datetime_to_fulldate(date: datetime.datetime) -> FullDate:
     )
 
 
-def fulldate_to_string(date: FullDate) -> str:
+def string_from_fulldate(date: FullDate) -> str:
     return f"{date.date.year:04d}-{date.date.month:02d}-{date.date.day:02d} {date.time.hour:02d}:{date.time.minute:02d}:{date.time.second:02d}"
 
 
-def python_timedelta_to_seconds(delta: datetime.timedelta) -> Second:
+def seconds_from_python_timedelta(delta: datetime.timedelta) -> Second:
     return Second(Scalar(delta.total_seconds()))
 
 
-def seconds_to_hours(seconds: Second) -> Hour:
+def hours_from_seconds(seconds: Second) -> Hour:
     return Hour(int(round(float(seconds) / 3600)))
 
 
-def hour_to_hour_string(hour: Hour) -> str:
+def hour_string_from_hour(hour: Hour) -> str:
     return f"{hour:02d}h"
 
 
-def make_vector2d(x: T, y: T) -> Vector2D[T]:
-    return Vector2D(x, y)
+def vector2d_from_coordinate2d(coordinates: Coordinate2D) -> Vector2D[Scalar]:
+    return make_vector2d(coordinates.x, coordinates.y)
 
 
-def make_vector3d(
-    x: T,
-    y: T,
-    z: T,
-) -> Vector3D[T]:
-    return Vector3D(x, y, z)
-
-
-def coordinate3d_to_vector3d(coordinates: Coordinate3D) -> Vector3D[Scalar]:
+def vector3d_from_coordinate3d(coordinates: Coordinate3D) -> Vector3D[Scalar]:
     return make_vector3d(coordinates.x, coordinates.y, coordinates.z)
 
 
-def position_vector_to_vector3d(position_vector: PositionVector) -> Vector3D[Scalar]:
+def vector3d_from_position(position_vector: PositionVector) -> Vector3D[Scalar]:
     return make_vector3d(position_vector.x, position_vector.y, position_vector.z)
 
 
-def velocity_vector_to_vector3d(velocity_vector: VelocityVector) -> Vector3D[Scalar]:
+def vector3d_from_velocity(velocity_vector: VelocityVector) -> Vector3D[Scalar]:
     return make_vector3d(velocity_vector.x, velocity_vector.y, velocity_vector.z)
 
 
-def vector_to_velocity_vector(vector: Vector3D) -> VelocityVector:
+def velocity_from_vector(vector: Vector3D) -> VelocityVector:
     return VelocityVector(Velocity(vector.x), Velocity(vector.y), Velocity(vector.z))
 
 
-def vector_to_position_vector(vector: Vector3D) -> PositionVector:
+def position_from_vector(vector: Vector3D) -> PositionVector:
     return PositionVector(Position(vector.x), Position(vector.y), Position(vector.z))
 
 
-def make_state_vector(pos: PositionVector, vel: VelocityVector) -> StateVector:
-    return StateVector(pos, vel)
-
-
-def make_true_anomaly(val: float) -> TrueAnomaly:
-    return TrueAnomaly(Anomaly(Radians(Scalar(val))))
-
-
-def make_eccentric_anomaly(val: float) -> EccentricAnomaly:
-    return EccentricAnomaly(Anomaly(Radians(Scalar(val))))
-
-
-def vector_to_coordinate3d(vector: Vector3D) -> Coordinate3D:
+def coordinate3d_from_vector(vector: Vector3D) -> Coordinate3D:
     return Coordinate3D(vector.x, vector.y, vector.z)
 
 
-def vector_to_coordinate2d(vector: Vector2D) -> Coordinate2D:
+def coordinate2d_from_vector(vector: Vector2D) -> Coordinate2D:
     return Coordinate2D(vector.x, vector.y)

@@ -9,7 +9,7 @@ from astronomy_types import (
 
 from afmaths.operation import divide_by
 from afmaths.physics.space.type_conversion_helpers import make_vector3d
-from afmaths.tensors import vector_magnitude, vector_subtract
+from afmaths.tensors import vector_magnitude_3d, vector_subtract_3d
 
 
 def orbital_period_mean_motion(n_per_day: MeanMotion) -> Day:
@@ -21,8 +21,8 @@ def distance_to_satellite(
 ) -> Distance:
     return Distance(
         Scalar(
-            vector_magnitude(
-                vector_subtract(
+            vector_magnitude_3d(
+                vector_subtract_3d(
                     itrs_position, make_vector3d(observer.x, observer.y, observer.z)
                 )
             )

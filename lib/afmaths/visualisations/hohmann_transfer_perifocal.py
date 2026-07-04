@@ -4,8 +4,10 @@ import math
 
 import plotly.graph_objects as go
 from afmaths.constants import EARTH_MU_KM_CUBED
-from afmaths.physics.space.engineering.astrodynamics import (
+from afmaths.physics.space.engineering.astrodynamics.hohmann_transfer import (
     hohmann_transfer_from_radii,
+)
+from afmaths.physics.space.engineering.astrodynamics.maneuvers import (
     transfer_eccentricity,
     transfer_semi_major_axis,
 )

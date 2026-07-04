@@ -1,6 +1,6 @@
 import math
 
-from afmaths.physics.space.type_conversion_helpers import degrees_to_radians
+from afmaths.physics.space.type_conversion_helpers import radians_from_degrees
 from afmaths.physics.space.astronomy.coordinate_functions import (
     ecliptic_to_equatorial_coordinates,
 )
@@ -41,7 +41,9 @@ def sun_longitude(
         eccentricity = Eccentricity(Ratio(Scalar(0.016705)))
 
         return mean_anomaly + (
-            (360 / math.pi) * eccentricity * math.sin(degrees_to_radians(mean_anomaly))
+            (360 / math.pi)
+            * eccentricity
+            * math.sin(radians_from_degrees(mean_anomaly))
         )
 
     def sun_longitude_2010(true_anomaly_degrees: float) -> float:
@@ -77,7 +79,7 @@ def sun_longitude(
     longitude_degrees = sun_longitude_2010(true_anomaly)
     longitude_degrees_corrected = Degrees(Scalar(longitude_degrees % 360))
 
-    return Radians(degrees_to_radians(longitude_degrees_corrected))
+    return Radians(radians_from_degrees(longitude_degrees_corrected))
 
 
 def sun_position_approximate(

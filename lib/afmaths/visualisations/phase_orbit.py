@@ -4,7 +4,7 @@ import math
 import plotly.graph_objects as go
 
 from afmaths.constants import EARTH_MU_KM_CUBED
-from afmaths.physics.space.engineering.astrodynamics import (
+from afmaths.physics.space.engineering.astrodynamics.phase_orbit import (
     phase_apoapsis,
     phase_orbit,
     phase_periapsis,

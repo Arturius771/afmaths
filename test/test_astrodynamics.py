@@ -1,9 +1,8 @@
 import unittest
 
-from afmaths.physics.space.engineering.astrodynamics import (
+from afmaths.physics.space.engineering.astrodynamics.orbital_directions import (
     anti_normal,
     anti_radial,
-    hohmann_transfer,
     normal,
     prograde,
     radial,
@@ -20,6 +19,9 @@ from astronomy_types import (
     VelocityVector,
 )
 
+from afmaths.physics.space.engineering.astrodynamics.hohmann_transfer import (
+    hohmann_transfer,
+)
 from afmaths.types import OrbitalDirection
 
 

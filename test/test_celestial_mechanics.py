@@ -3,6 +3,7 @@ import unittest
 
 from afmaths.types import Force, Mass, OrbitalDirection
 from afmaths.physics.space.celestial_mechanics import (
+    distance_between_positions,
     orbit_centripetal_force,
     orbital_direction_from_inclination,
     state_vector_at_time,
@@ -30,7 +31,7 @@ from astronomy_types import (
     VelocityVector,
 )
 
-from afmaths.physics.space.type_conversion_helpers import degrees_to_radians
+from afmaths.physics.space.type_conversion_helpers import radians_from_degrees
 
 
 class CelestialMechanicsTestMethods(unittest.TestCase):
@@ -69,9 +70,9 @@ class CelestialMechanicsTestMethods(unittest.TestCase):
     def test_orbit_state_vector_prediction(self):
         result = state_vector_at_time(
             OrbitalElements(
-                Inclination(degrees_to_radians(Degrees(Scalar(98.371)))),
-                RightAscension(degrees_to_radians(Degrees(Scalar(120.534)))),
-                ArgumentOfPeriapsis(degrees_to_radians(Degrees(Scalar(10.598)))),
+                Inclination(radians_from_degrees(Degrees(Scalar(98.371)))),
+                RightAscension(radians_from_degrees(Degrees(Scalar(120.534)))),
+                ArgumentOfPeriapsis(radians_from_degrees(Degrees(Scalar(10.598)))),
                 SemiMajorAxis(Distance(Scalar(6878.1))),
                 Eccentricity(Ratio(Scalar(10e-5))),
                 TrueAnomaly(Anomaly(Radians(Scalar(2.8022276030554347)))),
@@ -207,6 +208,41 @@ class CelestialMechanicsTestMethods(unittest.TestCase):
                 Inclination(Radians(Scalar(5 * math.pi / 4)))
             ),
             OrbitalDirection.RETROGRADE,
+        )
+
+    def test_distance_between_positions(self):
+        self.assertAlmostEqual(
+            distance_between_positions(
+                PositionVector(
+                    Position(Scalar(2)),
+                    Position(Scalar(4)),
+                    Position(Scalar(1)),
+                ),
+                PositionVector(
+                    Position(Scalar(3)),
+                    Position(Scalar(5)),
+                    Position(Scalar(2)),
+                ),
+            ),
+            Distance(Scalar(1.73)),
+            places=2,
+        )
+
+        self.assertAlmostEqual(
+            distance_between_positions(
+                PositionVector(
+                    Position(Scalar(-22)),
+                    Position(Scalar(4000)),
+                    Position(Scalar(132)),
+                ),
+                PositionVector(
+                    Position(Scalar(3)),
+                    Position(Scalar(-500)),
+                    Position(Scalar(1800)),
+                ),
+            ),
+            Distance(Scalar(4799.25)),
+            places=1,
         )
 
 

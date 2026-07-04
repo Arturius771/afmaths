@@ -25,10 +25,10 @@ from afmaths.physics.space.celestial_mechanics import (
     orbital_elements_from_state_vectors,
 )
 from afmaths.physics.space.type_conversion_helpers import (
-    dms_to_radians,
-    fulldate_to_string,
-    hms_to_radians,
-    python_datetime_to_fulldate,
+    radians_from_dms,
+    string_from_fulldate,
+    radians_from_hms,
+    fulldate_from_python_datetime,
 )
 
 
@@ -96,8 +96,8 @@ def build_horizons_url(query: HorizonsObserverQuery) -> str:
             "COMMAND": quote_horizons(query.target.value),
             "EPHEM_TYPE": quote_horizons(query.ephemeris_type.value),
             "CENTER": quote_horizons(f"500@{query.centre.value}"),
-            "START_TIME": quote_horizons(fulldate_to_string(query.start_time)),
-            "STOP_TIME": quote_horizons(fulldate_to_string(query.stop_time)),
+            "START_TIME": quote_horizons(string_from_fulldate(query.start_time)),
+            "STOP_TIME": quote_horizons(string_from_fulldate(query.stop_time)),
             "STEP_SIZE": quote_horizons(query.step_size),
             "QUANTITIES": quote_horizons(quantities),
         },
@@ -189,8 +189,8 @@ def try_parse_equatorial_coordinates(
         return None
 
     try:
-        right_ascension = RightAscension(hms_to_radians(parse_hms(ra_parts)))
-        declination = Declination(dms_to_radians(parse_dms(dec_parts)))
+        right_ascension = RightAscension(radians_from_hms(parse_hms(ra_parts)))
+        declination = Declination(radians_from_dms(parse_dms(dec_parts)))
     except ValueError:
         return None
 
@@ -304,8 +304,8 @@ def get_object_state_vectors_from_horizon(
 if __name__ == "__main__":
     coordinates = get_object_equatorial_coordinates(
         target=HorizonsCommandTarget.MARS,
-        start_time=python_datetime_to_fulldate(datetime.datetime.now()),
-        stop_time=python_datetime_to_fulldate(
+        start_time=fulldate_from_python_datetime(datetime.datetime.now()),
+        stop_time=fulldate_from_python_datetime(
             datetime.datetime.now() + datetime.timedelta(days=1)
         ),
         step_size="1h",
@@ -317,8 +317,8 @@ if __name__ == "__main__":
 
     state_vectors = get_object_state_vectors_from_horizon(
         target=HorizonsCommandTarget.MARS,
-        start_time=python_datetime_to_fulldate(datetime.datetime(2026, 5, 27, 0, 0)),
-        stop_time=python_datetime_to_fulldate(datetime.datetime(2026, 5, 28, 0, 0)),
+        start_time=fulldate_from_python_datetime(datetime.datetime(2026, 5, 27, 0, 0)),
+        stop_time=fulldate_from_python_datetime(datetime.datetime(2026, 5, 28, 0, 0)),
         step_size="1h",
     )
 
@@ -330,8 +330,8 @@ if __name__ == "__main__":
     coordinates = orbital_elements_from_state_vectors(
         get_object_state_vectors_from_horizon(
             target=HorizonsCommandTarget.MOON,
-            start_time=python_datetime_to_fulldate(datetime.datetime.now()),
-            stop_time=python_datetime_to_fulldate(
+            start_time=fulldate_from_python_datetime(datetime.datetime.now()),
+            stop_time=fulldate_from_python_datetime(
                 datetime.datetime.now() + datetime.timedelta(days=1)
             ),
             step_size="1h",

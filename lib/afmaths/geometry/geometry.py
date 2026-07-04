@@ -1,5 +1,6 @@
 from astronomy_types import (
     Coordinate2D,
+    Coordinate3D,
     Distance,
     Eccentricity,
     Radians,
@@ -8,6 +9,12 @@ from astronomy_types import (
     SemiLatusRectum,
     SemiMajorAxis,
     SemiMinorAxis,
+)
+from afmaths.tensors import (
+    vector_magnitude,
+    vector_magnitude_3d,
+    vector_subtract,
+    vector_subtract_3d,
 )
 from afmaths.types import Area
 from afmaths.geometry.transformations import translate_coordinate
@@ -24,7 +31,12 @@ from afmaths.operation import (
 )
 import math
 
-from afmaths.physics.space.type_conversion_helpers import make_vector2d, make_vector3d
+from afmaths.physics.space.type_conversion_helpers import (
+    make_vector2d,
+    make_vector3d,
+    vector2d_from_coordinate2d,
+    vector3d_from_coordinate3d,
+)
 
 
 def pythagoras_theorem(a):
@@ -98,24 +110,56 @@ def sieve_of_eratosthenes(n: int) -> list[int]:
 #     return semi_major_axis * (1 - eccentricity**2) ** 0.5
 
 
-def calculate_distance(
-    coordinates1: Coordinate2D, coordinates2: Coordinate2D
-) -> Distance:
-    """
-    Calculate the distance between two points in 2D space.
+# def calculate_distance(
+#     coordinates1: Coordinate2D, coordinates2: Coordinate2D
+# ) -> Distance:
+#     """
+#     Calculate the distance between two points in 2D space.
 
-    Parameters:
-    x1 (float): The x-coordinate of the first point.
-    y1 (float): The y-coordinate of the first point.
-    x2 (float): The x-coordinate of the second point.
-    y2 (float): The y-coordinate of the second point.
+#     Parameters:
+#     x1 (float): The x-coordinate of the first point.
+#     y1 (float): The y-coordinate of the first point.
+#     x2 (float): The x-coordinate of the second point.
+#     y2 (float): The y-coordinate of the second point.
 
-    Returns:
-    float: The distance between the two points.
-    """
-    return (
-        (coordinates2.x - coordinates1.x) ** 2 + (coordinates2.y - coordinates1.y) ** 2
-    ) ** 0.5
+#     Returns:
+#     float: The distance between the two points.
+#     """
+#     return (
+#         (coordinates2.x - coordinates1.x) ** 2 + (coordinates2.y - coordinates1.y) ** 2
+#     ) ** 0.5
+
+
+def calculate_distance(coord1: Coordinate2D, coord2: Coordinate2D) -> Distance:
+    """Calculates the distance between two points in 2D space. Derived from the Pythagorean theorem."""
+    return Distance(
+        Scalar(
+            abs(
+                vector_magnitude(
+                    vector_subtract(
+                        vector2d_from_coordinate2d(coord1),
+                        vector2d_from_coordinate2d(coord2),
+                    )
+                )
+            )
+        )
+    )
+
+
+def calculate_distance_3d(coord1: Coordinate3D, coord2: Coordinate3D) -> Distance:
+    """Calculates the distance between two points in 3D space"""
+    return Distance(
+        Scalar(
+            abs(
+                vector_magnitude_3d(
+                    vector_subtract_3d(
+                        vector3d_from_coordinate3d(coord1),
+                        vector3d_from_coordinate3d(coord2),
+                    )
+                )
+            )
+        )
+    )
 
 
 def geometric_mean_distance(x: Distance, y: Distance) -> Distance:

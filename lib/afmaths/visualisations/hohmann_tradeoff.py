@@ -20,7 +20,9 @@ from astronomy_types import (
 
 from afmaths.constants import EARTH_MU_KM_CUBED, EARTH_RADIUS_KM
 from afmaths.physics.space.celestial_mechanics import orbit_radius, periapsis_radius
-from afmaths.physics.space.engineering.astrodynamics import hohmann_transfer_from_radii
+from afmaths.physics.space.engineering.astrodynamics.hohmann_transfer import (
+    hohmann_transfer_from_radii,
+)
 
 INITIAL_ALTITUDE_KM = Distance(Scalar(10_000))
 MAX = INITIAL_ALTITUDE_KM * 500

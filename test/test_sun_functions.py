@@ -16,10 +16,10 @@ from astronomy_types import (
 )
 
 from afmaths.physics.space.type_conversion_helpers import (
-    dms_to_degrees,
+    degrees_from_dms,
     make_date,
     make_time,
-    time_to_decimal_time,
+    decimal_time_from_time,
 )
 from afmaths.physics.space.astronomy.sun_functions import sun_position_approximate
 
@@ -35,13 +35,13 @@ class SunTestMethods(unittest.TestCase):
 
         self.assertAlmostEqual(
             math.degrees(float(result.declination)),
-            dms_to_degrees(DMS(19, 21, 13.81)),
+            degrees_from_dms(DMS(19, 21, 13.81)),
             places=2,
         )
 
         self.assertAlmostEqual(
             math.degrees(float(result.right_ascension)) / 15,
-            time_to_decimal_time(Time(Hour(8), Minute(23), Second(Scalar(33.72)))),
+            decimal_time_from_time(Time(Hour(8), Minute(23), Second(Scalar(33.72)))),
             places=2,
         )
 

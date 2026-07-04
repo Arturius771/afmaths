@@ -8,7 +8,9 @@ from astronomy_types import (
 from afmaths.constants import EXAMPLE_ELEMENTS, STEFAN_BOLTZMANN_CONSTANT
 from afmaths.operation import divide_by, exponentiate, multiply, subtract
 from afmaths.physics.electromagnetism import stefan_boltzmann_law
-from afmaths.physics.space.engineering.astrodynamics import angle_above_orbital_plane
+from afmaths.physics.space.engineering.astrodynamics.maneuvers import (
+    angle_above_orbital_plane,
+)
 from afmaths.types import Area
 
 

@@ -19,8 +19,8 @@ from astronomy_types import (
 
 from afmaths.operation import is_divisible
 from afmaths.physics.space.type_conversion_helpers import (
-    decimal_time_to_time,
-    time_to_decimal_time,
+    time_from_decimal_time,
+    decimal_time_from_time,
 )
 
 
@@ -162,7 +162,7 @@ def hours_minutes_seconds_to_decimal_time(
     time: Time,
     twenty_four_hour_clock: bool = True,
 ) -> DecimalTime:
-    decimal_time = time_to_decimal_time(time)
+    decimal_time = decimal_time_from_time(time)
 
     if twenty_four_hour_clock or decimal_time <= 12:
         return DecimalTime(decimal_time)
@@ -172,9 +172,9 @@ def hours_minutes_seconds_to_decimal_time(
 
 def decimal_hours_to_hours_minutes_seconds(decimal_time: DecimalTime) -> Time:
     hours, minutes, seconds = (
-        decimal_time_to_time(decimal_time).hour,
-        decimal_time_to_time(decimal_time).minute,
-        decimal_time_to_time(decimal_time).second,
+        time_from_decimal_time(decimal_time).hour,
+        time_from_decimal_time(decimal_time).minute,
+        time_from_decimal_time(decimal_time).second,
     )
 
     if float(decimal_time) < 0:

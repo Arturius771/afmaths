@@ -12,14 +12,15 @@ from astronomy_types import (
     Second,
     SemiMajorAxis,
     StateVector,
+    TrueAnomaly,
 )
 
 import plotly.graph_objects as go
 
-from afmaths.constants import MOON_ELEMENTS, OTHER_EXAMPLE_ELEMENTS
+from afmaths.constants import MOON_ELEMENTS, SATELLITE_EXAMPLE_ELEMENTS
 from afmaths.geometry.geometry import calculate_distance
-from afmaths.physics.kinematics import position_vector_from_coordinates
-from afmaths.physics.space.engineering.astrodynamics import (
+from afmaths.physics.kinematics import position_displacement
+from afmaths.physics.space.engineering.astrodynamics.orbital_directions import (
     anti_normal,
     anti_radial,
     normal,
@@ -43,10 +44,12 @@ from afmaths.visualisations.base import (
     tangent_vector_for_plot,
 )
 from afmaths.visualisations.helpers import (
+    PlotNode,
     PlotOrbital2DSettings,
     PlotPerifocalOrbitLine,
     add_perifocal_orbit_line,
     add_plot_centre,
+    add_plot_node,
     central_body_radius_plot,
     figure_circle,
     figure_layout,
@@ -184,6 +187,78 @@ def real_semi_major_axis_metres(elements: OrbitalElements) -> SemiMajorAxis:
     return SemiMajorAxis(Distance(Scalar(elements.semi_major_axis * 1000)))
 
 
+def find_closest_approach(
+    settings: PlotOrbital2DSettings,
+    primary_focus_plot_coordinate: Coordinate2D,
+    central_body_mass_kg: float,
+    orbiting_body_mass_kg: list[float],
+    orbital_elements: list[OrbitalElements],
+    orbiting_body_is_satellite: list[bool],
+) -> tuple[float, TrueAnomaly, Coordinate2D]:
+
+    reference_period = orbital_period(
+        real_semi_major_axis_metres(orbital_elements[0]),
+        gravitational_parameter(
+            Mass(central_body_mass_kg),
+            Mass(orbiting_body_mass_kg[0]),
+        ),
+    )
+
+    body_positions = []
+    sat_positions = []
+    true_anomalies = []
+
+    for step_index in range(settings.slider_steps):
+        fraction = step_index / (settings.slider_steps - 1)
+        elapsed_time = reference_period * fraction
+
+        for index, elements in enumerate(orbital_elements):
+
+            plot_elements = scale_orbital_elements_for_plot(
+                elements,
+                Distance(Scalar(settings.distance_scale)),
+            )
+            eccentric_anomaly_obj = eccentric_anomaly_at_time(
+                elements,
+                Second(Scalar(elapsed_time)),
+            )
+
+            true_anomaly = true_anomaly_from_eccentric_anomaly(
+                eccentric_anomaly_obj,
+                plot_elements.eccentricity,
+            )
+
+            coordinates = coordinates_for_elements(
+                primary_focus_plot_coordinate,
+                plot_elements,
+                eccentric_anomaly_obj,
+            )
+
+            if orbiting_body_is_satellite[index]:
+                sat_positions.append(coordinates)
+                true_anomalies.append(true_anomaly)
+            else:
+                body_positions.append(coordinates)
+
+    distances = []
+    for i in range(len(body_positions)):
+        distances.append(
+            calculate_distance(
+                body_positions[i],
+                sat_positions[i],
+            )
+        )
+        true_anomalies.append(sat_positions[i])
+
+    index = distances.index(min(distances))
+
+    return (
+        distances[index],
+        true_anomalies[index],
+        sat_positions[index],
+    )
+
+
 def generate_combined_orbital_slider_data(
     settings: PlotOrbital2DSettings,
     primary_focus_plot_coordinate: Coordinate2D,
@@ -289,7 +364,7 @@ def generate_combined_orbital_slider_data(
             )
 
             if orbiting_body_is_satellite[index]:
-                position_vector = position_vector_from_coordinates(
+                position_vector = position_displacement(
                     Coordinate3D(coordinates.x, coordinates.y, Scalar(0)),
                     Coordinate3D(
                         primary_focus_plot_coordinate.x,
@@ -399,42 +474,55 @@ def build_2d_orbit_visualiser_figure(
         label_trace_indices.append(label_trace_index)
         vector_trace_indices.append(body_vector_trace_indices)
 
-    return add_plot_centre(
-        figure_slider(
-            figure_layout(
-                figure_planetary_body(
-                    fig,
-                    primary_focus_plot_coordinate,
-                    central_body_radius_plot(
-                        central_body_radius_km,
-                        settings.distance_scale,
+    return add_plot_node(
+        add_plot_centre(
+            figure_slider(
+                figure_layout(
+                    figure_planetary_body(
+                        fig,
+                        primary_focus_plot_coordinate,
+                        central_body_radius_plot(
+                            central_body_radius_km,
+                            settings.distance_scale,
+                        ),
+                        central_body_name,
+                        "Black",
+                        "blue",
+                        "green",
                     ),
-                    central_body_name,
-                    "Black",
-                    "blue",
-                    "green",
+                    settings.plot_width,
+                    settings.plot_height,
+                    plot_min(settings),
+                    plot_max(settings),
+                    title=title,
                 ),
-                settings.plot_width,
-                settings.plot_height,
-                plot_min(settings),
-                plot_max(settings),
-                title=title,
+                generate_combined_orbital_slider_data(
+                    settings,
+                    primary_focus_plot_coordinate,
+                    central_body_mass_kg,
+                    orbiting_body_names,
+                    orbiting_body_mass_kg,
+                    orbital_elements,
+                    orbiting_body_is_satellite,
+                    body_trace_indices,
+                    label_trace_indices,
+                    vector_trace_indices,
+                ),
             ),
-            generate_combined_orbital_slider_data(
+            primary_focus_plot_coordinate,
+            Distance(Scalar(0.1)),
+        ),
+        PlotNode(
+            "Closest approach",
+            find_closest_approach(
                 settings,
                 primary_focus_plot_coordinate,
                 central_body_mass_kg,
-                orbiting_body_names,
                 orbiting_body_mass_kg,
                 orbital_elements,
                 orbiting_body_is_satellite,
-                body_trace_indices,
-                label_trace_indices,
-                vector_trace_indices,
-            ),
+            )[2],
         ),
-        primary_focus_plot_coordinate,
-        Distance(Scalar(0.1)),
     )
 
 
@@ -455,7 +543,7 @@ def main() -> None:
         orbiting_body_radius_km=[1_737.4, 1_737.4],
         orbiting_body_mass_kg=[7.346e22, 1000],
         orbiting_body_is_satellite=[False, True],
-        orbital_elements=[MOON_ELEMENTS, OTHER_EXAMPLE_ELEMENTS],
+        orbital_elements=[MOON_ELEMENTS, SATELLITE_EXAMPLE_ELEMENTS],
         title="Earth-Moon system",
     ).show()
 

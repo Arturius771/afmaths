@@ -26,9 +26,9 @@ from astronomy_types import (
 )
 
 from afmaths.physics.space.type_conversion_helpers import (
-    degrees_to_radians,
-    dms_to_radians,
-    hms_to_radians,
+    radians_from_degrees,
+    radians_from_dms,
+    radians_from_hms,
 )
 from afmaths.physics.space.astronomy.coordinate_correction_functions import (
     aberration_from_date,
@@ -68,13 +68,13 @@ def assert_time_almost_equal(
 class CoordinateCorrectionTestMethods(unittest.TestCase):
     def test_angle_difference(self):
         coordinates1 = EquatorialCoordinates(
-            Declination(dms_to_radians(DMS(-8, 13, 30))),
-            RightAscension(hms_to_radians(HMS(5, 13, 31.7))),
+            Declination(radians_from_dms(DMS(-8, 13, 30))),
+            RightAscension(radians_from_hms(HMS(5, 13, 31.7))),
         )
 
         coordinates2 = EquatorialCoordinates(
-            Declination(dms_to_radians(DMS(-16, 41, 11))),
-            RightAscension(hms_to_radians(HMS(6, 44, 13.4))),
+            Declination(radians_from_dms(DMS(-16, 41, 11))),
+            RightAscension(radians_from_hms(HMS(6, 44, 13.4))),
         )
 
         result = angle_difference(
@@ -86,13 +86,13 @@ class CoordinateCorrectionTestMethods(unittest.TestCase):
 
     def test_rising_and_setting(self):
         coordinates = EquatorialCoordinates(
-            Declination(dms_to_radians(DMS(21, 42, 0))),
-            RightAscension(hms_to_radians(HMS(23, 39, 20))),
+            Declination(radians_from_dms(DMS(21, 42, 0))),
+            RightAscension(radians_from_hms(HMS(23, 39, 20))),
         )
 
         location = GeographicCoordinates(
-            Radians(degrees_to_radians(Degrees(Scalar(30)))),
-            Radians(degrees_to_radians(Degrees(Scalar(64)))),
+            Radians(radians_from_degrees(Degrees(Scalar(30)))),
+            Radians(radians_from_degrees(Degrees(Scalar(64)))),
         )
 
         greenwich_date = Date(
@@ -141,8 +141,8 @@ class CoordinateCorrectionTestMethods(unittest.TestCase):
 
     def test_precession_low_precision(self):
         coordinates = EquatorialCoordinates(
-            Declination(dms_to_radians(DMS(14, 23, 25))),
-            RightAscension(hms_to_radians(HMS(9, 10, 43))),
+            Declination(radians_from_dms(DMS(14, 23, 25))),
+            RightAscension(radians_from_hms(HMS(9, 10, 43))),
         )
 
         result = precession_low_precision(
@@ -199,8 +199,8 @@ class CoordinateCorrectionTestMethods(unittest.TestCase):
         )
 
         coordinates = EclipticCoordinates(
-            dms_to_radians(DMS(-1, 32, 56.4)),
-            dms_to_radians(DMS(352, 37, 10.1)),
+            radians_from_dms(DMS(-1, 32, 56.4)),
+            radians_from_dms(DMS(352, 37, 10.1)),
         )
 
         result = aberration_from_date(

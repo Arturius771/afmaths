@@ -25,8 +25,8 @@ from afmaths.physics.physics import (
     pushing_to_resisting_force_ratio,
     momentum,
 )
-from afmaths.physics.space.engineering.astrodynamics import DeltaV, hohmann_transfer
-from afmaths.types import Force, Mass, Momentum, Pressure
+
+from afmaths.types import DeltaV, Force, Mass, Momentum, Pressure
 
 
 def tsiolkovsky_ideal_rocket_equation(

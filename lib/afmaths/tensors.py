@@ -41,7 +41,12 @@ def dot_product_3d(vector_a: Vector3D[Scalar], vector_b: Vector3D[Scalar]) -> Sc
 
 
 # TODO: check naming
-def vector_magnitude(vector: Vector3D[Scalar]) -> Scalar:
+def vector_magnitude(vector: Vector2D[Scalar]) -> Scalar:
+    """Returns the magnitude of a vector"""
+    return Scalar(square_root(add(SQUARE(vector.x))(SQUARE(vector.y))))
+
+
+def vector_magnitude_3d(vector: Vector3D[Scalar]) -> Scalar:
     """Returns the magnitude of a vector"""
     return Scalar(
         square_root(add(SQUARE(vector.x))(add(SQUARE(vector.y))(SQUARE(vector.z))))
@@ -49,7 +54,7 @@ def vector_magnitude(vector: Vector3D[Scalar]) -> Scalar:
 
 
 def vector_normalise(vector: Vector3D) -> Vector3D:
-    magnitude = vector_magnitude(vector)
+    magnitude = vector_magnitude_3d(vector)
 
     return make_vector3d(
         divide_by(magnitude)(vector.x),
@@ -117,7 +122,14 @@ def vector_cross_multiplication_3d(
     return make_vector3d(i, j, k)
 
 
-def vector_subtract(vector_a: Vector3D, vector_b: Vector3D) -> Vector3D:
+def vector_subtract(vector_a: Vector2D, vector_b: Vector2D) -> Vector2D:
+    return Vector2D(
+        subtract(vector_b.x)(vector_a.x),
+        subtract(vector_b.y)(vector_a.y),
+    )
+
+
+def vector_subtract_3d(vector_a: Vector3D, vector_b: Vector3D) -> Vector3D:
     return Vector3D(
         subtract(vector_b.x)(vector_a.x),
         subtract(vector_b.y)(vector_a.y),
@@ -125,7 +137,7 @@ def vector_subtract(vector_a: Vector3D, vector_b: Vector3D) -> Vector3D:
     )
 
 
-def vector_add(vector_a: Vector3D, vector_b: Vector3D) -> Vector3D:
+def vector_add_3d(vector_a: Vector3D, vector_b: Vector3D) -> Vector3D:
     return Vector3D(
         add(vector_b.x)(vector_a.x),
         add(vector_b.y)(vector_a.y),

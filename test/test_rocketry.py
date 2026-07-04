@@ -1,8 +1,10 @@
 import unittest
 
 from afmaths.types import DeltaV, Force, Mass
-from afmaths.physics.space.engineering.astrodynamics import hohmann_transfer
-from afmaths.physics.space.rocketry import (
+from afmaths.physics.space.engineering.astrodynamics.hohmann_transfer import (
+    hohmann_transfer,
+)
+from afmaths.physics.space.engineering.rocketry import (
     delta_v_for_stages,
     payload_mass_for_delta_v,
     propellant_mass_from_initial_mass,
