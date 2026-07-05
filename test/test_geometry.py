@@ -1,6 +1,6 @@
 import unittest
 
-from afmaths.geometry.geometry import calculate_distance, calculate_foci
+from afmaths.geometry.geometry import area_of_sphere, calculate_distance, calculate_foci
 from astronomy_types import (
     Coordinate2D,
     Distance,
@@ -46,6 +46,12 @@ class GeometryTestMethods(unittest.TestCase):
                 Coordinate2D(2000, -1256),
             ),
             Distance(Scalar(2499.248687105787)),
+        )
+
+    def test_area_of_sphere(self):
+        self.assertEqual(
+            area_of_sphere(Distance(Scalar(1737.5))),
+            37936694.78750525,
         )
 
 

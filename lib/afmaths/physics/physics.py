@@ -1,4 +1,5 @@
 import math
+from afmaths.geometry.geometry import area_of_sphere
 from afmaths.types import (
     Force,
     Mass,
@@ -82,9 +83,7 @@ def centripetal_force(acceleration: Acceleration, mass: Mass) -> Force:
     return force(mass, acceleration)
 
 
-def inverse_square_law(source_strength: float, distance_metres: float) -> float:
+def inverse_square_law(source_strength: float, distance_metres: Distance) -> float:
     """Calculates the inverse square law"""
     ##TM255 block 1
-    four_times_pi = multiply(4)(math.pi)
-    denominator = multiply(SQUARE(distance_metres))(four_times_pi)
-    return divide_by(denominator)(source_strength)
+    return divide_by(area_of_sphere(distance_metres))(source_strength)

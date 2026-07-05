@@ -331,7 +331,7 @@ def generate_angles_on_circle(resolution: int) -> list[Radians]:
 
 
 # region Areas
-def area(length: float, height: float) -> Area:
+def area_rectangle(length: float, height: float) -> Area:
     return multiply(length)(height)
 
 
@@ -344,6 +344,10 @@ def area_of_right_triangle(base_length: float, height_length: float) -> Area:
 def area_of_quarter_circle(side_length: float, radius: float) -> Area:
     """Area = s^2 - ((1/4)*pi*r^2)"""
     return subtract((divide_by(4)(1)) * math.pi * SQUARE(radius))(SQUARE(side_length))
+
+
+def area_of_sphere(radius: Distance) -> Area:
+    return multiply(4)(multiply(math.pi)(SQUARE(radius)))
 
 
 # endregion

@@ -47,8 +47,8 @@ def post_burn_momentum(
 ) -> Momentum:
     """After shedding mass and gaining velocity"""
     return momentum(
-        mass=(subtract(delta_mass)(initial_mass)),
-        velocity=(add(initial_velocity)(delta_v)),
+        subtract(delta_mass)(initial_mass),
+        add(initial_velocity)(delta_v),
     )
 
 

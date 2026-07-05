@@ -47,8 +47,8 @@ SATELLITE_EXAMPLE_ELEMENTS = OrbitalElements(
     Inclination(Radians(Scalar(math.radians(75)))),
     RightAscension(Radians(Scalar(1.2))),
     ArgumentOfPeriapsis(Radians(Scalar(0.5))),
-    SemiMajorAxis(Distance(Scalar(260000))),
-    Eccentricity(Ratio(Scalar(0.3449006))),
+    SemiMajorAxis(Distance(Scalar(368470.7933846703))),
+    Eccentricity(Ratio(Scalar(0.05449006))),
     TrueAnomaly(Anomaly(Radians(Scalar(1)))),
 )
 SPEED_OF_LIGHT_METRES_PER_SECONDS = 299792458

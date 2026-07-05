@@ -12,7 +12,7 @@ from astronomy_types import (
     Velocity,
 )
 
-from afmaths.geometry.geometry import area
+from afmaths.geometry.geometry import area_rectangle
 from afmaths.graph import slope_gradiant
 from afmaths.operation import add, multiply, trapezoidal_rule
 from afmaths.physics.space.type_conversion_helpers import make_vector3d
@@ -55,7 +55,9 @@ def velocity_time_displacement_flat(
 ) -> Displacement:
     return Displacement(
         Scalar(
-            area(flat_component_start.y, flat_component_end.x - flat_component_start.x)
+            area_rectangle(
+                flat_component_start.y, flat_component_end.x - flat_component_start.x
+            )
         )
     )
 
