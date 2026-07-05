@@ -1,12 +1,8 @@
-from dataclasses import replace
-import math
 from astronomy_types import (
     Distance,
     PositionVector,
     StateVector,
-    TrueAnomaly,
     Vector3D,
-    Velocity,
     VelocityVector,
 )
 from afmaths.types import OrbitalDirection

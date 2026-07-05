@@ -41,7 +41,6 @@ from afmaths.physics.space.celestial_mechanics import (
     periapsis_radius,
     periapsis_velocity,
     radial_velocity,
-    delta_v,
     velocity_at_radius,
     vis_viva,
 )
@@ -137,47 +136,55 @@ def angular_velocity_from_sidereal_period(
 # TODO: function(s) to change specific orbital elements
 
 
+def delta_v(initial_velocity: Velocity, final_velocity: Velocity) -> DeltaV:
+    return abs(subtract(initial_velocity)(final_velocity))
+
+
 def increase_semi_major_axis_at_periapsis(
-    a: SemiMajorAxis,
+    target_a: SemiMajorAxis,
     current_radius: Distance,
     mu: GravitationalParameter = EARTH_MU_KM_CUBED,
 ) -> DeltaV:
+    """Calculates the delta-v required to increase the semi-major axis of an orbit at periapsis."""
     return delta_v(
         velocity_at_radius(current_radius, mu),
-        vis_viva(mu, current_radius, a),
+        vis_viva(mu, current_radius, target_a),
     )
 
 
 def increase_semi_major_axis_at_apoapsis(
-    a: SemiMajorAxis,
+    target_a: SemiMajorAxis,
     current_radius: Distance,
     mu: GravitationalParameter = EARTH_MU_KM_CUBED,
 ) -> DeltaV:
+    """Calculates the delta-v required to increase the semi-major axis of an orbit at apoapsis."""
     return delta_v(
-        vis_viva(mu, current_radius, a),
+        vis_viva(mu, current_radius, target_a),
         velocity_at_radius(current_radius, mu),
     )
 
 
 def decrease_semi_major_axis_at_periapsis(
-    a: SemiMajorAxis,
+    target_a: SemiMajorAxis,
     current_radius: Distance,
     mu: GravitationalParameter = EARTH_MU_KM_CUBED,
 ) -> DeltaV:
+    """Calculates the delta-v required to decrease the semi-major axis of an orbit at periapsis."""
     return delta_v(
-        vis_viva(mu, current_radius, a),
+        vis_viva(mu, current_radius, target_a),
         velocity_at_radius(current_radius, mu),
     )
 
 
 def decrease_semi_major_axis_at_apoapsis(
-    a: SemiMajorAxis,
+    target_a: SemiMajorAxis,
     current_radius: Distance,
     mu: GravitationalParameter = EARTH_MU_KM_CUBED,
 ) -> DeltaV:
+    """Calculates the delta-v required to decrease the semi-major axis of an orbit at apoapsis."""
     return delta_v(
         velocity_at_radius(current_radius, mu),
-        vis_viva(mu, current_radius, a),
+        vis_viva(mu, current_radius, target_a),
     )
 
 
@@ -193,7 +200,10 @@ def inclination_change_at_node(
 
 
 # region Transfer Orbit
-def parabolic_escape(elements: OrbitalElements, mu: GravitationalParameter) -> DeltaV:
+def parabolic_escape_delta_v(
+    elements: OrbitalElements, mu: GravitationalParameter
+) -> DeltaV:
+    """Calculates the delta-v required to escape a gravitational body from a given orbit."""
     velocity_at_periapsis = periapsis_velocity(mu, elements)
     parabolic_escape_velocity = Velocity(
         Scalar(
@@ -223,12 +233,14 @@ def transfer_period(
 def transfer_semi_major_axis(
     initial_radius: Distance, final_radius: Distance
 ) -> SemiMajorAxis:
+    """Calculates the semi-major axis of a transfer orbit given the initial and final radii."""
     return semi_major_axis_from_vertex_distances(initial_radius, final_radius)
 
 
 def transfer_eccentricity(
     initial_radius: Distance, final_radius: Distance
 ) -> Eccentricity:
+    """Calculates the eccentricity of a transfer orbit given the initial and final radii."""
     return Eccentricity(
         Ratio(Scalar(abs(eccentricity_from_apsides(initial_radius, final_radius))))
     )

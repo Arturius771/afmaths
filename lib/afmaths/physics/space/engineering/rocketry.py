@@ -16,6 +16,7 @@ from astronomy_types import (
     Rate,
     Ratio,
     Scalar,
+    Second,
     Velocity,
 )
 
@@ -29,15 +30,16 @@ from afmaths.physics.physics import (
 from afmaths.types import DeltaV, Force, Mass, Momentum, Pressure
 
 
-def tsiolkovsky_ideal_rocket_equation(
-    effective_exhaust_velocity: Velocity, initial_mass: Mass, dry_mass: Mass
+def delta_v_from_tsiolkovsky(
+    effective_exhaust_velocity: Velocity, full_mass: Mass, dry_mass: Mass
 ) -> DeltaV:
-    return multiply(math.log(rocket_mass_ratio(dry_mass, initial_mass)))(
+    """Calculates the change in velocity of a rocket given the effective exhaust velocity, initial mass, and dry mass."""
+    return multiply(math.log(full_to_dry_mass_ratio(dry_mass, full_mass)))(
         effective_exhaust_velocity
     )
 
 
-def final_momentum(
+def post_burn_momentum(
     initial_mass: Mass,
     delta_mass: Mass,
     initial_velocity: Velocity,
@@ -53,16 +55,34 @@ def final_momentum(
 # region Performance
 
 
-def specific_impulse(force_newtons: float, mass_flow: Rate) -> float:
-    return divide_by(multiply(mass_flow)(STANDARD_GRAVITY))(force_newtons)
+def mass_flow_rate(
+    thrust: Force,
+    specific_impulse: float,
+    gravitational_acceleration: Acceleration = STANDARD_GRAVITY,
+) -> Rate:
+    return divide_by(multiply(specific_impulse)(gravitational_acceleration))(thrust)
 
 
-def specific_impulse_from_exhaust_velocity(exhaust_velocity: Velocity) -> float:
-    return divide_by(STANDARD_GRAVITY)(exhaust_velocity)
+def specific_impulse(
+    thrust: float,
+    mass_flow: Rate,
+    gravitational_acceleration: Acceleration = STANDARD_GRAVITY,
+) -> float:
+    return divide_by(multiply(mass_flow)(gravitational_acceleration))(thrust)
 
 
-def effective_exhaust_velocity(specific_impulse: float) -> Velocity:
-    return multiply(specific_impulse)(STANDARD_GRAVITY)
+def specific_impulse_from_exhaust_velocity(
+    exhaust_velocity: Velocity,
+    gravitational_acceleration: Acceleration = STANDARD_GRAVITY,
+) -> float:
+    return divide_by(gravitational_acceleration)(exhaust_velocity)
+
+
+def effective_exhaust_velocity(
+    specific_impulse: float,
+    gravitational_acceleration: Acceleration = STANDARD_GRAVITY,
+) -> Velocity:
+    return multiply(specific_impulse)(gravitational_acceleration)
 
 
 def delta_v_for_stages(
@@ -71,7 +91,7 @@ def delta_v_for_stages(
 ) -> tuple[DeltaV, list[DeltaV]]:
 
     def stage_delta_v(i: int) -> DeltaV:
-        return tsiolkovsky_ideal_rocket_equation(
+        return delta_v_from_tsiolkovsky(
             effective_exhaust_velocity,
             mass_per_stage[i],
             mass_per_stage[i + 1],
@@ -105,16 +125,20 @@ def thrust_to_weight(
     )
 
 
-def thrust(
+def thrust_from_mass_flow_and_pressure(
     mass_flow_rate: float,
-    exit_velocity: Velocity,
-    exit_pressure: Pressure,
+    effective_exhaust_velocity: Velocity,
+    exhaust_pressure: Pressure,
     outside_pressure: Pressure,
     nozzle_exit: Area,
 ) -> Force:
-    return add(multiply(mass_flow_rate)(exit_velocity))(
-        multiply(subtract(outside_pressure)(exit_pressure))(nozzle_exit)
+    return add(multiply(mass_flow_rate)(effective_exhaust_velocity))(
+        multiply(subtract(outside_pressure)(exhaust_pressure))(nozzle_exit)
     )
+
+
+def burn_duration(mass_flow_rate: Rate, propellant_mass: Mass) -> Second:
+    return Second(Scalar(divide_by(mass_flow_rate)(propellant_mass)))
 
 
 # endregion
@@ -127,7 +151,7 @@ def dry_mass(structure_mass: Mass, payload_mass: Mass, motor_mass: Mass) -> Mass
     return add(add(structure_mass)(motor_mass))(payload_mass)
 
 
-def propellant_mass_from_initial_mass(
+def propellant_mass_from_full_mass(
     full_mass: Mass, delta_v: DeltaV, effective_exhaust_velocity: Velocity
 ) -> Mass:
     return multiply(full_mass)(
@@ -151,24 +175,22 @@ def full_mass(dry_mass: Mass, propellant_mass: Mass) -> Mass:
     return add(dry_mass)(propellant_mass)
 
 
-def rocket_mass_ratio(dry_mass: Mass, full_mass: Mass) -> Ratio:
+def full_to_dry_mass_ratio(dry_mass: Mass, full_mass: Mass) -> Ratio:
     return divide_by(dry_mass)(full_mass)
 
 
-def payload_mass_ratio(
+def payload_to_non_payload_stage_mass_ratio(
     propellant_mass: Mass, structure_mass: Mass, payload_mass: Mass
 ) -> Ratio:
     return divide_by(add(structure_mass)(propellant_mass))(payload_mass)
 
 
-def mass_ratio_from_ratio(
-    structural_coefficient: Ratio, payload_mass_ratio: Ratio
-) -> Ratio:
+def mass_ratio(structural_coefficient: Ratio, payload_mass_ratio: Ratio) -> Ratio:
     add_payload_ratio = add(payload_mass_ratio)
     return divide_by(add_payload_ratio(structural_coefficient))(add_payload_ratio(1))
 
 
-def rocket_acceleration(
+def net_rocket_acceleration(
     thrust: Force, mass: Mass, standard_g: Acceleration = STANDARD_GRAVITY
 ) -> Acceleration:
     return net_acceleration(thrust, mass, standard_g)
@@ -183,7 +205,7 @@ def structural_coefficient(structure_mass: Mass, propellant_mass: Mass) -> Ratio
     return divide_by(add(structure_mass)(propellant_mass))(structure_mass)
 
 
-def payload_mass_for_delta_v(
+def max_payload_mass(
     propellant_mass: Mass, required_mass_ratio: Ratio, dry_non_payload_mass: Mass
 ) -> Mass:
     """P = (M_p / (R-1)) - D"""

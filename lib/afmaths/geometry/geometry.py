@@ -19,6 +19,7 @@ from afmaths.tensors import (
 from afmaths.types import Area
 from afmaths.geometry.transformations import translate_coordinate
 from afmaths.operation import (
+    DOUBLE,
     HALF,
     SQUARE,
     add,
@@ -163,6 +164,7 @@ def calculate_distance_3d(coord1: Coordinate3D, coord2: Coordinate3D) -> Distanc
 
 
 def geometric_mean_distance(x: Distance, y: Distance) -> Distance:
+    """Calculates the geometric mean of two distances."""
     return Distance(Scalar(square_root(multiply(x)(y))))
 
 
@@ -177,6 +179,7 @@ def semi_minor_axis_from_semi_latus_rectum(
     l: SemiLatusRectum,
     a: SemiMajorAxis,
 ) -> SemiMinorAxis:
+    """Calculates the semi-minor axis of an ellipse given the semi-latus rectum and semi-major axis."""
     return SemiMinorAxis(geometric_mean_distance(l, a))
 
 
@@ -249,12 +252,18 @@ def semi_major_axis_from_nearest_vertex_distance(
 
 
 def semi_major_axis_hyperbola(l: SemiLatusRectum, e: Eccentricity) -> SemiMajorAxis:
+    """
+    Calculate the semi-major axis of a hyperbola given the semi-latus rectum and eccentric
+    """
     if e <= 1:
         raise ValueError("Hyperbola eccentricity must be > 1.")
     return divide_by(subtract(1)(SQUARE(e)))(l)
 
 
 def eccentricity(a: SemiMajorAxis, b: SemiMinorAxis) -> Eccentricity:
+    """
+    Calculate the eccentricity of an ellipse given its semi-major axis and semi-minor axis.
+    """
     return Eccentricity(
         Ratio(Scalar(square_root(subtract(divide_by(SQUARE(a))(SQUARE(b)))(1))))
     )
@@ -269,7 +278,7 @@ def semi_major_axis_from_vertex_distances(
     min_vertex_distance: Distance,
     max_vertex_distance: Distance,
 ) -> SemiMajorAxis:
-    """Returns the semi major axis of an ellipse given the lengths of the two axes"""
+    """Calculate the semi-major axis of an ellipse given the distances from the center to the nearest and farthest vertices."""
     return SemiMajorAxis(HALF(add(min_vertex_distance)(max_vertex_distance)))
 
 
@@ -311,11 +320,11 @@ def ellipse_bounding_box(
 
 
 def generate_angles_on_circle(resolution: int) -> list[Radians]:
-    typed = []
-    for val in interval(0, 2 * math.pi, resolution):
-        typed.append(Radians(Scalar(val)))
+    angles = []
+    for val in interval(0, DOUBLE(math.pi), resolution):
+        angles.append(Radians(Scalar(val)))
 
-    return typed
+    return angles
 
 
 # endregion

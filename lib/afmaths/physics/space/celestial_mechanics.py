@@ -313,10 +313,6 @@ def vis_viva(
     )
 
 
-def delta_v(initial_velocity: Velocity, final_velocity: Velocity) -> DeltaV:
-    return abs(subtract(initial_velocity)(final_velocity))
-
-
 def radial_velocity(state: StateVector) -> Velocity:
     position = vector3d_from_position(state.position)
 
@@ -687,6 +683,19 @@ def perifocal_radial_unit_vector(
     )
 
 
+def perifocal_velocity_direction_vector(
+    theta: TrueAnomaly,
+    e: Eccentricity,
+) -> Vector3D[Scalar]:
+    """Calculates the direction vector of an orbit in the perifocal coordinate system from the orbital elements."""
+
+    return make_vector3d(
+        Scalar(negate(math.sin(theta))),
+        Scalar(add(e)(math.cos(theta))),
+        Scalar(0),
+    )
+
+
 def perifocal_position_coordinate_2d(
     orbital_elements: OrbitalElements,
 ) -> Coordinate2D[Scalar]:
@@ -725,27 +734,17 @@ def perifocal_position_vector(
 
 
 def perifocal_velocity_vector(
-    true_anomaly: TrueAnomaly,
-    eccentricity: Eccentricity,
-    semi_major_axis: SemiMajorAxis,
-    gravitational_parameter: GravitationalParameter,
+    theta: TrueAnomaly,
+    e: Eccentricity,
+    a: SemiMajorAxis,
+    mu: GravitationalParameter,
 ) -> VelocityVector:
     """Calculates the velocity vector in the perifocal coordinate system"""
 
     return velocity_from_vector(
         vector_multiplication_3d(
-            make_vector3d(
-                Scalar(negate(math.sin(true_anomaly))),
-                Scalar(add(eccentricity)(math.cos(true_anomaly))),
-                Scalar(0),
-            ),
-            Scalar(
-                square_root(
-                    divide_by(
-                        multiply(semi_major_axis)(subtract(SQUARE(eccentricity))(1))
-                    )(gravitational_parameter)
-                )
-            ),
+            perifocal_velocity_direction_vector(theta, e),
+            Scalar(square_root(divide_by(multiply(a)(subtract(SQUARE(e))(1)))(mu))),
         )
     )
 
@@ -767,6 +766,7 @@ def eccentricity_from_ellipse_equation(
     a: SemiMajorAxis,
     mu: GravitationalParameter = EARTH_MU_KM_CUBED,
 ) -> Eccentricity:
+    """Calculates the eccentricity of an orbit from the angular momentum vector and semi major axis"""
 
     return eccentricity(
         a,

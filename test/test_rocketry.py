@@ -1,26 +1,33 @@
+import math
 import unittest
 
-from afmaths.types import DeltaV, Force, Mass
+from afmaths.types import Area, DeltaV, Force, Mass, Pressure
 from afmaths.physics.space.engineering.astrodynamics.hohmann_transfer import (
     hohmann_transfer,
 )
 from afmaths.physics.space.engineering.rocketry import (
+    burn_duration,
     delta_v_for_stages,
-    payload_mass_for_delta_v,
-    propellant_mass_from_initial_mass,
+    delta_v_from_tsiolkovsky,
+    effective_exhaust_velocity,
+    full_mass,
+    mass_flow_rate,
+    max_payload_mass,
+    propellant_mass_from_full_mass,
     required_mass_ratio,
-    rocket_acceleration,
+    net_rocket_acceleration,
+    thrust_from_mass_flow_and_pressure,
     thrust_to_weight,
 )
-from astronomy_types import Distance, Scalar, Velocity
+from astronomy_types import Distance, Rate, Scalar, Velocity
 
 
 class RocketryTestMethods(unittest.TestCase):
 
-    def test_propellant_mass_from_initial_mass(self):
+    def test_propellant_mass_from_full_mass(self):
 
         self.assertEqual(
-            propellant_mass_from_initial_mass(
+            propellant_mass_from_full_mass(
                 Mass(1000),
                 hohmann_transfer(Distance(Scalar(300)), Distance(Scalar(1000)))[0],
                 Velocity(Scalar(3)),
@@ -48,10 +55,10 @@ class RocketryTestMethods(unittest.TestCase):
             [2079.441541679836, 2748.8721956224654],
         )
 
-    def test_payload_mass_for_delta_v(self):
+    def test_max_payload_mass(self):
 
         self.assertEqual(
-            payload_mass_for_delta_v(
+            max_payload_mass(
                 Mass(5000),
                 required_mass_ratio(
                     DeltaV(Velocity(Scalar(10_000))), Velocity(Scalar(500))
@@ -68,14 +75,62 @@ class RocketryTestMethods(unittest.TestCase):
             1.0197162129779282,
         )
 
-    def test_rocket_acceleration(self):
+    def test_net_rocket_acceleration(self):
 
         self.assertEqual(
-            rocket_acceleration(
+            net_rocket_acceleration(
                 Force(Scalar(5_000)),
                 Mass(500),
             ),
             0.19335000000000058,
+        )
+
+    def test_burn_duration(self):
+
+        self.assertEqual(
+            burn_duration(
+                mass_flow_rate=Rate(Scalar(5)),
+                propellant_mass=Mass(100),
+            ),
+            20,
+        )
+
+        specific_impulse_seconds = 100
+
+        dry_mass_value = Mass(100)
+
+        full_mass_value = full_mass(
+            dry_mass_value,
+            Mass(100),
+        )
+
+        exhaust_velocity = effective_exhaust_velocity(
+            specific_impulse_seconds,
+        )
+
+        self.assertAlmostEqual(
+            burn_duration(
+                mass_flow_rate(
+                    thrust_from_mass_flow_and_pressure(
+                        Rate(Scalar(5)),
+                        exhaust_velocity,
+                        Pressure(Scalar(0)),
+                        Pressure(Scalar(0)),
+                        Area(Scalar(1)),
+                    ),
+                    specific_impulse_seconds,
+                ),
+                propellant_mass_from_full_mass(
+                    full_mass_value,
+                    delta_v_from_tsiolkovsky(
+                        exhaust_velocity,
+                        full_mass_value,
+                        dry_mass_value,
+                    ),
+                    exhaust_velocity,
+                ),
+            ),
+            20,
         )
 
 

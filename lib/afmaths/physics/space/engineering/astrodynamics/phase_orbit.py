@@ -4,23 +4,18 @@ from astronomy_types import (
     Distance,
     EccentricAnomaly,
     Eccentricity,
-    EquatorialCoordinates,
     GravitationalParameter,
     OrbitalElements,
-    Position,
-    PositionVector,
-    Radians,
     Ratio,
     Scalar,
     Second,
     SemiMajorAxis,
-    StateVector,
     TrueAnomaly,
 )
 from afmaths.constants import (
     EARTH_MU_KM_CUBED,
-    EARTH_RADIUS_KM,
 )
+from afmaths.physics.space.engineering.astrodynamics.maneuvers import delta_v
 from afmaths.types import OrbitalDirection, DeltaV
 
 from afmaths.operation import (
@@ -35,11 +30,8 @@ from afmaths.physics.space.celestial_mechanics import (
     kepler_equation,
     orbital_period,
     periapsis_radius,
-    periapsis_velocity,
-    radial_velocity,
     semi_major_axis_from_period,
     time_since_periapsis,
-    delta_v,
     vis_viva,
 )
 

@@ -14,21 +14,17 @@ from afmaths.physics.space.engineering.astrodynamics.maneuvers import (
     increase_semi_major_axis_at_apoapsis,
     increase_semi_major_axis_at_periapsis,
     transfer_period,
+    transfer_semi_major_axis,
 )
 from afmaths.physics.space.engineering.astrodynamics.orbital_directions import (
     burn_direction_at_apsis,
 )
 from afmaths.types import OrbitalDirection, DeltaV
 from afmaths.geometry.geometry import (
-    eccentricity_factor_plus,
     semi_major_axis_from_vertex_distances,
 )
 from afmaths.operation import (
     add,
-)
-from afmaths.physics.space.type_conversion_helpers import (
-    vector3d_from_position,
-    vector3d_from_velocity,
 )
 from afmaths.physics.space.celestial_mechanics import (
     apoapsis_radius,
@@ -67,29 +63,19 @@ def hohmann_transfer_from_radii(
     """Calculates the delta-v required for a Hohmann transfer. Assumes a circular initial and final orbit."""
     # www.braeunig.us/space/problem.htm#4.19
 
-    semi_major_axis_transfer_ellipse = semi_major_axis_from_vertex_distances(
-        initial_radius, target_radius
-    )
+    transfer_a = transfer_semi_major_axis(initial_radius, target_radius)
 
     direction = burn_direction_at_apsis(initial_radius, target_radius)
     transfer_delta_v = (
-        increase_semi_major_axis_at_periapsis(
-            semi_major_axis_transfer_ellipse, initial_radius, mu
-        )
+        increase_semi_major_axis_at_periapsis(transfer_a, initial_radius, mu)
         if direction is OrbitalDirection.PROGRADE
-        else decrease_semi_major_axis_at_apoapsis(
-            semi_major_axis_transfer_ellipse, target_radius, mu
-        )
+        else decrease_semi_major_axis_at_apoapsis(transfer_a, target_radius, mu)
     )
 
     circularise = (
-        increase_semi_major_axis_at_apoapsis(
-            semi_major_axis_transfer_ellipse, target_radius, mu
-        )
+        increase_semi_major_axis_at_apoapsis(transfer_a, target_radius, mu)
         if direction is OrbitalDirection.PROGRADE
-        else decrease_semi_major_axis_at_periapsis(
-            semi_major_axis_transfer_ellipse, initial_radius, mu
-        )
+        else decrease_semi_major_axis_at_periapsis(transfer_a, initial_radius, mu)
     )
 
     total = DeltaV(add(transfer_delta_v)(circularise))
