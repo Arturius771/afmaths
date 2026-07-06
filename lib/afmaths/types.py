@@ -13,6 +13,8 @@ EarthCentredInertialFrame = NewType("EarthCentredInertialFrame", Vector3D[Scalar
 Momentum = NewType("Momentum", Scalar)
 Force = NewType("Force", Scalar)
 Percentage = NewType("Percentage", float)
+AngularMomentum = NewType("AngularMomentum", Vector3D[Scalar])
+Torque = NewType("Torque", Scalar)
 
 
 class OrbitalDirection(Enum):

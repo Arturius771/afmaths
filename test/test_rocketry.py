@@ -1,9 +1,8 @@
-import math
 import unittest
 
 from afmaths.types import Area, DeltaV, Force, Mass, Pressure
 from afmaths.physics.space.engineering.astrodynamics.hohmann_transfer import (
-    hohmann_transfer,
+    hohmann_transfer_parameters,
 )
 from afmaths.physics.space.engineering.rocketry import (
     burn_duration,
@@ -19,7 +18,7 @@ from afmaths.physics.space.engineering.rocketry import (
     thrust_from_mass_flow_and_pressure,
     thrust_to_weight,
 )
-from astronomy_types import Distance, Rate, Scalar, Velocity
+from astronomy_types import Distance, Rate, Scalar, Second, Velocity
 
 
 class RocketryTestMethods(unittest.TestCase):
@@ -29,7 +28,9 @@ class RocketryTestMethods(unittest.TestCase):
         self.assertEqual(
             propellant_mass_from_full_mass(
                 Mass(1000),
-                hohmann_transfer(Distance(Scalar(300)), Distance(Scalar(1000)))[0],
+                hohmann_transfer_parameters(
+                    Distance(Scalar(300)), Distance(Scalar(1000))
+                )[0][0],
                 Velocity(Scalar(3)),
             ),
             117.62062398293438,
@@ -95,7 +96,7 @@ class RocketryTestMethods(unittest.TestCase):
             20,
         )
 
-        specific_impulse_seconds = 100
+        specific_impulse_seconds = Second(Scalar(100))
 
         dry_mass_value = Mass(100)
 

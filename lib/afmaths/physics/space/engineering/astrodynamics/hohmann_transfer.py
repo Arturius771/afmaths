@@ -20,9 +20,6 @@ from afmaths.physics.space.engineering.astrodynamics.orbital_directions import (
     burn_direction_at_apsis,
 )
 from afmaths.types import OrbitalDirection, DeltaV
-from afmaths.geometry.geometry import (
-    semi_major_axis_from_vertex_distances,
-)
 from afmaths.operation import (
     add,
 )
@@ -39,9 +36,9 @@ def hohmann_transfer_from_orbital_elements(
     final_orbit: OrbitalElements,
     initial_body_radius: Distance = EARTH_RADIUS_KM,
     mu: GravitationalParameter = EARTH_MU_KM_CUBED,
-) -> tuple[DeltaV, DeltaV, DeltaV, OrbitalDirection, Second]:
+) -> tuple[tuple[DeltaV, ...], OrbitalDirection, Second]:
     """Assume a circular obit for initial and final."""
-    return hohmann_transfer(
+    return hohmann_transfer_parameters(
         orbit_altitude(
             periapsis_radius(initial_orbit.semi_major_axis, initial_orbit.eccentricity),
             initial_body_radius,
@@ -55,57 +52,64 @@ def hohmann_transfer_from_orbital_elements(
     )
 
 
-def hohmann_transfer_from_radii(
+def hohmann_transfer_delta_v(
     initial_radius: Distance,
     target_radius: Distance,
     mu: GravitationalParameter = EARTH_MU_KM_CUBED,
-) -> tuple[DeltaV, DeltaV, DeltaV, OrbitalDirection, Second]:
+) -> tuple[DeltaV, ...]:
     """Calculates the delta-v required for a Hohmann transfer. Assumes a circular initial and final orbit."""
     # www.braeunig.us/space/problem.htm#4.19
 
     transfer_a = transfer_semi_major_axis(initial_radius, target_radius)
 
     direction = burn_direction_at_apsis(initial_radius, target_radius)
+    prograde = direction is OrbitalDirection.PROGRADE
     transfer_delta_v = (
         increase_semi_major_axis_at_periapsis(transfer_a, initial_radius, mu)
-        if direction is OrbitalDirection.PROGRADE
+        if prograde
         else decrease_semi_major_axis_at_apoapsis(transfer_a, target_radius, mu)
     )
 
     circularise = (
         increase_semi_major_axis_at_apoapsis(transfer_a, target_radius, mu)
-        if direction is OrbitalDirection.PROGRADE
+        if prograde
         else decrease_semi_major_axis_at_periapsis(transfer_a, initial_radius, mu)
     )
 
     total = DeltaV(add(transfer_delta_v)(circularise))
 
-    period = transfer_period(
-        mu,
-        initial_radius,
-        target_radius,
-    )
-
     return (
         total,
         transfer_delta_v,
         circularise,
-        burn_direction_at_apsis(initial_radius, target_radius),
-        period,
     )
 
 
-def hohmann_transfer(
+def hohmann_transfer_parameters(
     initial_altitude: Distance,
     target_altitude: Distance,
     initial_body_radius: Distance = EARTH_RADIUS_KM,
     mu: GravitationalParameter = EARTH_MU_KM_CUBED,
-) -> tuple[DeltaV, DeltaV, DeltaV, OrbitalDirection, Second]:
-    """Calculates the delta-v required for a Hohmann transfer. Assumes a circular initial and final orbit."""
-    # www.braeunig.us/space/problem.htm#4.19
+) -> tuple[tuple[DeltaV, ...], OrbitalDirection, Second]:
 
-    return hohmann_transfer_from_radii(
-        orbit_radius(initial_altitude, initial_body_radius),
-        orbit_radius(target_altitude, initial_body_radius),
+    initial_r = orbit_radius(initial_altitude, initial_body_radius)
+    target_r = orbit_radius(target_altitude, initial_body_radius)
+
+    delta_v = hohmann_transfer_delta_v(
+        initial_r,
+        target_r,
         mu,
     )
+
+    direction = burn_direction_at_apsis(
+        initial_r,
+        target_r,
+    )
+
+    period = transfer_period(
+        initial_r,
+        target_r,
+        mu,
+    )
+
+    return (delta_v, direction, period)

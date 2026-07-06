@@ -21,7 +21,7 @@ from astronomy_types import (
 from afmaths.constants import EARTH_MU_KM_CUBED, EARTH_RADIUS_KM
 from afmaths.physics.space.celestial_mechanics import orbit_radius, periapsis_radius
 from afmaths.physics.space.engineering.astrodynamics.hohmann_transfer import (
-    hohmann_transfer_from_radii,
+    hohmann_transfer_delta_v,
 )
 
 INITIAL_ALTITUDE_KM = Distance(Scalar(10_000))
@@ -61,7 +61,7 @@ if __name__ == "__main__":
         )
 
         total_delta_v, transfer_delta_v, arrival_delta_v, direction, transfer_time = (
-            hohmann_transfer_from_radii(
+            hohmann_transfer_delta_v(
                 initial_radius=initial_radius_km,
                 target_radius=target_radius_km,
                 mu=EARTH_MU_KM_CUBED,

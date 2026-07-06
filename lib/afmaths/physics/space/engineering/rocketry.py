@@ -57,7 +57,7 @@ def post_burn_momentum(
 
 def mass_flow_rate(
     thrust: Force,
-    specific_impulse: float,
+    specific_impulse: Second,
     gravitational_acceleration: Acceleration = STANDARD_GRAVITY,
 ) -> Rate:
     return divide_by(multiply(specific_impulse)(gravitational_acceleration))(thrust)
@@ -67,21 +67,26 @@ def specific_impulse(
     thrust: float,
     mass_flow: Rate,
     gravitational_acceleration: Acceleration = STANDARD_GRAVITY,
-) -> float:
+) -> Second:
     return divide_by(multiply(mass_flow)(gravitational_acceleration))(thrust)
 
 
 def specific_impulse_from_exhaust_velocity(
     exhaust_velocity: Velocity,
     gravitational_acceleration: Acceleration = STANDARD_GRAVITY,
-) -> float:
+) -> Second:
     return divide_by(gravitational_acceleration)(exhaust_velocity)
 
 
 def effective_exhaust_velocity(
-    specific_impulse: float,
+    specific_impulse: Second,
     gravitational_acceleration: Acceleration = STANDARD_GRAVITY,
 ) -> Velocity:
+    """
+    specific_impulse = s
+    gravitational_acceleration = m/s²
+
+    s * m/s² = m/s"""
     return multiply(specific_impulse)(gravitational_acceleration)
 
 

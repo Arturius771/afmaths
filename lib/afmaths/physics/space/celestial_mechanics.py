@@ -35,7 +35,6 @@ from afmaths.tensors import (
     vector_multiplication_3d,
     vector_negate,
     vector_normalise,
-    vector_subtract_3d,
 )
 
 from afmaths.geometry.geometry import (
@@ -65,20 +64,16 @@ from afmaths.operation import (
 )
 from astronomy_types import (
     Acceleration,
-    Anomaly,
     Coordinate2D,
-    Degrees,
     EccentricAnomaly,
     GravitationalParameter,
     Latitude,
     MeanAnomaly,
     MeanMotion,
     OrbitalElements,
-    Position,
     PositionVector,
     Radians,
     Rate,
-    Ratio,
     RightAscension,
     Inclination,
     ArgumentOfPeriapsis,
@@ -89,14 +84,13 @@ from astronomy_types import (
     StateVector,
     TrueAnomaly,
     Scalar,
-    Vector2D,
     Vector3D,
     Velocity,
     VelocityVector,
     Distance,
 )
 
-from afmaths.types import Area, DeltaV, Force, Mass, OrbitalDirection
+from afmaths.types import AngularMomentum, Area, DeltaV, Force, Mass, OrbitalDirection
 
 ## Check if this belongs in geometry.py
 # def true_anomaly_from_eccentric_anomaly(
@@ -252,10 +246,12 @@ def orbital_period(a: SemiMajorAxis, mu: GravitationalParameter) -> Second:
 
 
 def swept_area_of_ellipse(
-    angular_momentum: Scalar, time_since_periapsis: Second
+    angular_momentum: AngularMomentum, time_since_periapsis: Second
 ) -> Area:
     # From MSE SFM Exercise 1
-    return multiply(HALF(angular_momentum))(time_since_periapsis)
+    return multiply(HALF(angular_momentum_magnitude(angular_momentum)))(
+        time_since_periapsis
+    )
 
 
 def mean_motion(
@@ -376,10 +372,10 @@ def mean_angular_rate(a: SemiMajorAxis, mu: GravitationalParameter) -> Rate:
     return Rate(Scalar(square_root(divide_by(CUBE(a))(mu))))
 
 
-def angular_momentum(state_vectors: StateVector) -> Vector3D[Scalar]:
+def angular_momentum(state_vectors: StateVector) -> AngularMomentum:
     # From MSE SFM Exercise 2
-    return vector_cross_multiplication_3d(
-        state_vectors.position, state_vectors.velocity
+    return AngularMomentum(
+        vector_cross_multiplication_3d(state_vectors.position, state_vectors.velocity)
     )
 
 
@@ -762,7 +758,7 @@ def argument_of_periapsis(
 
 
 def eccentricity_from_ellipse_equation(
-    angular_momentum_vector: Vector3D[Scalar],
+    angular_momentum_vector: AngularMomentum,
     a: SemiMajorAxis,
     mu: GravitationalParameter = EARTH_MU_KM_CUBED,
 ) -> Eccentricity:
@@ -772,7 +768,7 @@ def eccentricity_from_ellipse_equation(
         a,
         semi_minor_axis_from_semi_latus_rectum(
             semi_latus_rectum_from_angular_momentum(
-                angular_momentum_magnitude(angular_momentum_vector),
+                angular_momentum_vector,
                 mu,
             ),
             a,
@@ -788,7 +784,7 @@ def eccentricity_from_apsides(periapsis: Distance, apoapsis: Distance) -> Eccent
 
 
 def inclination_from_angular_momentum_vector(
-    angular_momentum_vector: Vector3D,
+    angular_momentum_vector: AngularMomentum,
 ) -> Inclination:
     """Calculates the inclination of an orbit from the angular momentum vector"""
     return Inclination(
@@ -810,7 +806,7 @@ def inclination_from_angular_momentum_vector(
 
 
 def ascending_node_vector_from_angular_momentum_vector(
-    angular_momentum_vector: Vector3D,
+    angular_momentum_vector: AngularMomentum,
 ) -> Vector3D:
     """Calculates the vector pointing to the ascending node of an orbit from the angular momentum vector."""
     return vector_cross_multiplication_3d(
@@ -820,7 +816,7 @@ def ascending_node_vector_from_angular_momentum_vector(
 
 
 def right_ascension_of_ascending_node_from_angular_momentum_vector(
-    angular_momentum_vector: Vector3D,
+    angular_momentum_vector: AngularMomentum,
 ) -> RightAscension:
     """Calculates the right ascension of ascending node of an orbit from the angular momentum vector.
 
@@ -1027,10 +1023,10 @@ def eccentric_anomaly_at_time(
 
 
 def semi_latus_rectum_from_angular_momentum(
-    angular_momentum_magnitude: Scalar,
+    angular_momentum: AngularMomentum,
     mu: GravitationalParameter,
 ) -> SemiLatusRectum:
-    return divide_by(mu)(SQUARE(angular_momentum_magnitude))
+    return divide_by(mu)(SQUARE(angular_momentum_magnitude(angular_momentum)))
 
 
 # region ## Mean Anomaly

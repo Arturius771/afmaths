@@ -1,9 +1,11 @@
 import math
 from afmaths.geometry.geometry import area_of_sphere
 from afmaths.types import (
+    AngularMomentum,
     Force,
     Mass,
     Momentum,
+    Torque,
 )
 from afmaths.operation import (
     HALF,
@@ -15,7 +17,9 @@ from afmaths.operation import (
 )
 from astronomy_types import (
     Acceleration,
+    Degrees,
     Distance,
+    Radians,
     Ratio,
     Scalar,
     Velocity,
@@ -39,6 +43,22 @@ def decibels(power1: float):
 
 def momentum(mass: Mass, velocity: Velocity) -> Momentum:
     return multiply(mass)(velocity)
+
+
+def moment_of_inertia(
+    angular_momentum: AngularMomentum, angular_velocity: Velocity
+) -> Scalar:
+    return divide_by(angular_velocity)(angular_momentum)
+
+
+def torque(force: Force, angle: Radians, length: Distance) -> Torque:
+    return multiply(force)(multiply(length)(math.sin(angle)))
+
+
+def applied_torque(
+    moment_of_inertia: Scalar, angular_acceleration: Acceleration
+) -> Torque:
+    return multiply(moment_of_inertia)(angular_acceleration)
 
 
 def force(mass: Mass, acceleration: Acceleration) -> Force:

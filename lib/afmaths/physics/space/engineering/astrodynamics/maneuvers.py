@@ -219,9 +219,9 @@ def parabolic_escape_delta_v(
 
 
 def transfer_period(
-    mu: GravitationalParameter,
     initial_radius: Distance,
     final_radius: Distance,
+    mu: GravitationalParameter,
 ) -> Second:
     """Assuming an elliptical transfer orbit."""
 

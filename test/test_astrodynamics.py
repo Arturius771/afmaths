@@ -20,7 +20,7 @@ from astronomy_types import (
 )
 
 from afmaths.physics.space.engineering.astrodynamics.hohmann_transfer import (
-    hohmann_transfer,
+    hohmann_transfer_parameters,
 )
 from afmaths.types import OrbitalDirection
 
@@ -29,62 +29,66 @@ class AstrodynamicsTestMethods(unittest.TestCase):
 
     def test_hohmann_transfer(self):
 
-        result = hohmann_transfer(Distance(Scalar(300)), Distance(Scalar(1000)))
+        result = hohmann_transfer_parameters(
+            Distance(Scalar(300)), Distance(Scalar(1000))
+        )
         self.assertAlmostEqual(
-            result[0],
+            result[0][0],
             0.37539955175032447,
             places=10,
         )
 
         self.assertAlmostEqual(
-            result[1],
+            result[0][1],
             0.19003921507073027,
             places=10,
         )
 
         self.assertAlmostEqual(
-            result[2],
+            result[0][2],
             0.18536033667959417,
             places=10,
         )
 
         self.assertEqual(
-            result[3],
+            result[1],
             OrbitalDirection.PROGRADE,
         )
 
         self.assertAlmostEqual(
-            result[4],
+            result[2],
             2931.7611286318975,
             places=10,
         )
 
-        result = hohmann_transfer(Distance(Scalar(1000)), Distance(Scalar(776)))
+        result = hohmann_transfer_parameters(
+            Distance(Scalar(1000)), Distance(Scalar(776))
+        )
         self.assertAlmostEqual(
-            result[0],
+            result[0][0],
             0.11417803172385366,
             places=10,
         )
 
         self.assertAlmostEqual(
-            result[1],
+            result[0][1],
             0.057309034941426695,
             places=10,
         )
 
         self.assertAlmostEqual(
-            result[2],
+            result[0][2],
             0.05686899678242696,
             places=10,
         )
 
         self.assertEqual(
-            result[3],
+            result[1],
             OrbitalDirection.RETROGRADE,
         )
 
         self.assertAlmostEqual(
-            result[4],
+            result[2],
             3081.939034222961,
             places=10,
         )

@@ -5,13 +5,15 @@ import math
 import plotly.graph_objects as go
 from afmaths.constants import EARTH_MU_KM_CUBED
 from afmaths.physics.space.engineering.astrodynamics.hohmann_transfer import (
-    hohmann_transfer_from_radii,
+    hohmann_transfer_delta_v,
+    hohmann_transfer_parameters,
 )
 from afmaths.physics.space.engineering.astrodynamics.maneuvers import (
     transfer_eccentricity,
     transfer_semi_major_axis,
 )
 from afmaths.physics.space.celestial_mechanics import (
+    orbit_altitude,
     orbit_radius,
     periapsis_radius,
 )
@@ -179,16 +181,13 @@ def build_hohmann_transfer_2d_perifocal_figure(
         transfer_burn_eccentric_anomaly = transfer_endpoint_b_eccentric_anomaly
         arrival_burn_eccentric_anomaly = transfer_endpoint_a_eccentric_anomaly
 
-    total_delta_v, transfer_delta_v, arrival_delta_v, direction, transfer_time = (
-        hohmann_transfer_from_radii(
-            initial_radius=Distance(
-                Scalar(
-                    scale_distance_to_distance(start_radius, settings.distance_scale)
-                )
-            ),
-            target_radius=orbit_radius(final_altitude, central_body_radius_km),
-            mu=gravitational_parameter,
-        )
+    delta_v, direction, transfer_time = hohmann_transfer_parameters(
+        orbit_altitude(
+            scale_distance_to_distance(start_radius, settings.distance_scale),
+            central_body_radius_km,
+        ),
+        final_altitude,
+        mu=gravitational_parameter,
     )
 
     fig = add_plot_node(
@@ -199,7 +198,7 @@ def build_hohmann_transfer_2d_perifocal_figure(
             primary_focus_plot_coordinate=primary_focus_plot_coordinate,
             transfer_orbit=transfer_orbit,
             E=transfer_burn_eccentric_anomaly,
-            delta_v=transfer_delta_v,
+            delta_v=delta_v[1],
             direction=direction,
             time=Second(Scalar(0)),
         ),
@@ -213,7 +212,7 @@ def build_hohmann_transfer_2d_perifocal_figure(
             primary_focus_plot_coordinate=primary_focus_plot_coordinate,
             transfer_orbit=transfer_orbit,
             E=arrival_burn_eccentric_anomaly,
-            delta_v=arrival_delta_v,
+            delta_v=delta_v[2],
             direction=direction,
             time=transfer_time,
         ),
@@ -273,7 +272,7 @@ def build_hohmann_transfer_2d_perifocal_figure(
                 f"{title_prefix}<br>"
                 f"Start = initial periapsis, "
                 f"arrival = final circular orbit<br>"
-                f"Total Δv = {total_delta_v:.4f} km/s, "
+                f"Total Δv = {delta_v[0]:.4f} km/s, "
                 f"transfer time = {transfer_time:.2f} s"
             ),
         ),
