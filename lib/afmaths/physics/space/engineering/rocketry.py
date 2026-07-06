@@ -21,13 +21,15 @@ from astronomy_types import (
 )
 
 from afmaths.physics.physics import (
+    impulse_from_force,
     net_acceleration,
     force,
     pushing_to_resisting_force_ratio,
     momentum,
 )
 
-from afmaths.types import DeltaV, Force, Mass, Momentum, Pressure
+from afmaths.physics.space.engineering.astrodynamics.maneuvers import delta_v
+from afmaths.types import DeltaV, Force, Impulse, Mass, Momentum, Pressure
 
 
 def delta_v_from_tsiolkovsky(
@@ -60,7 +62,38 @@ def mass_flow_rate(
     specific_impulse: Second,
     gravitational_acceleration: Acceleration = STANDARD_GRAVITY,
 ) -> Rate:
+    """The change in mass per unit time, as it is expelled out of the rocket."""
     return divide_by(multiply(specific_impulse)(gravitational_acceleration))(thrust)
+
+
+def total_impulse(thrust: Force, burn_duration: Second) -> Impulse:
+    """Assuming constant thrust"""
+    return impulse_from_force(thrust, burn_duration)
+
+
+def total_impulse_from_exhaust_velocity(
+    effective_exhaust: Velocity, propellant_mass: Mass
+) -> Impulse:
+    return multiply(effective_exhaust)(propellant_mass)
+
+
+def initial_momentum(rocket_mass: Mass, rocket_velocity: Velocity) -> Momentum:
+    return momentum(rocket_mass, rocket_velocity)
+
+
+def final_momentum(
+    initial_rocket: Mass,
+    final_rocket: Mass,
+    initial_velocity: Velocity,
+    final_velocity: Velocity,
+) -> Momentum:
+    delta_m = subtract(final_rocket)(initial_rocket)
+    dv = delta_v(initial_velocity, final_velocity)
+    return momentum(subtract(delta_m)(initial_rocket), add(initial_velocity)(dv))
+
+
+def momentum_gain(initial: Momentum, final: Momentum) -> Momentum:
+    return subtract(final)(initial)
 
 
 def specific_impulse(
@@ -68,6 +101,7 @@ def specific_impulse(
     mass_flow: Rate,
     gravitational_acceleration: Acceleration = STANDARD_GRAVITY,
 ) -> Second:
+    """I_sp = thrust /"""
     return divide_by(multiply(mass_flow)(gravitational_acceleration))(thrust)
 
 
@@ -75,6 +109,7 @@ def specific_impulse_from_exhaust_velocity(
     exhaust_velocity: Velocity,
     gravitational_acceleration: Acceleration = STANDARD_GRAVITY,
 ) -> Second:
+    """I_sp = C_e/g"""
     return divide_by(gravitational_acceleration)(exhaust_velocity)
 
 
@@ -83,6 +118,8 @@ def effective_exhaust_velocity(
     gravitational_acceleration: Acceleration = STANDARD_GRAVITY,
 ) -> Velocity:
     """
+    C_e = I_sp * g
+
     specific_impulse = s
     gravitational_acceleration = m/s²
 

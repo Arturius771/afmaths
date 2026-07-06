@@ -3,6 +3,7 @@ from afmaths.geometry.geometry import area_of_sphere
 from afmaths.types import (
     AngularMomentum,
     Force,
+    Impulse,
     Mass,
     Momentum,
     Torque,
@@ -17,11 +18,11 @@ from afmaths.operation import (
 )
 from astronomy_types import (
     Acceleration,
-    Degrees,
     Distance,
     Radians,
     Ratio,
     Scalar,
+    Second,
     Velocity,
 )
 
@@ -55,6 +56,15 @@ def torque(force: Force, angle: Radians, length: Distance) -> Torque:
     return multiply(force)(multiply(length)(math.sin(angle)))
 
 
+def impulse(initial: Momentum, final: Momentum) -> Impulse:
+    """Change in momentum"""
+    return subtract(final)(initial)
+
+
+def impulse_from_force(force: Force, duration: Second) -> Impulse:
+    return multiply(force)(duration)
+
+
 def applied_torque(
     moment_of_inertia: Scalar, angular_acceleration: Acceleration
 ) -> Torque:
@@ -64,6 +74,10 @@ def applied_torque(
 def force(mass: Mass, acceleration: Acceleration) -> Force:
     """Newton's second law"""
     return multiply(mass)(acceleration)
+
+
+def force_from_momentum(initial: Momentum, final: Momentum, duration: Second) -> Force:
+    return divide_by(duration)(impulse(initial, final))
 
 
 def pushing_to_resisting_force_ratio(

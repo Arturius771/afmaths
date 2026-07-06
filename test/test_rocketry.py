@@ -15,8 +15,12 @@ from afmaths.physics.space.engineering.rocketry import (
     propellant_mass_from_full_mass,
     required_mass_ratio,
     net_rocket_acceleration,
+    specific_impulse,
+    specific_impulse_from_exhaust_velocity,
     thrust_from_mass_flow_and_pressure,
     thrust_to_weight,
+    total_impulse,
+    total_impulse_from_exhaust_velocity,
 )
 from astronomy_types import Distance, Rate, Scalar, Second, Velocity
 
@@ -132,6 +136,59 @@ class RocketryTestMethods(unittest.TestCase):
                 ),
             ),
             20,
+        )
+
+    def test_total_impulse_consistency_for_constant_thrust_burn(self):
+        specific_impulse_seconds = Second(Scalar(300))
+        propellant_mass = Mass(60)
+        propellant_mass_flow_rate = Rate(Scalar(2))
+
+        exhaust_velocity = effective_exhaust_velocity(
+            specific_impulse_seconds,
+        )
+        thrust = thrust_from_mass_flow_and_pressure(
+            mass_flow_rate=propellant_mass_flow_rate,
+            effective_exhaust_velocity=exhaust_velocity,
+            exhaust_pressure=Pressure(Scalar(0)),
+            outside_pressure=Pressure(Scalar(0)),
+            nozzle_exit=Area(Scalar(1)),
+        )
+
+        self.assertAlmostEqual(
+            total_impulse(
+                thrust,
+                burn_duration(
+                    mass_flow_rate=propellant_mass_flow_rate,
+                    propellant_mass=propellant_mass,
+                ),
+            ),
+            total_impulse_from_exhaust_velocity(
+                exhaust_velocity,
+                propellant_mass,
+            ),
+        )
+
+        self.assertAlmostEqual(
+            mass_flow_rate(
+                thrust,
+                specific_impulse_seconds,
+            ),
+            propellant_mass_flow_rate,
+        )
+
+        self.assertAlmostEqual(
+            specific_impulse(
+                thrust,
+                propellant_mass_flow_rate,
+            ),
+            specific_impulse_seconds,
+        )
+
+        self.assertAlmostEqual(
+            specific_impulse_from_exhaust_velocity(
+                exhaust_velocity,
+            ),
+            specific_impulse_seconds,
         )
 
 

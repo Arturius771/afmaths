@@ -15,6 +15,7 @@ Force = NewType("Force", Scalar)
 Percentage = NewType("Percentage", float)
 AngularMomentum = NewType("AngularMomentum", Vector3D[Scalar])
 Torque = NewType("Torque", Scalar)
+Impulse = NewType("Impulse", Scalar)
 
 
 class OrbitalDirection(Enum):
