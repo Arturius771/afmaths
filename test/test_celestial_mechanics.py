@@ -4,6 +4,8 @@ import unittest
 from afmaths.types import Force, Mass, OrbitalDirection
 from afmaths.physics.space.celestial_mechanics import (
     distance_between_positions,
+    eccentric_anomaly_solved,
+    newtons_method_eccentric_anomaly,
     orbit_centripetal_force,
     orbital_direction_from_inclination,
     state_vector_at_time,
@@ -16,6 +18,7 @@ from astronomy_types import (
     Distance,
     Eccentricity,
     Inclination,
+    MeanAnomaly,
     OrbitalElements,
     Position,
     PositionVector,
@@ -243,6 +246,25 @@ class CelestialMechanicsTestMethods(unittest.TestCase):
             ),
             Distance(Scalar(4799.25)),
             places=1,
+        )
+
+    def test_eccentric_anomaly_solved(self):
+        self.assertEqual(
+            eccentric_anomaly_solved(
+                newtons_method_eccentric_anomaly,
+                Eccentricity(Ratio(Scalar(0.4))),
+                MeanAnomaly(Anomaly(Radians(Scalar(1.3)))),
+            )[0],
+            1.6968274346828216,
+        )
+
+        self.assertEqual(
+            eccentric_anomaly_solved(
+                newtons_method_eccentric_anomaly,
+                Eccentricity(Ratio(Scalar(0.8))),
+                MeanAnomaly(Anomaly(Radians(Scalar(5.5)))),
+            )[0],
+            4.70006079291257,
         )
 
 

@@ -12,6 +12,7 @@ from afmaths.operation import (
     multiply_by_repeated_addition,
     negate,
     newtons_raphson_method,
+    power_rule_string,
     ratio,
     reduce,
     square,
@@ -114,6 +115,9 @@ class OperatioTestMethods(unittest.TestCase):
         result = reduce(lambda a, b: subtract(b)(a))([1, 2, 3, 5, 6])
 
         self.assertEqual(result, -15)
+
+    def test_power_rule_string(self):
+        self.assertEqual(power_rule_string(55, 5), "f'(55^{5}) = 5 * 55^{4}")
 
 
 if __name__ == "__main__":

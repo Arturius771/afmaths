@@ -1,5 +1,6 @@
 from dataclasses import replace
 import math
+from typing import Callable
 
 from afmaths.constants import (
     EARTH_MU_KM_CUBED,
@@ -925,14 +926,24 @@ def newtons_method_eccentric_anomaly(
 ) -> EccentricAnomaly:
     """Performs one iteration of Newton's method to solve Kepler's equation for the eccentric anomaly.
 
-    Converges quckly if eccentricity is low."""
-    # E_i - (E_i - e * np.sin(E_i) - M) / (1 - e * np.cos(E_i))
-    # E_i - (E_i - eccentricity * math.sin(E_i) - mean_anomaly)
-    # M = E - e * np.sin(E)
+    Converges quckly if eccentricity is low.
+
+    Kepler Equation: M = E - e * np.sin(E)
+
+    Setting to find for 0, by subtracting M: (E_i - e * np.sin(E_i) - M).
+
+    For an incorrect guess: E_i - e * sin(E_i) - M != 0
+
+    Derivative: (1 - e * np.cos(E_i)
+    """
+
     return make_eccentric_anomaly(
         newtons_raphson_method(
+            # Initial guess
             E_i_guess,
+            # (E_i - e * np.sin(E_i) - M)
             subtract(M)(kepler_equation(E_i_guess, e)),
+            # (1 - e * np.cos(E_i)
             subtract(multiply(e)(math.cos(E_i_guess)))(1),
         )
     )
@@ -970,28 +981,41 @@ def eccentric_anomaly_from_true_anomaly(
 
 
 def eccentric_anomaly_solved(
-    iteration_func,
+    iteration_function: Callable,
     e: Eccentricity,
     M: MeanAnomaly,
     tolerance=1e-6,
     max_iterations=100,
 ) -> tuple[EccentricAnomaly, list]:
+    """Solves for Eccentric Anomaly by repeatedly applying the iteration_function until the delta between the guess and the next guess is basically 0."""
+
     history = []  # TODO: make this more structured
 
     E_i = EccentricAnomaly(M)
-    delta_E = float("inf")
+    delta_E = float(
+        "inf"
+    )  # When this delta is 0 or close to it, we have arrived at the answer
 
     iteration = 0
     history.append((iteration, E_i, math.degrees(E_i), None))
 
     while iteration < max_iterations and abs(delta_E) > tolerance:
-        E_next = iteration_func(E_i, e, M)
+        # Find the next guess for E
+        E_next = iteration_function(E_i, e, M)
+
+        # Calculate the delta between the first and next guess
         delta_E = E_next - E_i
+
+        # Track iterations
         iteration += 1
 
+        # Update history
         history.append((iteration, E_next, math.degrees(E_next), delta_E))
+
+        # Set the next guess
         E_i = E_next
 
+    # Return an answer once the loop is broken
     return make_eccentric_anomaly(E_i), history
 
 

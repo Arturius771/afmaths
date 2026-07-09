@@ -230,7 +230,7 @@ def trapezoidal_rule(curve: list[Coordinate2D]) -> float:
 
 
 def power_rule_string(symbol: float, exponent: float) -> str:
-    return f"f({symbol}^{{{exponent}}}) = {exponent} * {symbol}^{{{exponent - 1}}}"
+    return f"f'({symbol}^{{{exponent}}}) = {exponent} * {symbol}^{{{exponent - 1}}}"
 
 
 def is_divisible(num: int, factor: int) -> bool:
@@ -242,9 +242,19 @@ def is_divisible(num: int, factor: int) -> bool:
 
 
 def newtons_raphson_method(
-    first_term: float, function: float, derivative: float
+    current_estimate: float,
+    function_value: float,
+    derivative_value: float,
 ) -> float:
-    # E_i - (E_i - e * np.sin(E_i) - M) / (1 - e * np.cos(E_i))
-    # E_i - (E_i - eccentricity * math.sin(E_i) - mean_anomaly)
-    # M = E - e * np.sin(E)
-    return subtract(divide_by(derivative)(function))(first_term)
+    """x_1=x_0-(f(x_0)/f'(x_0))
+
+    The function value either equals 0, in which case we have solved the equation, or it gives the vertical error.
+
+    The derivative value, the tangent of the function value, tells us the horizontal error when it is used to divide the function value, as a correction.
+
+    We subtract the division from the current estimate to get the next guess to iterate for. In other words, we apply the correction to our current guess.
+    """
+
+    correction = divide_by(derivative_value)(function_value)
+
+    return subtract(correction)(current_estimate)
