@@ -51,6 +51,10 @@ class OperatioTestMethods(unittest.TestCase):
 
         self.assertEqual(result, 20)
 
+        self.assertEqual(
+            multiply(500)(32352), multiply_by_repeated_addition(500)(32352)
+        )
+
     def test_divide(self):
         result = divide_by(7)(41)
 
@@ -65,6 +69,10 @@ class OperatioTestMethods(unittest.TestCase):
         result = exponentiate_by_repeated_multiplication(7)(10)
 
         self.assertEqual(result, 10000000)
+
+        self.assertEqual(
+            exponentiate(7)(10), exponentiate_by_repeated_multiplication(7)(10)
+        )
 
     def test_square_root(self):
         result = square_root(8)
