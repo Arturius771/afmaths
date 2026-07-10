@@ -2,7 +2,7 @@ from afmaths.operation import (
     divide_by,
     exponentiate,
     ratio,
-    ratio_to_percentage,
+    percentage_from_ratio,
 )
 from astronomy_types import Ratio
 
@@ -12,6 +12,6 @@ def probability_of_outcome_percentage(
 ) -> float:
     return divide_by(
         exponentiate(number_of_flips)(
-            ratio(100)(ratio_to_percentage(chance_per_flip_ratio))
+            ratio(100)(percentage_from_ratio(chance_per_flip_ratio))
         )
     )(1)

@@ -50,7 +50,7 @@ def date_of_easter(year: Year) -> Date:
     )
 
 
-def date_to_day_number(date: Date) -> int:
+def day_number_from_date(date: Date) -> int:
     """Converts a date to the day number of the year."""
     year = date.year
     month = int(date.month)
@@ -77,7 +77,7 @@ def year_is_leap(year: Year) -> bool:
     )
 
 
-def greenwich_to_julian_date(date: Date) -> JulianDate:
+def julian_date_from_greenwich(date: Date) -> JulianDate:
     # TODO: update to take h:m:s
     year = int(date.year)
     month = int(date.month)
@@ -106,7 +106,7 @@ def greenwich_to_julian_date(date: Date) -> JulianDate:
     return JulianDate(Scalar(b + c + d + day + 1720994.5))
 
 
-def julian_to_greenwich_date(julian_date: JulianDate) -> Date:
+def greenwich_date_from_julian(julian_date: JulianDate) -> Date:
     jd = float(julian_date) + 0.5
     i = math.floor(jd)
     f = jd - i
@@ -133,11 +133,11 @@ def julian_to_greenwich_date(julian_date: JulianDate) -> Date:
     )
 
 
-def julian_date_to_j2000(julian_date: JulianDate) -> Epoch:
-    return julian_date_to_epoch(julian_date, -2451545.0)
+def j200_from_julian_Date(julian_date: JulianDate) -> Epoch:
+    return epoch_from_julian_date(julian_date, -2451545.0)
 
 
-def julian_date_to_epoch(julian_date: JulianDate, adjustment: float) -> Epoch:
+def epoch_from_julian_date(julian_date: JulianDate, adjustment: float) -> Epoch:
     return Epoch(JulianDate(Scalar(julian_date + adjustment)))
 
 
@@ -158,7 +158,7 @@ def finding_day_of_week(julian_date: JulianDate) -> DaysOfWeek:
     return days[day_number]
 
 
-def hours_minutes_seconds_to_decimal_time(
+def decimal_time_from_hms(
     time: Time,
     twenty_four_hour_clock: bool = True,
 ) -> DecimalTime:
@@ -170,7 +170,7 @@ def hours_minutes_seconds_to_decimal_time(
     return DecimalTime(Scalar(decimal_time - 12))
 
 
-def decimal_hours_to_hours_minutes_seconds(decimal_time: DecimalTime) -> Time:
+def hms_from_decimal(decimal_time: DecimalTime) -> Time:
     hours, minutes, seconds = (
         time_from_decimal_time(decimal_time).hour,
         time_from_decimal_time(decimal_time).minute,
@@ -187,7 +187,7 @@ def decimal_hours_to_hours_minutes_seconds(decimal_time: DecimalTime) -> Time:
     )
 
 
-def local_civil_to_universal_time(
+def universal_time_from_local_civil(
     local_time_and_date: FullDate,
     daylight_savings_correction: int = 0,
     timezone_offset_correction: int = 0,
@@ -197,7 +197,7 @@ def local_civil_to_universal_time(
 
     zone_hour = int(local_time.hour) - daylight_savings_correction
 
-    decimal_zone_time = hours_minutes_seconds_to_decimal_time(
+    decimal_zone_time = decimal_time_from_hms(
         Time(
             hour=Hour(zone_hour),
             minute=local_time.minute,
@@ -208,7 +208,7 @@ def local_civil_to_universal_time(
     universal_time = float(decimal_zone_time) - timezone_offset_correction
     greenwich_calendar_day = float(local_date.day) + (universal_time / 24)
 
-    julian_date = greenwich_to_julian_date(
+    julian_date = julian_date_from_greenwich(
         Date(
             local_date.year,
             local_date.month,
@@ -216,9 +216,9 @@ def local_civil_to_universal_time(
         )
     )
 
-    greenwich_date = julian_to_greenwich_date(julian_date)
+    greenwich_date = greenwich_date_from_julian(julian_date)
 
-    utc = decimal_hours_to_hours_minutes_seconds(
+    utc = hms_from_decimal(
         DecimalTime(
             Scalar(24 * (greenwich_calendar_day - math.floor(greenwich_calendar_day)))
         )
@@ -242,18 +242,18 @@ def universal_to_local_civil_time(
     greenwich_date = universal_time_and_date.date
     utc = universal_time_and_date.time
 
-    decimal_hours = hours_minutes_seconds_to_decimal_time(utc)
+    decimal_hours = decimal_time_from_hms(utc)
     local_civil_time = (
         float(decimal_hours) + timezone_offset_correction + daylight_savings_correction
     )
 
-    julian_date = greenwich_to_julian_date(greenwich_date)
+    julian_date = julian_date_from_greenwich(greenwich_date)
     local_julian_date = JulianDate(Scalar(julian_date + (local_civil_time / 24)))
 
-    local_date = julian_to_greenwich_date(local_julian_date)
+    local_date = greenwich_date_from_julian(local_julian_date)
     integer_day = math.floor(local_date.day)
 
-    local_time = decimal_hours_to_hours_minutes_seconds(
+    local_time = hms_from_decimal(
         DecimalTime(Scalar((local_date.day - integer_day) * 24))
     )
 
@@ -267,40 +267,40 @@ def universal_to_local_civil_time(
     )
 
 
-def universal_to_greenwich_sidereal_time(universal_time_and_date: FullDate) -> Time:
+def greenwich_sidereal_time_from_universal(universal_time_and_date: FullDate) -> Time:
     date = universal_time_and_date.date
     time = universal_time_and_date.time
 
-    julian_date = greenwich_to_julian_date(date)
-    s = julian_date_to_j2000(julian_date)
+    julian_date = julian_date_from_greenwich(date)
+    s = j200_from_julian_Date(julian_date)
     t = float(s) / 36525.0
 
     t0 = 6.697374558 + (2400.051336 * t) + (0.000025862 * t**2)
     t1 = t0 % 24
 
-    universal_time = hours_minutes_seconds_to_decimal_time(time)
+    universal_time = decimal_time_from_hms(time)
     gst = (float(universal_time) * 1.002737909 + t1) % 24
 
-    return decimal_hours_to_hours_minutes_seconds(DecimalTime(Scalar(gst)))
+    return hms_from_decimal(DecimalTime(Scalar(gst)))
 
 
-def greenwich_sidereal_to_universal_time(
+def universal_time_from_greenwich(
     greenwich_date_and_sidereal_time: FullDate,
 ) -> FullDate:
     greenwich_date = greenwich_date_and_sidereal_time.date
     greenwich_sidereal_time = greenwich_date_and_sidereal_time.time
 
-    julian_date = greenwich_to_julian_date(greenwich_date)
-    s = julian_date_to_j2000(julian_date)
+    julian_date = julian_date_from_greenwich(greenwich_date)
+    s = j200_from_julian_Date(julian_date)
     t = s / 36525.0
 
     t0 = 6.697374558 + (2400.051336 * t) + (0.000025862 * t**2)
     t1 = t0 % 24
 
-    gst_decimal = hours_minutes_seconds_to_decimal_time(greenwich_sidereal_time)
+    gst_decimal = decimal_time_from_hms(greenwich_sidereal_time)
     universal_time = ((gst_decimal - t1) % 24) * 0.9972695663
 
-    utc = decimal_hours_to_hours_minutes_seconds(DecimalTime(Scalar(universal_time)))
+    utc = hms_from_decimal(DecimalTime(Scalar(universal_time)))
 
     return FullDate(
         date=greenwich_date,
@@ -308,33 +308,29 @@ def greenwich_sidereal_to_universal_time(
     )
 
 
-def greenwich_sidereal_to_local_sidereal_time(
+def local_sidereal_time_from_greenwich_sidereal(
     greenwich_sidereal_time: Time,
     longitude: Longitude,
 ) -> Time:
-    gst_decimal = hours_minutes_seconds_to_decimal_time(greenwich_sidereal_time)
+    gst_decimal = decimal_time_from_hms(greenwich_sidereal_time)
 
     longitude_degrees = math.degrees(float(longitude))
     offset_hours = longitude_degrees / 15
 
     local_sidereal_time = (float(gst_decimal) + offset_hours) % 24
 
-    return decimal_hours_to_hours_minutes_seconds(
-        DecimalTime(Scalar(local_sidereal_time))
-    )
+    return hms_from_decimal(DecimalTime(Scalar(local_sidereal_time)))
 
 
-def local_sidereal_to_greenwich_sidereal_time(
+def greenwich_sidereal_time_from_local_sidereal(
     local_sidereal_time: Time,
     longitude: Longitude,
 ) -> Time:
-    lst_decimal = hours_minutes_seconds_to_decimal_time(local_sidereal_time)
+    lst_decimal = decimal_time_from_hms(local_sidereal_time)
 
     longitude_degrees = math.degrees(float(longitude))
     offset_hours = longitude_degrees / 15
 
     greenwich_sidereal_time = (float(lst_decimal) - offset_hours) % 24
 
-    return decimal_hours_to_hours_minutes_seconds(
-        DecimalTime(Scalar(greenwich_sidereal_time))
-    )
+    return hms_from_decimal(DecimalTime(Scalar(greenwich_sidereal_time)))

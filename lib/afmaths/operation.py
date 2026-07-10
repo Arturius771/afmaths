@@ -154,7 +154,7 @@ def product(
     return total
 
 
-def ratio_to_percentage(ratio: Ratio) -> Percentage:
+def percentage_from_ratio(ratio: Ratio) -> Percentage:
     return multiply(100)(ratio)
 
 

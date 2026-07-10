@@ -22,18 +22,18 @@ from astronomy_types import (
 from afmaths.physics.space.type_conversion_helpers import radians_from_degrees
 from afmaths.physics.space.astronomy.time_functions import (
     date_of_easter,
-    date_to_day_number,
-    decimal_hours_to_hours_minutes_seconds,
+    day_number_from_date,
+    hms_from_decimal,
     finding_day_of_week,
-    greenwich_sidereal_to_local_sidereal_time,
-    greenwich_sidereal_to_universal_time,
-    greenwich_to_julian_date,
-    hours_minutes_seconds_to_decimal_time,
-    julian_date_to_j2000,
-    julian_to_greenwich_date,
-    local_civil_to_universal_time,
-    local_sidereal_to_greenwich_sidereal_time,
-    universal_to_greenwich_sidereal_time,
+    local_sidereal_time_from_greenwich_sidereal,
+    universal_time_from_greenwich,
+    julian_date_from_greenwich,
+    decimal_time_from_hms,
+    j200_from_julian_Date,
+    greenwich_date_from_julian,
+    universal_time_from_local_civil,
+    greenwich_sidereal_time_from_local_sidereal,
+    greenwich_sidereal_time_from_universal,
     universal_to_local_civil_time,
     year_is_leap,
 )
@@ -124,43 +124,43 @@ class TimeTestMethods(unittest.TestCase):
         assert_date_equal(self, date_of_easter(Year(2024)), 2024, 3, 31)
 
     def test_date_to_day_number(self):
-        self.assertEqual(date_to_day_number(make_date(2000, 1, 1)), 1)
+        self.assertEqual(day_number_from_date(make_date(2000, 1, 1)), 1)
         self.assertEqual(
-            date_to_day_number(make_date(2000, 12, 31)),
+            day_number_from_date(make_date(2000, 12, 31)),
             366,
         )
         self.assertEqual(
-            date_to_day_number(make_date(1900, 12, 31)),
+            day_number_from_date(make_date(1900, 12, 31)),
             365,
         )
 
     def test_greenwich_to_julian_date(self):
         self.assertEqual(
-            greenwich_to_julian_date(make_date(2009, 6, 19.75)),
+            julian_date_from_greenwich(make_date(2009, 6, 19.75)),
             JulianDate(Scalar(2455002.25)),
         )
         self.assertEqual(
-            greenwich_to_julian_date(make_date(1969, 1, 5)),
+            julian_date_from_greenwich(make_date(1969, 1, 5)),
             JulianDate(Scalar(2440226.5)),
         )
 
     def test_julian_date_to_j2000(self):
         self.assertEqual(
-            julian_date_to_j2000(JulianDate(Scalar(2440227.54513888889))),
+            j200_from_julian_Date(JulianDate(Scalar(2440227.54513888889))),
             -11317.454861111008,
         )
 
     def test_julian_to_greenwich_date(self):
         assert_date_equal(
             self,
-            julian_to_greenwich_date(JulianDate(Scalar(2455002.25))),
+            greenwich_date_from_julian(JulianDate(Scalar(2455002.25))),
             2009,
             6,
             19.75,
         )
         assert_date_equal(
             self,
-            julian_to_greenwich_date(JulianDate(Scalar(2440588))),
+            greenwich_date_from_julian(JulianDate(Scalar(2440588))),
             1970,
             1,
             1.5,
@@ -172,45 +172,45 @@ class TimeTestMethods(unittest.TestCase):
             DaysOfWeek.Friday,
         )
         self.assertEqual(
-            finding_day_of_week(greenwich_to_julian_date(make_date(2024, 4, 7))),
+            finding_day_of_week(julian_date_from_greenwich(make_date(2024, 4, 7))),
             DaysOfWeek.Sunday,
         )
 
     def test_hours_minutes_seconds_to_decimal_time(self):
         self.assertEqual(
-            hours_minutes_seconds_to_decimal_time(make_time(18, 31, 27)),
+            decimal_time_from_hms(make_time(18, 31, 27)),
             DecimalTime(Scalar(18.524166666666666)),
         )
         self.assertEqual(
-            hours_minutes_seconds_to_decimal_time(
+            decimal_time_from_hms(
                 make_time(18, 31, 27),
                 False,
             ),
             DecimalTime(Scalar(6.524166666666666)),
         )
         self.assertEqual(
-            hours_minutes_seconds_to_decimal_time(
+            decimal_time_from_hms(
                 make_time(11, 31, 5),
                 False,
             ),
             DecimalTime(Scalar(11.518055555555556)),
         )
         self.assertEqual(
-            hours_minutes_seconds_to_decimal_time(
+            decimal_time_from_hms(
                 make_time(12, 0, 0),
                 False,
             ),
             DecimalTime(Scalar(12)),
         )
         self.assertEqual(
-            hours_minutes_seconds_to_decimal_time(make_time(12, 0, 0)),
+            decimal_time_from_hms(make_time(12, 0, 0)),
             DecimalTime(Scalar(12)),
         )
 
     def test_decimal_hours_to_hours_minutes_seconds(self):
         assert_time_equal(
             self,
-            decimal_hours_to_hours_minutes_seconds(DecimalTime(Scalar(18.52416667))),
+            hms_from_decimal(DecimalTime(Scalar(18.52416667))),
             18,
             31,
             27,
@@ -221,7 +221,7 @@ class TimeTestMethods(unittest.TestCase):
 
         assert_full_date_equal(
             self,
-            local_civil_to_universal_time(lct, 1, 4),
+            universal_time_from_local_civil(lct, 1, 4),
             2013,
             6,
             30,
@@ -249,7 +249,7 @@ class TimeTestMethods(unittest.TestCase):
 
         assert_time_equal(
             self,
-            universal_to_greenwich_sidereal_time(utc),
+            greenwich_sidereal_time_from_universal(utc),
             4,
             40,
             5.23,
@@ -260,7 +260,7 @@ class TimeTestMethods(unittest.TestCase):
 
         assert_full_date_equal(
             self,
-            greenwich_sidereal_to_universal_time(full_date),
+            universal_time_from_greenwich(full_date),
             1980,
             4,
             22,
@@ -272,7 +272,7 @@ class TimeTestMethods(unittest.TestCase):
     def test_greenwich_sidereal_to_local_sidereal_time(self):
         assert_time_equal(
             self,
-            greenwich_sidereal_to_local_sidereal_time(
+            local_sidereal_time_from_greenwich_sidereal(
                 make_time(4, 40, 5.23),
                 Radians(radians_from_degrees(Degrees(Scalar(-64)))),
             ),
@@ -284,7 +284,7 @@ class TimeTestMethods(unittest.TestCase):
     def test_local_sidereal_to_greenwich_sidereal_time(self):
         assert_time_equal(
             self,
-            local_sidereal_to_greenwich_sidereal_time(
+            greenwich_sidereal_time_from_local_sidereal(
                 make_time(0, 24, 5.23),
                 Radians(radians_from_degrees(Degrees(Scalar(-64)))),
             ),

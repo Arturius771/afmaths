@@ -116,13 +116,13 @@ def ml_activation_function(input: float, threshold: float = 0):
         return 0
 
 
-def byte_to_ascii_text(input: int) -> str:
+def ascii_text_from_byte(input: int) -> str:
     # https://www.rapidtables.com/convert/number/binary-to-ascii.html
 
-    return chr(byte_to_decimal(input))
+    return chr(decimal_from_byte(input))
 
 
-def byte_to_decimal(input: int) -> int:
+def decimal_from_byte(input: int) -> int:
     """Takes an 8 bit value and returns its value in decimal form."""
     value = 0
     tracker = len(str(input)) - 1
@@ -135,25 +135,25 @@ def byte_to_decimal(input: int) -> int:
     return value
 
 
-def byte_to_hex(input: int) -> str:
+def hex_from_byte(input: int) -> str:
     str_input = str(input)
     length = len(str_input)
 
     if length == 8:
-        return f"{bit_to_hex(str_input[:4])}{bit_to_hex(str_input[4:])}"
+        return f"{hex_from_bit(str_input[:4])}{hex_from_bit(str_input[4:])}"
     if length == 7:
-        return f"{bit_to_hex(str_input[:3])}{bit_to_hex(str_input[3:])}"
+        return f"{hex_from_bit(str_input[:3])}{hex_from_bit(str_input[3:])}"
     if length == 6:
-        return f"{bit_to_hex(str_input[:2])}{bit_to_hex(str_input[2:])}"
+        return f"{hex_from_bit(str_input[:2])}{hex_from_bit(str_input[2:])}"
     if length == 5:
-        return f"{bit_to_hex(str_input[:1])}{bit_to_hex(str_input[1:])}"
+        return f"{hex_from_bit(str_input[:1])}{hex_from_bit(str_input[1:])}"
     if length <= 4:
-        return f"{bit_to_hex(str_input)}"
+        return f"{hex_from_bit(str_input)}"
 
     return str_input
 
 
-def bit_to_hex(bit_string: str) -> str:
+def hex_from_bit(bit_string: str) -> str:
     bit_string = bit_string
     if bit_string == "0":
         return "0"

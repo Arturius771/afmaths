@@ -34,15 +34,15 @@ from afmaths.physics.space.type_conversion_helpers import (
     radians_from_hms,
 )
 from afmaths.physics.space.astronomy.coordinate_functions import (
-    ecliptic_to_equatorial_coordinates,
-    equatorial_to_ecliptic_coordinates,
-    equatorial_to_galactic_coordinates,
-    equatorial_to_horizon_coordinates,
-    galactic_to_equatorial_coordinates,
-    horizon_to_equatorial_coordinates,
-    hour_angle_to_right_ascension,
+    equatorial_coordinates_from_ecliptic,
+    ecliptic_coordinates_from_equatorial,
+    galactic_coordinates_from_equatorial,
+    horizontal_coordinates_from_equatorial,
+    equatorial_coordinates_from_galactic,
+    equatorial_coordinates_from_horizontal,
+    right_ascension,
     mean_obliquity_ecliptic,
-    right_ascension_to_hour_angle,
+    hour_angle,
 )
 
 
@@ -97,7 +97,7 @@ class CoordinateTestMethods(unittest.TestCase):
             time=make_time(14, 36, 51.67),
         )
 
-        result = right_ascension_to_hour_angle(
+        result = hour_angle(
             RightAscension(radians_from_hms(HMS(18, 32, 21))),
             full_date,
             0,
@@ -117,7 +117,7 @@ class CoordinateTestMethods(unittest.TestCase):
             time=make_time(14, 36, 51.67),
         )
 
-        result = hour_angle_to_right_ascension(
+        result = right_ascension(
             HourAngle(radians_from_hms(HMS(9, 52, 23.66))),
             full_date,
             0,
@@ -137,7 +137,7 @@ class CoordinateTestMethods(unittest.TestCase):
             HourAngle(radians_from_hms(HMS(5, 51, 44))),
         )
 
-        result = equatorial_to_horizon_coordinates(
+        result = horizontal_coordinates_from_equatorial(
             coordinates,
             Radians(radians_from_degrees(Degrees(Scalar(52)))),
         )
@@ -160,7 +160,7 @@ class CoordinateTestMethods(unittest.TestCase):
             Azimuth(radians_from_dms(DMS(283, 16, 15.76))),
         )
 
-        result = horizon_to_equatorial_coordinates(
+        result = equatorial_coordinates_from_horizontal(
             coordinates,
             Radians(radians_from_degrees(Degrees(Scalar(52)))),
         )
@@ -188,7 +188,7 @@ class CoordinateTestMethods(unittest.TestCase):
             radians_from_dms(DMS(139, 41, 10)),
         )
 
-        result = ecliptic_to_equatorial_coordinates(
+        result = equatorial_coordinates_from_ecliptic(
             coordinates,
             make_date(2009, 7, 6),
         )
@@ -211,7 +211,7 @@ class CoordinateTestMethods(unittest.TestCase):
             RightAscension(radians_from_hms(HMS(9, 34, 53.4))),
         )
 
-        result = equatorial_to_ecliptic_coordinates(
+        result = ecliptic_coordinates_from_equatorial(
             coordinates,
             make_date(2009, 7, 6),
         )
@@ -234,7 +234,7 @@ class CoordinateTestMethods(unittest.TestCase):
             RightAscension(radians_from_hms(HMS(10, 21, 0))),
         )
 
-        result = equatorial_to_galactic_coordinates(coordinates)
+        result = galactic_coordinates_from_equatorial(coordinates)
 
         assert_angle_degrees(
             self,
@@ -254,7 +254,7 @@ class CoordinateTestMethods(unittest.TestCase):
             radians_from_dms(DMS(232, 14, 52.38)),
         )
 
-        result = galactic_to_equatorial_coordinates(coordinates)
+        result = equatorial_coordinates_from_galactic(coordinates)
 
         assert_angle_degrees(
             self,

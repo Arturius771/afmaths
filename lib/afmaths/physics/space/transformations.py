@@ -1,28 +1,60 @@
 import math
-from astronomy_types import OrbitalElements, Scalar, Vector3D
+from astronomy_types import (
+    Coordinate3D,
+    Degrees,
+    Distance,
+    GeographicCoordinates,
+    OrbitalElements,
+    Scalar,
+    Vector3D,
+)
 from afmaths.geometry.transformations import (
     orthonormal_frame_transform_3d,
     rotation_matrix_3d,
 )
-from afmaths.physics.space.type_conversion_helpers import make_vector3d
+from afmaths.physics.space.type_conversion_helpers import make_vector2d, make_vector3d
+from afmaths.tensors import vector_magnitude, vector_magnitude_3d
 from afmaths.types import TransformationMatrix3D
 
 
-def transform_perifocal_vector_to_element_reference_frame(
+def transform_element_reference_frame_from_perifocal_vector(
     orbital_elements: OrbitalElements,
     perifocal_vector: Vector3D[Scalar],
 ) -> Vector3D[Scalar]:
     """Transforms a vector from the perifocal coordinate system to the ECI coordinate system using the provided transformation matrix"""
     return orthonormal_frame_transform_3d(
-        perifocal_to_element_reference_frame_transformation(orbital_elements),
+        transform_element_reference_frame_from_perifocal(orbital_elements),
         perifocal_vector,
     )
 
 
-# region Factories
+def transform_geographic_coordinates_from_itrs(
+    coords: Coordinate3D[Scalar],
+) -> GeographicCoordinates:
+    """Converts ITRS cartesian coordinates to geographic Lat/Lon (degrees). Useful for ground track plotting."""
+    return GeographicCoordinates(
+        Degrees(
+            Scalar(
+                math.degrees(
+                    math.atan2(
+                        coords.z, vector_magnitude(make_vector2d(coords.x, coords.y))
+                    )
+                )
+            )
+        ),
+        Degrees(Scalar(math.degrees(math.atan2(coords.y, coords.x)))),
+    )
 
 
-def perifocal_to_element_reference_frame_transformation(
+# TODO: Maybe move this?
+def radius_from_itrs(coords: Coordinate3D[Scalar]) -> Distance:
+    return Distance(vector_magnitude_3d(make_vector3d(coords.x, coords.y, coords.z)))
+
+
+# region Transformation Matrices
+
+
+def transform_element_reference_frame_from_perifocal(
     orbital_elements: OrbitalElements,
 ) -> TransformationMatrix3D:
     """

@@ -13,7 +13,7 @@ from afmaths.geometry.transformations import (
 )
 from afmaths.physics.physics import centripetal_acceleration, centripetal_force
 from afmaths.physics.space.transformations import (
-    transform_perifocal_vector_to_element_reference_frame,
+    transform_element_reference_frame_from_perifocal_vector,
 )
 from afmaths.physics.space.type_conversion_helpers import (
     coordinate3d_from_vector,
@@ -361,8 +361,10 @@ def orbit_radius(
     return add(alt)(central_body_radius)
 
 
-def orbit_altitude(radius: Distance, body_radius: Distance) -> Distance:
-    return Distance(subtract(body_radius)(radius))
+def orbit_altitude(
+    radius: Distance, central_body_radius: Distance = EARTH_RADIUS_KM
+) -> Distance:
+    return Distance(subtract(central_body_radius)(radius))
 
 
 # region ## Angular Momentum
@@ -579,13 +581,13 @@ def state_vector_from_orbital_elements(
 
     return make_state_vector(
         position_from_vector(
-            transform_perifocal_vector_to_element_reference_frame(
+            transform_element_reference_frame_from_perifocal_vector(
                 orbital_elements,
                 vector3d_from_position(perifocal_position_gaussian),
             )
         ),
         velocity_from_vector(
-            transform_perifocal_vector_to_element_reference_frame(
+            transform_element_reference_frame_from_perifocal_vector(
                 orbital_elements,
                 vector3d_from_velocity(perifocal_velocity_gaussian),
             )

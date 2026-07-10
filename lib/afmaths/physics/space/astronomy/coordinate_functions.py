@@ -5,11 +5,11 @@ from afmaths.physics.space.type_conversion_helpers import (
     decimal_time_from_time,
 )
 from afmaths.physics.space.astronomy.time_functions import (
-    greenwich_sidereal_to_local_sidereal_time,
-    greenwich_to_julian_date,
-    julian_date_to_j2000,
-    local_civil_to_universal_time,
-    universal_to_greenwich_sidereal_time,
+    local_sidereal_time_from_greenwich_sidereal,
+    julian_date_from_greenwich,
+    j200_from_julian_Date,
+    universal_time_from_local_civil,
+    greenwich_sidereal_time_from_universal,
 )
 from astronomy_types import (
     Altitude,
@@ -33,21 +33,21 @@ from astronomy_types import (
 )
 
 
-def right_ascension_to_hour_angle(
+def hour_angle(
     right_ascension: RightAscension,
     local_date_and_time: FullDate,
     daylight_savings: int,
     zone_correction: int,
     longitude: Longitude,
 ) -> HourAngle:
-    utc = local_civil_to_universal_time(
+    utc = universal_time_from_local_civil(
         local_date_and_time,
         daylight_savings,
         zone_correction,
     )
 
-    gst = universal_to_greenwich_sidereal_time(utc)
-    local_sidereal_time = greenwich_sidereal_to_local_sidereal_time(gst, longitude)
+    gst = greenwich_sidereal_time_from_universal(utc)
+    local_sidereal_time = local_sidereal_time_from_greenwich_sidereal(gst, longitude)
 
     lst_decimal = decimal_time_from_time(local_sidereal_time)
     right_ascension_hours = math.degrees(float(right_ascension)) / 15
@@ -58,16 +58,16 @@ def right_ascension_to_hour_angle(
     return HourAngle(radians_from_degrees(hour_angle_degrees))
 
 
-def hour_angle_to_right_ascension(
+def right_ascension(
     hour_angle: HourAngle,
     full_date: FullDate,
     daylight_savings: int,
     zone_correction: int,
     longitude: Longitude,
 ) -> RightAscension:
-    utc = local_civil_to_universal_time(full_date, daylight_savings, zone_correction)
-    gst = universal_to_greenwich_sidereal_time(utc)
-    local_sidereal_time = greenwich_sidereal_to_local_sidereal_time(gst, longitude)
+    utc = universal_time_from_local_civil(full_date, daylight_savings, zone_correction)
+    gst = greenwich_sidereal_time_from_universal(utc)
+    local_sidereal_time = local_sidereal_time_from_greenwich_sidereal(gst, longitude)
 
     lst_decimal = decimal_time_from_time(local_sidereal_time)
     hour_angle_hours = math.degrees(float(hour_angle)) / 15
@@ -78,7 +78,7 @@ def hour_angle_to_right_ascension(
     return RightAscension(Radians(radians_from_degrees(right_ascension_degrees)))
 
 
-def equatorial_to_horizon_coordinates(
+def horizontal_coordinates_from_equatorial(
     equatorial_coordinates: EquatorialCoordinatesHourAngle,
     latitude: Latitude,
 ) -> HorizontalCoordinates:
@@ -105,7 +105,7 @@ def equatorial_to_horizon_coordinates(
     )
 
 
-def horizon_to_equatorial_coordinates(
+def equatorial_coordinates_from_horizontal(
     horizontal_coordinates: HorizontalCoordinates,
     observer_latitude: Latitude,
 ) -> EquatorialCoordinatesHourAngle:
@@ -140,8 +140,8 @@ def horizon_to_equatorial_coordinates(
 
 
 def mean_obliquity_ecliptic(greenwich_date: Date) -> Obliquity:
-    julian_date = greenwich_to_julian_date(greenwich_date)
-    j2000 = julian_date_to_j2000(julian_date)
+    julian_date = julian_date_from_greenwich(greenwich_date)
+    j2000 = j200_from_julian_Date(julian_date)
 
     t = float(j2000) / 36525
     de = (t * (46.815 + t * (0.0006 - (t * 0.00181)))) / 3600
@@ -151,7 +151,7 @@ def mean_obliquity_ecliptic(greenwich_date: Date) -> Obliquity:
     return Obliquity(Radians(radians_from_degrees(obliquity_degrees)))
 
 
-def ecliptic_to_equatorial_coordinates(
+def equatorial_coordinates_from_ecliptic(
     ecliptic_coordinates: EclipticCoordinates,
     greenwich_date: Date,
 ) -> EquatorialCoordinates:
@@ -184,7 +184,7 @@ def ecliptic_to_equatorial_coordinates(
     )
 
 
-def equatorial_to_ecliptic_coordinates(
+def ecliptic_coordinates_from_equatorial(
     equatorial_coordinates: EquatorialCoordinates,
     greenwich_date: Date,
 ) -> EclipticCoordinates:
@@ -215,7 +215,7 @@ def equatorial_to_ecliptic_coordinates(
     )
 
 
-def equatorial_to_galactic_coordinates(
+def galactic_coordinates_from_equatorial(
     equatorial_coordinates: EquatorialCoordinates,
 ) -> GalacticCoordinates:
     declination = equatorial_coordinates.declination
@@ -254,7 +254,7 @@ def equatorial_to_galactic_coordinates(
     )
 
 
-def galactic_to_equatorial_coordinates(
+def equatorial_coordinates_from_galactic(
     galactic_coordinates: GalacticCoordinates,
 ) -> EquatorialCoordinates:
     galactic_latitude = float(galactic_coordinates.latitude)

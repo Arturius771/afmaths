@@ -19,9 +19,13 @@ from astronomy_types import (
 )
 
 from afmaths.constants import EARTH_MU_KM_CUBED, EARTH_RADIUS_KM
-from afmaths.physics.space.celestial_mechanics import orbit_radius, periapsis_radius
+from afmaths.physics.space.celestial_mechanics import (
+    orbit_altitude,
+    orbit_radius,
+    periapsis_radius,
+)
 from afmaths.physics.space.engineering.astrodynamics.hohmann_transfer import (
-    hohmann_transfer_delta_v,
+    hohmann_transfer_parameters,
 )
 
 INITIAL_ALTITUDE_KM = Distance(Scalar(10_000))
@@ -60,18 +64,16 @@ if __name__ == "__main__":
             EARTH_RADIUS_KM,
         )
 
-        total_delta_v, transfer_delta_v, arrival_delta_v, direction, transfer_time = (
-            hohmann_transfer_delta_v(
-                initial_radius=initial_radius_km,
-                target_radius=target_radius_km,
-                mu=EARTH_MU_KM_CUBED,
-            )
+        deltav, direction, transfer_time = hohmann_transfer_parameters(
+            INITIAL_ALTITUDE_KM,
+            orbit_altitude(target_radius_km, EARTH_RADIUS_KM),
+            mu=EARTH_MU_KM_CUBED,
         )
 
         x.append(target_radius_km / initial_radius_km)
-        delta_v_data.append(total_delta_v)
-        initial_burn.append(transfer_delta_v)
-        arrival_burn.append(arrival_delta_v)
+        delta_v_data.append(deltav[0])
+        initial_burn.append(deltav[1])
+        arrival_burn.append(deltav[2])
 
         # Convert seconds to days so the values are more readable.
         time_data_days.append(transfer_time / 86_400)

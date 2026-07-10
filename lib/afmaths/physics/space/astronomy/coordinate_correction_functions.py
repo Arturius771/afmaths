@@ -5,10 +5,10 @@ from afmaths.physics.space.type_conversion_helpers import (
     radians_from_degrees,
 )
 from afmaths.physics.space.astronomy.time_functions import (
-    greenwich_sidereal_to_universal_time,
-    greenwich_to_julian_date,
-    julian_date_to_epoch,
-    local_sidereal_to_greenwich_sidereal_time,
+    universal_time_from_greenwich,
+    julian_date_from_greenwich,
+    epoch_from_julian_date,
+    greenwich_sidereal_time_from_local_sidereal,
 )
 from .sun_functions import sun_longitude
 from astronomy_types import (
@@ -99,12 +99,12 @@ def rising_and_setting(
         radians_from_degrees(Degrees(Scalar((360 - azimuth_angle_degrees) % 360)))
     )
 
-    rise_greenwich_sidereal_time = local_sidereal_to_greenwich_sidereal_time(
+    rise_greenwich_sidereal_time = greenwich_sidereal_time_from_local_sidereal(
         time_from_decimal_time(DecimalTime(Scalar(rise_lst))),
         longitude,
     )
 
-    set_greenwich_sidereal_time = local_sidereal_to_greenwich_sidereal_time(
+    set_greenwich_sidereal_time = greenwich_sidereal_time_from_local_sidereal(
         time_from_decimal_time(DecimalTime(Scalar(set_lst))),
         longitude,
     )
@@ -119,8 +119,8 @@ def rising_and_setting(
         time=set_greenwich_sidereal_time,
     )
 
-    rise_ut = greenwich_sidereal_to_universal_time(rise_full_date).time
-    set_ut = greenwich_sidereal_to_universal_time(set_full_date).time
+    rise_ut = universal_time_from_greenwich(rise_full_date).time
+    set_ut = universal_time_from_greenwich(set_full_date).time
 
     rise_time_adjusted = Time(
         rise_ut.hour,
@@ -156,12 +156,12 @@ def precession_low_precision(
     declination1 = float(equatorial_coordinates.declination)
     right_ascension1 = float(equatorial_coordinates.right_ascension)
 
-    t_centuries = float(julian_date_to_epoch(original_epoch, -2415020.5)) / 36525
+    t_centuries = float(epoch_from_julian_date(original_epoch, -2415020.5)) / 36525
 
     m = 3.07234 + (0.00186 * t_centuries)
     n = 20.0468 - (0.0085 * t_centuries)
 
-    n_years = float(julian_date_to_epoch(new_epoch, -float(original_epoch))) / 365.25
+    n_years = float(epoch_from_julian_date(new_epoch, -float(original_epoch))) / 365.25
 
     right_ascension_hours = math.degrees(right_ascension1) / 15
     right_ascension_degrees = math.degrees(right_ascension1)
@@ -188,8 +188,8 @@ def nutation_from_date(greenwich_date: Date) -> NutationAndObliquity:
     """
     Calculates nutation in longitude and nutation in obliquity for a Greenwich date.
     """
-    julian_date = greenwich_to_julian_date(greenwich_date)
-    t_centuries = float(julian_date_to_epoch(julian_date, -2415020)) / 36525
+    julian_date = julian_date_from_greenwich(greenwich_date)
+    t_centuries = float(epoch_from_julian_date(julian_date, -2415020)) / 36525
 
     a = 100.0021358 * t_centuries
     l1 = 279.6967 + (0.000303 * t_centuries**2)

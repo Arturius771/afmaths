@@ -32,7 +32,7 @@ def dynamic_pressure(fluid_mass_density: float, flow_speed: float) -> float:
     return multiply(HALF(fluid_mass_density))(SQUARE(flow_speed))
 
 
-def watts_to_decibel_milliwatts(power_in_watts: float) -> float:
+def decibel_milliwatts_from_watts(power_in_watts: float) -> float:
     """Converts watts to decibels relative to one milliwatt"""
     return decibels(power_in_watts)(0.001)
 

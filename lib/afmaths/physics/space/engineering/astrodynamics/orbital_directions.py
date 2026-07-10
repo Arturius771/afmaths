@@ -42,6 +42,7 @@ def anti_normal(state: StateVector) -> tuple[Vector3D, OrbitalDirection]:
 
 
 def burn_direction_at_apsis(initial: Distance, target: Distance) -> OrbitalDirection:
+    """Calculates if the burn should be prograde or retrograde (relative to the orbital direction) to adjust the height of the oribt."""
     if initial > target:
         return OrbitalDirection.RETROGRADE
     return OrbitalDirection.PROGRADE

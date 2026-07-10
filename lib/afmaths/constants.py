@@ -6,6 +6,7 @@ from astronomy_types import (
     Acceleration,
     Anomaly,
     ArgumentOfPeriapsis,
+    Coordinate3D,
     Eccentricity,
     Enum,
     GravitationalParameter,
@@ -57,3 +58,15 @@ GRAVITATIONAL_CONSTANT = multiply(6.67430)(exponentiate(negate(11))(10))  # 6.67
 STANDARD_GRAVITY = Acceleration(Scalar(9.80665))  # m/s
 STEFAN_BOLTZMANN_CONSTANT = multiply(5.670367)(exponentiate(negate(8))(10))
 UNIT_VECTOR_XY_PLANE = Vector3D[Scalar](Scalar(0), Scalar(0), Scalar(1))
+ITRS_EXAMPLE_POSITION: list[Coordinate3D[Scalar]] = [
+    Coordinate3D(x=Scalar(6790.0), y=Scalar(0.0), z=Scalar(0.0)),
+    Coordinate3D(x=Scalar(0.0), y=Scalar(6790.0), z=Scalar(0.0)),
+    Coordinate3D(x=Scalar(-6790.0), y=Scalar(0.0), z=Scalar(0.0)),
+    Coordinate3D(x=Scalar(0.0), y=Scalar(-6790.0), z=Scalar(0.0)),
+    Coordinate3D(x=Scalar(4153.518707), y=Scalar(732.377413), z=Scalar(5321.278575)),
+    Coordinate3D(x=Scalar(1091.593504), y=Scalar(-4073.882417), z=Scalar(5321.278575)),
+    Coordinate3D(
+        x=Scalar(-3230.864009), y=Scalar(-2711.016798), z=Scalar(-5321.278575)
+    ),
+    Coordinate3D(x=Scalar(2982.288913), y=Scalar(2982.288913), z=Scalar(-5321.278575)),
+]

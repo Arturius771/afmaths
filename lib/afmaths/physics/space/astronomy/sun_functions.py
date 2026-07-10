@@ -2,11 +2,11 @@ import math
 
 from afmaths.physics.space.type_conversion_helpers import radians_from_degrees
 from afmaths.physics.space.astronomy.coordinate_functions import (
-    ecliptic_to_equatorial_coordinates,
+    equatorial_coordinates_from_ecliptic,
 )
 from afmaths.physics.space.astronomy.time_functions import (
-    greenwich_to_julian_date,
-    local_civil_to_universal_time,
+    julian_date_from_greenwich,
+    universal_time_from_local_civil,
 )
 from astronomy_types import (
     Date,
@@ -51,15 +51,15 @@ def sun_longitude(
 
         return true_anomaly_degrees + ecliptic_longitude_of_perigee
 
-    greenwich_date = local_civil_to_universal_time(
+    greenwich_date = universal_time_from_local_civil(
         local_date,
         daylight_savings_correction,
         timezone_correction,
     ).date
 
-    julian_date = greenwich_to_julian_date(greenwich_date)
+    julian_date = julian_date_from_greenwich(greenwich_date)
 
-    epoch_date = greenwich_to_julian_date(
+    epoch_date = julian_date_from_greenwich(
         Date(
             Year(2010),
             Month(1),
@@ -87,7 +87,7 @@ def sun_position_approximate(
     daylight_savings_correction: int,
     timezone_correction: int,
 ) -> EquatorialCoordinates:
-    greenwich_date = local_civil_to_universal_time(
+    greenwich_date = universal_time_from_local_civil(
         local_date,
         daylight_savings_correction,
         timezone_correction,
@@ -99,7 +99,7 @@ def sun_position_approximate(
         timezone_correction,
     )
 
-    return ecliptic_to_equatorial_coordinates(
+    return equatorial_coordinates_from_ecliptic(
         EclipticCoordinates(
             Radians(Scalar(0.0)),
             longitude,

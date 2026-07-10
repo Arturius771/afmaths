@@ -61,15 +61,15 @@ def hohmann_transfer_delta_v(
     # www.braeunig.us/space/problem.htm#4.19
 
     transfer_a = transfer_semi_major_axis(initial_radius, target_radius)
-
-    direction = burn_direction_at_apsis(initial_radius, target_radius)
-    prograde = direction is OrbitalDirection.PROGRADE
+    prograde = (
+        burn_direction_at_apsis(initial_radius, target_radius)
+        is OrbitalDirection.PROGRADE
+    )
     transfer_delta_v = (
         increase_semi_major_axis_at_periapsis(transfer_a, initial_radius, mu)
         if prograde
         else decrease_semi_major_axis_at_apoapsis(transfer_a, target_radius, mu)
     )
-
     circularise = (
         increase_semi_major_axis_at_apoapsis(transfer_a, target_radius, mu)
         if prograde

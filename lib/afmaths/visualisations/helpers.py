@@ -22,6 +22,9 @@ from astronomy_types import (
 from afmaths.geometry.geometry import circle_bounding_box
 from afmaths.operation import interval
 from afmaths.physics.space.type_conversion_helpers import make_vector3d
+from pathlib import Path
+
+BACKGROUND_IMAGE = Path(__file__).with_name("Earth-hires.jpg")
 
 
 @dataclass(frozen=True)
@@ -464,3 +467,167 @@ def make_3d_orbit_figure(
     )
 
     return fig
+
+
+import base64
+import mimetypes
+from pathlib import Path
+
+import plotly.graph_objects as go
+
+
+def image_file_to_data_uri(image_path: str | Path) -> str:
+    image_path = Path(image_path).expanduser().resolve()
+
+    if not image_path.exists():
+        raise FileNotFoundError(f"Background image not found: {image_path}")
+
+    mime_type, _ = mimetypes.guess_type(image_path)
+
+    if mime_type is None:
+        mime_type = "image/png"
+
+    encoded = base64.b64encode(image_path.read_bytes()).decode("utf-8")
+
+    return f"data:{mime_type};base64,{encoded}"
+
+
+def with_data_background_image(
+    fig: go.Figure | None = None,
+    image_source: str | Path = BACKGROUND_IMAGE,
+    x_min: float = -180,
+    x_max: float = 180,
+    y_min: float = -90,
+    y_max: float = 90,
+    opacity: float = 0.8,
+    set_axis_ranges: bool = True,
+    lock_aspect_ratio: bool = False,
+) -> go.Figure:
+    """
+    Add a background image in data coordinates.
+
+    The image pans and zooms with the axes because it uses x/y references.
+    """
+    if fig is None:
+        fig = go.Figure()
+
+    if image_source is None:
+        return fig
+
+    source = str(image_source)
+
+    if not source.startswith(("http://", "https://", "data:")):
+        source = image_file_to_data_uri(image_source)
+
+    fig.add_layout_image(
+        dict(
+            source=source,
+            xref="x",
+            yref="y",
+            x=x_min,
+            y=y_max,
+            sizex=x_max - x_min,
+            sizey=y_max - y_min,
+            xanchor="left",
+            yanchor="top",
+            sizing="stretch",
+            opacity=opacity,
+            layer="below",
+        )
+    )
+
+    if set_axis_ranges:
+        fig.update_xaxes(range=[x_min, x_max])
+        fig.update_yaxes(range=[y_min, y_max])
+
+    if lock_aspect_ratio:
+        fig.update_yaxes(
+            scaleanchor="x",
+            scaleratio=1,
+        )
+
+    fig.update_layout(
+        plot_bgcolor="rgba(0,0,0,0)",
+        paper_bgcolor="rgba(0,0,0,0)",
+    )
+
+    return fig
+
+
+import math
+
+from astronomy_types import Coordinate3D, Scalar
+
+
+def synthetic_iss_like_itrs_positions(
+    samples: int = 360,
+    orbits: float = 2.0,
+    radius_km: float = 6790.0,
+    inclination_degrees: float = 51.6,
+    orbital_period_seconds: float = 92.68 * 60.0,
+    initial_longitude_degrees: float = 0.0,
+) -> list[Coordinate3D[Scalar]]:
+    """
+    Generate synthetic ISS-like ITRS positions for ground-track testing.
+
+    This is not precise orbital propagation. It is a deterministic visual/test
+    fixture with:
+    - circular orbit
+    - fixed inclination
+    - spherical Earth
+    - Earth rotating underneath the orbital plane
+
+    Returns Earth-fixed Cartesian coordinates in kilometres.
+    """
+
+    def wrap_degrees(longitude: float) -> float:
+        return ((longitude + 180.0) % 360.0) - 180.0
+
+    def itrs_position_from_longitude_latitude(
+        longitude_degrees: float,
+        latitude_degrees: float,
+    ) -> Coordinate3D[Scalar]:
+        longitude = math.radians(longitude_degrees)
+        latitude = math.radians(latitude_degrees)
+
+        return Coordinate3D(
+            x=Scalar(radius_km * math.cos(latitude) * math.cos(longitude)),
+            y=Scalar(radius_km * math.cos(latitude) * math.sin(longitude)),
+            z=Scalar(radius_km * math.sin(latitude)),
+        )
+
+    inclination = math.radians(inclination_degrees)
+    duration_seconds = orbits * orbital_period_seconds
+    earth_rotation_rate_degrees_per_second = 360.0 / 86164.0905
+
+    positions: list[Coordinate3D[Scalar]] = []
+
+    for index in range(samples):
+        time_seconds = duration_seconds * index / max(samples - 1, 1)
+        argument_of_latitude = 2.0 * math.pi * time_seconds / orbital_period_seconds
+
+        latitude_degrees = math.degrees(
+            math.asin(math.sin(inclination) * math.sin(argument_of_latitude))
+        )
+
+        inertial_longitude_degrees = math.degrees(
+            math.atan2(
+                math.cos(inclination) * math.sin(argument_of_latitude),
+                math.cos(argument_of_latitude),
+            )
+        )
+
+        longitude_degrees = wrap_degrees(
+            initial_longitude_degrees
+            + inertial_longitude_degrees
+            - earth_rotation_rate_degrees_per_second * time_seconds
+        )
+
+        positions.append(
+            itrs_position_from_longitude_latitude(
+                longitude_degrees,
+                latitude_degrees,
+            )
+        )
+
+    return positions

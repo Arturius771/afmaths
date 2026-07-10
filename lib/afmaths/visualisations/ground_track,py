@@ -1,0 +1,62 @@
+from pathlib import Path
+
+import plotly.graph_objects as go
+from afmaths.physics.space.transformations import (
+    transform_geographic_coordinates_from_itrs,
+)
+from afmaths.visualisations.helpers import (
+    synthetic_iss_like_itrs_positions,
+    with_data_background_image,
+)
+from astronomy_types import Coordinate3D, Scalar
+
+BACKGROUND_IMAGE = Path(__file__).with_name("Earth-hires.jpg")
+
+
+def build_ground_track_figure(positions: list[Coordinate3D[Scalar]]) -> go.Figure:
+
+    geographic_coordinates = [
+        transform_geographic_coordinates_from_itrs(position) for position in positions
+    ]
+
+    fig = go.Figure()
+
+    fig.add_trace(
+        go.Scatter(
+            x=[float(coordinate.longitude) for coordinate in geographic_coordinates],
+            y=[float(coordinate.latitude) for coordinate in geographic_coordinates],
+            mode="lines+markers",
+            name="Synthetic ISS-like ground track",
+        )
+    )
+
+    fig.update_layout(
+        title="Satellite ground track",
+        xaxis_title="Longitude",
+        yaxis_title="Latitude",
+    )
+
+    return with_data_background_image(
+        fig,
+        image_source=BACKGROUND_IMAGE,
+        x_min=-180,
+        x_max=180,
+        y_min=-90,
+        y_max=90,
+        opacity=0.3,
+        set_axis_ranges=True,
+        lock_aspect_ratio=False,
+    )
+
+
+def main() -> None:
+    build_ground_track_figure(
+        synthetic_iss_like_itrs_positions(
+            samples=100,
+            orbits=3.3,
+        )
+    ).show()
+
+
+if __name__ == "__main__":
+    main()

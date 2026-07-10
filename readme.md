@@ -4,14 +4,9 @@ A simple package of math functions. Originally this was written to enable loggin
 
 # Todo
 
-- Add tests
 - Create output functionality, which prints (in a user friendly way) the steps required
-- Doc comments
-- Document how to build/run
-- Document how to upgrade the npm package
 - Document and implement semantic versioning
 - Use currying for functions
-- Adapt hohmann transfer style to be closer to the repo's
 
 # Create and start virtual environment:
 
