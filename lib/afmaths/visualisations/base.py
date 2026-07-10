@@ -36,7 +36,7 @@ from afmaths.physics.space.celestial_mechanics import (
     periapsis_true_anomaly,
     state_vector_at_time,
 )
-from afmaths.physics.space.horizons_api import (
+from afmaths.physics.space.external.horizons_api import (
     HorizonsCommandTarget,
     get_object_state_vectors_from_horizon,
 )

@@ -47,8 +47,6 @@ def transform_geographic_coordinates_from_itrs(
 
 
 # TODO: Maybe move this?
-def radius_from_itrs(coords: Coordinate3D[Scalar]) -> Distance:
-    return Distance(vector_magnitude_3d(make_vector3d(coords.x, coords.y, coords.z)))
 
 
 # region Transformation Matrices

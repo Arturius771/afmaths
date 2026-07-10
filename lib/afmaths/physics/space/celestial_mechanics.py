@@ -36,6 +36,7 @@ from afmaths.tensors import (
     vector_multiplication_3d,
     vector_negate,
     vector_normalise,
+    vector_subtract_3d,
 )
 
 from afmaths.geometry.geometry import (
@@ -66,6 +67,7 @@ from afmaths.operation import (
 from astronomy_types import (
     Acceleration,
     Coordinate2D,
+    Coordinate3D,
     EccentricAnomaly,
     GravitationalParameter,
     Latitude,
@@ -320,6 +322,13 @@ def radial_velocity(state: StateVector) -> Velocity:
     )
 
 
+def velocity_at_radius(
+    r: Distance,
+    mu: GravitationalParameter = EARTH_MU_KM_CUBED,
+) -> Velocity:
+    return Velocity(Scalar(square_root(divide_by(r)(mu))))
+
+
 # region ## Radius
 
 
@@ -348,13 +357,6 @@ def gravitational_acceleration_at_altitude(
     )
 
 
-def velocity_at_radius(
-    r: Distance,
-    mu: GravitationalParameter = EARTH_MU_KM_CUBED,
-) -> Velocity:
-    return Velocity(Scalar(square_root(divide_by(r)(mu))))
-
-
 def orbit_radius(
     alt: Distance, central_body_radius: Distance = EARTH_RADIUS_KM
 ) -> Distance:
@@ -365,6 +367,24 @@ def orbit_altitude(
     radius: Distance, central_body_radius: Distance = EARTH_RADIUS_KM
 ) -> Distance:
     return Distance(subtract(central_body_radius)(radius))
+
+
+def distance_satellite_observer(
+    itrs_position: PositionVector, observer: Coordinate3D
+) -> Distance:
+    return Distance(
+        Scalar(
+            vector_magnitude_3d(
+                vector_subtract_3d(
+                    itrs_position, make_vector3d(observer.x, observer.y, observer.z)
+                )
+            )
+        )
+    )
+
+
+def orbital_radius_from_itrs(coords: Coordinate3D[Scalar]) -> Distance:
+    return Distance(vector_magnitude_3d(make_vector3d(coords.x, coords.y, coords.z)))
 
 
 # region ## Angular Momentum

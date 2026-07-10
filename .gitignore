@@ -8,3 +8,4 @@ __pycache__/
 RFM_02.ipynb
 venv/
 build/
+secrets.txt

@@ -77,6 +77,22 @@ def radians_from_degrees(degrees: Degrees) -> Radians:
     return Radians(Scalar(math.radians(float(degrees))))
 
 
+def radians_from_string(degrees_str: str) -> Radians:
+    return Radians(Scalar(float(math.radians(float(degrees_str)))))
+
+
+def radians_from_dms(dms: DMS) -> Radians:
+    return radians_from_degrees(degrees_from_dms(dms))
+
+
+def radians_from_hms(hms: HMS) -> Radians:
+    return radians_from_degrees(degrees_from_hms(hms))
+
+
+def degrees_from_radians(radians: Radians) -> Degrees:
+    return Degrees(Scalar(math.degrees(radians)))
+
+
 def degrees_from_dms(dms: DMS) -> Degrees:
     sign = -1 if dms.degrees < 0 else 1
     return Degrees(
@@ -84,16 +100,8 @@ def degrees_from_dms(dms: DMS) -> Degrees:
     )
 
 
-def radians_from_dms(dms: DMS) -> Radians:
-    return radians_from_degrees(degrees_from_dms(dms))
-
-
 def degrees_from_hms(hms: HMS) -> Degrees:
     return Degrees(Scalar(15 * (hms.hours + hms.minutes / 60 + hms.seconds / 3600)))
-
-
-def radians_from_hms(hms: HMS) -> Radians:
-    return radians_from_degrees(degrees_from_hms(hms))
 
 
 def degrees_from_hours(hours: DecimalTime) -> Degrees:

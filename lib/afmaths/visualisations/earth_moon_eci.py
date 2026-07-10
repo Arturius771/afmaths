@@ -2,7 +2,7 @@ import datetime
 
 from astronomy_types import GravitationalParameter, Scalar
 
-from afmaths.physics.space.horizons_api import HorizonsCommandTarget
+from afmaths.physics.space.external.horizons_api import HorizonsCommandTarget
 from afmaths.visualisations.base import (
     BodyPlotConfig,
     OrbitPlotSettings,
