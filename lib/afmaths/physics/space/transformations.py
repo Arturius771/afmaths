@@ -4,7 +4,9 @@ from astronomy_types import (
     Degrees,
     Distance,
     GeographicCoordinates,
+    JulianDate,
     OrbitalElements,
+    Radians,
     Scalar,
     Vector3D,
 )
@@ -12,6 +14,8 @@ from afmaths.geometry.transformations import (
     orthonormal_frame_transform_3d,
     rotation_matrix_3d,
 )
+from afmaths.operation import DOUBLE, add, multiply
+from afmaths.physics.space.astronomy.time_functions import j200_from_julian_Date
 from afmaths.physics.space.type_conversion_helpers import make_vector2d, make_vector3d
 from afmaths.tensors import vector_magnitude, vector_magnitude_3d
 from afmaths.types import TransformationMatrix3D
@@ -46,7 +50,20 @@ def transform_geographic_coordinates_from_itrs(
     )
 
 
-# TODO: Maybe move this?
+def earth_rotation_angle(jd: JulianDate) -> Radians:
+    # ISG lecture no. 2
+    return Radians(
+        Scalar(
+            DOUBLE(
+                multiply(math.pi)(
+                    add(0.7790572732640)(
+                        multiply(1.00273781191135448)(j200_from_julian_Date(jd))
+                    )
+                )
+            )
+            % DOUBLE(math.pi)
+        )
+    )
 
 
 # region Transformation Matrices

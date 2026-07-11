@@ -106,6 +106,26 @@ def julian_date_from_greenwich(date: Date) -> JulianDate:
     return JulianDate(Scalar(b + c + d + day + 1720994.5))
 
 
+def julian_date_from_full_Date(full_date: FullDate) -> JulianDate:
+    # ISG Lecture no.2
+    fd = (
+        full_date.time.hour / 24
+        + full_date.time.minute / 1440
+        + full_date.time.second / 86400
+    )
+    my = int((full_date.date.month - 14) / 12)
+    return JulianDate(
+        Scalar(
+            math.floor(1461 * (full_date.date.year + 4800 + my) / 4)
+            + math.floor(367 * ((full_date.date.month - 2) - (12 * my)) / 12)
+            - math.floor(3 * math.floor((full_date.date.year + 4900 + my) / 100) / 4)
+            + full_date.date.day
+            - 32075.5
+            + fd
+        )
+    )
+
+
 def greenwich_date_from_julian(julian_date: JulianDate) -> Date:
     jd = float(julian_date) + 0.5
     i = math.floor(jd)
@@ -334,3 +354,62 @@ def greenwich_sidereal_time_from_local_sidereal(
     greenwich_sidereal_time = (float(lst_decimal) - offset_hours) % 24
 
     return hms_from_decimal(DecimalTime(Scalar(greenwich_sidereal_time)))
+
+
+def modified_julian_Date(jd: JulianDate) -> JulianDate:
+    return JulianDate(Scalar(jd - 2400000.5))
+
+
+def hours_from_seconds(seconds: Second) -> Hour:
+    return Hour(int(seconds / 3600))
+
+
+def minutes_from_seconds(seconds: Second) -> Minute:
+    return Minute(int(seconds / 60))
+
+
+def time_from_seconds(total_seconds: Second) -> Time:
+    hours = hours_from_seconds(total_seconds)
+
+    seconds_after_hours = Second(Scalar(float(total_seconds - hours * 3600)))
+    minutes = minutes_from_seconds(seconds_after_hours)
+
+    remaining_seconds = Second(Scalar(float(seconds_after_hours - minutes * 60)))
+
+    return Time(hours, minutes, remaining_seconds)
+
+
+def time_from_percentage(percentage: float) -> Time:
+    """Calculates the time based on what percentage of the day has elapsed."""
+    if not 0 <= percentage < 1:
+        raise ValueError(f"Day fraction must be between 0 and 1, received {percentage}")
+
+    return time_from_seconds(Second(Scalar(86400 * percentage)))
+
+
+def date_from_day_number(day_number: int, year: Year) -> Date:
+    month = 1
+    day = 1
+    month_days = [
+        31,
+        29 if year_is_leap(year) else 28,
+        31,
+        30,
+        31,
+        30,
+        31,
+        31,
+        30,
+        31,
+        30,
+        31,
+    ]
+    sum = 0
+    for index in range(len((month_days))):
+        sum += month_days[index]
+        if sum >= day_number:
+            month = index + 1
+            day = day_number - sum + month_days[index]
+            break
+
+    return Date(year, Month(int(month)), Day(Scalar(day)))

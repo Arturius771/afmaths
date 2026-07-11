@@ -9,7 +9,6 @@ from astronomy_types import (
     FullDate,
     Hour,
     JulianDate,
-    Longitude,
     Minute,
     Month,
     Radians,
@@ -21,11 +20,15 @@ from astronomy_types import (
 
 from afmaths.physics.space.type_conversion_helpers import radians_from_degrees
 from afmaths.physics.space.astronomy.time_functions import (
+    date_from_day_number,
     date_of_easter,
     day_number_from_date,
     hms_from_decimal,
     finding_day_of_week,
+    julian_date_from_full_Date,
+    time_from_seconds,
     local_sidereal_time_from_greenwich_sidereal,
+    time_from_percentage,
     universal_time_from_greenwich,
     julian_date_from_greenwich,
     decimal_time_from_hms,
@@ -301,6 +304,98 @@ class TimeTestMethods(unittest.TestCase):
         self.assertFalse(year_is_leap(Year(2023)))
         self.assertTrue(year_is_leap(Year(2024)))
         self.assertTrue(year_is_leap(Year(2048)))
+
+    def test_time_from_seconds(self):
+        self.assertEqual(
+            time_from_seconds(Second(Scalar(86400))),
+            Time(hour=Hour(int(24)), minute=Minute(int(0)), second=Second(Scalar(0))),
+        )
+        self.assertEqual(
+            time_from_seconds(Second(Scalar(86399))),
+            Time(hour=Hour(int(23)), minute=Minute(int(59)), second=Second(Scalar(59))),
+        )
+        self.assertEqual(
+            time_from_seconds(Second(Scalar(1))),
+            Time(hour=Hour(int(0)), minute=Minute(int(0)), second=Second(Scalar(1))),
+        )
+        self.assertEqual(
+            time_from_seconds(Second(Scalar(61))),
+            Time(hour=Hour(int(0)), minute=Minute(int(1)), second=Second(Scalar(1))),
+        )
+        self.assertEqual(
+            time_from_seconds(Second(Scalar(3661))),
+            Time(hour=Hour(int(1)), minute=Minute(int(1)), second=Second(Scalar(1))),
+        )
+
+    def test_time_from_day_fraction(self):
+
+        self.assertEqual(
+            time_from_percentage(0.10),
+            Time(hour=Hour(int(2)), minute=Minute(int(24)), second=Second(Scalar(0))),
+        )
+
+        self.assertEqual(
+            time_from_percentage(0.99),
+            Time(hour=Hour(int(23)), minute=Minute(int(45)), second=Second(Scalar(36))),
+        )
+
+    def test_date_from_day_number(self):
+        self.assertEqual(
+            date_from_day_number(1, Year(int(2026))),
+            Date(Year(int(2026)), Month(int(1)), Day(Scalar(1))),
+        )
+        self.assertEqual(
+            date_from_day_number(365, Year(int(3009))),
+            Date(Year(int(3009)), Month(int(12)), Day(Scalar(31))),
+        )
+        self.assertEqual(
+            date_from_day_number(60, Year(int(2048))),
+            Date(Year(int(2048)), Month(int(2)), Day(Scalar(29))),
+        )
+        self.assertEqual(
+            date_from_day_number(366, Year(int(2048))),
+            Date(Year(int(2048)), Month(int(12)), Day(Scalar(31))),
+        )
+        self.assertEqual(
+            date_from_day_number(60, Year(int(2050))),
+            Date(Year(int(2050)), Month(int(3)), Day(Scalar(1))),
+        )
+
+    def test_julian_date_from_full_Date(self):
+        self.assertEqual(
+            julian_date_from_full_Date(
+                FullDate(
+                    Date(
+                        Year(int(2026)),
+                        Month(int(7)),
+                        Day(Scalar(10)),
+                    ),
+                    Time(
+                        hour=Hour(int(0)),
+                        minute=Minute(int(0)),
+                        second=Second(Scalar(0)),
+                    ),
+                )
+            ),
+            2461231.5000000,
+        )
+        self.assertEqual(
+            julian_date_from_full_Date(
+                FullDate(
+                    Date(
+                        Year(int(2026)),
+                        Month(int(7)),
+                        Day(Scalar(8)),
+                    ),
+                    Time(
+                        hour=Hour(int(13)),
+                        minute=Minute(int(56)),
+                        second=Second(Scalar(43)),
+                    ),
+                )
+            ),
+            2461230.0810532407,
+        )
 
 
 if __name__ == "__main__":

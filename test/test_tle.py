@@ -4,21 +4,45 @@ from afmaths.constants import ISS_TLE_EXAMPLE
 from afmaths.physics.space.engineering.two_line_elements import (
     parse_argument_of_periapsis,
     parse_eccentricity,
-    parse_epoch,
+    parse_full_date,
     parse_inclinatition,
     parse_mean_anomaly,
     parse_mean_motion,
     parse_right_ascension_ascending_node,
 )
 from afmaths.physics.space.type_conversion_helpers import degrees_from_radians
+from astronomy_types import (
+    Date,
+    Day,
+    FullDate,
+    Hour,
+    Minute,
+    Month,
+    Scalar,
+    Second,
+    Time,
+    Year,
+)
 
 
 class TLETestMethods(unittest.TestCase):
 
-    def test_parse_epoch(self):
-        self.assertEqual(parse_epoch(ISS_TLE_EXAMPLE), 26191.34711344)
-
-        # self.assertEqual() # TODO: add date/hms test
+    def test_parse_full_date(self):
+        self.assertEqual(
+            parse_full_date(ISS_TLE_EXAMPLE),
+            FullDate(
+                Date(
+                    Year(int(2026)),
+                    Month(int(7)),
+                    Day(Scalar(10)),
+                ),
+                Time(
+                    hour=Hour(int(8)),
+                    minute=Minute(int(19)),
+                    second=Second(Scalar(50.60121599999911)),
+                ),
+            ),
+        )
 
     def test_parse_inclination(self):
         self.assertEqual(
