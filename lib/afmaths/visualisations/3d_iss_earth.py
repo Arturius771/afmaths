@@ -16,7 +16,7 @@ from afmaths.visualisations.base import (
 
 DISTANCE_SCALE_KM = 1000
 BODY_RADIUS_SCALE = 1.0
-ORBIT_POINTS = 50
+ORBIT_POINTS = 100
 
 EARTH_RADIUS_KM = 6_371.0
 ISS_RADIUS = 200
@@ -36,7 +36,7 @@ if __name__ == "__main__":
 
     build_3d_orbit_figure(
         settings=settings,
-        title="Earth-Moon system",
+        title="Earth Artifical Satellites",
         central_body_name="Earth",
         central_body_radius_km=EARTH_RADIUS_KM,
         central_body_radius_scale=BODY_RADIUS_SCALE,
@@ -46,6 +46,19 @@ if __name__ == "__main__":
                 target=orbital_elements_from_tle(get_tle_from_norad_id(ISS_NORAD_ID)),
                 radius_km=ISS_RADIUS,
                 radius_scale=BODY_RADIUS_SCALE,
-            )
+            ),
+            BodyPlotConfig(
+                name="39122",
+                target=orbital_elements_from_tle(get_tle_from_norad_id(39122)),
+                radius_km=ISS_RADIUS,
+                radius_scale=BODY_RADIUS_SCALE,
+            ),
+            BodyPlotConfig(
+                name="25847",
+                target=orbital_elements_from_tle(get_tle_from_norad_id(25847)),
+                radius_km=ISS_RADIUS,
+                radius_scale=BODY_RADIUS_SCALE,
+            ),
         ],
     ).show()
+25847
