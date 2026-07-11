@@ -597,20 +597,27 @@ def add_orbiting_body_to_traces(
 ) -> None:
     from afmaths.visualisations.helpers import add_body_surface
 
-    horizon_state_vectors = get_object_state_vectors_from_horizon(
-        target=HorizonsCommandTarget(body.target),
-        centre=settings.centre,
-        start_time=fulldate_from_python_datetime(settings.start_time),
-        stop_time=fulldate_from_python_datetime(settings.stop_time),
-    )
+    if isinstance(body.target, HorizonsCommandTarget):
 
-    if len(horizon_state_vectors) < 1:
-        raise ValueError(f"No Horizons state vectors returned for {body.name}")
+        horizon_state_vectors = get_object_state_vectors_from_horizon(
+            target=HorizonsCommandTarget(body.target),
+            centre=settings.centre,
+            start_time=fulldate_from_python_datetime(settings.start_time),
+            stop_time=fulldate_from_python_datetime(settings.stop_time),
+        )
 
-    orbital_elements = orbital_elements_from_state_vectors(
-        horizon_state_vectors[0],
-        mu=settings.gravitational_parameter,
-    )
+        if len(horizon_state_vectors) < 1:
+            raise ValueError(f"No Horizons state vectors returned for {body.name}")
+
+        orbital_elements = orbital_elements_from_state_vectors(
+            horizon_state_vectors[0],
+            mu=settings.gravitational_parameter,
+        )
+    elif isinstance(body.target, OrbitalElements):
+        orbital_elements = body.target
+    else:
+        print(body.target)
+        raise ValueError("Orbital elements ain't right")
 
     model_current_state = state_vector_at_time(
         orbital_elements,

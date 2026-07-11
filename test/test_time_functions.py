@@ -18,6 +18,7 @@ from astronomy_types import (
     Year,
 )
 
+from afmaths.constants import SECONDS_PER_DAY
 from afmaths.physics.space.type_conversion_helpers import radians_from_degrees
 from afmaths.physics.space.astronomy.time_functions import (
     date_from_day_number,
@@ -307,7 +308,7 @@ class TimeTestMethods(unittest.TestCase):
 
     def test_time_from_seconds(self):
         self.assertEqual(
-            time_from_seconds(Second(Scalar(86400))),
+            time_from_seconds(Second(Scalar(SECONDS_PER_DAY))),
             Time(hour=Hour(int(24)), minute=Minute(int(0)), second=Second(Scalar(0))),
         )
         self.assertEqual(

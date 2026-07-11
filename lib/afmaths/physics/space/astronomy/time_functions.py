@@ -17,6 +17,7 @@ from astronomy_types import (
     Year,
 )
 
+from afmaths.constants import SECONDS_PER_DAY
 from afmaths.operation import is_divisible
 from afmaths.physics.space.type_conversion_helpers import (
     time_from_decimal_time,
@@ -111,7 +112,7 @@ def julian_date_from_full_Date(full_date: FullDate) -> JulianDate:
     fd = (
         full_date.time.hour / 24
         + full_date.time.minute / 1440
-        + full_date.time.second / 86400
+        + full_date.time.second / SECONDS_PER_DAY
     )
     my = int((full_date.date.month - 14) / 12)
     return JulianDate(
@@ -384,7 +385,7 @@ def time_from_percentage(percentage: float) -> Time:
     if not 0 <= percentage < 1:
         raise ValueError(f"Day fraction must be between 0 and 1, received {percentage}")
 
-    return time_from_seconds(Second(Scalar(86400 * percentage)))
+    return time_from_seconds(Second(Scalar(SECONDS_PER_DAY * percentage)))
 
 
 def date_from_day_number(day_number: int, year: Year) -> Date:

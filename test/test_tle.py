@@ -1,15 +1,16 @@
 import unittest
 
-from afmaths.constants import ISS_TLE_EXAMPLE
+from afmaths.constants import ISS_NORAD_ID, ISS_TLE_EXAMPLE
 from afmaths.physics.space.engineering.two_line_elements import (
     parse_argument_of_periapsis,
     parse_eccentricity,
     parse_full_date,
-    parse_inclinatition,
+    parse_inclination,
     parse_mean_anomaly,
-    parse_mean_motion,
+    parse_mean_motion_per_day,
     parse_right_ascension_ascending_node,
 )
+from afmaths.physics.space.external.space_track_api import get_tle_from_norad_id
 from afmaths.physics.space.type_conversion_helpers import degrees_from_radians
 from astronomy_types import (
     Date,
@@ -46,7 +47,7 @@ class TLETestMethods(unittest.TestCase):
 
     def test_parse_inclination(self):
         self.assertEqual(
-            degrees_from_radians(parse_inclinatition(ISS_TLE_EXAMPLE)), 51.6302
+            degrees_from_radians(parse_inclination(ISS_TLE_EXAMPLE)), 51.6302
         )
 
     def test_parse_right_ascension_ascending_node(self):
@@ -69,7 +70,13 @@ class TLETestMethods(unittest.TestCase):
         )
 
     def test_parse_mean_motionn(self):
-        self.assertEqual(parse_mean_motion(ISS_TLE_EXAMPLE), 15.48968037575346)
+        self.assertEqual(parse_mean_motion_per_day(ISS_TLE_EXAMPLE), 15.48968037)
+
+    # Don't run this test frequently, and the eccentricity will change
+    # def test_space_track(self):
+    #     self.assertEqual(
+    #         parse_eccentricity(get_tle_from_norad_id(ISS_NORAD_ID)), 0.0006688
+    #     )
 
 
 if __name__ == "__main__":

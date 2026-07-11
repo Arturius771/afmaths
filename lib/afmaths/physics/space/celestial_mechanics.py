@@ -6,6 +6,7 @@ from afmaths.constants import (
     EARTH_MU_KM_CUBED,
     EARTH_RADIUS_KM,
     GRAVITATIONAL_CONSTANT,
+    SECONDS_PER_DAY,
     UNIT_VECTOR_XY_PLANE,
 )
 from afmaths.geometry.transformations import (
@@ -271,6 +272,10 @@ def distance_between_positions(pos1: PositionVector, pos2: PositionVector) -> Di
         coordinate3d_from_vector(vector3d_from_position(pos1)),
         coordinate3d_from_vector(vector3d_from_position(pos2)),
     )
+
+
+def orbital_period_from_mean_motion(mean_motion_per_day: MeanMotion) -> Second:
+    return Second(Scalar(divide_by(mean_motion_per_day)(SECONDS_PER_DAY)))
 
 
 # region ## Latitude
@@ -886,7 +891,7 @@ def semi_major_axis_from_state_vectors(
 
 
 def semi_major_axis_from_period(
-    orbital_period: Second, mu: GravitationalParameter
+    orbital_period: Second, mu: GravitationalParameter = EARTH_MU_KM_CUBED
 ) -> SemiMajorAxis:
     return exponentiate(divide_by(3)(2))(
         divide_by(DOUBLE(math.pi))(multiply(square_root(mu))(orbital_period))
