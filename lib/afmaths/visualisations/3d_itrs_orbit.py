@@ -1,14 +1,22 @@
 import datetime
 
 from astronomy_types import Epoch, GravitationalParameter, Scalar, JulianDate, Second
-from afmaths.constants import ISS_NORAD_ID, MINUTES_PER_DAY
+from afmaths.constants import (
+    BEIDOU_IGSO_6,
+    EUTELSAT_EUTE_117_NORAD_ID,
+    GALILEO_7_NORAD_ID,
+    ISS_NORAD_ID,
+    MINUTES_PER_DAY,
+    MOLNIYA_3_50_NORAD_ID,
+)
+from afmaths.physics.space.astronomy.time_functions import julian_date_from_full_Date
 from afmaths.physics.space.celestial_mechanics import (
     EARTH_MU_KM_CUBED,
     state_vector_at_time,
 )
 from afmaths.physics.space.engineering.two_line_elements import (
     orbital_elements_from_tle,
-    parse_epoch,
+    parse_full_date,
 )
 from afmaths.physics.space.external.space_track_api import get_tle_from_norad_id
 from afmaths.physics.space.transformations import itrs_positions_from_gcrs_position
@@ -20,9 +28,10 @@ BODY_RADIUS_SCALE = 5.0
 ORBIT_POINTS = 50
 EARTH_RADIUS_KM = 6_371.0
 EARTH_GRAVITATIONAL_PARAMETER = GravitationalParameter(Scalar(398_600.4418))
+TARGET_ID = BEIDOU_IGSO_6
 
 if __name__ == "__main__":
-    tle = get_tle_from_norad_id(ISS_NORAD_ID)
+    tle = get_tle_from_norad_id(TARGET_ID)
     orbital_elements = orbital_elements_from_tle(tle)
 
     gcrs_positions = [
@@ -35,12 +44,11 @@ if __name__ == "__main__":
     ]
 
     # assuming this has already been converted properly to a real JulianDate
-    epoch = Epoch(JulianDate(Scalar(float(parse_epoch(tle)))))
-
-    itrs_positions = itrs_positions_from_gcrs_position(
-        gcrs_positions,
-        epoch,
+    epoch = Epoch(
+        JulianDate(Scalar(float(julian_date_from_full_Date(parse_full_date(tle)))))
     )
+
+    itrs_positions = itrs_positions_from_gcrs_position(gcrs_positions, epoch)
 
     settings = OrbitPlotSettings(
         centre=HorizonsCommandTarget.EARTH,
@@ -55,7 +63,7 @@ if __name__ == "__main__":
     build_3d_itrs_orbit_figure(
         settings=settings,
         itrs_positions=itrs_positions,
-        title="ISS ITRS orbit view",
+        title=f"{TARGET_ID} ITRS orbit view",
         central_body_name="Earth",
         central_body_radius_km=EARTH_RADIUS_KM,
         central_body_radius_scale=1.0,

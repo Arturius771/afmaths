@@ -2,15 +2,23 @@ import math
 from pathlib import Path
 
 import plotly.graph_objects as go
-from afmaths.constants import ISS_NORAD_ID, MINUTES_PER_DAY
-from afmaths.physics.space.astronomy.time_functions import seconds_from_minutes
+from afmaths.constants import (
+    BEIDOU_IGSO_6,
+    GALILEO_7_NORAD_ID,
+    ISS_NORAD_ID,
+    MINUTES_PER_DAY,
+    MOLNIYA_3_50_NORAD_ID,
+)
+from afmaths.physics.space.astronomy.time_functions import (
+    julian_date_from_full_Date,
+    seconds_from_minutes,
+)
 from afmaths.physics.space.celestial_mechanics import (
     state_vector_at_time,
-    state_vector_from_orbital_elements,
 )
 from afmaths.physics.space.engineering.two_line_elements import (
     orbital_elements_from_tle,
-    parse_epoch,
+    parse_full_date,
 )
 from afmaths.physics.space.external.space_track_api import get_tle_from_norad_id
 from afmaths.physics.space.transformations import (
@@ -20,12 +28,10 @@ from afmaths.physics.space.transformations import (
 from afmaths.visualisations.helpers import (
     PlotNode,
     add_plot_nodes,
-    synthetic_iss_like_itrs_positions,
     with_data_background_image,
 )
 from astronomy_types import (
     Coordinate2D,
-    Coordinate3D,
     Epoch,
     JulianDate,
     Minute,
@@ -34,6 +40,7 @@ from astronomy_types import (
 )
 
 BACKGROUND_IMAGE = Path(__file__).with_name("Earth-hires.jpg")
+TARGET_ID = BEIDOU_IGSO_6
 
 
 def build_ground_track_figure(positions: list[PositionVector]) -> go.Figure:
@@ -54,7 +61,7 @@ def build_ground_track_figure(positions: list[PositionVector]) -> go.Figure:
     )
 
     fig.update_layout(
-        title="Satellite ground track",
+        title=f"Satellite {TARGET_ID} ground track",
         xaxis_title="Longitude",
         yaxis_title="Latitude",
     )
@@ -95,7 +102,7 @@ if __name__ == "__main__":
     #         orbits=3.3,
     #     )
     # ).show()
-    tle = get_tle_from_norad_id(39122)
+    tle = get_tle_from_norad_id(TARGET_ID)
     orbital_elements = orbital_elements_from_tle(tle)
 
     build_ground_track_figure(
@@ -107,6 +114,10 @@ if __name__ == "__main__":
                 ).position
                 for minute in range(MINUTES_PER_DAY)
             ],
-            Epoch(JulianDate(Scalar(float(parse_epoch(tle))))),
+            Epoch(
+                JulianDate(
+                    Scalar(float(julian_date_from_full_Date(parse_full_date(tle))))
+                )
+            ),
         )
     ).show()

@@ -69,11 +69,23 @@ def earth_rotation_angle(jd: JulianDate) -> Radians:
     )
 
 
+def itrs_position_from_gmst_passive(
+    gmst: Radians, gcrs_position: PositionVector
+) -> PositionVector:
+    itrs_position = orthonormal_frame_transform_3d(
+        z_axis_passive_rotation(gmst),
+        make_vector3d(gcrs_position.x, gcrs_position.y, gcrs_position.z),
+    )
+    return PositionVector(
+        Position(itrs_position.x), Position(itrs_position.y), Position(itrs_position.z)
+    )
+
+
 def itrs_position_from_gmst(
     gmst: Radians, gcrs_position: PositionVector
 ) -> PositionVector:
     itrs_position = orthonormal_frame_transform_3d(
-        z_axis_rotation(gmst),
+        z_axis_active_rotation(gmst),
         make_vector3d(gcrs_position.x, gcrs_position.y, gcrs_position.z),
     )
     return PositionVector(
@@ -82,8 +94,7 @@ def itrs_position_from_gmst(
 
 
 def itrs_positions_from_gcrs_position(
-    gcrs_positions: list[PositionVector],
-    epoch: Epoch,
+    gcrs_positions: list[PositionVector], epoch: Epoch
 ) -> list[PositionVector]:
     itrs_positions: list[PositionVector] = []
 
@@ -92,7 +103,7 @@ def itrs_positions_from_gcrs_position(
         gmst = greenwich_mean_sidereal_time_radians_from_julian_date(
             current_julian_date
         )
-        itrs_positions.append(itrs_position_from_gmst(gmst, gcrs_position))
+        itrs_positions.append(itrs_position_from_gmst_passive(gmst, gcrs_position))
 
     return itrs_positions
 
@@ -160,7 +171,69 @@ def transform_element_reference_frame_from_perifocal(
     )
 
 
-def x_axis_rotation(angle: Radians) -> TransformationMatrix3D:
+def x_axis_passive_xrotation(angle: Radians) -> TransformationMatrix3D:
+    """Passive coordinate-frame rotation about the x-axis."""
+    return rotation_matrix_3d(
+        make_vector3d(
+            Scalar(1),
+            Scalar(0),
+            Scalar(0),
+        ),
+        make_vector3d(
+            Scalar(0),
+            Scalar(math.cos(angle)),
+            Scalar(negate(math.sin(angle))),
+        ),
+        make_vector3d(
+            Scalar(0),
+            Scalar(math.sin(angle)),
+            Scalar(math.cos(angle)),
+        ),
+    )
+
+
+def y_axis_passive_rotation(angle: Radians) -> TransformationMatrix3D:
+    """Passive coordinate-frame rotation about the y-axis."""
+    return rotation_matrix_3d(
+        make_vector3d(
+            Scalar(math.cos(angle)),
+            Scalar(0),
+            Scalar(math.sin(angle)),
+        ),
+        make_vector3d(
+            Scalar(0),
+            Scalar(1),
+            Scalar(0),
+        ),
+        make_vector3d(
+            Scalar(negate(math.sin(angle))),
+            Scalar(0),
+            Scalar(math.cos(angle)),
+        ),
+    )
+
+
+def z_axis_passive_rotation(angle: Radians) -> TransformationMatrix3D:
+    return rotation_matrix_3d(
+        make_vector3d(
+            Scalar(math.cos(angle)),
+            Scalar(negate(math.sin(angle))),
+            Scalar(0),
+        ),
+        make_vector3d(
+            Scalar(math.sin(angle)),
+            Scalar(math.cos(angle)),
+            Scalar(0),
+        ),
+        make_vector3d(
+            Scalar(0),
+            Scalar(0),
+            Scalar(1),
+        ),
+    )
+
+
+def x_axis_active_rotation(angle: Radians) -> TransformationMatrix3D:
     return rotation_matrix_3d(
         make_vector3d(Scalar(1), Scalar(0), Scalar(0)),
         make_vector3d(Scalar(0), Scalar(math.cos(angle)), Scalar(math.sin(angle))),
@@ -170,7 +243,7 @@ def x_axis_rotation(angle: Radians) -> TransformationMatrix3D:
     )
 
 
-def y_axis_rotation(angle: Radians) -> TransformationMatrix3D:
+def y_axis_active_rotation(angle: Radians) -> TransformationMatrix3D:
     return rotation_matrix_3d(
         make_vector3d(
             Scalar(math.cos(angle)), Scalar(0), Scalar(negate(math.sin(angle)))
@@ -180,7 +253,7 @@ def y_axis_rotation(angle: Radians) -> TransformationMatrix3D:
     )
 
 
-def z_axis_rotation(angle: Radians) -> TransformationMatrix3D:
+def z_axis_active_rotation(angle: Radians) -> TransformationMatrix3D:
     return rotation_matrix_3d(
         make_vector3d(Scalar(math.cos(angle)), Scalar(math.sin(angle)), Scalar(0)),
         make_vector3d(
