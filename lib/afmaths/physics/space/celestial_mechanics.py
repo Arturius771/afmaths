@@ -592,7 +592,7 @@ def state_vector_from_orbital_elements(
 ) -> StateVector:
     """Calculates the state vectors (position and velocity) of an orbit from the orbital elements.
 
-    The reference frame for the state vector will match the reference frame for the orbital elements.
+    The reference frame for the state vector will match the reference frame for the orbital elements. However it is calculated using idea two body interactions. Perturbations are not accounted for.
     """
 
     perifocal_position_gaussian = perifocal_position_vector(orbital_elements)

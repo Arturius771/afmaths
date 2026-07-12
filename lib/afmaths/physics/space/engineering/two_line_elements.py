@@ -195,11 +195,6 @@ def parse_mean_motion_per_day(tle: str) -> MeanMotion:
     )
 
 
-# meanAnomaly = mod( ...
-#             startMeanAnomalyRadians + timeDayOffsets(epochIndex) * meanMotionPerDay * 2 * pi, ...
-#             2 * pi);
-
-
 def orbital_elements_from_tle(
     tle: str, mu: GravitationalParameter = EARTH_MU_KM_CUBED
 ) -> OrbitalElements:

@@ -1,4 +1,5 @@
 import datetime
+import random
 
 from astronomy_types import GravitationalParameter, Scalar
 
@@ -34,9 +35,11 @@ if __name__ == "__main__":
         add_prediction_to_orbit=False,
     )
 
+    random_tle = random.randrange(1, 69999)
+
     build_3d_orbit_figure(
         settings=settings,
-        title="Earth Artifical Satellites",
+        title="Earth Artificial Satellites",
         central_body_name="Earth",
         central_body_radius_km=EARTH_RADIUS_KM,
         central_body_radius_scale=BODY_RADIUS_SCALE,
@@ -56,6 +59,12 @@ if __name__ == "__main__":
             BodyPlotConfig(
                 name="25847",
                 target=orbital_elements_from_tle(get_tle_from_norad_id(25847)),
+                radius_km=ISS_RADIUS,
+                radius_scale=BODY_RADIUS_SCALE,
+            ),
+            BodyPlotConfig(
+                name=f"Random: {random_tle}",
+                target=orbital_elements_from_tle(get_tle_from_norad_id(random_tle)),
                 radius_km=ISS_RADIUS,
                 radius_scale=BODY_RADIUS_SCALE,
             ),
