@@ -703,3 +703,74 @@ def build_3d_orbit_figure(
         title,
         settings.distance_scale_km,
     )
+
+
+import plotly.graph_objects as go
+
+from astronomy_types import PositionVector
+from afmaths.visualisations.base import OrbitPlotSettings
+from afmaths.visualisations.helpers import (
+    add_body_surface,
+    make_3d_orbit_figure,
+    scale_position,
+)
+
+
+# Subject: 3D ITRS orbit trace construction.
+# Scales a sequence of ITRS position vectors and returns a Plotly 3D line trace.
+def add_itrs_orbit_trace(
+    name: str,
+    itrs_positions: list[PositionVector],
+    distance_scale_km: float,
+) -> go.Scatter3d:
+    x = []
+    y = []
+    z = []
+
+    for position in itrs_positions:
+        scaled = scale_position(position, distance_scale_km)
+        x.append(scaled.x)
+        y.append(scaled.y)
+        z.append(scaled.z)
+
+    return go.Scatter3d(
+        x=x,
+        y=y,
+        z=z,
+        mode="lines",
+        name=name,
+    )
+
+
+# Subject: high-level 3D ITRS orbit visualisation composition.
+# Builds a 3D figure with a central body at the origin and a supplied ITRS orbit trace.
+def build_3d_itrs_orbit_figure(
+    settings: OrbitPlotSettings,
+    itrs_positions: list[PositionVector],
+    title: str = "ITRS orbit view",
+    central_body_name: str = "Earth",
+    central_body_radius_km: float = 6_371.0,
+    central_body_radius_scale: float = 5.0,
+    orbit_name: str = "orbit",
+    central_body_opacity: float = 0.7,
+) -> go.Figure:
+    traces = [
+        add_body_surface(
+            central_body_name,
+            central_body_radius_km,
+            central_body_radius_scale,
+            settings.distance_scale_km,
+            opacity=central_body_opacity,
+        ),
+        add_itrs_orbit_trace(
+            orbit_name,
+            itrs_positions,
+            settings.distance_scale_km,
+        ),
+    ]
+
+    return make_3d_orbit_figure(
+        traces,
+        title,
+        settings.distance_scale_km,
+    )

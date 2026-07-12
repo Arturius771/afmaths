@@ -11,15 +11,30 @@ from astronomy_types import (
     Longitude,
     Minute,
     Month,
+    Radians,
     Scalar,
     Second,
     Time,
     Year,
 )
 
-from afmaths.constants import SECONDS_PER_DAY
-from afmaths.operation import is_divisible
+from afmaths.constants import (
+    HOURS_PER_DAY,
+    MINUTES_PER_DAY,
+    SECONDS_PER_DAY,
+    SECONDS_PER_MINUTE,
+)
+from afmaths.operation import (
+    CUBE,
+    SQUARE,
+    add,
+    divide_by,
+    is_divisible,
+    multiply,
+    subtract,
+)
 from afmaths.physics.space.type_conversion_helpers import (
+    radians_from_degrees,
     time_from_decimal_time,
     decimal_time_from_time,
 )
@@ -110,8 +125,8 @@ def julian_date_from_greenwich(date: Date) -> JulianDate:
 def julian_date_from_full_Date(full_date: FullDate) -> JulianDate:
     # ISG Lecture no.2
     fd = (
-        full_date.time.hour / 24
-        + full_date.time.minute / 1440
+        full_date.time.hour / HOURS_PER_DAY
+        + full_date.time.minute / MINUTES_PER_DAY
         + full_date.time.second / SECONDS_PER_DAY
     )
     my = int((full_date.date.month - 14) / 12)
@@ -227,7 +242,7 @@ def universal_time_from_local_civil(
     )
 
     universal_time = float(decimal_zone_time) - timezone_offset_correction
-    greenwich_calendar_day = float(local_date.day) + (universal_time / 24)
+    greenwich_calendar_day = float(local_date.day) + (universal_time / HOURS_PER_DAY)
 
     julian_date = julian_date_from_greenwich(
         Date(
@@ -241,7 +256,10 @@ def universal_time_from_local_civil(
 
     utc = hms_from_decimal(
         DecimalTime(
-            Scalar(24 * (greenwich_calendar_day - math.floor(greenwich_calendar_day)))
+            Scalar(
+                HOURS_PER_DAY
+                * (greenwich_calendar_day - math.floor(greenwich_calendar_day))
+            )
         )
     )
 
@@ -269,13 +287,15 @@ def universal_to_local_civil_time(
     )
 
     julian_date = julian_date_from_greenwich(greenwich_date)
-    local_julian_date = JulianDate(Scalar(julian_date + (local_civil_time / 24)))
+    local_julian_date = JulianDate(
+        Scalar(julian_date + (local_civil_time / HOURS_PER_DAY))
+    )
 
     local_date = greenwich_date_from_julian(local_julian_date)
     integer_day = math.floor(local_date.day)
 
     local_time = hms_from_decimal(
-        DecimalTime(Scalar((local_date.day - integer_day) * 24))
+        DecimalTime(Scalar((local_date.day - integer_day) * HOURS_PER_DAY))
     )
 
     return FullDate(
@@ -297,10 +317,10 @@ def greenwich_sidereal_time_from_universal(universal_time_and_date: FullDate) ->
     t = float(s) / 36525.0
 
     t0 = 6.697374558 + (2400.051336 * t) + (0.000025862 * t**2)
-    t1 = t0 % 24
+    t1 = t0 % HOURS_PER_DAY
 
     universal_time = decimal_time_from_hms(time)
-    gst = (float(universal_time) * 1.002737909 + t1) % 24
+    gst = (float(universal_time) * 1.002737909 + t1) % HOURS_PER_DAY
 
     return hms_from_decimal(DecimalTime(Scalar(gst)))
 
@@ -316,10 +336,10 @@ def universal_time_from_greenwich(
     t = s / 36525.0
 
     t0 = 6.697374558 + (2400.051336 * t) + (0.000025862 * t**2)
-    t1 = t0 % 24
+    t1 = t0 % HOURS_PER_DAY
 
     gst_decimal = decimal_time_from_hms(greenwich_sidereal_time)
-    universal_time = ((gst_decimal - t1) % 24) * 0.9972695663
+    universal_time = ((gst_decimal - t1) % HOURS_PER_DAY) * 0.9972695663
 
     utc = hms_from_decimal(DecimalTime(Scalar(universal_time)))
 
@@ -338,7 +358,7 @@ def local_sidereal_time_from_greenwich_sidereal(
     longitude_degrees = math.degrees(float(longitude))
     offset_hours = longitude_degrees / 15
 
-    local_sidereal_time = (float(gst_decimal) + offset_hours) % 24
+    local_sidereal_time = (float(gst_decimal) + offset_hours) % HOURS_PER_DAY
 
     return hms_from_decimal(DecimalTime(Scalar(local_sidereal_time)))
 
@@ -352,7 +372,7 @@ def greenwich_sidereal_time_from_local_sidereal(
     longitude_degrees = math.degrees(float(longitude))
     offset_hours = longitude_degrees / 15
 
-    greenwich_sidereal_time = (float(lst_decimal) - offset_hours) % 24
+    greenwich_sidereal_time = (float(lst_decimal) - offset_hours) % HOURS_PER_DAY
 
     return hms_from_decimal(DecimalTime(Scalar(greenwich_sidereal_time)))
 
@@ -414,3 +434,20 @@ def date_from_day_number(day_number: int, year: Year) -> Date:
             break
 
     return Date(year, Month(int(month)), Day(Scalar(day)))
+
+
+def greenwich_mean_sidereal_time_radians_from_julian_date(jd: JulianDate) -> Radians:
+    jd_centuries = (jd - 2451545.0) / 36525
+    gmstDegrees = add(280.46061837)(
+        add(multiply(360.98564736629)(jd - 2451545.0))(
+            subtract(divide_by(38710000)(CUBE(jd_centuries)))(
+                multiply(0.000387933)(SQUARE(jd_centuries))
+            )
+        )
+    )
+
+    return radians_from_degrees(gmstDegrees % 360)
+
+
+def seconds_from_minutes(min: Minute) -> Second:
+    return multiply(min)(SECONDS_PER_MINUTE)

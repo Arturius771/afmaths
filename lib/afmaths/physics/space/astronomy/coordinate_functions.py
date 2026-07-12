@@ -1,5 +1,6 @@
 import math
 
+from afmaths.constants import HOURS_PER_DAY
 from afmaths.physics.space.type_conversion_helpers import (
     radians_from_degrees,
     decimal_time_from_time,
@@ -52,7 +53,7 @@ def hour_angle(
     lst_decimal = decimal_time_from_time(local_sidereal_time)
     right_ascension_hours = math.degrees(float(right_ascension)) / 15
 
-    hour_angle_hours = (float(lst_decimal) - right_ascension_hours) % 24
+    hour_angle_hours = (float(lst_decimal) - right_ascension_hours) % HOURS_PER_DAY
     hour_angle_degrees = Degrees(Scalar(hour_angle_hours * 15))
 
     return HourAngle(radians_from_degrees(hour_angle_degrees))
@@ -72,7 +73,7 @@ def right_ascension(
     lst_decimal = decimal_time_from_time(local_sidereal_time)
     hour_angle_hours = math.degrees(float(hour_angle)) / 15
 
-    right_ascension_hours = (float(lst_decimal) - hour_angle_hours) % 24
+    right_ascension_hours = (float(lst_decimal) - hour_angle_hours) % HOURS_PER_DAY
     right_ascension_degrees = Degrees(Scalar(right_ascension_hours * 15))
 
     return RightAscension(Radians(radians_from_degrees(right_ascension_degrees)))

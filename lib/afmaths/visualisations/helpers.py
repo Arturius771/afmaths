@@ -11,6 +11,7 @@ from astronomy_types import (
     Distance,
     EccentricAnomaly,
     OrbitalElements,
+    Position,
     PositionVector,
     Radians,
     Scalar,
@@ -566,7 +567,7 @@ def synthetic_iss_like_itrs_positions(
     inclination_degrees: float = 51.6,
     orbital_period_seconds: float = 92.68 * 60.0,
     initial_longitude_degrees: float = 0.0,
-) -> list[Coordinate3D[Scalar]]:
+) -> list[PositionVector]:
     """
     Generate synthetic ISS-like ITRS positions for ground-track testing.
 
@@ -586,21 +587,21 @@ def synthetic_iss_like_itrs_positions(
     def itrs_position_from_longitude_latitude(
         longitude_degrees: float,
         latitude_degrees: float,
-    ) -> Coordinate3D[Scalar]:
+    ) -> PositionVector:
         longitude = math.radians(longitude_degrees)
         latitude = math.radians(latitude_degrees)
 
-        return Coordinate3D(
-            x=Scalar(radius_km * math.cos(latitude) * math.cos(longitude)),
-            y=Scalar(radius_km * math.cos(latitude) * math.sin(longitude)),
-            z=Scalar(radius_km * math.sin(latitude)),
+        return PositionVector(
+            x=Position(Scalar(radius_km * math.cos(latitude) * math.cos(longitude))),
+            y=Position(Scalar(radius_km * math.cos(latitude) * math.sin(longitude))),
+            z=Position(Scalar(radius_km * math.sin(latitude))),
         )
 
     inclination = math.radians(inclination_degrees)
     duration_seconds = orbits * orbital_period_seconds
     earth_rotation_rate_degrees_per_second = 360.0 / 86164.0905
 
-    positions: list[Coordinate3D[Scalar]] = []
+    positions: list[PositionVector] = []
 
     for index in range(samples):
         time_seconds = duration_seconds * index / max(samples - 1, 1)

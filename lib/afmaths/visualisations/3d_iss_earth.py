@@ -3,7 +3,12 @@ import random
 
 from astronomy_types import GravitationalParameter, Scalar
 
-from afmaths.constants import ISS_NORAD_ID
+from afmaths.constants import (
+    EUTELSAT_EUTE_117_NORAD_ID,
+    GALILEO_7_NORAD_ID,
+    ISS_NORAD_ID,
+    MOLNIYA_3_50_NORAD_ID,
+)
 from afmaths.physics.space.engineering.two_line_elements import (
     orbital_elements_from_tle,
 )
@@ -51,14 +56,26 @@ if __name__ == "__main__":
                 radius_scale=BODY_RADIUS_SCALE,
             ),
             BodyPlotConfig(
-                name="39122",
-                target=orbital_elements_from_tle(get_tle_from_norad_id(39122)),
+                name="EUTE 117",
+                target=orbital_elements_from_tle(
+                    get_tle_from_norad_id(EUTELSAT_EUTE_117_NORAD_ID)
+                ),
                 radius_km=ISS_RADIUS,
                 radius_scale=BODY_RADIUS_SCALE,
             ),
             BodyPlotConfig(
-                name="25847",
-                target=orbital_elements_from_tle(get_tle_from_norad_id(25847)),
+                name="MOLNIYA 3 50",
+                target=orbital_elements_from_tle(
+                    get_tle_from_norad_id(MOLNIYA_3_50_NORAD_ID)
+                ),
+                radius_km=ISS_RADIUS,
+                radius_scale=BODY_RADIUS_SCALE,
+            ),
+            BodyPlotConfig(
+                name="Galileo 7",
+                target=orbital_elements_from_tle(
+                    get_tle_from_norad_id(GALILEO_7_NORAD_ID)
+                ),
                 radius_km=ISS_RADIUS,
                 radius_scale=BODY_RADIUS_SCALE,
             ),
@@ -70,4 +87,3 @@ if __name__ == "__main__":
             ),
         ],
     ).show()
-25847

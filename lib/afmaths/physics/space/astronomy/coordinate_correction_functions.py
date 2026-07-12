@@ -1,5 +1,6 @@
 import math
 
+from afmaths.constants import HOURS_PER_DAY
 from afmaths.physics.space.type_conversion_helpers import (
     time_from_decimal_time,
     radians_from_degrees,
@@ -81,8 +82,8 @@ def rising_and_setting(
     hour_angle_degrees = math.degrees(math.acos(clamped_cosine_ha))
     hour_angle_hours = hour_angle_degrees / 15
 
-    rise_lst = (right_ascension_hours - hour_angle_hours) % 24
-    set_lst = (right_ascension_hours + hour_angle_hours) % 24
+    rise_lst = (right_ascension_hours - hour_angle_hours) % HOURS_PER_DAY
+    set_lst = (right_ascension_hours + hour_angle_hours) % HOURS_PER_DAY
 
     azimuth_argument = (
         math.sin(declination) + math.sin(vertical_shift_radians) * math.sin(latitude)
