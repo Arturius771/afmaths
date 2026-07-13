@@ -11,12 +11,15 @@ from astronomy_types import (
     Enum,
     GravitationalParameter,
     Distance,
+    Hour,
     Inclination,
+    Minute,
     OrbitalElements,
     Radians,
     Ratio,
     RightAscension,
     Scalar,
+    Second,
     SemiMajorAxis,
     TrueAnomaly,
     Vector2D,
@@ -26,8 +29,11 @@ from astronomy_types import (
 
 from afmaths.operation import exponentiate, multiply, negate
 
-EARTH_MU_KM_CUBED = GravitationalParameter(Scalar(398600.5))  # km^3 / s^2
+EARTH_MU_KM_CUBED = GravitationalParameter(Scalar(398_600.4418))  # km^3 / s^2
 EARTH_RADIUS_KM = Distance(Scalar(6378.0))  # km
+EARTH_ANGULAR_VELOCITY = Radians(
+    Scalar((multiply(exponentiate(negate(5))(10))(7.29115)))
+)
 MOON_ELEMENTS = OrbitalElements(
     Inclination(Radians(Scalar(0.08956146531375098))),
     RightAscension(Radians(Scalar(5.765000161307142))),
@@ -79,7 +85,11 @@ GALILEO_7_NORAD_ID = 40544
 MOLNIYA_3_50_NORAD_ID = 25847
 EUTELSAT_EUTE_117_NORAD_ID = 39122
 BEIDOU_IGSO_6 = 41434
-SECONDS_PER_DAY = 86400
-MINUTES_PER_DAY = 1440
-HOURS_PER_DAY = 24
-SECONDS_PER_MINUTE = 60
+ARIANE_6_FM1_UPPER = 60235
+TERRA_SAR = 31698
+JAMES_WEBB = 50463
+SECONDS_PER_DAY = Second(Scalar(86400))
+MINUTES_PER_DAY = Minute(1440)
+HOURS_PER_DAY = Hour(24)
+SECONDS_PER_MINUTE = Second(Scalar(60))
+SECONDS_PER_HOUR = Second(Scalar(3600))

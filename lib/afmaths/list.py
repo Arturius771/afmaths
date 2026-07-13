@@ -66,3 +66,13 @@ def dataplotter(number_list: list[float]) -> tuple:
         list_median(number_list),
         quartiles(number_list),
     )
+
+
+# TODO: make function which returns entries of a list according to multiples of an index value
+# def get_
+# Source - https://stackoverflow.com/q/18272160
+# Retrieved 2026-07-13, License - CC BY-SA 3.0
+
+# a = [-2, 1, 5, 3, 8, 5, 6]
+# b = [1, 2, 5]
+# return [gcrs_positions[i] for i in b]

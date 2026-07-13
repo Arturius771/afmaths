@@ -245,7 +245,9 @@ def orbit_centripetal_force(velocity: Velocity, radius: Distance, mass: Mass) ->
     return centripetal_force(centripetal_acceleration(velocity, radius), mass)
 
 
-def orbital_period(a: SemiMajorAxis, mu: GravitationalParameter) -> Second:
+def orbital_period(
+    a: SemiMajorAxis, mu: GravitationalParameter = EARTH_MU_KM_CUBED
+) -> Second:
     return DOUBLE(multiply(math.pi)(square_root(divide_by(mu)(CUBE(a)))))
 
 

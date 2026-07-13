@@ -14,6 +14,7 @@ from astronomy_types import (
     Ratio,
     RightAscension,
     Scalar,
+    Second,
     StateVector,
     Year,
 )
@@ -27,6 +28,7 @@ from afmaths.physics.space.astronomy.time_functions import (
 from afmaths.physics.space.celestial_mechanics import (
     eccentric_anomaly_solved,
     newtons_method_eccentric_anomaly,
+    orbital_period,
     orbital_period_from_mean_motion,
     semi_major_axis_from_period,
     state_vector_from_orbital_elements,
@@ -97,6 +99,12 @@ def get_tle_element_from_column(
 
 
 # region TLE Elements
+
+
+def parse_norad_id(tle: str) -> str:
+    return get_tle_element_from_column(
+        tle_column_one(tle), SATELLITE_CATALOGUE_NUMBER, COLUMN_1_ELSET
+    )
 
 
 def parse_epoch(tle: str) -> str:
@@ -193,6 +201,12 @@ def parse_mean_motion_per_day(tle: str) -> MeanMotion:
             )
         )
     )
+
+
+def orbital_period_from_tle(
+    tle: str, mu: GravitationalParameter = EARTH_MU_KM_CUBED
+) -> Second:
+    return orbital_period(orbital_elements_from_tle(tle).semi_major_axis, mu)
 
 
 def orbital_elements_from_tle(

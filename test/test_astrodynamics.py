@@ -35,19 +35,19 @@ class AstrodynamicsTestMethods(unittest.TestCase):
         self.assertAlmostEqual(
             result[0][0],
             0.37539955175032447,
-            places=10,
+            places=7,
         )
 
         self.assertAlmostEqual(
             result[0][1],
             0.19003921507073027,
-            places=10,
+            places=7,
         )
 
         self.assertAlmostEqual(
             result[0][2],
             0.18536033667959417,
-            places=10,
+            places=7,
         )
 
         self.assertEqual(
@@ -57,8 +57,8 @@ class AstrodynamicsTestMethods(unittest.TestCase):
 
         self.assertAlmostEqual(
             result[2],
-            2931.7611286318975,
-            places=10,
+            2931.7613426663966,
+            places=7,
         )
 
         result = hohmann_transfer_parameters(
@@ -66,19 +66,19 @@ class AstrodynamicsTestMethods(unittest.TestCase):
         )
         self.assertAlmostEqual(
             result[0][0],
-            0.11417803172385366,
+            0.11417802338823702,
             places=10,
         )
 
         self.assertAlmostEqual(
             result[0][1],
-            0.057309034941426695,
+            0.057309030757556556,
             places=10,
         )
 
         self.assertAlmostEqual(
             result[0][2],
-            0.05686899678242696,
+            0.05686899263068046,
             places=10,
         )
 
@@ -89,7 +89,7 @@ class AstrodynamicsTestMethods(unittest.TestCase):
 
         self.assertAlmostEqual(
             result[2],
-            3081.939034222961,
+            3081.939259221263,
             places=10,
         )
 

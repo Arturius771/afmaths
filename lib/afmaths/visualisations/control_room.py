@@ -1,6 +1,13 @@
 import random
 
-from afmaths.constants import MINUTES_PER_DAY
+from afmaths.constants import (
+    BEIDOU_IGSO_6,
+    GALILEO_7_NORAD_ID,
+    ISS_NORAD_ID,
+    JAMES_WEBB,
+    MINUTES_PER_DAY,
+    MOLNIYA_3_50_NORAD_ID,
+)
 from afmaths.physics.space.engineering.two_line_elements import (
     orbital_elements_from_tle,
 )
@@ -10,18 +17,20 @@ from iss_earth_3d import visualisation_3d_satellite_earth
 from itrs_orbit_3d import visualisation_3d_itrs
 from ground_track import visualisation_2d_ground_track
 
+# 41321, 25867, 13901 interesting sat
 if __name__ == "__main__":
-    random_tle = random.randrange(1, 69999)
-    track_for_minutes = 280
-    visualisation_3d_itrs(random_tle, track_for_minutes)
+    norad_id: int = JAMES_WEBB or random.randrange(1, 69999)
+    track_for_minutes = MINUTES_PER_DAY
+    tle = get_tle_from_norad_id(norad_id)
+    visualisation_3d_itrs(tle, track_for_minutes)
     visualisation_3d_satellite_earth(
         [
             BodyPlotConfig(
-                name=f"SAT: {random_tle}",
-                target=orbital_elements_from_tle(get_tle_from_norad_id(random_tle)),
+                name=f"SAT: {tle}",
+                target=orbital_elements_from_tle(tle),
                 radius_km=200,
                 radius_scale=1.0,
             )
         ]
     )
-    visualisation_2d_ground_track(random_tle, track_for_minutes).show()
+    visualisation_2d_ground_track(tle, track_for_minutes, True).show()

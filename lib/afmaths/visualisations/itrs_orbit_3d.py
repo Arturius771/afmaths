@@ -9,7 +9,9 @@ from afmaths.constants import (
     MINUTES_PER_DAY,
     MOLNIYA_3_50_NORAD_ID,
 )
-from afmaths.physics.space.astronomy.time_functions import julian_date_from_full_Date
+from afmaths.physics.space.astronomy.time_functions import (
+    julian_date_from_full_Date,
+)
 from afmaths.physics.space.celestial_mechanics import (
     EARTH_MU_KM_CUBED,
     state_vector_at_time,
@@ -17,21 +19,22 @@ from afmaths.physics.space.celestial_mechanics import (
 from afmaths.physics.space.engineering.two_line_elements import (
     orbital_elements_from_tle,
     parse_full_date,
+    parse_norad_id,
 )
 from afmaths.physics.space.external.space_track_api import get_tle_from_norad_id
+
 from afmaths.physics.space.transformations import itrs_positions_from_gcrs_position
 from afmaths.visualisations.base import OrbitPlotSettings, build_3d_itrs_orbit_figure
 from afmaths.physics.space.external.horizons_api import HorizonsCommandTarget
 
-DISTANCE_SCALE_KM = 10_000
-BODY_RADIUS_SCALE = 5.0
+DISTANCE_SCALE_KM = 1000
+BODY_RADIUS_SCALE = 1.0
 ORBIT_POINTS = 50
 EARTH_RADIUS_KM = 6_371.0
-EARTH_GRAVITATIONAL_PARAMETER = GravitationalParameter(Scalar(398_600.4418))
 
 
-def visualisation_3d_itrs(norad_target_id: int, track_for: int = MINUTES_PER_DAY):
-    tle = get_tle_from_norad_id(norad_target_id)
+def visualisation_3d_itrs(tle: str, track_for: int = MINUTES_PER_DAY):
+
     orbital_elements = orbital_elements_from_tle(tle)
 
     gcrs_positions = [
@@ -43,7 +46,6 @@ def visualisation_3d_itrs(norad_target_id: int, track_for: int = MINUTES_PER_DAY
         for minute in range(track_for)
     ]
 
-    # assuming this has already been converted properly to a real JulianDate
     epoch = Epoch(
         JulianDate(Scalar(float(julian_date_from_full_Date(parse_full_date(tle)))))
     )
@@ -52,7 +54,7 @@ def visualisation_3d_itrs(norad_target_id: int, track_for: int = MINUTES_PER_DAY
 
     settings = OrbitPlotSettings(
         centre=HorizonsCommandTarget.EARTH,
-        gravitational_parameter=EARTH_GRAVITATIONAL_PARAMETER,
+        gravitational_parameter=EARTH_MU_KM_CUBED,
         distance_scale_km=DISTANCE_SCALE_KM,
         orbit_points=ORBIT_POINTS,
         start_time=datetime.datetime.now(),
@@ -63,13 +65,9 @@ def visualisation_3d_itrs(norad_target_id: int, track_for: int = MINUTES_PER_DAY
     return build_3d_itrs_orbit_figure(
         settings=settings,
         itrs_positions=itrs_positions,
-        title=f"{norad_target_id} ITRS orbit view",
+        title=f"{parse_norad_id(tle)} ITRS orbit view",
         central_body_name="Earth",
         central_body_radius_km=EARTH_RADIUS_KM,
         central_body_radius_scale=1.0,
         orbit_name="ISS ITRS track",
     ).show()
-
-
-if __name__ == "__main__":
-    visualisation_3d_itrs(BEIDOU_IGSO_6)

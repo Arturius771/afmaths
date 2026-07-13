@@ -1,3 +1,4 @@
+import datetime
 import math
 from astronomy_types import (
     Date,
@@ -22,6 +23,7 @@ from afmaths.constants import (
     HOURS_PER_DAY,
     MINUTES_PER_DAY,
     SECONDS_PER_DAY,
+    SECONDS_PER_HOUR,
     SECONDS_PER_MINUTE,
 )
 from afmaths.operation import (
@@ -34,6 +36,7 @@ from afmaths.operation import (
     subtract,
 )
 from afmaths.physics.space.type_conversion_helpers import (
+    fulldate_from_python_datetime,
     radians_from_degrees,
     time_from_decimal_time,
     decimal_time_from_time,
@@ -386,7 +389,7 @@ def hours_from_seconds(seconds: Second) -> Hour:
 
 
 def minutes_from_seconds(seconds: Second) -> Minute:
-    return Minute(int(seconds / 60))
+    return Minute(int(seconds / SECONDS_PER_MINUTE))
 
 
 def time_from_seconds(total_seconds: Second) -> Time:
@@ -451,3 +454,29 @@ def greenwich_mean_sidereal_time_radians_from_julian_date(jd: JulianDate) -> Rad
 
 def seconds_from_minutes(min: Minute) -> Second:
     return multiply(min)(SECONDS_PER_MINUTE)
+
+
+def seconds_from_hours(hours: Hour) -> Second:
+    return multiply(hours)(SECONDS_PER_HOUR)
+
+
+def epoch_offset(epoch: Epoch, offset: Minute) -> Epoch:
+    """Assumes an average Earth day."""
+    return Epoch(JulianDate(Scalar(add(epoch)(divide_by(MINUTES_PER_DAY)(offset)))))
+
+
+def hms_from_julian_date(julian_date: JulianDate) -> Time:
+    date = greenwich_date_from_julian(julian_date)
+    day_fraction = float(date.day) - math.floor(float(date.day))
+
+    return time_from_percentage(day_fraction)
+
+
+def seconds_from_julian_date_delta(delta: JulianDate) -> Second:
+    return Second(Scalar(float(delta) * SECONDS_PER_DAY))
+
+
+def julian_date_now() -> JulianDate:
+    return julian_date_from_full_Date(
+        fulldate_from_python_datetime(datetime.datetime.now(datetime.UTC))
+    )

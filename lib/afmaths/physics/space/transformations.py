@@ -4,6 +4,7 @@ from astronomy_types import (
     Epoch,
     GeographicCoordinates,
     JulianDate,
+    Minute,
     OrbitalElements,
     Position,
     PositionVector,
@@ -18,6 +19,7 @@ from afmaths.geometry.transformations import (
 )
 from afmaths.operation import DOUBLE, add, multiply, negate
 from afmaths.physics.space.astronomy.time_functions import (
+    epoch_offset,
     greenwich_mean_sidereal_time_radians_from_julian_date,
     j200_from_julian_Date,
 )
@@ -72,6 +74,7 @@ def earth_rotation_angle(jd: JulianDate) -> Radians:
 def itrs_position_from_gmst_passive(
     gmst: Radians, gcrs_position: PositionVector
 ) -> PositionVector:
+    """Simplified conversion not taking into account any perturbations or time compatibility."""
     itrs_position = orthonormal_frame_transform_3d(
         z_axis_passive_rotation(gmst),
         make_vector3d(gcrs_position.x, gcrs_position.y, gcrs_position.z),
@@ -93,17 +96,24 @@ def itrs_position_from_gmst(
     )
 
 
+def itrs_position_from_gcrs_position(
+    jd: JulianDate, gcrs_position: PositionVector
+) -> PositionVector:
+    gmst = greenwich_mean_sidereal_time_radians_from_julian_date(jd)
+    return itrs_position_from_gmst_passive(gmst, gcrs_position)
+
+
 def itrs_positions_from_gcrs_position(
-    gcrs_positions: list[PositionVector], epoch: Epoch
+    gcrs_positions: list[PositionVector],
+    epoch: Epoch,
 ) -> list[PositionVector]:
     itrs_positions: list[PositionVector] = []
 
     for minute, gcrs_position in enumerate(gcrs_positions):
-        current_julian_date = JulianDate(Scalar(epoch + minute / MINUTES_PER_DAY))
-        gmst = greenwich_mean_sidereal_time_radians_from_julian_date(
-            current_julian_date
+        current_julian_date = epoch_offset(epoch, Minute(minute))
+        itrs_positions.append(
+            itrs_position_from_gcrs_position(current_julian_date, gcrs_position)
         )
-        itrs_positions.append(itrs_position_from_gmst_passive(gmst, gcrs_position))
 
     return itrs_positions
 
