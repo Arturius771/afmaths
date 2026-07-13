@@ -40,28 +40,57 @@ from astronomy_types import (
 )
 
 BACKGROUND_IMAGE = Path(__file__).with_name("Earth-hires.jpg")
-TARGET_ID = BEIDOU_IGSO_6
 
 
-def build_ground_track_figure(positions: list[PositionVector]) -> go.Figure:
+def visualisation_2d_ground_track(
+    norad_target_id: int, track_for: int = MINUTES_PER_DAY
+) -> go.Figure:
+    tle = get_tle_from_norad_id(norad_target_id)
+
+    orbital_elements = orbital_elements_from_tle(tle)
+
+    positions = itrs_positions_from_gcrs_position(
+        [
+            state_vector_at_time(
+                orbital_elements,
+                seconds_from_minutes(Minute(int(minute))),
+            ).position
+            for minute in range(track_for)
+        ],
+        Epoch(
+            JulianDate(Scalar(float(julian_date_from_full_Date(parse_full_date(tle)))))
+        ),
+    )
 
     geographic_coordinates = [
         transform_geographic_coordinates_from_itrs(position) for position in positions
     ]
 
     fig = go.Figure()
-
     fig.add_trace(
         go.Scatter(
             x=[float(coordinate.longitude) for coordinate in geographic_coordinates],
             y=[float(coordinate.latitude) for coordinate in geographic_coordinates],
             mode="markers",
             name="Satellite ground track",
+            marker={
+                "color": list(range(len(geographic_coordinates))),
+                "colorscale": "blues",
+                "showscale": False,
+                "reversescale": True,
+                "colorbar": {
+                    "title": "Iteration",
+                },
+                "line": {
+                    "color": "black",
+                    "width": 1,
+                },
+            },
         )
     )
 
     fig.update_layout(
-        title=f"Satellite {TARGET_ID} ground track",
+        title=f"Satellite {norad_target_id} ground track",
         xaxis_title="Longitude",
         yaxis_title="Latitude",
     )
@@ -76,7 +105,7 @@ def build_ground_track_figure(positions: list[PositionVector]) -> go.Figure:
             x_max=180,
             y_min=-90,
             y_max=90,
-            opacity=0.3,
+            opacity=0.6,
             set_axis_ranges=True,
             lock_aspect_ratio=False,
         ),
@@ -102,22 +131,4 @@ if __name__ == "__main__":
     #         orbits=3.3,
     #     )
     # ).show()
-    tle = get_tle_from_norad_id(TARGET_ID)
-    orbital_elements = orbital_elements_from_tle(tle)
-
-    build_ground_track_figure(
-        itrs_positions_from_gcrs_position(
-            [
-                state_vector_at_time(
-                    orbital_elements,
-                    seconds_from_minutes(Minute(int(minute))),
-                ).position
-                for minute in range(MINUTES_PER_DAY)
-            ],
-            Epoch(
-                JulianDate(
-                    Scalar(float(julian_date_from_full_Date(parse_full_date(tle))))
-                )
-            ),
-        )
-    ).show()
+    visualisation_2d_ground_track(BEIDOU_IGSO_6)

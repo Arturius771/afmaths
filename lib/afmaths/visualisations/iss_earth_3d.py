@@ -29,26 +29,30 @@ ISS_RADIUS = 200
 EARTH_GRAVITATIONAL_PARAMETER = GravitationalParameter(Scalar(398_600.4418))
 
 
-if __name__ == "__main__":
+def visualisation_3d_satellite_earth(bodies: list[BodyPlotConfig]):
     settings = OrbitPlotSettings(
         centre=HorizonsCommandTarget.EARTH,
         gravitational_parameter=EARTH_GRAVITATIONAL_PARAMETER,
         distance_scale_km=DISTANCE_SCALE_KM,
         orbit_points=ORBIT_POINTS,
         start_time=datetime.datetime.now(),
-        time_offset=datetime.timedelta(days=15),
         add_prediction_to_orbit=False,
     )
 
-    random_tle = random.randrange(1, 69999)
-
-    build_3d_orbit_figure(
+    return build_3d_orbit_figure(
         settings=settings,
         title="Earth Artificial Satellites",
         central_body_name="Earth",
         central_body_radius_km=EARTH_RADIUS_KM,
         central_body_radius_scale=BODY_RADIUS_SCALE,
-        orbiting_bodies=[
+        orbiting_bodies=bodies,
+    ).show()
+
+
+if __name__ == "__main__":
+    random_tle = random.randrange(1, 69999)
+    visualisation_3d_satellite_earth(
+        [
             BodyPlotConfig(
                 name="ISS",
                 target=orbital_elements_from_tle(get_tle_from_norad_id(ISS_NORAD_ID)),
@@ -85,5 +89,5 @@ if __name__ == "__main__":
                 radius_km=ISS_RADIUS,
                 radius_scale=BODY_RADIUS_SCALE,
             ),
-        ],
-    ).show()
+        ]
+    )

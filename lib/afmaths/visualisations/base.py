@@ -80,7 +80,9 @@ class OrbitPlotSettings:
     distance_scale_km: float
     orbit_points: int
     start_time: datetime.datetime
-    time_offset: datetime.timedelta
+    time_offset: datetime.timedelta = datetime.timedelta(
+        days=0, seconds=0, microseconds=0, milliseconds=0, minutes=0, hours=0, weeks=0
+    )
     add_prediction_to_orbit: bool = True
 
     @property

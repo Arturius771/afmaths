@@ -28,10 +28,10 @@ BODY_RADIUS_SCALE = 5.0
 ORBIT_POINTS = 50
 EARTH_RADIUS_KM = 6_371.0
 EARTH_GRAVITATIONAL_PARAMETER = GravitationalParameter(Scalar(398_600.4418))
-TARGET_ID = BEIDOU_IGSO_6
 
-if __name__ == "__main__":
-    tle = get_tle_from_norad_id(TARGET_ID)
+
+def visualisation_3d_itrs(norad_target_id: int, track_for: int = MINUTES_PER_DAY):
+    tle = get_tle_from_norad_id(norad_target_id)
     orbital_elements = orbital_elements_from_tle(tle)
 
     gcrs_positions = [
@@ -40,7 +40,7 @@ if __name__ == "__main__":
             Second(Scalar(minute * 60)),
             EARTH_MU_KM_CUBED,
         ).position
-        for minute in range(MINUTES_PER_DAY)
+        for minute in range(track_for)
     ]
 
     # assuming this has already been converted properly to a real JulianDate
@@ -60,12 +60,16 @@ if __name__ == "__main__":
         add_prediction_to_orbit=False,
     )
 
-    build_3d_itrs_orbit_figure(
+    return build_3d_itrs_orbit_figure(
         settings=settings,
         itrs_positions=itrs_positions,
-        title=f"{TARGET_ID} ITRS orbit view",
+        title=f"{norad_target_id} ITRS orbit view",
         central_body_name="Earth",
         central_body_radius_km=EARTH_RADIUS_KM,
         central_body_radius_scale=1.0,
         orbit_name="ISS ITRS track",
     ).show()
+
+
+if __name__ == "__main__":
+    visualisation_3d_itrs(BEIDOU_IGSO_6)
