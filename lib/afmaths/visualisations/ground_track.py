@@ -130,8 +130,8 @@ def visualisation_2d_ground_track(
                     Scalar(current_position.longitude),
                     Scalar(current_position.latitude),
                 ),
-                text=f"Lat: {current_position.latitude:.1f}, Lon: {current_position.longitude:.1f}",
-                size=10,
+                text=f"Lon: {current_position.longitude:.1f}, Lat: {current_position.latitude:.1f}",
+                size=20,
                 symbol="diamond",
                 colour="orange",
             )
