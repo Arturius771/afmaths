@@ -236,7 +236,7 @@ def gravitational_acceleration_at_radius(
 
 
 def kepler_equation(E: EccentricAnomaly, e: Eccentricity) -> MeanAnomaly:
-    """Kepler equation."""
+    """Kepler equation that calculates mean anomaly."""
     # M = E - e * np.sin(E)
     return subtract(multiply(e)(math.sin(E)))(E)
 
@@ -278,6 +278,12 @@ def distance_between_positions(pos1: PositionVector, pos2: PositionVector) -> Di
 
 def orbital_period_from_mean_motion(mean_motion_per_day: MeanMotion) -> Second:
     return Second(Scalar(divide_by(mean_motion_per_day)(SECONDS_PER_DAY)))
+
+
+def current_orbital_elapsed_period(
+    elapsed_seconds: Second, orbital_period: Second
+) -> Second:
+    return Second(Scalar(elapsed_seconds % orbital_period))
 
 
 # region ## Latitude
@@ -938,12 +944,12 @@ def true_anomaly(eccentricity: Eccentricity, mean_anomaly: MeanAnomaly) -> TrueA
 def true_anomaly_at_time(
     eccentricity: Eccentricity,
     mean_anomaly: MeanAnomaly,
-    time: Second,
+    time_offset: Second,
     mean_motion: MeanMotion,
 ) -> TrueAnomaly:
     return true_anomaly(
         eccentricity,
-        mean_anomaly_at_time(mean_anomaly, time, mean_motion),
+        mean_anomaly_at_time(mean_anomaly, time_offset, mean_motion),
     )
 
 
@@ -1086,10 +1092,10 @@ def semi_latus_rectum_from_angular_momentum(
 
 
 def mean_anomaly_at_time(
-    M: MeanAnomaly, time_offset_s: Second, n: MeanMotion
+    M: MeanAnomaly, time_offset: Second, n: MeanMotion
 ) -> MeanAnomaly:
     """Calculates the mean anomaly at a given time offset from the current mean motion and mean anomaly"""
-    return add(M)(multiply(n)(time_offset_s))
+    return add(M)(multiply(n)(time_offset))
 
 
 # endregion

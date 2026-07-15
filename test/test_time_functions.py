@@ -29,7 +29,7 @@ from afmaths.physics.space.astronomy.time_functions import (
     julian_date_from_full_Date,
     time_from_seconds,
     local_sidereal_time_from_greenwich_sidereal,
-    time_from_percentage,
+    time_from_day_fraction,
     universal_time_from_greenwich,
     julian_date_from_greenwich,
     decimal_time_from_hms,
@@ -331,12 +331,12 @@ class TimeTestMethods(unittest.TestCase):
     def test_time_from_day_fraction(self):
 
         self.assertEqual(
-            time_from_percentage(0.10),
+            time_from_day_fraction(0.10),
             Time(hour=Hour(int(2)), minute=Minute(int(24)), second=Second(Scalar(0))),
         )
 
         self.assertEqual(
-            time_from_percentage(0.99),
+            time_from_day_fraction(0.99),
             Time(hour=Hour(int(23)), minute=Minute(int(45)), second=Second(Scalar(36))),
         )
 

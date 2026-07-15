@@ -5,6 +5,7 @@ from pathlib import Path
 import plotly.graph_objects as go
 from afmaths.constants import (
     BEIDOU_IGSO_6,
+    EARTH_MU_KM_CUBED,
     GALILEO_7_NORAD_ID,
     ISS_NORAD_ID,
     MINUTES_PER_DAY,
@@ -12,25 +13,36 @@ from afmaths.constants import (
 )
 from afmaths.physics.space.astronomy.time_functions import (
     epoch_offset,
+    greenwich_full_Date_from_julian_date,
+    julian_date_delta,
     julian_date_from_full_Date,
     julian_date_now,
+    pretty_print_full_date,
     seconds_from_julian_date_delta,
     seconds_from_minutes,
 )
 from afmaths.physics.space.celestial_mechanics import (
+    current_orbital_elapsed_period,
+    orbit_equation,
     orbital_direction_from_inclination,
     state_vector_at_time,
+    true_anomaly,
+    true_anomaly_at_time,
+    vis_viva,
 )
 from afmaths.physics.space.engineering.astrodynamics.ground_track import (
-    geographic_coordinate_from_itrs,
-    ground_track_positions,
-    start_of_orbit_positions,
-    westware_drift_from_angular_velocity_and_period,
+    earth_geographic_coordinate_from_itrs,
+    earth_ground_track_positions,
+    earth_start_of_orbit_positions,
+    westward_drift_from_angular_velocity_and_period,
 )
 from afmaths.physics.space.engineering.two_line_elements import (
     orbital_elements_from_tle,
     orbital_period_from_tle,
+    parse_epoch,
     parse_full_date,
+    parse_julian_date,
+    parse_mean_anomaly,
     parse_norad_id,
 )
 from afmaths.physics.space.external.space_track_api import get_tle_from_norad_id
@@ -51,6 +63,7 @@ from astronomy_types import (
     Minute,
     PositionVector,
     Scalar,
+    Second,
 )
 
 BACKGROUND_IMAGE = Path(__file__).with_name("Earth-hires.jpg")
@@ -62,16 +75,16 @@ def visualisation_2d_ground_track(
     show_orbit_markers: bool = False,
 ) -> go.Figure:
 
-    orbital_elements = orbital_elements_from_tle(tle)
+    epoch_elements = orbital_elements_from_tle(tle)
 
-    direction = orbital_direction_from_inclination(orbital_elements.inclination)
+    direction = orbital_direction_from_inclination(epoch_elements.inclination)
 
     epoch = Epoch(julian_date_from_full_Date(parse_full_date(tle)))
 
-    positions = ground_track_positions(
+    positions = earth_ground_track_positions(
         [
             state_vector_at_time(
-                orbital_elements,
+                epoch_elements,
                 seconds_from_minutes(Minute(int(minute))),
             ).position
             for minute in range(track_for)
@@ -80,11 +93,11 @@ def visualisation_2d_ground_track(
     )
 
     geographic_coordinates = [
-        geographic_coordinate_from_itrs(position) for position in positions
+        earth_geographic_coordinate_from_itrs(position) for position in positions
     ]
 
     period = orbital_period_from_tle(tle)
-    orbit_marker_positions = start_of_orbit_positions(positions, period)
+    orbit_marker_positions = earth_start_of_orbit_positions(positions, period)
 
     fig = go.Figure()
     fig.add_trace(
@@ -109,17 +122,31 @@ def visualisation_2d_ground_track(
         )
     )
 
-    current_position = geographic_coordinate_from_itrs(
+    elapsed_seconds = seconds_from_julian_date_delta(julian_date_delta(epoch))
+
+    state = state_vector_at_time(
+        epoch_elements,
+        elapsed_seconds,
+    )
+
+    velocity = vis_viva(
+        EARTH_MU_KM_CUBED,
+        orbit_equation(
+            epoch_elements.semi_major_axis,
+            epoch_elements.eccentricity,
+            true_anomaly(epoch_elements.eccentricity, parse_mean_anomaly(tle)),
+        ),
+        epoch_elements.semi_major_axis,
+    )
+
+    current_position = earth_geographic_coordinate_from_itrs(
         itrs_position_from_gcrs_position(
             julian_date_now(),
-            state_vector_at_time(
-                orbital_elements,
-                seconds_from_julian_date_delta(
-                    JulianDate(Scalar(julian_date_now() - epoch))
-                ),
-            ).position,
+            state.position,
         )
     )
+
+    current_orbital_period = current_orbital_elapsed_period(elapsed_seconds, period)
 
     fig = add_plot_nodes(
         fig,
@@ -130,10 +157,11 @@ def visualisation_2d_ground_track(
                     Scalar(current_position.longitude),
                     Scalar(current_position.latitude),
                 ),
-                text=f"Lon: {current_position.longitude:.1f}, Lat: {current_position.latitude:.1f}",
+                text=f"Lon: {current_position.longitude:.1f}, Lat: {current_position.latitude:.1f} t={current_orbital_period:.0f}s v={velocity}",
                 size=20,
                 symbol="diamond",
                 colour="orange",
+                marker_only=True,
             )
         ],
     )
@@ -141,7 +169,7 @@ def visualisation_2d_ground_track(
     fig.update_layout(
         title=(
             f"Satellite {parse_norad_id(tle)} ground track"
-            f"<br>Drift: {westware_drift_from_angular_velocity_and_period(period)} deg | Duration: {track_for} min | Direction: {direction}"
+            f"<br>Drift: {westward_drift_from_angular_velocity_and_period(period)} deg | Duration: {track_for} min | Direction: {direction} | Epoch (JD): {parse_julian_date(tle)}"
         ),
         xaxis_title="Longitude",
         yaxis_title="Latitude",
@@ -151,8 +179,15 @@ def visualisation_2d_ground_track(
 
     if show_orbit_markers:
         orbit_marker_coordinates = [
-            geographic_coordinate_from_itrs(position)
+            earth_geographic_coordinate_from_itrs(position)
             for position in orbit_marker_positions
+        ]
+
+        orbit_epoch = [
+            greenwich_full_Date_from_julian_date(
+                epoch_offset(epoch, Second(Scalar(period * min)))
+            )
+            for min in range(len(orbit_marker_positions))
         ]
 
         plot_nodes.extend(
@@ -162,13 +197,17 @@ def visualisation_2d_ground_track(
                     Scalar(coordinate.longitude),
                     Scalar(coordinate.latitude),
                 ),
-                text=f"Orbit {orbit_number}",
+                text=f"Orbit {orbit_number} @ {pretty_print_full_date(orbit_epoch)}",
                 size=10,
                 symbol="circle",
+                marker_only=True,
             )
-            for orbit_number, coordinate in enumerate(
-                orbit_marker_coordinates,
-                start=1,
+            for (orbit_number, coordinate), orbit_epoch in zip(
+                enumerate(
+                    orbit_marker_coordinates,
+                    start=1,
+                ),
+                orbit_epoch,
             )
         )
 

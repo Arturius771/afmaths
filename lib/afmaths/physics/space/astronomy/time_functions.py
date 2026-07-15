@@ -403,12 +403,12 @@ def time_from_seconds(total_seconds: Second) -> Time:
     return Time(hours, minutes, remaining_seconds)
 
 
-def time_from_percentage(percentage: float) -> Time:
-    """Calculates the time based on what percentage of the day has elapsed."""
-    if not 0 <= percentage < 1:
-        raise ValueError(f"Day fraction must be between 0 and 1, received {percentage}")
+def time_from_day_fraction(fraction: float) -> Time:
+    """Calculates the time based on what fraction of the day has elapsed."""
+    if not 0 <= fraction < 1:
+        raise ValueError(f"Day fraction must be between 0 and 1, received {fraction}")
 
-    return time_from_seconds(Second(Scalar(SECONDS_PER_DAY * percentage)))
+    return time_from_seconds(Second(Scalar(SECONDS_PER_DAY * fraction)))
 
 
 def date_from_day_number(day_number: int, year: Year) -> Date:
@@ -440,9 +440,10 @@ def date_from_day_number(day_number: int, year: Year) -> Date:
 
 
 def greenwich_mean_sidereal_time_radians_from_julian_date(jd: JulianDate) -> Radians:
-    jd_centuries = (jd - 2451545.0) / 36525
+    j200 = j200_from_julian_Date(jd)
+    jd_centuries = j200 / 36525
     gmstDegrees = add(280.46061837)(
-        add(multiply(360.98564736629)(jd - 2451545.0))(
+        add(multiply(360.98564736629)(j200))(
             subtract(divide_by(38710000)(CUBE(jd_centuries)))(
                 multiply(0.000387933)(SQUARE(jd_centuries))
             )
@@ -460,19 +461,20 @@ def seconds_from_hours(hours: Hour) -> Second:
     return multiply(hours)(SECONDS_PER_HOUR)
 
 
-def epoch_offset(epoch: Epoch, offset: Minute) -> Epoch:
+def epoch_offset(epoch: Epoch, offset: Second) -> Epoch:
     """Assumes an average Earth day."""
-    return Epoch(JulianDate(Scalar(add(epoch)(divide_by(MINUTES_PER_DAY)(offset)))))
+    return Epoch(JulianDate(Scalar(add(epoch)(divide_by(SECONDS_PER_DAY)(offset)))))
 
 
-def hms_from_julian_date(julian_date: JulianDate) -> Time:
+def time_from_julian_date(julian_date: JulianDate) -> Time:
     date = greenwich_date_from_julian(julian_date)
     day_fraction = float(date.day) - math.floor(float(date.day))
 
-    return time_from_percentage(day_fraction)
+    return time_from_day_fraction(day_fraction)
 
 
 def seconds_from_julian_date_delta(delta: JulianDate) -> Second:
+    """Calculates the number of seconds that have elapsed in a Julian Date delta"""
     return Second(Scalar(float(delta) * SECONDS_PER_DAY))
 
 
@@ -480,3 +482,19 @@ def julian_date_now() -> JulianDate:
     return julian_date_from_full_Date(
         fulldate_from_python_datetime(datetime.datetime.now(datetime.UTC))
     )
+
+
+def julian_date_delta(
+    epoch: JulianDate, to_time: JulianDate = julian_date_now()
+) -> JulianDate:
+    return JulianDate(Scalar(to_time - epoch))
+
+
+def greenwich_full_Date_from_julian_date(jd: JulianDate) -> FullDate:
+    date = greenwich_date_from_julian(jd)
+    time = time_from_julian_date(jd)
+    return FullDate(date, time)
+
+
+def pretty_print_full_date(fd: FullDate) -> str:
+    return f"{fd.date.year}-{fd.date.month}-{fd.date.day:.0f} {fd.time.hour}:{fd.time.minute}:{fd.time.second:.2f}"

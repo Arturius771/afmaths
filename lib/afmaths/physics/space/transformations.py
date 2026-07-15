@@ -10,6 +10,7 @@ from astronomy_types import (
     PositionVector,
     Radians,
     Scalar,
+    Second,
     Vector3D,
 )
 from afmaths.constants import MINUTES_PER_DAY
@@ -22,6 +23,7 @@ from afmaths.physics.space.astronomy.time_functions import (
     epoch_offset,
     greenwich_mean_sidereal_time_radians_from_julian_date,
     j200_from_julian_Date,
+    seconds_from_minutes,
 )
 from afmaths.physics.space.type_conversion_helpers import make_vector2d, make_vector3d
 from afmaths.tensors import vector_magnitude, vector_magnitude_3d
@@ -110,7 +112,9 @@ def itrs_positions_from_gcrs_position(
     itrs_positions: list[PositionVector] = []
 
     for minute, gcrs_position in enumerate(gcrs_positions):
-        current_julian_date = epoch_offset(epoch, Minute(minute))
+        current_julian_date = epoch_offset(
+            epoch, Second(Scalar(seconds_from_minutes(Minute(minute))))
+        )
         itrs_positions.append(
             itrs_position_from_gcrs_position(current_julian_date, gcrs_position)
         )

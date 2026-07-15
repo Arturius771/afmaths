@@ -46,6 +46,7 @@ class PlotNode:
     colour: str = "red"
     size: int = 12
     symbol: str = "x"
+    marker_only: bool = False
 
 
 @dataclass(frozen=True)
@@ -274,17 +275,14 @@ def figure_slider(figure: go.Figure, slider_steps: list[dict]) -> go.Figure:
 
 
 # Subject: Plotly 2D marker/text trace.
-def add_plot_node(
-    fig: go.Figure,
-    node: PlotNode,
-) -> go.Figure:
+def add_plot_node(fig: go.Figure, node: PlotNode) -> go.Figure:
     text = node.text or node.name
 
     fig.add_trace(
         go.Scatter(
             x=[node.coordinate.x],
             y=[node.coordinate.y],
-            mode="markers+text",
+            mode="markers+text" if not node.marker_only else "markers",
             name=node.name,
             text=[text],
             textposition="top center",

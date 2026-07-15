@@ -6,6 +6,7 @@ from astronomy_types import (
     FullDate,
     GravitationalParameter,
     Inclination,
+    JulianDate,
     MeanAnomaly,
     MeanMotion,
     OrbitalElements,
@@ -23,7 +24,8 @@ from afmaths.constants import EARTH_MU_KM_CUBED
 from afmaths.operation import divide_by
 from afmaths.physics.space.astronomy.time_functions import (
     date_from_day_number,
-    time_from_percentage,
+    julian_date_from_full_Date,
+    time_from_day_fraction,
 )
 from afmaths.physics.space.celestial_mechanics import (
     eccentric_anomaly_solved,
@@ -113,11 +115,15 @@ def parse_epoch(tle: str) -> str:
     )
 
 
+def parse_julian_date(tle: str) -> JulianDate:
+    return julian_date_from_full_Date(parse_full_date(tle))
+
+
 def parse_full_date(tle: str) -> FullDate:
     epoch = parse_epoch(tle)
     year = Year(int(f"20{epoch[:2]}"))
     date = date_from_day_number(int(epoch[2:5]), year)
-    time = time_from_percentage(float(f"0.{epoch.split(".")[1]}"))
+    time = time_from_day_fraction(float(f"0.{epoch.split(".")[1]}"))
 
     return FullDate(date, time)
 

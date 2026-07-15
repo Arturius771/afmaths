@@ -18,6 +18,7 @@ from itrs_orbit_3d import visualisation_3d_itrs
 from ground_track import visualisation_2d_ground_track
 
 # 41321, 25867, 13901 interesting sat
+# 10967 retrograde
 if __name__ == "__main__":
     norad_id: int = ISS_NORAD_ID or random.randrange(1, 69999)
     track_for_minutes = MINUTES_PER_DAY

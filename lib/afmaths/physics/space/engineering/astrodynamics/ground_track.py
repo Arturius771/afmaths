@@ -40,18 +40,20 @@ def westward_drift_from_mean_motion(n: MeanMotion) -> Degrees:
     return Degrees(Scalar(multiply(360)(divide_by(n)(1))))
 
 
-def westware_drift_from_angular_velocity_and_period(
+def westward_drift_from_angular_velocity_and_period(
     orbital_period: Second,
     body_angular_velocity: Radians = EARTH_ANGULAR_VELOCITY,
 ) -> Degrees:
     return degrees_from_radians(multiply(body_angular_velocity)(orbital_period))
 
 
-def geographic_coordinate_from_itrs(itrs: PositionVector) -> GeographicCoordinates:
+def earth_geographic_coordinate_from_itrs(
+    itrs: PositionVector,
+) -> GeographicCoordinates:
     return transform_geographic_coordinates_from_itrs(itrs)
 
 
-def ground_track_positions(
+def earth_ground_track_positions(
     gcrs_positions: list[PositionVector],
     epoch: Epoch,
 ) -> list[PositionVector]:
@@ -59,7 +61,7 @@ def ground_track_positions(
     return itrs_positions_from_gcrs_position(gcrs_positions, epoch)
 
 
-def start_of_orbit_positions(
+def earth_start_of_orbit_positions(
     gcrs_positions: list[PositionVector],
     orbital_period: Second,
 ) -> list[PositionVector]:
