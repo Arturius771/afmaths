@@ -278,10 +278,40 @@ def orbital_period_from_mean_motion(mean_motion_per_day: MeanMotion) -> Second:
     return Second(Scalar(divide_by(mean_motion_per_day)(SECONDS_PER_DAY)))
 
 
-def current_orbital_elapsed_period(
-    elapsed_seconds: Second, orbital_period: Second
+def current_orbital_elapsed_period_from_epoch(
+    epoch_elapsed_seconds: Second, orbital_period: Second
 ) -> Second:
-    return Second(Scalar(elapsed_seconds % orbital_period))
+    return Second(Scalar(epoch_elapsed_seconds % orbital_period))
+
+
+def elapsed_time_to_true_anomaly(
+    elements: OrbitalElements,
+    target_true_anomaly: TrueAnomaly,
+) -> Second:
+    """Calculates how much time in seconds has passed from perigee to the specified true anomaly."""
+
+    M_delta = (
+        float(
+            kepler_equation(
+                eccentric_anomaly_from_true_anomaly(
+                    target_true_anomaly,
+                    elements.eccentricity,
+                ),
+                elements.eccentricity,
+            )
+        )
+        - float(
+            kepler_equation(
+                eccentric_anomaly_from_true_anomaly(
+                    elements.true_anomaly,
+                    elements.eccentricity,
+                ),
+                elements.eccentricity,
+            )
+        )
+    ) % (2 * math.pi)
+
+    return Second(Scalar(M_delta / float(mean_motion(elements.semi_major_axis))))
 
 
 # region ## Latitude
@@ -394,8 +424,8 @@ def distance_satellite_observer(
     )
 
 
-def orbital_radius_from_itrs(coords: Coordinate3D[Scalar]) -> Distance:
-    return Distance(vector_magnitude_3d(make_vector3d(coords.x, coords.y, coords.z)))
+def orbital_radius_from_position_vector(pos: PositionVector) -> Distance:
+    return Distance(vector_magnitude_3d(make_vector3d(pos.x, pos.y, pos.z)))
 
 
 # region ## Angular Momentum

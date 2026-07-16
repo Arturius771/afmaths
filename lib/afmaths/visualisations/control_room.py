@@ -6,6 +6,7 @@ from afmaths.constants import (
     BEIDOU_IGSO_6,
     GALILEO_7_NORAD_ID,
     ISS_NORAD_ID,
+    ISS_TLE_EXAMPLE,
     JAMES_WEBB,
     MINUTES_PER_DAY,
     MOLNIYA_3_50_NORAD_ID,
@@ -26,8 +27,8 @@ from astronomy_types import Distance, Scalar, Second
 # 41321, 25867, 13901 interesting sat
 # 10967 retrograde
 if __name__ == "__main__":
-    norad_id: int = ISS_NORAD_ID or random.randrange(1, 69999)
-    tle = get_tle_from_norad_id(norad_id)
+    norad_id: int = BEIDOU_IGSO_6 or random.randrange(1, 69999)
+    tle = ISS_TLE_EXAMPLE or get_tle_from_norad_id(norad_id)
     total_orbits = round(orbits_per_day(orbital_period_from_tle(tle)))
     point_interval = 60
 
