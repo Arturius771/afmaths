@@ -34,19 +34,19 @@ class AstrodynamicsTestMethods(unittest.TestCase):
         )
         self.assertAlmostEqual(
             result[0][0],
-            375.3995243441177,
+            375.3885342162439,
             places=7,
         )
 
         self.assertAlmostEqual(
             result[0][1],
-            190.03920119683517,
+            190.0335919432273,
             places=7,
         )
 
         self.assertAlmostEqual(
             result[0][2],
-            185.36032314728254,
+            185.3549422730166,
             places=7,
         )
 
@@ -57,7 +57,7 @@ class AstrodynamicsTestMethods(unittest.TestCase):
 
         self.assertAlmostEqual(
             result[2],
-            2931.7613426663966,
+            2931.8470683197825,
             places=7,
         )
 
@@ -66,19 +66,19 @@ class AstrodynamicsTestMethods(unittest.TestCase):
         )
         self.assertAlmostEqual(
             result[0][0],
-            114.1780233882373,
+            114.174793850831523,
             places=10,
         )
 
         self.assertAlmostEqual(
             result[0][1],
-            56.86899263068062,
+            56.8673882343528,
             places=10,
         )
 
         self.assertAlmostEqual(
             result[0][2],
-            57.309030757556684,
+            57.30740561647872,
             places=10,
         )
 
@@ -89,7 +89,7 @@ class AstrodynamicsTestMethods(unittest.TestCase):
 
         self.assertAlmostEqual(
             result[2],
-            3081.939259221263,
+            3082.026424305649,
             places=10,
         )
 

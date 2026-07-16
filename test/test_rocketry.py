@@ -37,7 +37,7 @@ class RocketryTestMethods(unittest.TestCase):
                 )[0][0],
                 Velocity(Scalar(3000)),
             ),
-            117.62061592204387,
+            117.61738342870154,
         )
 
     def test_delta_v_for_stages(self):

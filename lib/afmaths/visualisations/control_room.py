@@ -20,8 +20,9 @@ from astronomy_types import Distance, Scalar
 
 # 41321, 25867, 13901 interesting sat
 # 10967 retrograde
+# TODO: investigate why orbits dont align for 25867
 if __name__ == "__main__":
-    norad_id: int = MOLNIYA_3_50_NORAD_ID or random.randrange(1, 69999)
+    norad_id: int = 25867 or random.randrange(1, 69999)
     track_for_minutes = MINUTES_PER_DAY
     tle = get_tle_from_norad_id(norad_id)
 

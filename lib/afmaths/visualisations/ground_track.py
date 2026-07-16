@@ -23,6 +23,10 @@ from afmaths.physics.space.astronomy.time_functions import (
 )
 from afmaths.physics.space.celestial_mechanics import (
     current_orbital_elapsed_period,
+    eccentric_anomaly_from_true_anomaly,
+    kepler_equation,
+    mean_anomaly_at_time,
+    mean_motion,
     orbit_equation,
     orbital_direction_from_inclination,
     state_vector_at_time,
@@ -49,7 +53,10 @@ from afmaths.physics.space.transformations import (
     itrs_position_from_gcrs_position,
     transform_geographic_coordinates_from_itrs,
 )
-from afmaths.physics.space.type_conversion_helpers import fulldate_from_python_datetime
+from afmaths.physics.space.type_conversion_helpers import (
+    fulldate_from_python_datetime,
+    make_true_anomaly,
+)
 from afmaths.visualisations.helpers import (
     PlotNode,
     add_plot_nodes,
@@ -128,22 +135,30 @@ def visualisation_2d_ground_track(
         elapsed_seconds,
     )
 
-    velocity = vis_viva(
-        EARTH_MU,
-        orbit_equation(
-            epoch_elements.semi_major_axis,
-            epoch_elements.eccentricity,
-            true_anomaly(epoch_elements.eccentricity, parse_mean_anomaly(tle)),
-        ),
+    r = orbit_equation(
         epoch_elements.semi_major_axis,
+        epoch_elements.eccentricity,
+        true_anomaly(
+            epoch_elements.eccentricity,
+            mean_anomaly_at_time(
+                kepler_equation(
+                    eccentric_anomaly_from_true_anomaly(
+                        make_true_anomaly(0), epoch_elements.eccentricity
+                    ),
+                    epoch_elements.eccentricity,
+                ),
+                elapsed_seconds,
+                mean_motion(
+                    epoch_elements.semi_major_axis,
+                ),
+            ),
+        ),
     )
 
-    print(
-        orbit_equation(
-            epoch_elements.semi_major_axis,
-            epoch_elements.eccentricity,
-            true_anomaly(epoch_elements.eccentricity, parse_mean_anomaly(tle)),
-        ),
+    velocity = vis_viva(
+        EARTH_MU,
+        r,
+        epoch_elements.semi_major_axis,
     )
 
     current_position = earth_geographic_coordinate_from_itrs(
@@ -164,7 +179,7 @@ def visualisation_2d_ground_track(
                     Scalar(current_position.longitude),
                     Scalar(current_position.latitude),
                 ),
-                text=f"Lon: {current_position.longitude:.1f}, Lat: {current_position.latitude:.1f} t={current_orbital_period:.0f}s v={velocity:.2f} m/s",
+                text=f"Lon: {current_position.longitude:.1f}, Lat: {current_position.latitude:.1f} t={current_orbital_period:.0f}s v={velocity:.2f}m/s r={r:.2f}m",
                 size=20,
                 symbol="diamond",
                 colour="orange",
@@ -178,7 +193,7 @@ def visualisation_2d_ground_track(
             f"Satellite {parse_norad_id(tle)} ground track"
             f"<br>Drift: { westward_drift_from_angular_velocity_and_period(period):.2f}° | "
             f"Duration: {track_for} min | Direction: {direction} | "
-            f"Epoch (JD): {parse_julian_date(tle)}"
+            f"Epoch (JD): {parse_julian_date(tle)} | Period: {period:.0f}s"
         ),
         xaxis_title="Longitude [deg]",
         yaxis_title="Latitude [deg]",
