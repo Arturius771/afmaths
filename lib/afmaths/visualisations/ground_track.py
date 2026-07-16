@@ -8,49 +8,34 @@ from afmaths.physics.space.astronomy.time_functions import (
     epoch_offset,
     greenwich_full_Date_from_julian_date,
     julian_date_delta,
-    julian_date_from_full_Date,
     julian_date_now,
-    minutes_from_seconds,
     pretty_print_full_date,
     seconds_from_julian_date_delta,
-    seconds_from_minutes,
 )
 from afmaths.physics.space.celestial_mechanics import (
-    current_orbital_elapsed_period,
-    eccentric_anomaly_from_true_anomaly,
-    kepler_equation,
-    mean_anomaly_at_time,
-    mean_motion,
-    orbit_equation,
+    apoapsis_true_anomaly,
+    current_orbital_elapsed_period_from_epoch,
+    elapsed_time_to_true_anomaly,
     orbital_direction_from_inclination,
+    orbital_elements_from_state_vectors,
+    orbital_radius_from_position_vector,
+    periapsis_true_anomaly,
     state_vector_at_time,
-    true_anomaly,
     vis_viva,
 )
 from afmaths.physics.space.engineering.astrodynamics.ground_track import (
     earth_geographic_coordinate_from_itrs,
-    earth_ground_track_positions,
     earth_start_of_orbit_coordinates,
-    orbits_per_day,
     westward_drift_from_angular_velocity_and_period,
 )
 from afmaths.physics.space.engineering.two_line_elements import (
     orbital_elements_from_tle,
     orbital_period_from_tle,
-    parse_epoch,
-    parse_full_date,
     parse_julian_date,
-    parse_mean_anomaly,
     parse_norad_id,
 )
-from afmaths.physics.space.external.space_track_api import get_tle_from_norad_id
 from afmaths.physics.space.transformations import (
     itrs_position_from_gcrs_position,
-    transform_geographic_coordinates_from_itrs,
-)
-from afmaths.physics.space.type_conversion_helpers import (
-    fulldate_from_python_datetime,
-    make_true_anomaly,
 )
 from afmaths.types import OrbitalDirection
 from afmaths.visualisations.helpers import (
@@ -61,9 +46,6 @@ from afmaths.visualisations.helpers import (
 from astronomy_types import (
     Coordinate2D,
     Epoch,
-    JulianDate,
-    Minute,
-    PositionVector,
     Scalar,
     Second,
 )
@@ -82,93 +64,150 @@ def visualisation_2d_ground_track(
 
     track_for_duration = orbital_period_from_tle(tle) * track_for_orbits
 
-    epoch_elements = orbital_elements_from_tle(tle)
+    tle_epoch_elements = orbital_elements_from_tle(tle)
 
-    direction = orbital_direction_from_inclination(epoch_elements.inclination)
+    direction = orbital_direction_from_inclination(tle_epoch_elements.inclination)
 
-    epoch = Epoch(parse_julian_date(tle))
+    tle_epoch = Epoch(parse_julian_date(tle))
 
-    positions = earth_ground_track_positions(
-        [
-            state_vector_at_time(
-                epoch_elements,
-                Second(Scalar(second)),
-            ).position
-            for second in range(
-                0, int(track_for_duration), int(float(tracking_interval))
-            )
-        ],
-        epoch,
-    )
-
-    geographic_coordinates = [
-        earth_geographic_coordinate_from_itrs(position) for position in positions
+    elapsed_times = [
+        Second(Scalar(second))
+        for second in range(
+            0,
+            int(track_for_duration),
+            int(float(tracking_interval)),
+        )
     ]
 
-    period = orbital_period_from_tle(tle)
+    geographic_coordinates = [
+        earth_geographic_coordinate_from_itrs(
+            itrs_position_from_gcrs_position(
+                epoch_offset(tle_epoch, elapsed_time),
+                gcrs_position,
+            )
+        )
+        for elapsed_time, gcrs_position in zip(
+            elapsed_times,
+            [
+                state_vector_at_time(
+                    tle_epoch_elements,
+                    elapsed_time,
+                ).position
+                for elapsed_time in elapsed_times
+            ],
+        )
+    ]
 
-    fig = go.Figure()
-    fig.add_trace(
-        go.Scatter(
-            x=[(float(coordinate.longitude)) for coordinate in geographic_coordinates],
-            y=[float(coordinate.latitude) for coordinate in geographic_coordinates],
-            mode="markers+lines" if lines else "markers",
-            name="Satellite ground track",
-            marker={
-                "color": list(range(len(geographic_coordinates))),
-                "colorscale": "greys",
-                "showscale": False,
-                "colorbar": {
-                    "title": "Iteration",
-                },
-            },
+    orbital_period = orbital_period_from_tle(tle)
+
+    epoch_to_now_seconds = seconds_from_julian_date_delta(julian_date_delta(tle_epoch))
+
+    current_state = state_vector_at_time(
+        tle_epoch_elements,
+        epoch_to_now_seconds,
+    )
+    current_elements = orbital_elements_from_state_vectors(current_state)
+
+    current_epoch = epoch_offset(
+        tle_epoch,
+        epoch_to_now_seconds,
+    )
+
+    time_to_perigee = elapsed_time_to_true_anomaly(
+        current_elements,
+        periapsis_true_anomaly(),
+    )
+
+    time_to_apogee = elapsed_time_to_true_anomaly(
+        current_elements,
+        apoapsis_true_anomaly(),
+    )
+
+    perigee = earth_geographic_coordinate_from_itrs(
+        itrs_position_from_gcrs_position(
+            epoch_offset(current_epoch, time_to_perigee),
+            state_vector_at_time(
+                current_elements,
+                time_to_perigee,
+            ).position,
         )
     )
 
-    elapsed_seconds = seconds_from_julian_date_delta(julian_date_delta(epoch))
-
-    state = state_vector_at_time(
-        epoch_elements,
-        elapsed_seconds,
+    apogee = earth_geographic_coordinate_from_itrs(
+        itrs_position_from_gcrs_position(
+            epoch_offset(current_epoch, time_to_apogee),
+            state_vector_at_time(
+                current_elements,
+                time_to_apogee,
+            ).position,
+        )
     )
 
-    current_radius = orbit_equation(
-        epoch_elements.semi_major_axis,
-        epoch_elements.eccentricity,
-        true_anomaly(
-            epoch_elements.eccentricity,
-            mean_anomaly_at_time(
-                kepler_equation(
-                    eccentric_anomaly_from_true_anomaly(
-                        make_true_anomaly(0), epoch_elements.eccentricity
-                    ),
-                    epoch_elements.eccentricity,
-                ),
-                elapsed_seconds,
-                mean_motion(
-                    epoch_elements.semi_major_axis,
-                ),
-            ),
-        ),
-    )
-
-    current_velocity = vis_viva(
-        EARTH_MU,
-        current_radius,
-        epoch_elements.semi_major_axis,
-    )
+    current_radius = orbital_radius_from_position_vector(current_state.position)
 
     current_position = earth_geographic_coordinate_from_itrs(
         itrs_position_from_gcrs_position(
-            julian_date_now(),
-            state.position,
+            current_epoch,
+            current_state.position,
         )
     )
 
-    current_orbital_period = current_orbital_elapsed_period(elapsed_seconds, period)
-
     fig = add_plot_nodes(
-        fig,
+        add_plot_nodes(
+            add_plot_nodes(
+                go.Figure().add_trace(
+                    go.Scatter(
+                        x=[
+                            (float(coordinate.longitude))
+                            for coordinate in geographic_coordinates
+                        ],
+                        y=[
+                            float(coordinate.latitude)
+                            for coordinate in geographic_coordinates
+                        ],
+                        mode="markers+lines" if lines else "markers",
+                        name="Satellite ground track",
+                        marker={
+                            "color": list(range(len(geographic_coordinates))),
+                            "colorscale": "greys",
+                            "reversescale": True,
+                            "showscale": False,
+                            "colorbar": {
+                                "title": "Iteration",
+                            },
+                        },
+                    )
+                ),
+                [
+                    PlotNode(
+                        name=f"Apogee",
+                        coordinate=Coordinate2D(
+                            Scalar(apogee.longitude),
+                            Scalar(apogee.latitude),
+                        ),
+                        text=f"Apogee",
+                        size=20,
+                        symbol="circle",
+                        colour="Orange",
+                        marker_only=True,
+                    )
+                ],
+            ),
+            [
+                PlotNode(
+                    name=f"Perigee",
+                    coordinate=Coordinate2D(
+                        Scalar(perigee.longitude),
+                        Scalar(perigee.latitude),
+                    ),
+                    text=f"Perigee",
+                    size=20,
+                    symbol="circle",
+                    colour="Orange",
+                    marker_only=True,
+                )
+            ],
+        ),
         [
             PlotNode(
                 name=f"Position: {pretty_print_full_date(greenwich_full_Date_from_julian_date(julian_date_now()),  show_timesystem=True)}",
@@ -176,21 +215,19 @@ def visualisation_2d_ground_track(
                     Scalar(current_position.longitude),
                     Scalar(current_position.latitude),
                 ),
-                text=f"Lon: {current_position.longitude:.1f}, Lat: {current_position.latitude:.1f} t={current_orbital_period:.0f}s v={current_velocity:.2f}m/s r={current_radius:.2f}m",
+                text=f"Lon: {current_position.longitude:.1f}, Lat: {current_position.latitude:.1f} t={current_orbital_elapsed_period_from_epoch(epoch_to_now_seconds, orbital_period):.0f}s v={vis_viva(EARTH_MU,current_radius,tle_epoch_elements.semi_major_axis,):.2f}m/s r={current_radius:.2f}m",
                 size=20,
                 symbol="diamond",
                 colour="Red",
                 marker_only=True,
             )
         ],
-    )
-
-    fig.update_layout(
+    ).update_layout(
         title=(
             f"Satellite {parse_norad_id(tle)} ground track"
-            f"<br>Drift: { westward_drift_from_angular_velocity_and_period(period):.2f}° | "
+            f"<br>Drift: { westward_drift_from_angular_velocity_and_period(orbital_period):.2f}° | "
             f"Duration: {track_for_duration:.0f}s | Direction: {"Prograde" if direction == OrbitalDirection.PROGRADE else "Retrograde"} | "
-            f"Epoch (JD): {parse_julian_date(tle)} | Period: {period:.0f}s"
+            f"Epoch (JD): {parse_julian_date(tle)} | Period: {orbital_period:.0f}s"
         ),
         xaxis_title="Longitude [deg]",
         yaxis_title="Latitude [deg]",
@@ -201,12 +238,12 @@ def visualisation_2d_ground_track(
     if show_orbit_markers:
 
         orbit_marker_coordinates = earth_start_of_orbit_coordinates(
-            epoch_elements, epoch, track_for_orbits
+            tle_epoch_elements, tle_epoch, track_for_orbits
         )
 
         orbit_epoch = [
             greenwich_full_Date_from_julian_date(
-                epoch_offset(epoch, Second(Scalar(period * min)))
+                epoch_offset(tle_epoch, Second(Scalar(orbital_period * min)))
             )
             for min in range(len(orbit_marker_coordinates))
         ]
