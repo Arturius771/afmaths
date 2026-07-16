@@ -26,6 +26,7 @@ from afmaths.physics.space.type_conversion_helpers import make_vector3d
 from pathlib import Path
 
 BACKGROUND_IMAGE = Path(__file__).with_name("Earth-hires.jpg")
+METRES_PER_KILOMETRE = 1_000.0
 
 
 @dataclass(frozen=True)
@@ -62,29 +63,35 @@ class PlotOrbital2DSettings:
 
 
 # Subject: unit/scale conversion.
-# Converts a plot-scaled distance back into physical distance units by multiplying
-# by the distance scale. This is a visualisation/physics unit adapter.
+# Converts plot units back to the SI physical distance used by the astrodynamics
+# layer. One plot unit represents ``distance_scale`` kilometres.
 def scale_distance_to_distance(
     distance: Distance,
-    distance_scale_km: float,
+    distance_scale: float,
 ) -> Distance:
-    return Distance(Scalar(distance * distance_scale_km))
+    """Both distance and scale must be in the same unit."""
+    return Distance(Scalar(distance * distance_scale))
 
 
 # Subject: unit/scale conversion.
-# Converts a physical distance into plot units by dividing by the distance scale.
-def distance_to_scale_distance(distance_km: Distance, scale: float) -> Distance:
-    return Distance(Scalar(distance_km / scale))
+# Converts an SI physical distance in metres to plot units. Plot configuration
+# remains expressed in kilometres per plot unit for readable axes.
+def distance_to_scale_distance(
+    distance: Distance,
+    distance_scale: float,
+) -> Distance:
+    """Both distance and scale must be in the same unit."""
+    return Distance(Scalar(distance / distance_scale))
 
 
 # Subject: visualisation scale conversion for 3D vectors.
-# Divides x/y/z position components by distance_scale_km and rebuilds a Vector3D.
-# This is a render-time coordinate scaling helper, not celestial mechanics.
-def scale_position(position: PositionVector, distance_scale_km: float) -> Vector3D:
+# Converts SI metre position components into plot units where each unit represents
+# ``distance_scale`` kilometres. This is render-time scaling only.
+def scale_position(position: PositionVector, distance_scale: float) -> Vector3D:
     return make_vector3d(
-        distance_to_scale_distance(Distance(position.x), distance_scale_km),
-        distance_to_scale_distance(Distance(position.y), distance_scale_km),
-        distance_to_scale_distance(Distance(position.z), distance_scale_km),
+        distance_to_scale_distance(Distance(position.x), distance_scale),
+        distance_to_scale_distance(Distance(position.y), distance_scale),
+        distance_to_scale_distance(Distance(position.z), distance_scale),
     )
 
 
@@ -105,10 +112,10 @@ def elements_scaled_to_plot(
 # Subject: unit/scale conversion.
 # Backwards-compatible alias for distance_to_scale_distance.
 def value_to_scale(
-    distance_km: Distance,
+    distance_metres: Distance,
     scale: float,
 ) -> Distance:
-    return distance_to_scale_distance(distance_km, scale)
+    return distance_to_scale_distance(distance_metres, scale)
 
 
 # Subject: plot bounds.
@@ -141,10 +148,10 @@ def plot_origin() -> Coordinate2D:
 
 # Subject: visualisation scale conversion.
 def central_body_radius_plot(
-    central_body_radius_km: float,
-    distance_scale_km: float,
+    central_body_radius: float,
+    distance_scale: float,
 ) -> Distance:
-    return Distance(Scalar(central_body_radius_km / distance_scale_km))
+    return Distance(Scalar(central_body_radius / distance_scale))
 
 
 # Subject: Plotly 2D layout.
@@ -416,24 +423,24 @@ def plot_sphere_surface(
 
 # Subject: visualisation scale conversion.
 def scaled_radius(
-    radius_km: float,
+    radius: Distance,
     radius_scale: float,
-    distance_scale_km: float,
+    distance_scale: float,
 ) -> Distance:
-    return Distance(Scalar((radius_km * radius_scale) / distance_scale_km))
+    return Distance(Scalar((radius * radius_scale) / distance_scale))
 
 
 # Subject: Plotly 3D surface trace.
 def add_body_surface(
     name: str,
-    radius_km: float,
+    radius: Distance,
     radius_scale: float,
-    distance_scale_km: float,
+    distance_scale: float,
     position: PositionVector | None = None,
     opacity: float = 0.9,
 ) -> go.Surface:
     surface = plot_sphere_surface(
-        scaled_radius(radius_km, radius_scale, distance_scale_km),
+        scaled_radius(radius, radius_scale, distance_scale),
         position,
     )
 
@@ -451,16 +458,16 @@ def add_body_surface(
 def make_3d_orbit_figure(
     traces: list,
     title: str,
-    distance_scale_km: float,
+    distance_scale: float,
 ) -> go.Figure:
     fig = go.Figure(data=traces)
 
     fig.update_layout(
         title=title,
         scene=dict(
-            xaxis_title=f"X ({distance_scale_km:,} km units)",
-            yaxis_title=f"Y ({distance_scale_km:,} km units)",
-            zaxis_title=f"Z ({distance_scale_km:,} km units)",
+            xaxis_title=f"X ({distance_scale:,} m units)",
+            yaxis_title=f"Y ({distance_scale:,} m units)",
+            zaxis_title=f"Z ({distance_scale:,} m units)",
             aspectmode="data",
         ),
     )
@@ -561,7 +568,7 @@ from astronomy_types import Coordinate3D, Scalar
 def synthetic_iss_like_itrs_positions(
     samples: int = 360,
     orbits: float = 2.0,
-    radius_km: float = 6790.0,
+    radius_metres: float = 6_790_000.0,
     inclination_degrees: float = 51.6,
     orbital_period_seconds: float = 92.68 * 60.0,
     initial_longitude_degrees: float = 0.0,
@@ -576,7 +583,7 @@ def synthetic_iss_like_itrs_positions(
     - spherical Earth
     - Earth rotating underneath the orbital plane
 
-    Returns Earth-fixed Cartesian coordinates in kilometres.
+    Returns Earth-fixed Cartesian coordinates in metres.
     """
 
     def wrap_degrees(longitude: float) -> float:
@@ -590,9 +597,13 @@ def synthetic_iss_like_itrs_positions(
         latitude = math.radians(latitude_degrees)
 
         return PositionVector(
-            x=Position(Scalar(radius_km * math.cos(latitude) * math.cos(longitude))),
-            y=Position(Scalar(radius_km * math.cos(latitude) * math.sin(longitude))),
-            z=Position(Scalar(radius_km * math.sin(latitude))),
+            x=Position(
+                Scalar(radius_metres * math.cos(latitude) * math.cos(longitude))
+            ),
+            y=Position(
+                Scalar(radius_metres * math.cos(latitude) * math.sin(longitude))
+            ),
+            z=Position(Scalar(radius_metres * math.sin(latitude))),
         )
 
     inclination = math.radians(inclination_degrees)

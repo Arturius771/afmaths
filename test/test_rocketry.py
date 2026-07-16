@@ -33,11 +33,11 @@ class RocketryTestMethods(unittest.TestCase):
             propellant_mass_from_full_mass(
                 Mass(1000),
                 hohmann_transfer_parameters(
-                    Distance(Scalar(300)), Distance(Scalar(1000))
+                    Distance(Scalar(300000)), Distance(Scalar(1000000))
                 )[0][0],
-                Velocity(Scalar(3)),
+                Velocity(Scalar(3000)),
             ),
-            117.62061592204421,
+            117.62061592204387,
         )
 
     def test_delta_v_for_stages(self):

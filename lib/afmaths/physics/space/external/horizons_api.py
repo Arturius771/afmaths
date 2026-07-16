@@ -14,11 +14,12 @@ from astronomy_types import (
     EquatorialCoordinates,
     FullDate,
     Position,
+    PositionVector,
     RightAscension,
     Scalar,
     StateVector,
-    Vector3D,
     Velocity,
+    VelocityVector,
 )
 
 from afmaths.physics.space.celestial_mechanics import (
@@ -62,7 +63,15 @@ class HorizonsQuantity(str, Enum):
     RA_DEC = "1"
 
 
+class StateVectorOutputUnits(str, Enum):
+    SI = "m-s"
+    KM_S = "km-s"
+
+
 CoordinateType = Literal["astrometric", "apparent"]
+
+METRES_PER_KILOMETRE = 1_000.0
+HORIZONS_VECTOR_OUTPUT_UNITS = "KM-S"
 
 
 @dataclass(frozen=True)
@@ -88,19 +97,29 @@ class HorizonsObserverQuery:
 def build_horizons_url(query: HorizonsObserverQuery) -> str:
     quantities = ",".join(quantity.value for quantity in query.quantities)
 
+    params = {
+        "format": query.response_format.value,
+        "COMMAND": quote_horizons(query.target.value),
+        "EPHEM_TYPE": quote_horizons(query.ephemeris_type.value),
+        "CENTER": quote_horizons(f"500@{query.centre.value}"),
+        "START_TIME": quote_horizons(string_from_fulldate(query.start_time)),
+        "STOP_TIME": quote_horizons(string_from_fulldate(query.stop_time)),
+        "STEP_SIZE": quote_horizons(query.step_size),
+        "QUANTITIES": quote_horizons(quantities),
+    }
+
+    # Horizons does not support metres/second directly. Request its native KM-S
+    # vector format and convert to SI after parsing.
+    if query.ephemeris_type in {
+        HorizonsEphemerisType.VECTORS,
+        HorizonsEphemerisType.ELEMENTS,
+    }:
+        params["OUT_UNITS"] = quote_horizons(HORIZONS_VECTOR_OUTPUT_UNITS)
+
     request = requests.Request(
         "GET",
         "https://ssd.jpl.nasa.gov/api/horizons.api",
-        params={
-            "format": query.response_format.value,
-            "COMMAND": quote_horizons(query.target.value),
-            "EPHEM_TYPE": quote_horizons(query.ephemeris_type.value),
-            "CENTER": quote_horizons(f"500@{query.centre.value}"),
-            "START_TIME": quote_horizons(string_from_fulldate(query.start_time)),
-            "STOP_TIME": quote_horizons(string_from_fulldate(query.stop_time)),
-            "STEP_SIZE": quote_horizons(query.step_size),
-            "QUANTITIES": quote_horizons(quantities),
-        },
+        params=params,
     ).prepare()
 
     if request.url is None:
@@ -243,8 +262,23 @@ def quote_horizons(value: str) -> str:
     return f"'{value}'"
 
 
-def parse_state_vector_rows(rows: list[str]) -> list[StateVector]:
+def state_vector_unit_scale(output_units: StateVectorOutputUnits) -> float:
+    if output_units == StateVectorOutputUnits.SI:
+        return METRES_PER_KILOMETRE
+
+    if output_units == StateVectorOutputUnits.KM_S:
+        return 1.0
+
+    raise ValueError(f"Unsupported state-vector output units: {output_units}")
+
+
+def parse_state_vector_rows(
+    rows: list[str],
+    output_units: StateVectorOutputUnits = StateVectorOutputUnits.SI,
+) -> list[StateVector]:
+    """Parse Horizons KM-S vectors, returning metres and m/s by default."""
     state_vectors = []
+    unit_scale = state_vector_unit_scale(output_units)
 
     index = 0
 
@@ -252,21 +286,26 @@ def parse_state_vector_rows(rows: list[str]) -> list[StateVector]:
         row = rows[index].strip()
 
         if row.startswith("X ="):
+            if index + 1 >= len(rows):
+                raise ValueError(
+                    "Horizons position row was not followed by a velocity row"
+                )
+
             position_parts = row.replace("=", " ").split()
             velocity_parts = rows[index + 1].replace("=", " ").split()
 
-            x = Position(Scalar(float(position_parts[1])))
-            y = Position(Scalar(float(position_parts[3])))
-            z = Position(Scalar(float(position_parts[5])))
+            x = Position(Scalar(float(position_parts[1]) * unit_scale))
+            y = Position(Scalar(float(position_parts[3]) * unit_scale))
+            z = Position(Scalar(float(position_parts[5]) * unit_scale))
 
-            vx = Velocity(Scalar(float(velocity_parts[1])))
-            vy = Velocity(Scalar(float(velocity_parts[3])))
-            vz = Velocity(Scalar(float(velocity_parts[5])))
+            vx = Velocity(Scalar(float(velocity_parts[1]) * unit_scale))
+            vy = Velocity(Scalar(float(velocity_parts[3]) * unit_scale))
+            vz = Velocity(Scalar(float(velocity_parts[5]) * unit_scale))
 
             state_vectors.append(
                 StateVector(
-                    position=Vector3D(x=x, y=y, z=z),
-                    velocity=Vector3D(x=vx, y=vy, z=vz),
+                    position=PositionVector(x=x, y=y, z=z),
+                    velocity=VelocityVector(x=vx, y=vy, z=vz),
                 )
             )
 
@@ -284,7 +323,9 @@ def get_object_state_vectors_from_horizon(
     step_size: str = "1d",
     centre: HorizonsCommandTarget = HorizonsCommandTarget.EARTH,
     response_format: HorizonsFormat = HorizonsFormat.JSON,
+    output_units: StateVectorOutputUnits = StateVectorOutputUnits.SI,
 ) -> list[StateVector]:
+    """Return state vectors in metres and m/s unless KM-S is requested."""
     query = HorizonsObserverQuery(
         target=target,
         start_time=start_time,
@@ -298,7 +339,7 @@ def get_object_state_vectors_from_horizon(
 
     result = fetch_horizons_result(query)
     rows = extract_ephemeris_rows(result)
-    return parse_state_vector_rows(rows)
+    return parse_state_vector_rows(rows, output_units)
 
 
 if __name__ == "__main__":

@@ -5,7 +5,7 @@ from pathlib import Path
 import plotly.graph_objects as go
 from afmaths.constants import (
     BEIDOU_IGSO_6,
-    EARTH_MU_KM_CUBED,
+    EARTH_MU,
     GALILEO_7_NORAD_ID,
     ISS_NORAD_ID,
     MINUTES_PER_DAY,
@@ -27,7 +27,6 @@ from afmaths.physics.space.celestial_mechanics import (
     orbital_direction_from_inclination,
     state_vector_at_time,
     true_anomaly,
-    true_anomaly_at_time,
     vis_viva,
 )
 from afmaths.physics.space.engineering.astrodynamics.ground_track import (
@@ -130,13 +129,21 @@ def visualisation_2d_ground_track(
     )
 
     velocity = vis_viva(
-        EARTH_MU_KM_CUBED,
+        EARTH_MU,
         orbit_equation(
             epoch_elements.semi_major_axis,
             epoch_elements.eccentricity,
             true_anomaly(epoch_elements.eccentricity, parse_mean_anomaly(tle)),
         ),
         epoch_elements.semi_major_axis,
+    )
+
+    print(
+        orbit_equation(
+            epoch_elements.semi_major_axis,
+            epoch_elements.eccentricity,
+            true_anomaly(epoch_elements.eccentricity, parse_mean_anomaly(tle)),
+        ),
     )
 
     current_position = earth_geographic_coordinate_from_itrs(
@@ -157,7 +164,7 @@ def visualisation_2d_ground_track(
                     Scalar(current_position.longitude),
                     Scalar(current_position.latitude),
                 ),
-                text=f"Lon: {current_position.longitude:.1f}, Lat: {current_position.latitude:.1f} t={current_orbital_period:.0f}s v={velocity}",
+                text=f"Lon: {current_position.longitude:.1f}, Lat: {current_position.latitude:.1f} t={current_orbital_period:.0f}s v={velocity:.2f} m/s",
                 size=20,
                 symbol="diamond",
                 colour="orange",
@@ -169,10 +176,12 @@ def visualisation_2d_ground_track(
     fig.update_layout(
         title=(
             f"Satellite {parse_norad_id(tle)} ground track"
-            f"<br>Drift: {westward_drift_from_angular_velocity_and_period(period)} deg | Duration: {track_for} min | Direction: {direction} | Epoch (JD): {parse_julian_date(tle)}"
+            f"<br>Drift: { westward_drift_from_angular_velocity_and_period(period):.2f}° | "
+            f"Duration: {track_for} min | Direction: {direction} | "
+            f"Epoch (JD): {parse_julian_date(tle)}"
         ),
-        xaxis_title="Longitude",
-        yaxis_title="Latitude",
+        xaxis_title="Longitude [deg]",
+        yaxis_title="Latitude [deg]",
     )
 
     plot_nodes = []

@@ -20,7 +20,7 @@ from astronomy_types import (
     Year,
 )
 
-from afmaths.constants import EARTH_MU_KM_CUBED
+from afmaths.constants import EARTH_MU
 from afmaths.operation import divide_by
 from afmaths.physics.space.astronomy.time_functions import (
     date_from_day_number,
@@ -209,14 +209,12 @@ def parse_mean_motion_per_day(tle: str) -> MeanMotion:
     )
 
 
-def orbital_period_from_tle(
-    tle: str, mu: GravitationalParameter = EARTH_MU_KM_CUBED
-) -> Second:
+def orbital_period_from_tle(tle: str, mu: GravitationalParameter = EARTH_MU) -> Second:
     return orbital_period(orbital_elements_from_tle(tle).semi_major_axis, mu)
 
 
 def orbital_elements_from_tle(
-    tle: str, mu: GravitationalParameter = EARTH_MU_KM_CUBED
+    tle: str, mu: GravitationalParameter = EARTH_MU
 ) -> OrbitalElements:
     e = parse_eccentricity(tle)
 

@@ -1,6 +1,9 @@
 from afmaths.constants import EXAMPLE_ELEMENTS
 from afmaths.visualisations.base import build_keplerian_elements_2d_figure
-from afmaths.visualisations.helpers import PlotOrbital2DSettings
+from afmaths.visualisations.helpers import (
+    PlotOrbital2DSettings,
+    distance_to_scale_distance,
+)
 from astronomy_types import (
     ArgumentOfPeriapsis,
     Distance,
@@ -13,7 +16,7 @@ from astronomy_types import (
     TrueAnomaly,
 )
 
-DISTANCE_SCALE_KM = 12_824.9333333
+DISTANCE_SCALE = 12_824.9333333 * 1000
 ORBIT_RESOLUTION = 720
 
 
@@ -23,7 +26,10 @@ def plot_elements_from_example() -> OrbitalElements:
         RightAscension(EXAMPLE_ELEMENTS.right_ascension_of_ascending_node),
         ArgumentOfPeriapsis(EXAMPLE_ELEMENTS.argument_of_periapsis),
         SemiMajorAxis(
-            Distance(Scalar(EXAMPLE_ELEMENTS.semi_major_axis / DISTANCE_SCALE_KM))
+            distance_to_scale_distance(
+                Distance(Scalar(EXAMPLE_ELEMENTS.semi_major_axis)),
+                DISTANCE_SCALE,
+            )
         ),
         Eccentricity(EXAMPLE_ELEMENTS.eccentricity),
         TrueAnomaly(EXAMPLE_ELEMENTS.true_anomaly),
@@ -33,7 +39,7 @@ def plot_elements_from_example() -> OrbitalElements:
 def main() -> None:
     build_keplerian_elements_2d_figure(
         settings=PlotOrbital2DSettings(
-            distance_scale=DISTANCE_SCALE_KM,
+            distance_scale=DISTANCE_SCALE * 1000,
             plot_width=600,
             plot_height=1000,
         ),

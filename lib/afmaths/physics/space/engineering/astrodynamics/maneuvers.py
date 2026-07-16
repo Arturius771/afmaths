@@ -15,7 +15,7 @@ from astronomy_types import (
     Inclination,
 )
 from afmaths.constants import (
-    EARTH_MU_KM_CUBED,
+    EARTH_MU,
 )
 from afmaths.types import DeltaV
 from afmaths.geometry.geometry import (
@@ -61,7 +61,7 @@ from afmaths.tensors import (
 
 
 def flight_path_angle(
-    state: StateVector, mu: GravitationalParameter = EARTH_MU_KM_CUBED
+    state: StateVector, mu: GravitationalParameter = EARTH_MU
 ) -> Radians:
     elements = orbital_elements_from_state_vectors(state)
 
@@ -143,7 +143,7 @@ def delta_v(initial_velocity: Velocity, final_velocity: Velocity) -> DeltaV:
 def increase_semi_major_axis_at_periapsis(
     target_a: SemiMajorAxis,
     current_radius: Distance,
-    mu: GravitationalParameter = EARTH_MU_KM_CUBED,
+    mu: GravitationalParameter = EARTH_MU,
 ) -> DeltaV:
     """Calculates the delta-v required to increase the semi-major axis of an orbit at periapsis."""
     return delta_v(
@@ -155,7 +155,7 @@ def increase_semi_major_axis_at_periapsis(
 def increase_semi_major_axis_at_apoapsis(
     target_a: SemiMajorAxis,
     current_radius: Distance,
-    mu: GravitationalParameter = EARTH_MU_KM_CUBED,
+    mu: GravitationalParameter = EARTH_MU,
 ) -> DeltaV:
     """Calculates the delta-v required to increase the semi-major axis of an orbit at apoapsis."""
     return delta_v(
@@ -167,7 +167,7 @@ def increase_semi_major_axis_at_apoapsis(
 def decrease_semi_major_axis_at_periapsis(
     target_a: SemiMajorAxis,
     current_radius: Distance,
-    mu: GravitationalParameter = EARTH_MU_KM_CUBED,
+    mu: GravitationalParameter = EARTH_MU,
 ) -> DeltaV:
     """Calculates the delta-v required to decrease the semi-major axis of an orbit at periapsis."""
     return delta_v(
@@ -179,7 +179,7 @@ def decrease_semi_major_axis_at_periapsis(
 def decrease_semi_major_axis_at_apoapsis(
     target_a: SemiMajorAxis,
     current_radius: Distance,
-    mu: GravitationalParameter = EARTH_MU_KM_CUBED,
+    mu: GravitationalParameter = EARTH_MU,
 ) -> DeltaV:
     """Calculates the delta-v required to decrease the semi-major axis of an orbit at apoapsis."""
     return delta_v(

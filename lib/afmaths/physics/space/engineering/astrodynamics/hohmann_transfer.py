@@ -5,8 +5,8 @@ from astronomy_types import (
     Second,
 )
 from afmaths.constants import (
-    EARTH_MU_KM_CUBED,
-    EARTH_RADIUS_KM,
+    EARTH_MU,
+    EARTH_RADIUS,
 )
 from afmaths.physics.space.engineering.astrodynamics.maneuvers import (
     decrease_semi_major_axis_at_apoapsis,
@@ -34,8 +34,8 @@ from afmaths.physics.space.celestial_mechanics import (
 def hohmann_transfer_from_orbital_elements(
     initial_orbit: OrbitalElements,
     final_orbit: OrbitalElements,
-    initial_body_radius: Distance = EARTH_RADIUS_KM,
-    mu: GravitationalParameter = EARTH_MU_KM_CUBED,
+    initial_body_radius: Distance = EARTH_RADIUS,
+    mu: GravitationalParameter = EARTH_MU,
 ) -> tuple[tuple[DeltaV, ...], OrbitalDirection, Second]:
     """Assume a circular obit for initial and final."""
     return hohmann_transfer_parameters(
@@ -55,7 +55,7 @@ def hohmann_transfer_from_orbital_elements(
 def hohmann_transfer_delta_v(
     initial_radius: Distance,
     target_radius: Distance,
-    mu: GravitationalParameter = EARTH_MU_KM_CUBED,
+    mu: GravitationalParameter = EARTH_MU,
 ) -> tuple[DeltaV, ...]:
     """Calculates the delta-v required for a Hohmann transfer. Assumes a circular initial and final orbit."""
     # www.braeunig.us/space/problem.htm#4.19
@@ -68,12 +68,12 @@ def hohmann_transfer_delta_v(
     transfer_delta_v = (
         increase_semi_major_axis_at_periapsis(transfer_a, initial_radius, mu)
         if prograde
-        else decrease_semi_major_axis_at_apoapsis(transfer_a, target_radius, mu)
+        else decrease_semi_major_axis_at_apoapsis(transfer_a, initial_radius, mu)
     )
     circularise = (
         increase_semi_major_axis_at_apoapsis(transfer_a, target_radius, mu)
         if prograde
-        else decrease_semi_major_axis_at_periapsis(transfer_a, initial_radius, mu)
+        else decrease_semi_major_axis_at_periapsis(transfer_a, target_radius, mu)
     )
 
     total = DeltaV(add(transfer_delta_v)(circularise))
@@ -88,8 +88,8 @@ def hohmann_transfer_delta_v(
 def hohmann_transfer_parameters(
     initial_altitude: Distance,
     target_altitude: Distance,
-    initial_body_radius: Distance = EARTH_RADIUS_KM,
-    mu: GravitationalParameter = EARTH_MU_KM_CUBED,
+    initial_body_radius: Distance = EARTH_RADIUS,
+    mu: GravitationalParameter = EARTH_MU,
 ) -> tuple[tuple[DeltaV, ...], OrbitalDirection, Second]:
 
     initial_r = orbit_radius(initial_altitude, initial_body_radius)

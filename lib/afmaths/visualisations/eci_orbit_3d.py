@@ -1,9 +1,11 @@
 import datetime
 import random
 
-from astronomy_types import GravitationalParameter, Scalar
+from astronomy_types import Distance, GravitationalParameter, Scalar
 
 from afmaths.constants import (
+    EARTH_MU,
+    EARTH_RADIUS,
     EUTELSAT_EUTE_117_NORAD_ID,
     GALILEO_7_NORAD_ID,
     ISS_NORAD_ID,
@@ -20,20 +22,18 @@ from afmaths.visualisations.base import (
     build_3d_orbit_figure,
 )
 
-DISTANCE_SCALE_KM = 1000
+DISTANCE_SCALE = 1000
 BODY_RADIUS_SCALE = 1.0
 ORBIT_POINTS = 100
 
-EARTH_RADIUS_KM = 6_371.0
-ISS_RADIUS = 200
-EARTH_GRAVITATIONAL_PARAMETER = GravitationalParameter(Scalar(398_600.4418))
+SATELLITE_DISPLAY_RADIUS = Distance(Scalar(200_000))
 
 
 def visualisation_3d_satellite_earth(bodies: list[BodyPlotConfig]):
     settings = OrbitPlotSettings(
         centre=HorizonsCommandTarget.EARTH,
-        gravitational_parameter=EARTH_GRAVITATIONAL_PARAMETER,
-        distance_scale_km=DISTANCE_SCALE_KM,
+        gravitational_parameter=EARTH_MU,
+        distance_scale=DISTANCE_SCALE,
         orbit_points=ORBIT_POINTS,
         start_time=datetime.datetime.now(),
         add_prediction_to_orbit=False,
@@ -43,7 +43,7 @@ def visualisation_3d_satellite_earth(bodies: list[BodyPlotConfig]):
         settings=settings,
         title="Earth Artificial Satellites",
         central_body_name="Earth",
-        central_body_radius_km=EARTH_RADIUS_KM,
+        central_body_radius=EARTH_RADIUS,
         central_body_radius_scale=BODY_RADIUS_SCALE,
         orbiting_bodies=bodies,
     ).show()
@@ -56,7 +56,7 @@ if __name__ == "__main__":
             BodyPlotConfig(
                 name="ISS",
                 target=orbital_elements_from_tle(get_tle_from_norad_id(ISS_NORAD_ID)),
-                radius_km=ISS_RADIUS,
+                radius=SATELLITE_DISPLAY_RADIUS,
                 radius_scale=BODY_RADIUS_SCALE,
             ),
             BodyPlotConfig(
@@ -64,7 +64,7 @@ if __name__ == "__main__":
                 target=orbital_elements_from_tle(
                     get_tle_from_norad_id(EUTELSAT_EUTE_117_NORAD_ID)
                 ),
-                radius_km=ISS_RADIUS,
+                radius=SATELLITE_DISPLAY_RADIUS,
                 radius_scale=BODY_RADIUS_SCALE,
             ),
             BodyPlotConfig(
@@ -72,7 +72,7 @@ if __name__ == "__main__":
                 target=orbital_elements_from_tle(
                     get_tle_from_norad_id(MOLNIYA_3_50_NORAD_ID)
                 ),
-                radius_km=ISS_RADIUS,
+                radius=SATELLITE_DISPLAY_RADIUS,
                 radius_scale=BODY_RADIUS_SCALE,
             ),
             BodyPlotConfig(
@@ -80,13 +80,13 @@ if __name__ == "__main__":
                 target=orbital_elements_from_tle(
                     get_tle_from_norad_id(GALILEO_7_NORAD_ID)
                 ),
-                radius_km=ISS_RADIUS,
+                radius=SATELLITE_DISPLAY_RADIUS,
                 radius_scale=BODY_RADIUS_SCALE,
             ),
             BodyPlotConfig(
                 name=f"Random: {random_tle}",
                 target=orbital_elements_from_tle(get_tle_from_norad_id(random_tle)),
-                radius_km=ISS_RADIUS,
+                radius=SATELLITE_DISPLAY_RADIUS,
                 radius_scale=BODY_RADIUS_SCALE,
             ),
         ]

@@ -18,7 +18,7 @@ from astronomy_types import (
     TrueAnomaly,
 )
 
-from afmaths.constants import EARTH_MU_KM_CUBED, EARTH_RADIUS_KM
+from afmaths.constants import EARTH_MU, EARTH_RADIUS
 from afmaths.physics.space.celestial_mechanics import (
     orbit_altitude,
     orbit_radius,
@@ -28,9 +28,9 @@ from afmaths.physics.space.engineering.astrodynamics.hohmann_transfer import (
     hohmann_transfer_parameters,
 )
 
-INITIAL_ALTITUDE_KM = Distance(Scalar(10_000))
-MAX = INITIAL_ALTITUDE_KM * 500
-INTERVAL = INITIAL_ALTITUDE_KM / 2
+INITIAL_ALTITUDE_M = Distance(Scalar(10_000_000))
+MAX_ALTITUDE_M = INITIAL_ALTITUDE_M * 500
+ALTITUDE_INTERVAL_M = INITIAL_ALTITUDE_M / 2
 
 if __name__ == "__main__":
     initial_orbit = OrbitalElements(
@@ -39,17 +39,17 @@ if __name__ == "__main__":
         ArgumentOfPeriapsis(Radians(Scalar(math.radians(10)))),
         SemiMajorAxis(
             orbit_radius(
-                INITIAL_ALTITUDE_KM,
-                EARTH_RADIUS_KM,
+                INITIAL_ALTITUDE_M,
+                EARTH_RADIUS,
             )
         ),
         Eccentricity(Ratio(Scalar(0.0))),
         TrueAnomaly(Anomaly(Radians(Scalar(0)))),
     )
 
-    initial_radius_km = orbit_radius(
-        INITIAL_ALTITUDE_KM,
-        EARTH_RADIUS_KM,
+    initial_radius_m = orbit_radius(
+        INITIAL_ALTITUDE_M,
+        EARTH_RADIUS,
     )
 
     x = []
@@ -58,19 +58,22 @@ if __name__ == "__main__":
     delta_v_data = []
     time_data_days = []
 
-    for i in range(int(INITIAL_ALTITUDE_KM), int(MAX), int(INTERVAL)):
-        target_radius_km = orbit_radius(
+    for i in range(
+        int(INITIAL_ALTITUDE_M), int(MAX_ALTITUDE_M), int(ALTITUDE_INTERVAL_M)
+    ):
+        target_radius_m = orbit_radius(
             Distance(Scalar(i)),
-            EARTH_RADIUS_KM,
+            EARTH_RADIUS,
         )
 
         deltav, direction, transfer_time = hohmann_transfer_parameters(
-            INITIAL_ALTITUDE_KM,
-            orbit_altitude(target_radius_km, EARTH_RADIUS_KM),
-            mu=EARTH_MU_KM_CUBED,
+            INITIAL_ALTITUDE_M,
+            orbit_altitude(target_radius_m, EARTH_RADIUS),
+            mu=EARTH_MU,
         )
 
-        x.append(target_radius_km / initial_radius_km)
+        x.append(target_radius_m / initial_radius_m)
+        # Core astrodynamics returns m/s; convert only at the display boundary.
         delta_v_data.append(deltav[0])
         initial_burn.append(deltav[1])
         arrival_burn.append(deltav[2])
@@ -81,7 +84,7 @@ if __name__ == "__main__":
     peak_delta_v = max(delta_v_data)
     peak_index = delta_v_data.index(peak_delta_v)
     peak_time_days = time_data_days[peak_index]
-    peak_radius_km = x[peak_index] * initial_radius_km
+    peak_radius = x[peak_index] * initial_radius_m
 
     tradeoff_x = []
     days_per_m_per_s_saved = []
@@ -89,8 +92,7 @@ if __name__ == "__main__":
     tradeoff_delta_v = []
 
     for index in range(peak_index + 1, len(x)):
-        delta_v_saved_km_s = peak_delta_v - delta_v_data[index]
-        delta_v_saved_m_s = delta_v_saved_km_s * 1000
+        delta_v_saved_m_s = peak_delta_v - delta_v_data[index]
 
         extra_time_days = time_data_days[index] - peak_time_days
 
@@ -109,8 +111,8 @@ if __name__ == "__main__":
     best_tradeoff_time_days = tradeoff_time_days[best_tradeoff_index]
     best_tradeoff_days_per_m_per_s = days_per_m_per_s_saved[best_tradeoff_index]
 
-    best_tradeoff_radius_km = best_tradeoff_x * initial_radius_km
-    best_tradeoff_delta_v_saved_m_s = (peak_delta_v - best_tradeoff_delta_v) * 1000
+    best_tradeoff_radius = best_tradeoff_x * initial_radius_m
+    best_tradeoff_delta_v_saved_m_s = peak_delta_v - best_tradeoff_delta_v
 
     fig = make_subplots(
         rows=2,
@@ -161,19 +163,19 @@ if __name__ == "__main__":
             x=[x[peak_index]],
             y=[peak_delta_v],
             mode="markers",
-            name=f"Worst circular orbit: {peak_radius_km:.0f} km",
+            name=f"Worst circular orbit: {peak_radius:.0f} m",
             marker=dict(size=10),
             customdata=[
                 [
-                    peak_radius_km,
+                    peak_radius,
                     peak_time_days,
                 ]
             ],
             hovertemplate=(
                 "Worst circular orbit<br>"
                 "Radius ratio: %{x:.2f}<br>"
-                "Radius: %{customdata[0]:.0f} km<br>"
-                "Total Δv: %{y:.4f} km/s<br>"
+                "Radius: %{customdata[0]:.0f} m<br>"
+                "Total Δv: %{y:.4f} m/s<br>"
                 "Transfer time: %{customdata[1]:.2f} days"
                 "<extra></extra>"
             ),
@@ -187,11 +189,11 @@ if __name__ == "__main__":
             x=[best_tradeoff_x],
             y=[best_tradeoff_delta_v],
             mode="markers",
-            name=f"Best time/Δv tradeoff: {best_tradeoff_radius_km:.0f} km",
+            name=f"Best time/Δv tradeoff: {best_tradeoff_radius:.0f} m",
             marker=dict(size=12, symbol="diamond"),
             customdata=[
                 [
-                    best_tradeoff_radius_km,
+                    best_tradeoff_radius,
                     best_tradeoff_time_days,
                     best_tradeoff_delta_v_saved_m_s,
                     best_tradeoff_days_per_m_per_s,
@@ -200,8 +202,8 @@ if __name__ == "__main__":
             hovertemplate=(
                 "Best time/Δv tradeoff<br>"
                 "Radius ratio: %{x:.2f}<br>"
-                "Radius: %{customdata[0]:.0f} km<br>"
-                "Total Δv: %{y:.4f} km/s<br>"
+                "Radius: %{customdata[0]:.0f} m<br>"
+                "Total Δv: %{y:.4f} m/s<br>"
                 "Transfer time: %{customdata[1]:.2f} days<br>"
                 "Δv saved from peak: %{customdata[2]:.2f} m/s<br>"
                 "Cost: %{customdata[3]:.2f} days per m/s saved"
@@ -226,7 +228,7 @@ if __name__ == "__main__":
                 "Radius ratio: %{x:.2f}<br>"
                 "Days per m/s saved: %{y:.2f}<br>"
                 "Transfer time: %{customdata[0]:.2f} days<br>"
-                "Total Δv: %{customdata[1]:.4f} km/s"
+                "Total Δv: %{customdata[1]:.4f} m/s"
                 "<extra></extra>"
             ),
         ),
@@ -237,14 +239,14 @@ if __name__ == "__main__":
     fig.update_layout(
         title=(
             "Hohmann transfer tradeoff "
-            f"(initial orbit: {periapsis_radius(initial_orbit.semi_major_axis, initial_orbit.eccentricity):.0f} km)<br>"
+            f"(initial orbit: {periapsis_radius(initial_orbit.semi_major_axis, initial_orbit.eccentricity):.0f} m)<br>"
             "<sup>After the worst circular orbit, Δv falls slightly, but the time cost grows rapidly</sup>"
         ),
         height=900,
     )
 
     fig.update_yaxes(
-        title_text="Δv [km/s]",
+        title_text="Δv [m/s]",
         row=1,
         col=1,
     )

@@ -3,6 +3,7 @@ import datetime
 from astronomy_types import Epoch, GravitationalParameter, Scalar, JulianDate, Second
 from afmaths.constants import (
     BEIDOU_IGSO_6,
+    EARTH_RADIUS,
     EUTELSAT_EUTE_117_NORAD_ID,
     GALILEO_7_NORAD_ID,
     ISS_NORAD_ID,
@@ -13,7 +14,7 @@ from afmaths.physics.space.astronomy.time_functions import (
     julian_date_from_full_Date,
 )
 from afmaths.physics.space.celestial_mechanics import (
-    EARTH_MU_KM_CUBED,
+    EARTH_MU,
     state_vector_at_time,
 )
 from afmaths.physics.space.engineering.two_line_elements import (
@@ -27,10 +28,9 @@ from afmaths.physics.space.transformations import itrs_positions_from_gcrs_posit
 from afmaths.visualisations.base import OrbitPlotSettings, build_3d_itrs_orbit_figure
 from afmaths.physics.space.external.horizons_api import HorizonsCommandTarget
 
-DISTANCE_SCALE_KM = 1000
+DISTANCE_SCALE = 1000
 BODY_RADIUS_SCALE = 1.0
 ORBIT_POINTS = 50
-EARTH_RADIUS_KM = 6_371.0
 
 
 def visualisation_3d_itrs(tle: str, track_for: int = MINUTES_PER_DAY):
@@ -41,7 +41,7 @@ def visualisation_3d_itrs(tle: str, track_for: int = MINUTES_PER_DAY):
         state_vector_at_time(
             orbital_elements,
             Second(Scalar(minute * 60)),
-            EARTH_MU_KM_CUBED,
+            EARTH_MU,
         ).position
         for minute in range(track_for)
     ]
@@ -54,8 +54,8 @@ def visualisation_3d_itrs(tle: str, track_for: int = MINUTES_PER_DAY):
 
     settings = OrbitPlotSettings(
         centre=HorizonsCommandTarget.EARTH,
-        gravitational_parameter=EARTH_MU_KM_CUBED,
-        distance_scale_km=DISTANCE_SCALE_KM,
+        gravitational_parameter=EARTH_MU,
+        distance_scale=DISTANCE_SCALE,
         orbit_points=ORBIT_POINTS,
         start_time=datetime.datetime.now(),
         time_offset=datetime.timedelta(days=1),
@@ -67,7 +67,7 @@ def visualisation_3d_itrs(tle: str, track_for: int = MINUTES_PER_DAY):
         itrs_positions=itrs_positions,
         title=f"{parse_norad_id(tle)} ITRS orbit view",
         central_body_name="Earth",
-        central_body_radius_km=EARTH_RADIUS_KM,
+        central_body_radius=EARTH_RADIUS,
         central_body_radius_scale=1.0,
         orbit_name="ISS ITRS track",
     ).show()

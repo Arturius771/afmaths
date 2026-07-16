@@ -1,9 +1,10 @@
 from __future__ import annotations
 
+from dataclasses import replace
 import math
 import plotly.graph_objects as go
 
-from afmaths.constants import EARTH_MU_KM_CUBED
+from afmaths.constants import EARTH_MU, EARTH_RADIUS, EARTH_RADIUS
 from afmaths.physics.space.engineering.astrodynamics.phase_orbit import (
     phase_apoapsis,
     phase_orbit,
@@ -58,7 +59,7 @@ from astronomy_types import (
     TrueAnomaly,
 )
 
-AHEAD_BEHIND_CUTOFF_RAD = 3.14
+AHEAD_BEHIND_CUTOFF_RAD = math.pi
 
 
 def forward_true_anomaly_delta_rad(
@@ -148,6 +149,30 @@ def phase_is_higher_than_original(
     original_orbit: OrbitalElements,
 ) -> bool:
     return phase_orbit_elements.semi_major_axis > original_orbit.semi_major_axis
+
+
+def align_phase_poi_to_initial_true_anomaly(
+    phase_orbit_elements: OrbitalElements,
+    original_orbit: OrbitalElements,
+    initial_true_anomaly: TrueAnomaly,
+) -> OrbitalElements:
+    """Rotate the phase orbit so its burn/return apsis is at the selected POI."""
+    phase_poi_true_anomaly = (
+        0.0
+        if phase_is_higher_than_original(phase_orbit_elements, original_orbit)
+        else math.pi
+    )
+    poi_direction = original_orbit.argument_of_periapsis + initial_true_anomaly
+    phase_argument_of_periapsis = normalise_angle_rad(
+        poi_direction - phase_poi_true_anomaly
+    )
+
+    return replace(
+        phase_orbit_elements,
+        argument_of_periapsis=ArgumentOfPeriapsis(
+            Radians(Scalar(phase_argument_of_periapsis))
+        ),
+    )
 
 
 def expected_shared_apsis_radius(
@@ -261,7 +286,7 @@ def poi_plot_node(
             "POI<br>"
             f"{shared_apsis_label}<br>"
             f"{phase_orbit_label}<br>"
-            f"Δv = {delta_v:.4f} km/s<br>"
+            f"Δv = {delta_v:.4f} m/s<br>"
             f"T₂ = {phase_period:.2f} s"
         ),
         colour="red",
@@ -276,14 +301,14 @@ def build_phase_orbit_2d_perifocal_figure(
     desired_true_anomaly: TrueAnomaly,
     gravitational_parameter: GravitationalParameter,
     central_body_name: str = "Earth",
-    central_body_radius_km: Distance = Distance(Scalar(6_371.0)),
+    central_body_radius: Distance = EARTH_RADIUS,
     title_prefix: str = "Phasing orbit in the perifocal frame",
 ) -> go.Figure:
     """
     Build a phase-orbit visualisation.
 
-    `original_orbit` should be supplied in physical distance units, e.g. km,
-    because the astrodynamics functions use it with μ.
+    `original_orbit` must be supplied in SI physical units (metres), because
+    the astrodynamics functions use it with μ in m³/s².
 
     The plotting copies of the orbits are scaled internally.
     """
@@ -298,6 +323,11 @@ def build_phase_orbit_2d_perifocal_figure(
         original_orbit,
         signed_phase_delta,
         gravitational_parameter,
+    )
+    phase_orbit_elements = align_phase_poi_to_initial_true_anomaly(
+        phase_orbit_elements,
+        original_orbit,
+        initial_true_anomaly,
     )
 
     calculated_phase_period = orbital_period(
@@ -374,7 +404,7 @@ def build_phase_orbit_2d_perifocal_figure(
                 ),
                 primary_focus_plot_coordinate,
                 central_body_radius_plot(
-                    central_body_radius_km,
+                    central_body_radius,
                     settings.distance_scale,
                 ),
                 central_body_name,
@@ -405,12 +435,12 @@ def build_phase_orbit_2d_perifocal_figure(
                 f"Phase periapsis = {phase_periapsis(
                     phase_orbit_elements.semi_major_axis,
                     original_orbit,
-                ):.2f} km, "
+                ):.2f} m, "
                 f"phase apoapsis = {phase_apoapsis(
                     phase_orbit_elements.semi_major_axis,
                     original_orbit,
-                ):.2f} km, "
-                f"Δv = {delta_v:.4f} km/s"
+                ):.2f} m, "
+                f"Δv = {delta_v:.4f} m/s"
             ),
         ),
         primary_focus_plot_coordinate,
@@ -418,10 +448,8 @@ def build_phase_orbit_2d_perifocal_figure(
     )
 
 
-DISTANCE_SCALE_KM = Distance(Scalar(12_824.9333333))
-
-EARTH_RADIUS_KM = Distance(Scalar(6_371.0))
-INITIAL_ALTITUDE_KM = Distance(Scalar(200_000))
+DISTANCE_SCALE = 12_824.9333333 * 1000
+INITIAL_ALTITUDE_M = Distance(Scalar(200_000_000))
 
 
 if __name__ == "__main__":
@@ -429,14 +457,14 @@ if __name__ == "__main__":
         Inclination(Radians(Scalar(0))),
         RightAscension(Radians(Scalar(0))),
         ArgumentOfPeriapsis(Radians(Scalar(0.0))),
-        SemiMajorAxis(Distance(Scalar(EARTH_RADIUS_KM + INITIAL_ALTITUDE_KM))),
+        SemiMajorAxis(Distance(Scalar(EARTH_RADIUS + INITIAL_ALTITUDE_M))),
         Eccentricity(Ratio(Scalar(0.0))),
         TrueAnomaly(Anomaly(Radians(Scalar(0.0)))),
     )
 
     build_phase_orbit_2d_perifocal_figure(
         settings=PlotOrbital2DSettings(
-            distance_scale=DISTANCE_SCALE_KM,
+            distance_scale=DISTANCE_SCALE,
             plot_width=1000,
             plot_height=1000,
         ),
@@ -445,5 +473,5 @@ if __name__ == "__main__":
         # Since 4 > 3.14, it is treated as "behind" and uses a higher phase orbit.
         initial_true_anomaly=TrueAnomaly(Anomaly(Radians(Scalar(0.5)))),
         desired_true_anomaly=TrueAnomaly(Anomaly(Radians(Scalar(1.0)))),
-        gravitational_parameter=EARTH_MU_KM_CUBED,
+        gravitational_parameter=EARTH_MU,
     ).show()

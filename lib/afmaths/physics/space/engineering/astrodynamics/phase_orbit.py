@@ -13,7 +13,7 @@ from astronomy_types import (
     TrueAnomaly,
 )
 from afmaths.constants import (
-    EARTH_MU_KM_CUBED,
+    EARTH_MU,
 )
 from afmaths.physics.space.engineering.astrodynamics.maneuvers import delta_v
 from afmaths.types import OrbitalDirection, DeltaV
@@ -176,7 +176,7 @@ def phase_delta_v(
 def phase_orbit(
     original_orbit: OrbitalElements,
     true_anomaly_delta: TrueAnomaly,
-    mu: GravitationalParameter = EARTH_MU_KM_CUBED,
+    mu: GravitationalParameter = EARTH_MU,
 ) -> tuple[DeltaV, DeltaV, OrbitalElements]:
     """Returns the Point of Impulse (POI) DeltaV, total DeltaV, and phase orbital elements."""
 

@@ -13,14 +13,15 @@ from afmaths.physics.space.engineering.two_line_elements import (
 )
 from afmaths.physics.space.external.space_track_api import get_tle_from_norad_id
 from base import BodyPlotConfig
-from iss_earth_3d import visualisation_3d_satellite_earth
+from eci_orbit_3d import visualisation_3d_satellite_earth
 from itrs_orbit_3d import visualisation_3d_itrs
 from ground_track import visualisation_2d_ground_track
+from astronomy_types import Distance, Scalar
 
 # 41321, 25867, 13901 interesting sat
 # 10967 retrograde
 if __name__ == "__main__":
-    norad_id: int = ISS_NORAD_ID or random.randrange(1, 69999)
+    norad_id: int = MOLNIYA_3_50_NORAD_ID or random.randrange(1, 69999)
     track_for_minutes = MINUTES_PER_DAY
     tle = get_tle_from_norad_id(norad_id)
 
@@ -30,7 +31,7 @@ if __name__ == "__main__":
             BodyPlotConfig(
                 name=f"SAT: {tle}",
                 target=orbital_elements_from_tle(tle),
-                radius_km=200,
+                radius=Distance(Scalar(200_000)),
                 radius_scale=1.0,
             )
         ]

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from dataclasses import replace
+
 from astronomy_types import (
     Anomaly,
     Coordinate2D,
@@ -98,7 +100,7 @@ def add_orbiting_body_2d(
     primary_focus_plot_coordinate: Coordinate2D,
     settings: PlotOrbital2DSettings,
     body_name: str,
-    body_radius_km: float,
+    body_radius: float,
     elements: OrbitalElements,
     is_satellite: bool = False,
 ) -> tuple[go.Figure, int, int, list[int]]:
@@ -124,7 +126,7 @@ def add_orbiting_body_2d(
             mode="markers",
             name=body_name,
             marker=dict(
-                size=body_radius_km / settings.distance_scale + 5,
+                size=body_radius / settings.distance_scale + 5,
                 color=body_colour,
                 line=dict(color=body_colour, width=2),
             ),
@@ -183,10 +185,6 @@ def add_orbiting_body_2d(
     return fig, body_trace_index, label_trace_index, vector_trace_indices
 
 
-def real_semi_major_axis_metres(elements: OrbitalElements) -> SemiMajorAxis:
-    return SemiMajorAxis(Distance(Scalar(elements.semi_major_axis * 1000)))
-
-
 def find_closest_approach(
     settings: PlotOrbital2DSettings,
     primary_focus_plot_coordinate: Coordinate2D,
@@ -197,7 +195,7 @@ def find_closest_approach(
 ) -> tuple[float, TrueAnomaly, Coordinate2D]:
 
     reference_period = orbital_period(
-        real_semi_major_axis_metres(orbital_elements[0]),
+        orbital_elements[0].semi_major_axis,
         gravitational_parameter(
             Mass(central_body_mass_kg),
             Mass(orbiting_body_mass_kg[0]),
@@ -218,9 +216,14 @@ def find_closest_approach(
                 elements,
                 Distance(Scalar(settings.distance_scale)),
             )
+            mu = gravitational_parameter(
+                Mass(central_body_mass_kg),
+                Mass(orbiting_body_mass_kg[index]),
+            )
             eccentric_anomaly_obj = eccentric_anomaly_at_time(
                 elements,
                 Second(Scalar(elapsed_time)),
+                mu,
             )
 
             true_anomaly = true_anomaly_from_eccentric_anomaly(
@@ -248,7 +251,6 @@ def find_closest_approach(
                 sat_positions[i],
             )
         )
-        true_anomalies.append(sat_positions[i])
 
     index = distances.index(min(distances))
 
@@ -274,7 +276,7 @@ def generate_combined_orbital_slider_data(
     steps = []
 
     reference_period = orbital_period(
-        real_semi_major_axis_metres(orbital_elements[0]),
+        orbital_elements[0].semi_major_axis,
         gravitational_parameter(
             Mass(central_body_mass_kg),
             Mass(orbiting_body_mass_kg[0]),
@@ -309,6 +311,7 @@ def generate_combined_orbital_slider_data(
             eccentric_anomaly_obj = eccentric_anomaly_at_time(
                 elements,
                 Second(Scalar(elapsed_time)),
+                mu,
             )
 
             true_anomaly = true_anomaly_from_eccentric_anomaly(
@@ -322,31 +325,24 @@ def generate_combined_orbital_slider_data(
                 eccentric_anomaly_obj,
             )
 
-            distance_km = (
+            distance_metres = scale_distance_to_distance(
                 calculate_distance(
                     Coordinate2D(coordinates.x, coordinates.y),
                     primary_focus_plot_coordinate,
-                )
-                * settings.distance_scale
+                ),
+                settings.distance_scale,
             )
 
             velocity_m_s = vis_viva(
                 mu=mu,
-                radius=Distance(Scalar(distance_km * 1000)),
+                radius=distance_metres,
                 a=SemiMajorAxis(
-                    Distance(
-                        Scalar(
-                            scale_distance_to_distance(
-                                plot_elements.semi_major_axis,
-                                settings.distance_scale,
-                            )
-                            * 1000
-                        )
+                    scale_distance_to_distance(
+                        plot_elements.semi_major_axis,
+                        settings.distance_scale,
                     )
                 ),
             )
-
-            velocity_km_s = velocity_m_s / 1000
 
             body_x_updates.append([coordinates.x])
             body_y_updates.append([coordinates.y])
@@ -356,8 +352,8 @@ def generate_combined_orbital_slider_data(
             label_text_updates.append(
                 [
                     f"{orbiting_body_names[index]}<br>"
-                    f"r = {distance_km:.2f} km <br>"
-                    f"v = {velocity_km_s:.2f} km/s <br>"
+                    f"r = {distance_metres:.2f} m <br>"
+                    f"v = {velocity_m_s:.2f} m/s <br>"
                     f"ta = {true_anomaly:.2f} rad <br>"
                     f"t = {elapsed_time:.2f} s"
                 ]
@@ -425,10 +421,10 @@ def generate_combined_orbital_slider_data(
 def build_2d_orbit_visualiser_figure(
     settings: PlotOrbital2DSettings,
     central_body_name: str,
-    central_body_radius_km: float,
+    central_body_radius: float,
     central_body_mass_kg: float,
     orbiting_body_names: list[str],
-    orbiting_body_radius_km: list[float],
+    orbiting_body_radius: list[float],
     orbiting_body_mass_kg: list[float],
     orbital_elements: list[OrbitalElements],
     orbiting_body_is_satellite: list[bool] | None = None,
@@ -439,7 +435,7 @@ def build_2d_orbit_visualiser_figure(
 
     if not (
         len(orbiting_body_names)
-        == len(orbiting_body_radius_km)
+        == len(orbiting_body_radius)
         == len(orbiting_body_mass_kg)
         == len(orbital_elements)
         == len(orbiting_body_is_satellite)
@@ -464,7 +460,7 @@ def build_2d_orbit_visualiser_figure(
                 primary_focus_plot_coordinate,
                 settings,
                 orbiting_body_names[index],
-                orbiting_body_radius_km[index],
+                orbiting_body_radius[index],
                 elements,
                 orbiting_body_is_satellite[index],
             )
@@ -482,7 +478,7 @@ def build_2d_orbit_visualiser_figure(
                         fig,
                         primary_focus_plot_coordinate,
                         central_body_radius_plot(
-                            central_body_radius_km,
+                            central_body_radius,
                             settings.distance_scale,
                         ),
                         central_body_name,
@@ -526,24 +522,27 @@ def build_2d_orbit_visualiser_figure(
     )
 
 
-DISTANCE_SCALE_KM = 17_000.0
+DISTANCE_SCALE = 17_000.0 * 1000
 
 
 def main() -> None:
     settings = PlotOrbital2DSettings(
-        distance_scale=DISTANCE_SCALE_KM,
+        distance_scale=DISTANCE_SCALE,
     )
 
     build_2d_orbit_visualiser_figure(
         settings=settings,
         central_body_name="Earth",
-        central_body_radius_km=6_371.0,
+        central_body_radius=6_371.0,
         central_body_mass_kg=5.9722e24,
         orbiting_body_names=["Moon", "Sat"],
-        orbiting_body_radius_km=[1_737.4, 1_737.4],
+        orbiting_body_radius=[1_737.4 * 1000, 1_737.4 * 1000],
         orbiting_body_mass_kg=[7.346e22, 1000],
         orbiting_body_is_satellite=[False, True],
-        orbital_elements=[MOON_ELEMENTS, SATELLITE_EXAMPLE_ELEMENTS],
+        orbital_elements=[
+            MOON_ELEMENTS,
+            SATELLITE_EXAMPLE_ELEMENTS,
+        ],
         title="Earth-Moon system",
     ).show()
 

@@ -3,8 +3,8 @@ import math
 from typing import Callable
 
 from afmaths.constants import (
-    EARTH_MU_KM_CUBED,
-    EARTH_RADIUS_KM,
+    EARTH_MU,
+    EARTH_RADIUS,
     GRAVITATIONAL_CONSTANT,
     SECONDS_PER_DAY,
     UNIT_VECTOR_XY_PLANE,
@@ -135,7 +135,7 @@ from afmaths.types import AngularMomentum, Area, DeltaV, Force, Mass, OrbitalDir
 def generate_all_orbit_positions(
     orbital_elements: OrbitalElements,
     resolution: int = 50,
-    gravitational_parameter: GravitationalParameter = EARTH_MU_KM_CUBED,
+    gravitational_parameter: GravitationalParameter = EARTH_MU,
 ) -> list[PositionVector]:
     if resolution < 5:
         raise ValueError("Resolution must be greater than 5.")
@@ -245,9 +245,7 @@ def orbit_centripetal_force(velocity: Velocity, radius: Distance, mass: Mass) ->
     return centripetal_force(centripetal_acceleration(velocity, radius), mass)
 
 
-def orbital_period(
-    a: SemiMajorAxis, mu: GravitationalParameter = EARTH_MU_KM_CUBED
-) -> Second:
+def orbital_period(a: SemiMajorAxis, mu: GravitationalParameter = EARTH_MU) -> Second:
     return DOUBLE(multiply(math.pi)(square_root(divide_by(mu)(CUBE(a)))))
 
 
@@ -262,7 +260,7 @@ def swept_area_of_ellipse(
 
 def mean_motion(
     a: SemiMajorAxis,
-    mu: GravitationalParameter = EARTH_MU_KM_CUBED,
+    mu: GravitationalParameter = EARTH_MU,
 ) -> MeanMotion:
     """Calculates the mean motion of an orbit from the semi major axis in radians per second"""
     # n = np.sqrt(mu / np.power(a, 3))
@@ -337,7 +335,7 @@ def radial_velocity(state: StateVector) -> Velocity:
 
 def velocity_at_radius(
     r: Distance,
-    mu: GravitationalParameter = EARTH_MU_KM_CUBED,
+    mu: GravitationalParameter = EARTH_MU,
 ) -> Velocity:
     return Velocity(Scalar(square_root(divide_by(r)(mu))))
 
@@ -371,13 +369,13 @@ def gravitational_acceleration_at_altitude(
 
 
 def orbit_radius(
-    alt: Distance, central_body_radius: Distance = EARTH_RADIUS_KM
+    alt: Distance, central_body_radius: Distance = EARTH_RADIUS
 ) -> Distance:
     return add(alt)(central_body_radius)
 
 
 def orbit_altitude(
-    radius: Distance, central_body_radius: Distance = EARTH_RADIUS_KM
+    radius: Distance, central_body_radius: Distance = EARTH_RADIUS
 ) -> Distance:
     return Distance(subtract(central_body_radius)(radius))
 
@@ -557,7 +555,7 @@ def perifocal_position_at_descending_node(
 
 def orbital_elements_from_state_vectors(
     state_vectors: StateVector,
-    mu: GravitationalParameter = EARTH_MU_KM_CUBED,
+    mu: GravitationalParameter = EARTH_MU,
 ) -> OrbitalElements:
     """Calculates the orbital elements of an orbit from the state vectors (position and velocity)"""
     # From TUB MSE SFM Exercise 2 solution
@@ -596,7 +594,7 @@ def orbital_elements_from_state_vectors(
 
 def state_vector_from_orbital_elements(
     orbital_elements: OrbitalElements,
-    mu: GravitationalParameter = EARTH_MU_KM_CUBED,
+    mu: GravitationalParameter = EARTH_MU,
 ) -> StateVector:
     """Calculates the state vectors (position and velocity) of an orbit from the orbital elements.
 
@@ -631,7 +629,7 @@ def state_vector_from_orbital_elements(
 def state_vector_at_time(
     orbital_elements: OrbitalElements,
     time_offset: Second = Second(Scalar(0)),
-    mu: GravitationalParameter = EARTH_MU_KM_CUBED,
+    mu: GravitationalParameter = EARTH_MU,
 ) -> StateVector:
     """Calculates the state vectors (position and velocity) of an orbit from the orbital elements at a given time offset from the current position in the orbit."""
 
@@ -689,7 +687,7 @@ def propagate_orbit_to_time_2d(
 def position_vector_at_time(
     orbital_elements: OrbitalElements,
     time_offset: Second = Second(Scalar(0)),
-    mu: GravitationalParameter = EARTH_MU_KM_CUBED,
+    mu: GravitationalParameter = EARTH_MU,
 ) -> PositionVector:
     return state_vector_at_time(orbital_elements, time_offset, mu).position
 
@@ -697,7 +695,7 @@ def position_vector_at_time(
 def velocity_vector_at_time(
     orbital_elements: OrbitalElements,
     time_offset_s: Second = Second(Scalar(0)),
-    gravitational_parameter: GravitationalParameter = EARTH_MU_KM_CUBED,
+    gravitational_parameter: GravitationalParameter = EARTH_MU,
 ) -> VelocityVector:
     return state_vector_at_time(
         orbital_elements, time_offset_s, gravitational_parameter
@@ -796,7 +794,7 @@ def argument_of_periapsis(
 def eccentricity_from_ellipse_equation(
     angular_momentum_vector: AngularMomentum,
     a: SemiMajorAxis,
-    mu: GravitationalParameter = EARTH_MU_KM_CUBED,
+    mu: GravitationalParameter = EARTH_MU,
 ) -> Eccentricity:
     """Calculates the eccentricity of an orbit from the angular momentum vector and semi major axis"""
 
@@ -882,7 +880,7 @@ def right_ascension_of_ascending_node_from_angular_momentum_vector(
 
 def semi_major_axis_from_state_vectors(
     state_vectors: StateVector,
-    mu: GravitationalParameter = EARTH_MU_KM_CUBED,
+    mu: GravitationalParameter = EARTH_MU,
 ) -> SemiMajorAxis:
     """Calculates the semi major axis of an orbit from the position and velocity vectors"""
     # r_norm = np.linalg.norm(r)
@@ -899,7 +897,7 @@ def semi_major_axis_from_state_vectors(
 
 
 def semi_major_axis_from_period(
-    orbital_period: Second, mu: GravitationalParameter = EARTH_MU_KM_CUBED
+    orbital_period: Second, mu: GravitationalParameter = EARTH_MU
 ) -> SemiMajorAxis:
     return exponentiate(divide_by(3)(2))(
         divide_by(DOUBLE(math.pi))(multiply(square_root(mu))(orbital_period))
@@ -1057,7 +1055,7 @@ def eccentric_anomaly_solved(
 def eccentric_anomaly_at_time(
     orbital_elements: OrbitalElements,
     time_seconds: Second,
-    g: GravitationalParameter = EARTH_MU_KM_CUBED,
+    g: GravitationalParameter = EARTH_MU,
 ) -> EccentricAnomaly:
 
     initial_mean_anomaly = kepler_equation(

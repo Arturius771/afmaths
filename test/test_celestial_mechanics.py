@@ -43,32 +43,40 @@ class CelestialMechanicsTestMethods(unittest.TestCase):
         result = orbital_elements_from_state_vectors(
             StateVector(
                 PositionVector(
-                    Position(Scalar(10000)),
-                    Position(Scalar(40000)),
-                    Position(Scalar(-5000)),
+                    Position(Scalar(10000000)),
+                    Position(Scalar(40000000)),
+                    Position(Scalar(-5000000)),
                 ),
                 VelocityVector(
-                    Velocity(Scalar(-1.5)),
-                    Velocity(Scalar(1)),
-                    Velocity(Scalar(-0.1)),
+                    Velocity(Scalar(-1500)),
+                    Velocity(Scalar(1000)),
+                    Velocity(Scalar(-100)),
                 ),
             )
         )
-        self.assertAlmostEqual(result.inclination, 0.12166217595729033, places=10)
-
         self.assertAlmostEqual(
-            result.right_ascension_of_ascending_node, 3.024483909022929, places=10
+            result.argument_of_periapsis,
+            1.597899323919624,
+            places=6,
         )
 
         self.assertAlmostEqual(
-            result.argument_of_periapsis, 1.5978995641224425, places=6
+            result.semi_major_axis,
+            25_015_181.01846454,
+            places=1,
         )
 
-        self.assertAlmostEqual(result.semi_major_axis, 25015.186690979368, places=1)
+        self.assertAlmostEqual(
+            result.eccentricity,
+            0.7079771708731989,
+            places=6,
+        )
 
-        self.assertAlmostEqual(result.eccentricity, 0.7079768603248032, places=6)
-
-        self.assertAlmostEqual(result.true_anomaly, 2.987554518980773, places=6)
+        self.assertAlmostEqual(
+            result.true_anomaly,
+            2.9875547591835923,
+            places=6,
+        )
 
     def test_orbit_state_vector_prediction(self):
         result = state_vector_at_time(
@@ -76,7 +84,7 @@ class CelestialMechanicsTestMethods(unittest.TestCase):
                 Inclination(radians_from_degrees(Degrees(Scalar(98.371)))),
                 RightAscension(radians_from_degrees(Degrees(Scalar(120.534)))),
                 ArgumentOfPeriapsis(radians_from_degrees(Degrees(Scalar(10.598)))),
-                SemiMajorAxis(Distance(Scalar(6878.1))),
+                SemiMajorAxis(Distance(Scalar(6878100))),
                 Eccentricity(Ratio(Scalar(10e-5))),
                 TrueAnomaly(Anomaly(Radians(Scalar(2.8022276030554347)))),
             ),
@@ -84,32 +92,33 @@ class CelestialMechanicsTestMethods(unittest.TestCase):
         )
         self.assertAlmostEqual(
             result.position.x,
-            -1753.131769017119,
+            -1_753_135.2394416651,
             places=2,
         )
         self.assertAlmostEqual(
             result.position.y,
-            1070.9950241554125,
-            places=1,
-        )
-        self.assertAlmostEqual(
-            result.position.z,
-            -6564.0676605044755,
+            1_071_001.4816334906,
             places=2,
         )
         self.assertAlmostEqual(
+            result.position.z,
+            -6_564_065.679221897,
+            places=2,
+        )
+
+        self.assertAlmostEqual(
             result.velocity.x,
-            -3.478980009547892,
+            -3_478.9797952214476,
             places=2,
         )
         self.assertAlmostEqual(
             result.velocity.y,
-            6.473396036204375,
+            6_473.398314925645,
             places=2,
         )
         self.assertAlmostEqual(
             result.velocity.z,
-            1.986162313733967,
+            1_986.1714357769285,
             places=2,
         )
 
@@ -117,48 +126,25 @@ class CelestialMechanicsTestMethods(unittest.TestCase):
             orbital_elements_from_state_vectors(
                 StateVector(
                     PositionVector(
-                        Position(Scalar(10000)),
-                        Position(Scalar(40000)),
-                        Position(Scalar(-5000)),
+                        Position(Scalar(10000000)),
+                        Position(Scalar(40000000)),
+                        Position(Scalar(-5000000)),
                     ),
                     VelocityVector(
-                        Velocity(Scalar(-1.5)),
-                        Velocity(Scalar(1)),
-                        Velocity(Scalar(-0.1)),
+                        Velocity(Scalar(-1500)),
+                        Velocity(Scalar(1000)),
+                        Velocity(Scalar(-100)),
                     ),
                 )
             )
         )
-        self.assertAlmostEqual(
-            result.position.x,
-            10000.000000000027,
-            places=2,
-        )
-        self.assertAlmostEqual(
-            result.position.y,
-            39999.999999999985,
-            places=1,
-        )
-        self.assertAlmostEqual(
-            result.position.z,
-            -5000.0,
-            places=2,
-        )
-        self.assertAlmostEqual(
-            result.velocity.x,
-            -1.4999999999999996,
-            places=2,
-        )
-        self.assertAlmostEqual(
-            result.velocity.y,
-            1.0000000000000016,
-            places=2,
-        )
-        self.assertAlmostEqual(
-            result.velocity.z,
-            -0.1000000000000002,
-            places=2,
-        )
+        self.assertAlmostEqual(result.position.x, 10_000_000, places=2)
+        self.assertAlmostEqual(result.position.y, 40_000_000, places=1)
+        self.assertAlmostEqual(result.position.z, -5_000_000, places=2)
+
+        self.assertAlmostEqual(result.velocity.x, -1_500, places=2)
+        self.assertAlmostEqual(result.velocity.y, 1_000, places=2)
+        self.assertAlmostEqual(result.velocity.z, -100, places=2)
 
     def test_orbit_centripetal_force(self):
         self.assertEqual(

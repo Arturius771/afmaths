@@ -13,20 +13,24 @@ from astronomy_types import (
     EccentricAnomaly,
     GravitationalParameter,
     OrbitalElements,
+    Position,
     PositionVector,
     Radians,
     Scalar,
     Second,
     SemiMajorAxis,
+    StateVector,
     TrueAnomaly,
+    Vector3D,
     Velocity,
     VelocityVector,
 )
 
+from afmaths.constants import EARTH_RADIUS
 from afmaths.geometry.geometry import semi_minor_axis
 from afmaths.geometry.transformations import translate_ellipse
 from afmaths.physics.space.celestial_mechanics import (
-    EARTH_MU_KM_CUBED,
+    EARTH_MU,
     apoapsis_true_anomaly,
     generate_all_orbit_positions,
     orbital_elements_from_state_vectors,
@@ -66,7 +70,7 @@ from afmaths.visualisations.helpers import (
 class BodyPlotConfig:
     name: str
     target: HorizonsCommandTarget | OrbitalElements
-    radius_km: float
+    radius: Distance  # metres
     radius_scale: float
 
 
@@ -77,7 +81,7 @@ class BodyPlotConfig:
 class OrbitPlotSettings:
     centre: HorizonsCommandTarget
     gravitational_parameter: GravitationalParameter
-    distance_scale_km: float
+    distance_scale: float
     orbit_points: int
     start_time: datetime.datetime
     time_offset: datetime.timedelta = datetime.timedelta(
@@ -560,9 +564,9 @@ def transfer_arc_angles(
 def add_orbit_line_trace(
     name: str,
     orbital_elements: OrbitalElements,
-    distance_scale_km: float,
+    distance_scale: float,
     orbit_points: int,
-    gravitational_parameter: GravitationalParameter = EARTH_MU_KM_CUBED,
+    gravitational_parameter: GravitationalParameter = EARTH_MU,
 ) -> go.Scatter3d:
     x = []
     y = []
@@ -573,7 +577,7 @@ def add_orbit_line_trace(
         orbit_points,
         gravitational_parameter,
     ):
-        scaled = scale_position(position, distance_scale_km)
+        scaled = scale_position(position, distance_scale)
 
         x.append(scaled.x)
         y.append(scaled.y)
@@ -631,7 +635,7 @@ def add_orbiting_body_to_traces(
         add_orbit_line_trace(
             body.name,
             orbital_elements,
-            settings.distance_scale_km,
+            settings.distance_scale,
             settings.orbit_points,
             settings.gravitational_parameter,
         )
@@ -640,12 +644,12 @@ def add_orbiting_body_to_traces(
     traces.append(
         add_body_surface(
             body.name,
-            body.radius_km,
+            body.radius,
             body.radius_scale,
-            settings.distance_scale_km,
+            settings.distance_scale,
             position=scale_position(
                 model_current_state.position,
-                settings.distance_scale_km,
+                settings.distance_scale,
             ),
             opacity=opacity,
         )
@@ -663,12 +667,12 @@ def add_orbiting_body_to_traces(
     traces.append(
         add_body_surface(
             body.name + " prediction",
-            body.radius_km,
+            body.radius,
             body.radius_scale,
-            settings.distance_scale_km,
+            settings.distance_scale,
             position=scale_position(
                 model_prediction_state.position,
-                settings.distance_scale_km,
+                settings.distance_scale,
             ),
             opacity=opacity,
         )
@@ -680,7 +684,7 @@ def build_3d_orbit_figure(
     settings: OrbitPlotSettings,
     title: str,
     central_body_name: str,
-    central_body_radius_km: float,
+    central_body_radius: Distance,
     central_body_radius_scale: float,
     orbiting_bodies: list[BodyPlotConfig],
     central_body_opacity: float = 0.7,
@@ -690,9 +694,9 @@ def build_3d_orbit_figure(
     traces = [
         add_body_surface(
             central_body_name,
-            central_body_radius_km,
+            central_body_radius,
             central_body_radius_scale,
-            settings.distance_scale_km,
+            settings.distance_scale,
             opacity=central_body_opacity,
         )
     ]
@@ -703,7 +707,7 @@ def build_3d_orbit_figure(
     return make_3d_orbit_figure(
         traces,
         title,
-        settings.distance_scale_km,
+        settings.distance_scale,
     )
 
 
@@ -723,14 +727,14 @@ from afmaths.visualisations.helpers import (
 def add_itrs_orbit_trace(
     name: str,
     itrs_positions: list[PositionVector],
-    distance_scale_km: float,
+    distance_scale: float,
 ) -> go.Scatter3d:
     x = []
     y = []
     z = []
 
     for position in itrs_positions:
-        scaled = scale_position(position, distance_scale_km)
+        scaled = scale_position(position, distance_scale)
         x.append(scaled.x)
         y.append(scaled.y)
         z.append(scaled.z)
@@ -751,7 +755,7 @@ def build_3d_itrs_orbit_figure(
     itrs_positions: list[PositionVector],
     title: str = "ITRS orbit view",
     central_body_name: str = "Earth",
-    central_body_radius_km: float = 6_371.0,
+    central_body_radius: Distance = EARTH_RADIUS,
     central_body_radius_scale: float = 5.0,
     orbit_name: str = "orbit",
     central_body_opacity: float = 0.7,
@@ -759,20 +763,20 @@ def build_3d_itrs_orbit_figure(
     traces = [
         add_body_surface(
             central_body_name,
-            central_body_radius_km,
+            central_body_radius,
             central_body_radius_scale,
-            settings.distance_scale_km,
+            settings.distance_scale,
             opacity=central_body_opacity,
         ),
         add_itrs_orbit_trace(
             orbit_name,
             itrs_positions,
-            settings.distance_scale_km,
+            settings.distance_scale,
         ),
     ]
 
     return make_3d_orbit_figure(
         traces,
         title,
-        settings.distance_scale_km,
+        settings.distance_scale,
     )

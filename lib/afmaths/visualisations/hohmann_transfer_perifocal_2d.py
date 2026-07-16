@@ -3,7 +3,7 @@ from __future__ import annotations
 import math
 
 import plotly.graph_objects as go
-from afmaths.constants import EARTH_MU_KM_CUBED
+from afmaths.constants import EARTH_MU, EARTH_RADIUS, EARTH_RADIUS
 from afmaths.physics.space.engineering.astrodynamics.hohmann_transfer import (
     hohmann_transfer_delta_v,
     hohmann_transfer_parameters,
@@ -22,6 +22,7 @@ from afmaths.visualisations.base import (
     coordinates_for_elements,
     eccentric_anomaly,
     plotted_radius_for_eccentric_anomaly,
+    scale_orbital_elements_for_plot,
     transfer_arc_angles,
 )
 from afmaths.visualisations.helpers import (
@@ -81,7 +82,7 @@ def transfer_burn_plot_node(
         text=(
             f"{label}<br>"
             f"Direction = {direction}<br>"
-            f"Δv = {delta_v:.4f} km/s<br>"
+            f"Δv = {delta_v:.4f} m/s<br>"
             f"t = {time:.2f} s"
         ),
         colour="red",
@@ -95,9 +96,10 @@ def build_hohmann_transfer_2d_perifocal_figure(
     final_altitude: Distance,
     gravitational_parameter: GravitationalParameter,
     central_body_name: str = "Earth",
-    central_body_radius_km: Distance = Distance(Scalar(6_371.0)),
+    central_body_radius: Distance = EARTH_RADIUS,
     title_prefix: str = "Hohmann transfer in the perifocal frame",
 ) -> go.Figure:
+    """Build a Hohmann transfer plot from SI physical orbital elements."""
     primary_focus_plot_coordinate = plot_origin()
 
     final_orbit = OrbitalElements(
@@ -105,12 +107,9 @@ def build_hohmann_transfer_2d_perifocal_figure(
         initial_orbit.right_ascension_of_ascending_node,
         ArgumentOfPeriapsis(Radians(Scalar(0))),
         SemiMajorAxis(
-            distance_to_scale_distance(
-                orbit_radius(
-                    final_altitude,
-                    Distance(Scalar(central_body_radius_km)),
-                ),
-                settings.distance_scale,
+            orbit_radius(
+                final_altitude,
+                central_body_radius,
             )
         ),
         Eccentricity(Ratio(Scalar(0))),
@@ -156,23 +155,40 @@ def build_hohmann_transfer_2d_perifocal_figure(
         TrueAnomaly(Anomaly(Radians(Scalar(0)))),
     )
 
+    distance_scale = Distance(Scalar(settings.distance_scale))
+    initial_orbit_for_plot = scale_orbital_elements_for_plot(
+        initial_orbit,
+        distance_scale,
+    )
+    final_orbit_for_plot = scale_orbital_elements_for_plot(
+        final_orbit,
+        distance_scale,
+    )
+    transfer_orbit_for_plot = scale_orbital_elements_for_plot(
+        transfer_orbit,
+        distance_scale,
+    )
+    start_radius_for_plot = distance_to_scale_distance(
+        start_radius,
+        settings.distance_scale,
+    )
+
     transfer_endpoint_a_eccentric_anomaly = eccentric_anomaly(0.0)
     transfer_endpoint_b_eccentric_anomaly = eccentric_anomaly(math.pi)
 
     transfer_endpoint_a_radius = plotted_radius_for_eccentric_anomaly(
         primary_focus_plot_coordinate,
-        transfer_orbit,
+        transfer_orbit_for_plot,
         transfer_endpoint_a_eccentric_anomaly,
     )
-
     transfer_endpoint_b_radius = plotted_radius_for_eccentric_anomaly(
         primary_focus_plot_coordinate,
-        transfer_orbit,
+        transfer_orbit_for_plot,
         transfer_endpoint_b_eccentric_anomaly,
     )
 
-    endpoint_a_matches_start = abs(transfer_endpoint_a_radius - start_radius)
-    endpoint_b_matches_start = abs(transfer_endpoint_b_radius - start_radius)
+    endpoint_a_matches_start = abs(transfer_endpoint_a_radius - start_radius_for_plot)
+    endpoint_b_matches_start = abs(transfer_endpoint_b_radius - start_radius_for_plot)
 
     if endpoint_a_matches_start <= endpoint_b_matches_start:
         transfer_burn_eccentric_anomaly = transfer_endpoint_a_eccentric_anomaly
@@ -182,10 +198,7 @@ def build_hohmann_transfer_2d_perifocal_figure(
         arrival_burn_eccentric_anomaly = transfer_endpoint_a_eccentric_anomaly
 
     delta_v, direction, transfer_time = hohmann_transfer_parameters(
-        orbit_altitude(
-            scale_distance_to_distance(start_radius, settings.distance_scale),
-            central_body_radius_km,
-        ),
+        orbit_altitude(start_radius, central_body_radius),
         final_altitude,
         mu=gravitational_parameter,
     )
@@ -193,10 +206,10 @@ def build_hohmann_transfer_2d_perifocal_figure(
     fig = add_plot_node(
         go.Figure(),
         transfer_burn_plot_node(
-            name="Transfer burn at initial periapsis",
-            label="Transfer burn at initial periapsis",
+            name="Transfer burn at initial orbit",
+            label="Transfer burn at initial orbit",
             primary_focus_plot_coordinate=primary_focus_plot_coordinate,
-            transfer_orbit=transfer_orbit,
+            transfer_orbit=transfer_orbit_for_plot,
             E=transfer_burn_eccentric_anomaly,
             delta_v=delta_v[1],
             direction=direction,
@@ -210,7 +223,7 @@ def build_hohmann_transfer_2d_perifocal_figure(
             name="Arrival burn at final circular orbit",
             label="Arrival burn at final circular orbit",
             primary_focus_plot_coordinate=primary_focus_plot_coordinate,
-            transfer_orbit=transfer_orbit,
+            transfer_orbit=transfer_orbit_for_plot,
             E=arrival_burn_eccentric_anomaly,
             delta_v=delta_v[2],
             direction=direction,
@@ -233,14 +246,14 @@ def build_hohmann_transfer_2d_perifocal_figure(
                             primary_focus_plot_coordinate,
                             PlotPerifocalOrbitLine(
                                 name="Initial orbit",
-                                orbital_elements=initial_orbit,
+                                orbital_elements=initial_orbit_for_plot,
                                 colour="grey",
                             ),
                         ),
                         primary_focus_plot_coordinate,
                         PlotPerifocalOrbitLine(
                             name="Transfer arc",
-                            orbital_elements=transfer_orbit,
+                            orbital_elements=transfer_orbit_for_plot,
                             colour="orange",
                             start_eccentric_anomaly=transfer_arc_start_angle,
                             end_eccentric_anomaly=transfer_arc_end_angle,
@@ -250,13 +263,13 @@ def build_hohmann_transfer_2d_perifocal_figure(
                     primary_focus_plot_coordinate,
                     PlotPerifocalOrbitLine(
                         name="Final circular orbit",
-                        orbital_elements=final_orbit,
+                        orbital_elements=final_orbit_for_plot,
                         colour="grey",
                     ),
                 ),
                 primary_focus_plot_coordinate,
                 central_body_radius_plot(
-                    central_body_radius_km,
+                    central_body_radius,
                     settings.distance_scale,
                 ),
                 central_body_name,
@@ -270,9 +283,9 @@ def build_hohmann_transfer_2d_perifocal_figure(
             plot_max(settings),
             title=(
                 f"{title_prefix}<br>"
-                f"Start = initial periapsis, "
+                f"Start = initial circular orbit, "
                 f"arrival = final circular orbit<br>"
-                f"Total Δv = {delta_v[0]:.4f} km/s, "
+                f"Total Δv = {delta_v[0]:.4f} m/s, "
                 f"transfer time = {transfer_time:.2f} s"
             ),
         ),
@@ -281,17 +294,16 @@ def build_hohmann_transfer_2d_perifocal_figure(
     )
 
 
-DISTANCE_SCALE_KM = 12_824.9333333
+DISTANCE_SCALE = 12_824.9333333 * 1000
 
-EARTH_RADIUS_KM = Distance(Scalar(6_371.0))
-INITIAL_ALTITUDE_KM = Distance(Scalar(200_000))
-TARGET_ALTITUDE_KM = Distance(Scalar(140_000))
+INITIAL_ALTITUDE_M = Distance(Scalar(200_000_000))
+TARGET_ALTITUDE_M = Distance(Scalar(140_000_000))
 
 
 if __name__ == "__main__":
     build_hohmann_transfer_2d_perifocal_figure(
         settings=PlotOrbital2DSettings(
-            distance_scale=DISTANCE_SCALE_KM,
+            distance_scale=DISTANCE_SCALE,
             plot_width=1000,
             plot_height=1000,
         ),
@@ -300,17 +312,14 @@ if __name__ == "__main__":
             RightAscension(Radians(Scalar(0))),
             ArgumentOfPeriapsis(Radians(Scalar(math.radians(10)))),
             SemiMajorAxis(
-                distance_to_scale_distance(
-                    orbit_radius(
-                        INITIAL_ALTITUDE_KM,
-                        EARTH_RADIUS_KM,
-                    ),
-                    DISTANCE_SCALE_KM,
+                orbit_radius(
+                    INITIAL_ALTITUDE_M,
+                    EARTH_RADIUS,
                 )
             ),
             Eccentricity(Ratio(Scalar(0.0))),
             TrueAnomaly(Anomaly(Radians(Scalar(0)))),
         ),
-        final_altitude=TARGET_ALTITUDE_KM,
-        gravitational_parameter=EARTH_MU_KM_CUBED,
+        final_altitude=TARGET_ALTITUDE_M,
+        gravitational_parameter=EARTH_MU,
     ).show()
