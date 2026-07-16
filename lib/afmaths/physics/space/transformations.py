@@ -112,11 +112,11 @@ def itrs_positions_from_gcrs_position(
     itrs_positions: list[PositionVector] = []
 
     for minute, gcrs_position in enumerate(gcrs_positions):
-        current_julian_date = epoch_offset(
+        offset_jd = epoch_offset(
             epoch, Second(Scalar(seconds_from_minutes(Minute(minute))))
         )
         itrs_positions.append(
-            itrs_position_from_gcrs_position(current_julian_date, gcrs_position)
+            itrs_position_from_gcrs_position(offset_jd, gcrs_position)
         )
 
     return itrs_positions

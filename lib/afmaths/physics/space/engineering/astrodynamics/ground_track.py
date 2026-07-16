@@ -14,7 +14,7 @@ from astronomy_types import (
     MeanMotion,
 )
 
-from afmaths.constants import EARTH_ANGULAR_VELOCITY, MINUTES_PER_DAY
+from afmaths.constants import EARTH_ANGULAR_VELOCITY, MINUTES_PER_DAY, SECONDS_PER_DAY
 from afmaths.operation import (
     divide_by,
     multiply,
@@ -61,16 +61,21 @@ def earth_ground_track_positions(
     return itrs_positions_from_gcrs_position(gcrs_positions, epoch)
 
 
+def orbits_per_day(orbital_period, day_duration: Second = SECONDS_PER_DAY) -> float:
+    return day_duration / orbital_period
+
+
 def earth_start_of_orbit_positions(
     gcrs_positions: list[PositionVector],
     orbital_period: Second,
 ) -> list[PositionVector]:
-    period_in_minutes = minutes_from_seconds(orbital_period)
-    orbits_per_day = MINUTES_PER_DAY / period_in_minutes
+    minutes_per_orbit = float(minutes_from_seconds(orbital_period))
+
+    total_orbits_in_positions = math.ceil(len(gcrs_positions) / minutes_per_orbit)
 
     start_indices = [
-        math.floor(orbit * period_in_minutes)
-        for orbit in range(math.ceil(orbits_per_day))
+        math.floor(orbit * minutes_per_orbit)
+        for orbit in range(total_orbits_in_positions)
     ]
 
     return [

@@ -1,3 +1,4 @@
+import math
 import random
 
 from afmaths.constants import (
@@ -8,8 +9,11 @@ from afmaths.constants import (
     MINUTES_PER_DAY,
     MOLNIYA_3_50_NORAD_ID,
 )
+from afmaths.physics.space.astronomy.time_functions import julian_date_now
+from afmaths.physics.space.engineering.astrodynamics.ground_track import orbits_per_day
 from afmaths.physics.space.engineering.two_line_elements import (
     orbital_elements_from_tle,
+    orbital_period_from_tle,
 )
 from afmaths.physics.space.external.space_track_api import get_tle_from_norad_id
 from base import BodyPlotConfig
@@ -20,13 +24,14 @@ from astronomy_types import Distance, Scalar
 
 # 41321, 25867, 13901 interesting sat
 # 10967 retrograde
-# TODO: investigate why orbits dont align for 25867
 if __name__ == "__main__":
-    norad_id: int = 25867 or random.randrange(1, 69999)
-    track_for_minutes = MINUTES_PER_DAY
+    norad_id: int = ISS_NORAD_ID or random.randrange(1, 69999)
     tle = get_tle_from_norad_id(norad_id)
+    total_orbits = round(orbits_per_day(orbital_period_from_tle(tle)) / 2)
 
-    visualisation_3d_itrs(tle, track_for_minutes)
+    print(julian_date_now())
+
+    visualisation_3d_itrs(tle, total_orbits)
     visualisation_3d_satellite_earth(
         [
             BodyPlotConfig(
@@ -37,4 +42,4 @@ if __name__ == "__main__":
             )
         ]
     )
-    visualisation_2d_ground_track(tle, track_for_minutes, True).show()
+    visualisation_2d_ground_track(tle, total_orbits, True).show()

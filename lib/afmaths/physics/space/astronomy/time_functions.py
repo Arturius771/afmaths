@@ -146,6 +146,7 @@ def julian_date_from_full_Date(full_date: FullDate) -> JulianDate:
 
 
 def greenwich_date_from_julian(julian_date: JulianDate) -> Date:
+    """The day is fractional."""
     jd = float(julian_date) + 0.5
     i = math.floor(jd)
     f = jd - i
@@ -478,9 +479,10 @@ def seconds_from_julian_date_delta(delta: JulianDate) -> Second:
     return Second(Scalar(float(delta) * SECONDS_PER_DAY))
 
 
-def julian_date_now() -> JulianDate:
+def julian_date_now(timesystem: datetime.timezone = datetime.UTC) -> JulianDate:
+    """Expressed in UTC by default."""
     return julian_date_from_full_Date(
-        fulldate_from_python_datetime(datetime.datetime.now(datetime.UTC))
+        fulldate_from_python_datetime(datetime.datetime.now(timesystem))
     )
 
 
@@ -496,5 +498,15 @@ def greenwich_full_Date_from_julian_date(jd: JulianDate) -> FullDate:
     return FullDate(date, time)
 
 
-def pretty_print_full_date(fd: FullDate) -> str:
-    return f"{fd.date.year}-{fd.date.month}-{fd.date.day:.0f} {fd.time.hour}:{fd.time.minute}:{fd.time.second:.2f}"
+def pretty_print_full_date(
+    fd: FullDate,
+    timesystem: str = "UTC",
+    show_timesystem: bool = False,
+) -> str:
+    suffix = f" {timesystem}" if show_timesystem else ""
+
+    return (
+        f"{fd.date.year}-{fd.date.month}-{math.floor(float(fd.date.day))} "
+        f"{fd.time.hour}:{fd.time.minute}:{fd.time.second:.2f}"
+        f"{suffix}"
+    )

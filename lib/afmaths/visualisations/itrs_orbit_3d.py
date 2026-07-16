@@ -12,13 +12,16 @@ from afmaths.constants import (
 )
 from afmaths.physics.space.astronomy.time_functions import (
     julian_date_from_full_Date,
+    minutes_from_seconds,
 )
 from afmaths.physics.space.celestial_mechanics import (
     EARTH_MU,
     state_vector_at_time,
 )
+from afmaths.physics.space.engineering.astrodynamics.ground_track import orbits_per_day
 from afmaths.physics.space.engineering.two_line_elements import (
     orbital_elements_from_tle,
+    orbital_period_from_tle,
     parse_full_date,
     parse_norad_id,
 )
@@ -33,7 +36,11 @@ BODY_RADIUS_SCALE = 1.0
 ORBIT_POINTS = 50
 
 
-def visualisation_3d_itrs(tle: str, track_for: int = MINUTES_PER_DAY):
+def visualisation_3d_itrs(tle: str, track_for_orbits: int = 3):
+    if track_for_orbits < 1:
+        track_for_orbits = 1
+
+    track_for = minutes_from_seconds(orbital_period_from_tle(tle)) * track_for_orbits
 
     orbital_elements = orbital_elements_from_tle(tle)
 

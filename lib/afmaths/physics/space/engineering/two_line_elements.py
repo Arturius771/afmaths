@@ -116,10 +116,12 @@ def parse_epoch(tle: str) -> str:
 
 
 def parse_julian_date(tle: str) -> JulianDate:
+    """Julian date (UTC) of the epoch represented in the TLE."""
     return julian_date_from_full_Date(parse_full_date(tle))
 
 
 def parse_full_date(tle: str) -> FullDate:
+    """Returns the epoch as a FullDate. TLEs supply the fractional part of the date as UTC."""
     epoch = parse_epoch(tle)
     year = Year(int(f"20{epoch[:2]}"))
     date = date_from_day_number(int(epoch[2:5]), year)
