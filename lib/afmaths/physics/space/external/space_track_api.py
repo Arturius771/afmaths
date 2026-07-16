@@ -1,9 +1,32 @@
+from __future__ import annotations
+
+import math
+import os
+import time
 from pathlib import Path
 
 import requests
 
 SPACE_TRACK_BASE_URL = "https://www.space-track.org"
+
+LOGIN_URL = f"{SPACE_TRACK_BASE_URL}/ajaxauth/login"
+
+GP_UPDATES_URL = (
+    f"{SPACE_TRACK_BASE_URL}/basicspacedata/query"
+    f"/class/gp"
+    f"/decay_date/null-val"
+    f"/CREATION_DATE/%3Enow-0.042"
+    f"/format/tle"
+)
+
 SECRETS_FILE = Path(__file__).with_name("secrets.txt")
+TLE_CACHE_FILE = Path(__file__).with_name("tle_cache.tle")
+LAST_GP_REQUEST_FILE = Path(__file__).with_name("last_gp_request.txt")
+
+MINIMUM_GP_REQUEST_INTERVAL_SECONDS = 60 * 60
+
+# Alpha-5 omits I and O.
+ALPHA_5_PREFIXES = "ABCDEFGHJKLMNPQRSTUVWXYZ"
 
 
 def load_secrets() -> dict[str, str]:
@@ -25,44 +48,222 @@ def load_secrets() -> dict[str, str]:
     return secrets
 
 
-def get_tle_from_norad_id(norad_id: int) -> str:
-    secrets = load_secrets()
+def norad_id_from_tle_field(field: str) -> int:
+    """
+    Parse a five-character NORAD catalogue field.
 
-    username = secrets["SPACE_TRACK_USERNAME"]
-    password = secrets["SPACE_TRACK_PASSWORD"]
+    Examples:
+        "25544" -> 25544
+        "A0000" -> 100000
+        "J0000" -> 180000
+    """
+    field = field.strip()
 
-    login_url = f"{SPACE_TRACK_BASE_URL}/ajaxauth/login"
-    tle_url = (
-        f"{SPACE_TRACK_BASE_URL}/basicspacedata/query"
-        f"/class/gp"
-        f"/NORAD_CAT_ID/{norad_id}"
-        f"/format/tle"
+    if len(field) != 5:
+        raise ValueError(f"Invalid NORAD catalogue field: {field!r}")
+
+    if field.isdigit():
+        return int(field)
+
+    prefix = field[0]
+    suffix = field[1:]
+
+    if prefix not in ALPHA_5_PREFIXES or not suffix.isdigit():
+        raise ValueError(f"Invalid Alpha-5 NORAD field: {field!r}")
+
+    prefix_value = ALPHA_5_PREFIXES.index(prefix) + 10
+
+    return prefix_value * 10_000 + int(suffix)
+
+
+def norad_id_from_tle_line(line: str) -> int:
+    if not line.startswith(("1 ", "2 ")):
+        raise ValueError(f"Not a TLE data line: {line!r}")
+
+    return norad_id_from_tle_field(line[2:7])
+
+
+def parse_tles(tle_text: str) -> dict[int, str]:
+    """
+    Parse Space-Track TLE output into:
+
+        {norad_id: "line 1\\nline 2"}
+
+    Non-TLE lines, such as optional object-name lines, are ignored.
+    """
+    lines = [line.rstrip() for line in tle_text.splitlines() if line.strip()]
+
+    parsed: dict[int, str] = {}
+    index = 0
+
+    while index < len(lines):
+        line_1 = lines[index]
+
+        if not line_1.startswith("1 "):
+            index += 1
+            continue
+
+        if index + 1 >= len(lines):
+            raise ValueError("TLE line 1 has no corresponding line 2")
+
+        line_2 = lines[index + 1]
+
+        if not line_2.startswith("2 "):
+            raise ValueError(
+                f"Expected TLE line 2 after {line_1!r}, " f"found {line_2!r}"
+            )
+
+        line_1_norad_id = norad_id_from_tle_line(line_1)
+        line_2_norad_id = norad_id_from_tle_line(line_2)
+
+        if line_1_norad_id != line_2_norad_id:
+            raise ValueError(
+                "TLE catalogue numbers do not match: "
+                f"{line_1_norad_id} != {line_2_norad_id}"
+            )
+
+        parsed[line_1_norad_id] = f"{line_1}\n{line_2}"
+        index += 2
+
+    if tle_text.strip() and not parsed:
+        raise ValueError("Response contained no valid TLE pairs")
+
+    return parsed
+
+
+def load_tle_cache() -> dict[int, str]:
+    if not TLE_CACHE_FILE.exists():
+        return {}
+
+    return parse_tles(TLE_CACHE_FILE.read_text(encoding="utf-8"))
+
+
+def write_tle_cache(tles: dict[int, str]) -> None:
+    """
+    Atomically replace the cache so readers never see a partially written
+    file.
+    """
+    cache_contents = "\n".join(tle for _, tle in sorted(tles.items()))
+
+    if cache_contents:
+        cache_contents += "\n"
+
+    temporary_file = TLE_CACHE_FILE.with_suffix(".tmp")
+    temporary_file.write_text(cache_contents, encoding="utf-8")
+    os.replace(temporary_file, TLE_CACHE_FILE)
+
+
+def last_gp_request_time() -> float | None:
+    if not LAST_GP_REQUEST_FILE.exists():
+        return None
+
+    try:
+        return float(LAST_GP_REQUEST_FILE.read_text(encoding="utf-8").strip())
+    except ValueError as error:
+        raise ValueError(f"Invalid timestamp in {LAST_GP_REQUEST_FILE}") from error
+
+
+def ensure_gp_request_is_allowed(now: float) -> None:
+    last_request = last_gp_request_time()
+
+    if last_request is None:
+        return
+
+    elapsed = now - last_request
+    remaining = MINIMUM_GP_REQUEST_INTERVAL_SECONDS - elapsed
+
+    if remaining > 0:
+        raise RuntimeError(
+            "The Space-Track gp endpoint was already requested recently. "
+            f"Try again in {math.ceil(remaining / 60)} minute(s)."
+        )
+
+
+def record_gp_request_time(request_time: float) -> None:
+    LAST_GP_REQUEST_FILE.write_text(
+        str(request_time),
+        encoding="utf-8",
     )
 
-    with requests.Session() as session:
-        login_response = session.post(
-            login_url,
+
+def authenticated_session() -> requests.Session:
+    secrets = load_secrets()
+
+    session = requests.Session()
+
+    try:
+        response = session.post(
+            LOGIN_URL,
             data={
-                "identity": username,
-                "password": password,
+                "identity": secrets["SPACE_TRACK_USERNAME"],
+                "password": secrets["SPACE_TRACK_PASSWORD"],
             },
             timeout=30,
         )
-        login_response.raise_for_status()
+        response.raise_for_status()
+    except Exception:
+        session.close()
+        raise
 
-        tle_response = session.get(tle_url, timeout=30)
-        tle_response.raise_for_status()
+    return session
 
-        if "You must be logged in" in tle_response.text:
+
+def refresh_tle_cache() -> int:
+    """
+    Fetch TLEs published during the previous hour and merge them into the
+    local cache.
+
+    This function should be run by one scheduled job, once per hour. It
+    should not be called by get_tle_from_norad_id().
+    """
+    request_time = time.time()
+    ensure_gp_request_is_allowed(request_time)
+
+    with authenticated_session() as session:
+        # Record the request before sending it. This prevents an immediate
+        # retry from violating the API limit if a later operation fails.
+        record_gp_request_time(request_time)
+
+        response = session.get(
+            GP_UPDATES_URL,
+            timeout=60,
+        )
+        response.raise_for_status()
+
+        if "You must be logged in" in response.text:
             raise RuntimeError("Space-Track authentication failed")
 
-        tle = tle_response.text.strip()
+        updated_tles = parse_tles(response.text)
 
-        if not tle:
-            raise ValueError(f"No TLE found for NORAD ID {norad_id}")
+    cached_tles = load_tle_cache()
+    cached_tles.update(updated_tles)
+    write_tle_cache(cached_tles)
 
-        return tle
+    return len(updated_tles)
+
+
+def get_tle_from_norad_id(norad_id: int) -> str:
+    """
+    Return a TLE from the local cache.
+
+    This preserves the existing public function and performs no network
+    request.
+    """
+    cached_tles = load_tle_cache()
+
+    try:
+        return cached_tles[norad_id]
+    except KeyError as error:
+        if not TLE_CACHE_FILE.exists():
+            raise FileNotFoundError(
+                "The local TLE cache does not exist. "
+                "Run refresh_tle_cache() using the scheduled update job."
+            ) from error
+
+        raise ValueError(f"No cached TLE found for NORAD ID {norad_id}") from error
 
 
 if __name__ == "__main__":
-    print(get_tle_from_norad_id(25544))
+    updated_count = refresh_tle_cache()
+
+    print(f"Merged {updated_count} updated TLE(s) into " f"{TLE_CACHE_FILE}")
