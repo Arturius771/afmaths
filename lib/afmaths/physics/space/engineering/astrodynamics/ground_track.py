@@ -4,6 +4,7 @@ from astronomy_types import (
     GeographicCoordinates,
     JulianDate,
     Minute,
+    OrbitalElements,
     PositionVector,
     Radians,
     Scalar,
@@ -20,8 +21,16 @@ from afmaths.operation import (
     multiply,
     negate,
 )
-from afmaths.physics.space.astronomy.time_functions import minutes_from_seconds
+from afmaths.physics.space.astronomy.time_functions import (
+    epoch_offset,
+    minutes_from_seconds,
+)
+from afmaths.physics.space.celestial_mechanics import (
+    orbital_period,
+    state_vector_at_time,
+)
 from afmaths.physics.space.transformations import (
+    itrs_position_from_gcrs_position,
     itrs_positions_from_gcrs_position,
     transform_geographic_coordinates_from_itrs,
 )
@@ -65,19 +74,31 @@ def orbits_per_day(orbital_period, day_duration: Second = SECONDS_PER_DAY) -> fl
     return day_duration / orbital_period
 
 
-def earth_start_of_orbit_positions(
-    gcrs_positions: list[PositionVector],
-    orbital_period: Second,
-) -> list[PositionVector]:
-    minutes_per_orbit = float(minutes_from_seconds(orbital_period))
+def earth_start_of_orbit_coordinates(
+    orbital_elements: OrbitalElements,
+    epoch: Epoch,
+    number_of_orbits: int,
+) -> list[GeographicCoordinates]:
+    if number_of_orbits < 1:
+        return []
 
-    total_orbits_in_positions = math.ceil(len(gcrs_positions) / minutes_per_orbit)
+    period = orbital_period(orbital_elements.semi_major_axis)
 
-    start_indices = [
-        math.floor(orbit * minutes_per_orbit)
-        for orbit in range(total_orbits_in_positions)
-    ]
+    coordinates = []
 
-    return [
-        gcrs_positions[index] for index in start_indices if index < len(gcrs_positions)
-    ]
+    for orbit_index in range(number_of_orbits):
+        elapsed_time = Second(Scalar(orbit_index * float(period)))
+
+        gcrs_position = state_vector_at_time(
+            orbital_elements,
+            elapsed_time,
+        ).position
+
+        itrs_position = itrs_position_from_gcrs_position(
+            epoch_offset(epoch, elapsed_time),
+            gcrs_position,
+        )
+
+        coordinates.append(earth_geographic_coordinate_from_itrs(itrs_position))
+
+    return coordinates

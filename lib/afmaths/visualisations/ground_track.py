@@ -30,7 +30,7 @@ from afmaths.physics.space.celestial_mechanics import (
 from afmaths.physics.space.engineering.astrodynamics.ground_track import (
     earth_geographic_coordinate_from_itrs,
     earth_ground_track_positions,
-    earth_start_of_orbit_positions,
+    earth_start_of_orbit_coordinates,
     orbits_per_day,
     westward_drift_from_angular_velocity_and_period,
 )
@@ -52,6 +52,7 @@ from afmaths.physics.space.type_conversion_helpers import (
     fulldate_from_python_datetime,
     make_true_anomaly,
 )
+from afmaths.types import OrbitalDirection
 from afmaths.visualisations.helpers import (
     PlotNode,
     add_plot_nodes,
@@ -71,13 +72,15 @@ from astronomy_types import (
 def visualisation_2d_ground_track(
     tle: str,
     track_for_orbits: int = 3,
+    tracking_interval: Second = Second(Scalar(60)),
     show_orbit_markers: bool = False,
     background_image_path: Path = Path(__file__).with_name("Earth-hires.jpg"),
+    lines: bool = False,
 ) -> go.Figure:
     if track_for_orbits < 1:
         track_for_orbits = 1
 
-    track_for = minutes_from_seconds(orbital_period_from_tle(tle)) * track_for_orbits
+    track_for_duration = orbital_period_from_tle(tle) * track_for_orbits
 
     epoch_elements = orbital_elements_from_tle(tle)
 
@@ -89,9 +92,11 @@ def visualisation_2d_ground_track(
         [
             state_vector_at_time(
                 epoch_elements,
-                seconds_from_minutes(Minute(int(minute))),
+                Second(Scalar(second)),
             ).position
-            for minute in range(track_for)
+            for second in range(
+                0, int(track_for_duration), int(float(tracking_interval))
+            )
         ],
         epoch,
     )
@@ -105,22 +110,17 @@ def visualisation_2d_ground_track(
     fig = go.Figure()
     fig.add_trace(
         go.Scatter(
-            x=[float(coordinate.longitude) for coordinate in geographic_coordinates],
+            x=[(float(coordinate.longitude)) for coordinate in geographic_coordinates],
             y=[float(coordinate.latitude) for coordinate in geographic_coordinates],
-            mode="markers",
+            mode="markers+lines" if lines else "markers",
             name="Satellite ground track",
             marker={
                 "color": list(range(len(geographic_coordinates))),
-                "colorscale": "blues",
+                "colorscale": "greys",
                 "showscale": False,
-                "reversescale": True,
                 "colorbar": {
                     "title": "Iteration",
                 },
-                # "line": {
-                #     "color": "black",
-                #     "width": 1,
-                # },
             },
         )
     )
@@ -171,7 +171,7 @@ def visualisation_2d_ground_track(
         fig,
         [
             PlotNode(
-                name=f"Position @ {pretty_print_full_date(greenwich_full_Date_from_julian_date(julian_date_now()),  show_timesystem=True)}",
+                name=f"Position: {pretty_print_full_date(greenwich_full_Date_from_julian_date(julian_date_now()),  show_timesystem=True)}",
                 coordinate=Coordinate2D(
                     Scalar(current_position.longitude),
                     Scalar(current_position.latitude),
@@ -179,7 +179,7 @@ def visualisation_2d_ground_track(
                 text=f"Lon: {current_position.longitude:.1f}, Lat: {current_position.latitude:.1f} t={current_orbital_period:.0f}s v={current_velocity:.2f}m/s r={current_radius:.2f}m",
                 size=20,
                 symbol="diamond",
-                colour="orange",
+                colour="Red",
                 marker_only=True,
             )
         ],
@@ -189,7 +189,7 @@ def visualisation_2d_ground_track(
         title=(
             f"Satellite {parse_norad_id(tle)} ground track"
             f"<br>Drift: { westward_drift_from_angular_velocity_and_period(period):.2f}° | "
-            f"Duration: {track_for} min | Direction: {direction} | "
+            f"Duration: {track_for_duration:.0f}s | Direction: {"Prograde" if direction == OrbitalDirection.PROGRADE else "Retrograde"} | "
             f"Epoch (JD): {parse_julian_date(tle)} | Period: {period:.0f}s"
         ),
         xaxis_title="Longitude [deg]",
@@ -199,22 +199,21 @@ def visualisation_2d_ground_track(
     plot_nodes = []
 
     if show_orbit_markers:
-        orbit_marker_positions = earth_start_of_orbit_positions(positions, period)
-        orbit_marker_coordinates = [
-            earth_geographic_coordinate_from_itrs(position)
-            for position in orbit_marker_positions
-        ]
+
+        orbit_marker_coordinates = earth_start_of_orbit_coordinates(
+            epoch_elements, epoch, track_for_orbits
+        )
 
         orbit_epoch = [
             greenwich_full_Date_from_julian_date(
                 epoch_offset(epoch, Second(Scalar(period * min)))
             )
-            for min in range(len(orbit_marker_positions))
+            for min in range(len(orbit_marker_coordinates))
         ]
 
         plot_nodes.extend(
             PlotNode(
-                name=f"orbit {orbit_number} start",
+                name=f"orbit {orbit_number}: {pretty_print_full_date(orbit_epoch, show_timesystem=True)}",
                 coordinate=Coordinate2D(
                     Scalar(coordinate.longitude),
                     Scalar(coordinate.latitude),

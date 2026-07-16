@@ -2,6 +2,7 @@ import math
 import random
 
 from afmaths.constants import (
+    ARIANE_6_FM1_UPPER,
     BEIDOU_IGSO_6,
     GALILEO_7_NORAD_ID,
     ISS_NORAD_ID,
@@ -20,16 +21,15 @@ from base import BodyPlotConfig
 from eci_orbit_3d import visualisation_3d_satellite_earth
 from itrs_orbit_3d import visualisation_3d_itrs
 from ground_track import visualisation_2d_ground_track
-from astronomy_types import Distance, Scalar
+from astronomy_types import Distance, Scalar, Second
 
 # 41321, 25867, 13901 interesting sat
 # 10967 retrograde
 if __name__ == "__main__":
     norad_id: int = ISS_NORAD_ID or random.randrange(1, 69999)
     tle = get_tle_from_norad_id(norad_id)
-    total_orbits = round(orbits_per_day(orbital_period_from_tle(tle)) / 2)
-
-    print(julian_date_now())
+    total_orbits = round(orbits_per_day(orbital_period_from_tle(tle)))
+    point_interval = 60
 
     visualisation_3d_itrs(tle, total_orbits)
     visualisation_3d_satellite_earth(
@@ -42,4 +42,6 @@ if __name__ == "__main__":
             )
         ]
     )
-    visualisation_2d_ground_track(tle, total_orbits, True).show()
+    visualisation_2d_ground_track(
+        tle, total_orbits, Second(Scalar(point_interval)), True
+    ).show()

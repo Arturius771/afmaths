@@ -146,7 +146,7 @@ def julian_date_from_full_Date(full_date: FullDate) -> JulianDate:
 
 
 def greenwich_date_from_julian(julian_date: JulianDate) -> Date:
-    """The day is fractional."""
+    """The day part is fractional."""
     jd = float(julian_date) + 0.5
     i = math.floor(jd)
     f = jd - i
