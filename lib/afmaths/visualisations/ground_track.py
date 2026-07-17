@@ -26,6 +26,7 @@ from afmaths.physics.space.celestial_mechanics import (
 from afmaths.physics.space.engineering.astrodynamics.ground_track import (
     earth_geographic_coordinate_from_itrs,
     earth_start_of_orbit_coordinates,
+    general_orbital_characteristics,
     westward_drift_from_angular_velocity_and_period,
 )
 from afmaths.physics.space.engineering.two_line_elements import (
@@ -62,11 +63,12 @@ def visualisation_2d_ground_track(
     if track_for_orbits < 1:
         track_for_orbits = 1
 
+    if tracking_interval < 1:
+        tracking_interval = Second(Scalar(60))
+
     track_for_duration = orbital_period_from_tle(tle) * track_for_orbits
 
     tle_epoch_elements = orbital_elements_from_tle(tle)
-
-    direction = orbital_direction_from_inclination(tle_epoch_elements.inclination)
 
     tle_epoch = Epoch(parse_julian_date(tle))
 
@@ -224,10 +226,8 @@ def visualisation_2d_ground_track(
         ],
     ).update_layout(
         title=(
-            f"Satellite {parse_norad_id(tle)} ground track"
-            f"<br>Drift: { westward_drift_from_angular_velocity_and_period(orbital_period):.2f}° | "
-            f"Duration: {track_for_duration:.0f}s | Direction: {"Prograde" if direction == OrbitalDirection.PROGRADE else "Retrograde"} | "
-            f"Epoch (JD): {parse_julian_date(tle)} | Period: {orbital_period:.0f}s"
+            f"Satellite {parse_norad_id(tle)} ground track | Duration: {track_for_duration:.0f}s"
+            f"<br>{general_orbital_characteristics(tle)}"
         ),
         xaxis_title="Longitude [deg]",
         yaxis_title="Latitude [deg]",

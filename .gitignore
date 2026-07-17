@@ -9,3 +9,6 @@ RFM_02.ipynb
 venv/
 build/
 secrets.txt
+tle_cache.tle
+last_gp_request.txt
+last_tle_cache_refresh.txt

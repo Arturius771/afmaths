@@ -7,6 +7,8 @@ from pathlib import Path
 
 import requests
 
+from afmaths.constants import SECONDS_PER_HOUR
+
 SPACE_TRACK_BASE_URL = "https://www.space-track.org"
 
 LOGIN_URL = f"{SPACE_TRACK_BASE_URL}/ajaxauth/login"
@@ -22,9 +24,10 @@ GP_UPDATES_URL = (
 SECRETS_FILE = Path(__file__).with_name("secrets.txt")
 TLE_CACHE_FILE = Path(__file__).with_name("tle_cache.tle")
 LAST_GP_REQUEST_FILE = Path(__file__).with_name("last_gp_request.txt")
+LAST_REFRESH_FILE = Path(__file__).with_name("last_tle_cache_refresh.txt")
 
-MINIMUM_GP_REQUEST_INTERVAL_SECONDS = 60 * 60
-
+MINIMUM_GP_REQUEST_INTERVAL_SECONDS = SECONDS_PER_HOUR
+MINIMUM_REFRESH_INTERVAL_SECONDS = SECONDS_PER_HOUR
 # Alpha-5 omits I and O.
 ALPHA_5_PREFIXES = "ABCDEFGHJKLMNPQRSTUVWXYZ"
 
@@ -131,9 +134,15 @@ def parse_tles(tle_text: str) -> dict[int, str]:
     return parsed
 
 
+def ensure_tle_cache_exists() -> None:
+    """
+    Create an empty cache file if it does not yet exist.
+    """
+    TLE_CACHE_FILE.touch(exist_ok=True)
+
+
 def load_tle_cache() -> dict[int, str]:
-    if not TLE_CACHE_FILE.exists():
-        return {}
+    ensure_tle_cache_exists()
 
     return parse_tles(TLE_CACHE_FILE.read_text(encoding="utf-8"))
 
@@ -153,14 +162,29 @@ def write_tle_cache(tles: dict[int, str]) -> None:
     os.replace(temporary_file, TLE_CACHE_FILE)
 
 
-def last_gp_request_time() -> float | None:
-    if not LAST_GP_REQUEST_FILE.exists():
+def timestamp_from_file(timestamp_file: Path) -> float | None:
+    if not timestamp_file.exists():
         return None
 
     try:
-        return float(LAST_GP_REQUEST_FILE.read_text(encoding="utf-8").strip())
+        return float(timestamp_file.read_text(encoding="utf-8").strip())
     except ValueError as error:
-        raise ValueError(f"Invalid timestamp in {LAST_GP_REQUEST_FILE}") from error
+        raise ValueError(f"Invalid timestamp in {timestamp_file}") from error
+
+
+def write_timestamp(timestamp_file: Path, timestamp: float) -> None:
+    timestamp_file.write_text(
+        str(timestamp),
+        encoding="utf-8",
+    )
+
+
+def last_gp_request_time() -> float | None:
+    return timestamp_from_file(LAST_GP_REQUEST_FILE)
+
+
+def last_refresh_time() -> float | None:
+    return timestamp_from_file(LAST_REFRESH_FILE)
 
 
 def ensure_gp_request_is_allowed(now: float) -> None:
@@ -179,11 +203,21 @@ def ensure_gp_request_is_allowed(now: float) -> None:
         )
 
 
+def refresh_is_due(now: float) -> bool:
+    last_refresh = last_refresh_time()
+
+    if last_refresh is None:
+        return True
+
+    return now - last_refresh >= MINIMUM_REFRESH_INTERVAL_SECONDS
+
+
 def record_gp_request_time(request_time: float) -> None:
-    LAST_GP_REQUEST_FILE.write_text(
-        str(request_time),
-        encoding="utf-8",
-    )
+    write_timestamp(LAST_GP_REQUEST_FILE, request_time)
+
+
+def record_refresh_time(refresh_time: float) -> None:
+    write_timestamp(LAST_REFRESH_FILE, refresh_time)
 
 
 def authenticated_session() -> requests.Session:
@@ -213,10 +247,16 @@ def refresh_tle_cache() -> int:
     Fetch TLEs published during the previous hour and merge them into the
     local cache.
 
-    This function should be run by one scheduled job, once per hour. It
-    should not be called by get_tle_from_norad_id().
+    If the cache was refreshed less than one hour ago, no request is made
+    and zero is returned.
     """
+    ensure_tle_cache_exists()
+
     request_time = time.time()
+
+    if not refresh_is_due(request_time):
+        return 0
+
     ensure_gp_request_is_allowed(request_time)
 
     with authenticated_session() as session:
@@ -239,6 +279,10 @@ def refresh_tle_cache() -> int:
     cached_tles.update(updated_tles)
     write_tle_cache(cached_tles)
 
+    # Only mark the refresh as completed after the cache has been
+    # successfully written.
+    record_refresh_time(time.time())
+
     return len(updated_tles)
 
 
@@ -254,12 +298,6 @@ def get_tle_from_norad_id(norad_id: int) -> str:
     try:
         return cached_tles[norad_id]
     except KeyError as error:
-        if not TLE_CACHE_FILE.exists():
-            raise FileNotFoundError(
-                "The local TLE cache does not exist. "
-                "Run refresh_tle_cache() using the scheduled update job."
-            ) from error
-
         raise ValueError(f"No cached TLE found for NORAD ID {norad_id}") from error
 
 

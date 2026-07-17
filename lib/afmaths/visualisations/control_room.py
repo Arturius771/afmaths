@@ -24,23 +24,22 @@ from itrs_orbit_3d import visualisation_3d_itrs
 from ground_track import visualisation_2d_ground_track
 from astronomy_types import Distance, Scalar, Second
 
-# 41321, 25867, 13901 interesting sat
+# 41321, 25867, 13901, 26402 interesting sat
 # 10967 retrograde
 if __name__ == "__main__":
-    norad_id: int = BEIDOU_IGSO_6 or random.randrange(1, 69999)
-    tle = ISS_TLE_EXAMPLE or get_tle_from_norad_id(norad_id)
-    total_orbits = round(orbits_per_day(orbital_period_from_tle(tle)))
-    point_interval = 60
+    norad_id: int = 26402 or random.randrange(1, 69999)
+    tle = get_tle_from_norad_id(norad_id)
+    total_orbits = round(orbits_per_day(orbital_period_from_tle(tle)) * 10)
+    point_interval = 30
 
     visualisation_3d_itrs(tle, total_orbits)
     visualisation_3d_satellite_earth(
         [
-            BodyPlotConfig(
-                name=f"SAT: {tle}",
-                target=orbital_elements_from_tle(tle),
-                radius=Distance(Scalar(200_000)),
-                radius_scale=1.0,
-            )
+            tle,
+            get_tle_from_norad_id(ISS_NORAD_ID),
+            get_tle_from_norad_id(26382),
+            get_tle_from_norad_id(63326),
+            get_tle_from_norad_id(52708),
         ]
     )
     visualisation_2d_ground_track(

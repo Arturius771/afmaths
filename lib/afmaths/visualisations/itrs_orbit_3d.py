@@ -18,7 +18,10 @@ from afmaths.physics.space.celestial_mechanics import (
     EARTH_MU,
     state_vector_at_time,
 )
-from afmaths.physics.space.engineering.astrodynamics.ground_track import orbits_per_day
+from afmaths.physics.space.engineering.astrodynamics.ground_track import (
+    general_orbital_characteristics,
+    orbits_per_day,
+)
 from afmaths.physics.space.engineering.two_line_elements import (
     orbital_elements_from_tle,
     orbital_period_from_tle,
@@ -72,7 +75,10 @@ def visualisation_3d_itrs(tle: str, track_for_orbits: int = 3):
     return build_3d_itrs_orbit_figure(
         settings=settings,
         itrs_positions=itrs_positions,
-        title=f"{parse_norad_id(tle)} ITRS orbit view",
+        title=(
+            f"{parse_norad_id(tle)} ITRS orbit view"
+            f"<br>{general_orbital_characteristics(tle)}"
+        ),
         central_body_name="Earth",
         central_body_radius=EARTH_RADIUS,
         central_body_radius_scale=1.0,

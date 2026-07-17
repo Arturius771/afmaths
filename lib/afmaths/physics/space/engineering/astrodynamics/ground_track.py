@@ -26,8 +26,14 @@ from afmaths.physics.space.astronomy.time_functions import (
     minutes_from_seconds,
 )
 from afmaths.physics.space.celestial_mechanics import (
+    orbital_direction_from_inclination,
     orbital_period,
     state_vector_at_time,
+)
+from afmaths.physics.space.engineering.two_line_elements import (
+    orbital_elements_from_tle,
+    orbital_period_from_tle,
+    parse_julian_date,
 )
 from afmaths.physics.space.transformations import (
     itrs_position_from_gcrs_position,
@@ -35,6 +41,7 @@ from afmaths.physics.space.transformations import (
     transform_geographic_coordinates_from_itrs,
 )
 from afmaths.physics.space.type_conversion_helpers import degrees_from_radians
+from afmaths.types import OrbitalDirection
 
 
 def max_latitude(i: Inclination) -> Latitude:
@@ -102,3 +109,12 @@ def earth_start_of_orbit_coordinates(
         coordinates.append(earth_geographic_coordinate_from_itrs(itrs_position))
 
     return coordinates
+
+
+def general_orbital_characteristics(tle: str) -> str:
+    direction = orbital_direction_from_inclination(
+        orbital_elements_from_tle(tle).inclination
+    )
+    orbital_period = orbital_period_from_tle(tle)
+
+    return f"Drift: { westward_drift_from_angular_velocity_and_period   (orbital_period):.2f}° | Direction: {"Prograde" if direction == OrbitalDirection.PROGRADE else "Retrograde"} | Epoch (JD): {parse_julian_date(tle)} | Period: {orbital_period:.0f}s"
