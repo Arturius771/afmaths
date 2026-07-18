@@ -15,7 +15,10 @@ from afmaths.physics.space.engineering.astrodynamics.ground_track import orbits_
 from afmaths.physics.space.engineering.two_line_elements import (
     orbital_period_from_tle,
 )
-from afmaths.physics.space.external.space_track_api import get_tle_from_norad_id
+from afmaths.physics.space.external.space_track_api import (
+    get_tle_from_norad_id,
+    refresh_tle_cache,
+)
 
 from eci_orbit_3d import visualisation_3d_satellite_earth
 from itrs_orbit_3d import visualisation_3d_itrs
@@ -26,6 +29,8 @@ from astronomy_types import Scalar, Second
 def launch_control_room(
     norad_ids: list[int], total_orbits: int, point_interval: int = 60
 ):
+    refresh_tle_cache()
+
     for id in norad_ids:
         tle = get_tle_from_norad_id(id)
         visualisation_3d_itrs(tle, total_orbits)
