@@ -40,11 +40,11 @@ def launch_control_room(
 # 41321, 25867, 13901, 26402 interesting sat
 # 10967 retrograde
 if __name__ == "__main__":
-    norad_id: int = 26402 or random.randrange(1, 69999)
+    norad_id: int = ISS_NORAD_ID or random.randrange(1, 69999)
     tle = get_tle_from_norad_id(norad_id)
-    total_orbits = round(orbits_per_day(orbital_period_from_tle(tle)) * 10)
+    total_orbits = round(orbits_per_day(orbital_period_from_tle(tle)))
     point_interval = 30
 
     launch_control_room(
-        [ISS_NORAD_ID, 26382, 63326, 52708], total_orbits, point_interval
+        [ISS_NORAD_ID, 26402, 26382, 63326, 52708], total_orbits, point_interval
     )
