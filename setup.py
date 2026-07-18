@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="afmaths",
-    version="2.1.0",
+    version="2.1.1",
     package_dir={"": "lib"},
     packages=find_packages(where="lib"),
     author="Artur Foden",
