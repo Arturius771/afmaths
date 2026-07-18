@@ -164,7 +164,7 @@ def precession_low_precision(
 
     n_years = float(epoch_from_julian_date(new_epoch, -float(original_epoch))) / 365.25
 
-    right_ascension_hours = math.degrees(right_ascension1) / 15
+    # right_ascension_hours = math.degrees(right_ascension1) / 15 # TODO unused line, check book.
     right_ascension_degrees = math.degrees(right_ascension1)
     declination_degrees = math.degrees(declination1)
 
@@ -223,6 +223,8 @@ def aberration_from_date(
 ) -> EclipticCoordinates:
     """
     Calculates apparent ecliptic coordinates after applying annual aberration.
+
+    Aberration is caused by the observer's planet's changing velocity over the course of a year as it revolves around the Star.
     """
     true_latitude = float(true_ecliptic_coordinates.latitude)
     true_longitude = float(true_ecliptic_coordinates.longitude)
