@@ -15,7 +15,5 @@ setup(
         "Programming Language :: Python :: 3",
     ],
     python_requires=">=3.12",
-    install_requires=[
-        "astronomy_types>=2.1.0",
-    ],
+    install_requires=["astronomy_types>=2.1.1", "requests", "plotly"],
 )
