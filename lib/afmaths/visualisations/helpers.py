@@ -180,7 +180,7 @@ def figure_circle(
     figure: go.Figure,
     coordinates: Coordinate2D,
     radius: Distance,
-    fill_colour: str = "blue",
+    fill_colour: str | None = "blue",
     line_colour: str = "blue",
 ) -> go.Figure:
     bounding_box = circle_bounding_box(coordinates, radius)

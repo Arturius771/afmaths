@@ -23,7 +23,7 @@ from afmaths.physics.space.external.space_track_api import (
 from eci_orbit_3d import visualisation_3d_satellite_earth
 from itrs_orbit_3d import visualisation_3d_itrs
 from ground_track import visualisation_2d_ground_track
-from astronomy_types import Scalar, Second
+from astronomy_types import Degrees, Distance, GeographicCoordinates, Scalar, Second
 
 
 def launch_control_room(
@@ -36,7 +36,13 @@ def launch_control_room(
         visualisation_3d_itrs(tle, total_orbits)
 
         visualisation_2d_ground_track(
-            tle, total_orbits, Second(Scalar(point_interval)), True
+            tle,
+            GeographicCoordinates(Degrees(Scalar(53)), Degrees(Scalar(-6))),
+            total_orbits,
+            Second(Scalar(point_interval)),
+            show_orbit_markers=True,
+            ground_station_name="Dublin, Ireland",
+            ground_station_longitude_range=Degrees(Scalar(5)),
         ).show()
 
     visualisation_3d_satellite_earth([get_tle_from_norad_id(id) for id in norad_ids])
@@ -45,7 +51,7 @@ def launch_control_room(
 # 41321, 25867, 13901, 26402 interesting sat
 # 10967 retrograde
 if __name__ == "__main__":
-    norad_id: int = random.randrange(1, 69999)
+    norad_id: int = ISS_NORAD_ID or random.randrange(1, 69999)
     tle = get_tle_from_norad_id(norad_id)
     total_orbits = round(orbits_per_day(orbital_period_from_tle(tle)))
     point_interval = 30

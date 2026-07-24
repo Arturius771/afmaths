@@ -1,5 +1,6 @@
 import math
 from astronomy_types import (
+    Distance,
     Epoch,
     GeographicCoordinates,
     JulianDate,
@@ -109,6 +110,26 @@ def earth_start_of_orbit_coordinates(
         coordinates.append(earth_geographic_coordinate_from_itrs(itrs_position))
 
     return coordinates
+
+
+def ground_station_cardinal_points(
+    ground_station: GeographicCoordinates, range: Distance
+) -> list[GeographicCoordinates]:
+    """
+    Calculate the cardinal points (N, E, S, W) around a ground station given a range.
+
+    This is currently a simple approximation and does not account for the Earth's curvature or other geodetic factors. For more accurate calculations, consider using geospatial libraries or more complex algorithms.
+    """
+    lat = ground_station.latitude
+    lon = ground_station.longitude
+
+    # Calculate the cardinal points
+    north = GeographicCoordinates(y=Degrees(Scalar(lat + range)), x=lon)
+    east = GeographicCoordinates(y=Degrees(Scalar(lat)), x=Degrees(Scalar(lon + range)))
+    south = GeographicCoordinates(y=Degrees(Scalar(lat - range)), x=lon)
+    west = GeographicCoordinates(y=Degrees(Scalar(lat)), x=Degrees(Scalar(lon - range)))
+
+    return [north, east, south, west]
 
 
 def general_orbital_characteristics(tle: str) -> str:

@@ -16,7 +16,6 @@ from afmaths.physics.space.celestial_mechanics import (
     apoapsis_true_anomaly,
     current_orbital_elapsed_period_from_epoch,
     elapsed_time_to_true_anomaly,
-    orbital_direction_from_inclination,
     orbital_elements_from_state_vectors,
     orbital_radius_from_position_vector,
     periapsis_true_anomaly,
@@ -27,7 +26,7 @@ from afmaths.physics.space.engineering.astrodynamics.ground_track import (
     earth_geographic_coordinate_from_itrs,
     earth_start_of_orbit_coordinates,
     general_orbital_characteristics,
-    westward_drift_from_angular_velocity_and_period,
+    ground_station_cardinal_points,
 )
 from afmaths.physics.space.engineering.two_line_elements import (
     orbital_elements_from_tle,
@@ -38,15 +37,19 @@ from afmaths.physics.space.engineering.two_line_elements import (
 from afmaths.physics.space.transformations import (
     itrs_position_from_gcrs_position,
 )
-from afmaths.types import OrbitalDirection
 from afmaths.visualisations.helpers import (
     PlotNode,
     add_plot_nodes,
+    distance_to_scale_distance,
+    figure_circle,
     with_data_background_image,
 )
 from astronomy_types import (
     Coordinate2D,
+    Degrees,
+    Distance,
     Epoch,
+    GeographicCoordinates,
     Scalar,
     Second,
 )
@@ -54,8 +57,13 @@ from astronomy_types import (
 
 def visualisation_2d_ground_track(
     tle: str,
+    ground_station: GeographicCoordinates,
     track_for_orbits: int = 3,
     tracking_interval: Second = Second(Scalar(60)),
+    ground_station_longitude_range: Degrees = Degrees(
+        Scalar(5)
+    ),  # Needs to become a distance value, and then transformed to geodesic circle
+    ground_station_name: str | None = None,
     show_orbit_markers: bool = False,
     background_image_path: Path = Path(__file__).with_name("Earth-hires.jpg"),
     lines: bool = False,
@@ -154,48 +162,67 @@ def visualisation_2d_ground_track(
         )
     )
 
-    fig = add_plot_nodes(
+    ## Unused
+    # ground_station_marker = (
+    #     ground_station_cardinal_points(ground_station, ground_station_range)
+    #     if ground_station
+    #     else []
+    # )
+
+    ground_station_coordinate = Coordinate2D(
+        Scalar(ground_station.longitude),
+        Scalar(ground_station.latitude),
+    )
+
+    fig = figure_circle(
         add_plot_nodes(
-            add_plot_nodes(
-                go.Figure().add_trace(
-                    go.Scatter(
-                        x=[
-                            (float(coordinate.longitude))
-                            for coordinate in geographic_coordinates
-                        ],
-                        y=[
-                            float(coordinate.latitude)
-                            for coordinate in geographic_coordinates
-                        ],
-                        mode="markers+lines" if lines else "markers",
-                        name="Satellite ground track",
-                        marker={
-                            "color": list(range(len(geographic_coordinates))),
-                            "colorscale": "greys",
-                            "reversescale": True,
-                            "showscale": False,
-                            "colorbar": {
-                                "title": "Iteration",
-                            },
+            go.Figure().add_trace(
+                go.Scatter(
+                    x=[
+                        (float(coordinate.longitude))
+                        for coordinate in geographic_coordinates
+                    ],
+                    y=[
+                        float(coordinate.latitude)
+                        for coordinate in geographic_coordinates
+                    ],
+                    mode="markers+lines" if lines else "markers",
+                    name="Satellite ground track",
+                    marker={
+                        "color": list(range(len(geographic_coordinates))),
+                        "colorscale": "greys",
+                        "reversescale": True,
+                        "showscale": False,
+                        "colorbar": {
+                            "title": "Iteration",
                         },
-                    )
-                ),
-                [
-                    PlotNode(
-                        name=f"Apogee",
-                        coordinate=Coordinate2D(
-                            Scalar(apogee.longitude),
-                            Scalar(apogee.latitude),
-                        ),
-                        text=f"Apogee",
-                        size=20,
-                        symbol="circle",
-                        colour="Orange",
-                        marker_only=True,
-                    )
-                ],
+                    },
+                )
             ),
             [
+                # Ground Station
+                PlotNode(
+                    name=f"Ground Station: {ground_station_name or 'Unnamed'}",
+                    coordinate=ground_station_coordinate,
+                    text=f"Ground Station: {ground_station_name or 'Unnamed'}",
+                    size=5,
+                    symbol="circle",
+                    colour="Blue",
+                    marker_only=True,
+                ),
+                # Apogee and Perigee
+                PlotNode(
+                    name=f"Apogee",
+                    coordinate=Coordinate2D(
+                        Scalar(apogee.longitude),
+                        Scalar(apogee.latitude),
+                    ),
+                    text=f"Apogee",
+                    size=20,
+                    symbol="circle",
+                    colour="Orange",
+                    marker_only=True,
+                ),
                 PlotNode(
                     name=f"Perigee",
                     coordinate=Coordinate2D(
@@ -207,30 +234,32 @@ def visualisation_2d_ground_track(
                     symbol="circle",
                     colour="Orange",
                     marker_only=True,
-                )
-            ],
-        ),
-        [
-            PlotNode(
-                name=f"Position: {pretty_print_full_date(greenwich_full_Date_from_julian_date(julian_date_now()),  show_timesystem=True)}",
-                coordinate=Coordinate2D(
-                    Scalar(current_position.longitude),
-                    Scalar(current_position.latitude),
                 ),
-                text=f"Lon: {current_position.longitude:.1f}, Lat: {current_position.latitude:.1f} t={current_orbital_elapsed_period_from_epoch(epoch_to_now_seconds, orbital_period):.0f}s v={vis_viva(EARTH_MU,current_radius,tle_epoch_elements.semi_major_axis,):.2f}m/s r={current_radius:.2f}m",
-                size=20,
-                symbol="diamond",
-                colour="Red",
-                marker_only=True,
-            )
-        ],
-    ).update_layout(
-        title=(
-            f"Satellite {parse_norad_id(tle)} ground track | Duration: {track_for_duration:.0f}s"
-            f"<br>{general_orbital_characteristics(tle)}"
+                # Current Position
+                PlotNode(
+                    name=f"Position: {pretty_print_full_date(greenwich_full_Date_from_julian_date(julian_date_now()),  show_timesystem=True)}",
+                    coordinate=Coordinate2D(
+                        Scalar(current_position.longitude),
+                        Scalar(current_position.latitude),
+                    ),
+                    text=f"Lon: {current_position.longitude:.1f}, Lat: {current_position.latitude:.1f} t={current_orbital_elapsed_period_from_epoch(epoch_to_now_seconds, orbital_period):.0f}s v={vis_viva(EARTH_MU,current_radius,tle_epoch_elements.semi_major_axis,):.2f}m/s r={current_radius:.2f}m",
+                    size=20,
+                    symbol="diamond",
+                    colour="Red",
+                    marker_only=True,
+                ),
+            ],
+        ).update_layout(
+            title=(
+                f"Satellite {parse_norad_id(tle)} ground track | Duration: {track_for_duration:.0f}s"
+                f"<br>{general_orbital_characteristics(tle)}"
+            ),
+            xaxis_title="Longitude [deg]",
+            yaxis_title="Latitude [deg]",
         ),
-        xaxis_title="Longitude [deg]",
-        yaxis_title="Latitude [deg]",
+        ground_station_coordinate,
+        Distance(Scalar(ground_station_longitude_range)),
+        fill_colour=None,
     )
 
     plot_nodes = []
