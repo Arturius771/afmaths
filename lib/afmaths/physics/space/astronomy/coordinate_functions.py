@@ -1,7 +1,9 @@
 import math
 
 from afmaths.constants import HOURS_PER_DAY
+from afmaths.geometry.geometry import normalise_angle
 from afmaths.physics.space.type_conversion_helpers import (
+    make_radians,
     radians_from_degrees,
     decimal_time_from_time,
 )
@@ -98,11 +100,11 @@ def horizontal_coordinates_from_equatorial(
     y = -math.cos(declination) * math.cos(latitude_radians) * math.sin(hour_angle)
     x = math.sin(declination) - math.sin(latitude_radians) * sin_altitude
 
-    azimuth = math.atan2(y, x) % (2 * math.pi)
+    azimuth = normalise_angle(make_radians(math.atan2(y, x)))
 
     return HorizontalCoordinates(
-        Altitude(Radians(Scalar(altitude))),
-        Azimuth(Radians(Scalar(azimuth))),
+        Altitude(make_radians(altitude)),
+        Azimuth(make_radians(azimuth)),
     )
 
 
@@ -132,11 +134,11 @@ def equatorial_coordinates_from_horizontal(
         - math.sin(observer_latitude) * sin_declination
     )
 
-    hour_angle = math.atan2(y, x) % (2 * math.pi)
+    hour_angle = normalise_angle(make_radians(math.atan2(y, x)))
 
     return EquatorialCoordinatesHourAngle(
-        Declination(Radians(Scalar(declination))),
-        HourAngle(Radians(Scalar(hour_angle))),
+        Declination(make_radians(declination)),
+        HourAngle(make_radians(hour_angle)),
     )
 
 
@@ -177,7 +179,7 @@ def equatorial_coordinates_from_ecliptic(
     ) * math.sin(obliquity)
     x = math.cos(ecliptic_longitude)
 
-    right_ascension = Scalar(math.atan2(y, x) % (2 * math.pi))
+    right_ascension = normalise_angle(make_radians(math.atan2(y, x)))
 
     return EquatorialCoordinates(
         Declination(Radians(declination)),
@@ -208,11 +210,11 @@ def ecliptic_coordinates_from_equatorial(
     ) * math.sin(obliquity)
     x = math.cos(right_ascension)
 
-    ecliptic_longitude = math.atan2(y, x) % (2 * math.pi)
+    ecliptic_longitude = normalise_angle(make_radians(math.atan2(y, x)))
 
     return EclipticCoordinates(
-        Radians(Scalar(ecliptic_latitude)),
-        Radians(Scalar(ecliptic_longitude)),
+        make_radians(ecliptic_latitude),
+        make_radians(ecliptic_longitude),
     )
 
 
@@ -250,8 +252,8 @@ def galactic_coordinates_from_equatorial(
     )
 
     return GalacticCoordinates(
-        Radians(Scalar(galactic_latitude)),
-        Radians(Scalar(galactic_longitude)),
+        make_radians(galactic_latitude),
+        make_radians(galactic_longitude),
     )
 
 
@@ -287,6 +289,6 @@ def equatorial_coordinates_from_galactic(
     )
 
     return EquatorialCoordinates(
-        Declination(Radians(Scalar(declination))),
+        Declination(make_radians(declination)),
         RightAscension(right_ascension),
     )

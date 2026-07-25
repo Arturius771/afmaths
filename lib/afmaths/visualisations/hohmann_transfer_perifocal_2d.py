@@ -18,9 +18,9 @@ from afmaths.physics.space.celestial_mechanics import (
     periapsis_radius,
 )
 from afmaths.afmath_types import OrbitalDirection
+from afmaths.physics.space.type_conversion_helpers import make_eccentric_anomaly
 from afmaths.visualisations.base import (
     coordinates_for_elements,
-    eccentric_anomaly,
     plotted_radius_for_eccentric_anomaly,
     scale_orbital_elements_for_plot,
     transfer_arc_angles,
@@ -173,8 +173,8 @@ def build_hohmann_transfer_2d_perifocal_figure(
         settings.distance_scale,
     )
 
-    transfer_endpoint_a_eccentric_anomaly = eccentric_anomaly(0.0)
-    transfer_endpoint_b_eccentric_anomaly = eccentric_anomaly(math.pi)
+    transfer_endpoint_a_eccentric_anomaly = make_eccentric_anomaly(0.0)
+    transfer_endpoint_b_eccentric_anomaly = make_eccentric_anomaly(math.pi)
 
     transfer_endpoint_a_radius = plotted_radius_for_eccentric_anomaly(
         primary_focus_plot_coordinate,

@@ -31,6 +31,7 @@ from afmaths.operation import (
     subtract,
 )
 from afmaths.physics.space.type_conversion_helpers import (
+    make_radians,
     vector3d_from_position,
     vector3d_from_velocity,
 )
@@ -102,7 +103,7 @@ def signed_flight_path_angle(state: StateVector) -> Radians:
     r = vector_magnitude_3d(vector3d_from_position(state.position))
     v = vector_magnitude_3d(vector3d_from_velocity(state.velocity))
 
-    return Radians(Scalar(math.asin(divide_by(v)(radial_velocity(state)))))
+    return make_radians(math.asin(divide_by(v)(radial_velocity(state))))
 
 
 def angle_above_orbital_plane(

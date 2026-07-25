@@ -35,6 +35,8 @@ from astronomy_types import (
 
 # region Factories
 def make_vector2d(x: T, y: T) -> Vector2D[T]:
+    """
+    Factory function to create a Vector2D instance."""
     return Vector2D(x, y)
 
 
@@ -43,14 +45,17 @@ def make_vector3d(
     y: T,
     z: T,
 ) -> Vector3D[T]:
+    """Factory function to create a Vector3D instance."""
     return Vector3D(x, y, z)
 
 
 def make_date(year: Year, month: Month, day: Day) -> Date:
+    """Factory function to create a Date instance."""
     return Date(Year(year), Month(month), Day(Scalar(day)))
 
 
 def make_time(hms: HMS) -> Time:
+    """Factory function to create a Time instance from an HMS instance."""
     return Time(
         hour=Hour(hms.hours),
         minute=Minute(hms.minutes),
@@ -59,26 +64,34 @@ def make_time(hms: HMS) -> Time:
 
 
 def make_state_vector(pos: PositionVector, vel: VelocityVector) -> StateVector:
+    """Factory function to create a StateVector instance."""
     return StateVector(pos, vel)
 
 
 def make_true_anomaly(val: float) -> TrueAnomaly:
-    return TrueAnomaly(Anomaly(Radians(Scalar(val))))
+    """Factory function to create a TrueAnomaly instance."""
+    return TrueAnomaly(Anomaly(make_radians(val)))
 
 
 def make_eccentric_anomaly(val: float) -> EccentricAnomaly:
-    return EccentricAnomaly(Anomaly(Radians(Scalar(val))))
+    """Factory function to create an EccentricAnomaly instance."""
+    return EccentricAnomaly(Anomaly(make_radians(val)))
+
+
+def make_radians(val: float) -> Radians:
+    """Factory function to create a Radians instance."""
+    return Radians(Scalar(val))
 
 
 # region Type Conversion
 
 
 def radians_from_degrees(degrees: Degrees) -> Radians:
-    return Radians(Scalar(math.radians(float(degrees))))
+    return make_radians(math.radians(float(degrees)))
 
 
 def radians_from_string(degrees_str: str) -> Radians:
-    return Radians(Scalar(float(math.radians(float(degrees_str)))))
+    return make_radians(math.radians(float(degrees_str)))
 
 
 def radians_from_dms(dms: DMS) -> Radians:

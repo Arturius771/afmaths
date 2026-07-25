@@ -45,6 +45,7 @@ from afmaths.physics.space.external.horizons_api import (
     get_object_state_vectors_from_horizon,
 )
 from afmaths.physics.space.type_conversion_helpers import (
+    make_eccentric_anomaly,
     make_true_anomaly,
     fulldate_from_python_datetime,
     seconds_from_python_timedelta,
@@ -98,36 +99,10 @@ class OrbitPlotSettings:
         return Second(Scalar(seconds_from_python_timedelta(self.time_offset)))
 
 
-# Subject: angle construction.
-# Lightweight adapter from plain radians into the project anomaly wrapper type.
-def eccentric_anomaly(value: float) -> EccentricAnomaly:
-    return EccentricAnomaly(Anomaly(Radians(Scalar(value))))
-
-
-# Subject: angle construction.
-# Lightweight adapter from plain radians into the project anomaly wrapper type.
-def true_anomaly(value: float) -> TrueAnomaly:
-    return TrueAnomaly(Anomaly(Radians(Scalar(value))))
-
-
 # Subject: angle normalisation.
 # Generic radian normalisation for visualisation logic that compares orbit angles.
 def normalise_angle_rad(angle: float) -> float:
     return angle % (2 * math.pi)
-
-
-# Subject: anomaly conversion.
-# Converts true anomaly to eccentric anomaly for elliptical orbit visualisations.
-def eccentric_anomaly_from_true_anomaly(
-    eccentricity: float,
-    true_anomaly_value: TrueAnomaly,
-) -> EccentricAnomaly:
-    E = 2 * math.atan2(
-        math.sqrt(1 - eccentricity) * math.sin(true_anomaly_value / 2),
-        math.sqrt(1 + eccentricity) * math.cos(true_anomaly_value / 2),
-    )
-
-    return eccentric_anomaly(normalise_angle_rad(E))
 
 
 # Subject: plot-unit adapter for orbital elements.
@@ -532,7 +507,7 @@ def tangent_vector_for_plot(
     next_point = coordinates_for_elements(
         primary_focus_plot_coordinate,
         plot_elements,
-        eccentric_anomaly(float(E) + delta),
+        make_eccentric_anomaly(float(E) + delta),
     )
 
     return VelocityVector(

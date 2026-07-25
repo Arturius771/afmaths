@@ -1,6 +1,9 @@
 import math
 
-from afmaths.physics.space.type_conversion_helpers import radians_from_degrees
+from afmaths.physics.space.type_conversion_helpers import (
+    make_radians,
+    radians_from_degrees,
+)
 from afmaths.physics.space.astronomy.coordinate_functions import (
     equatorial_coordinates_from_ecliptic,
 )
@@ -101,7 +104,7 @@ def sun_position_approximate(
 
     return equatorial_coordinates_from_ecliptic(
         EclipticCoordinates(
-            Radians(Scalar(0.0)),
+            make_radians(0),
             longitude,
         ),
         greenwich_date,

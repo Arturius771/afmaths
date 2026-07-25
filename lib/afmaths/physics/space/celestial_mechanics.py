@@ -20,6 +20,7 @@ from afmaths.physics.space.type_conversion_helpers import (
     coordinate3d_from_vector,
     make_eccentric_anomaly,
     coordinate2d_from_vector,
+    make_radians,
     position_from_vector,
     make_state_vector,
     make_true_anomaly,
@@ -46,6 +47,7 @@ from afmaths.geometry.geometry import (
     eccentricity_factor_plus,
     eccentricity,
     generate_angles_on_circle,
+    normalise_angle,
     semi_latus_rectum,
     semi_minor_axis,
     semi_minor_axis_from_semi_latus_rectum,
@@ -297,26 +299,30 @@ def elapsed_time_to_true_anomaly(
 ) -> Second:
     """Calculates how much time in seconds has passed from perigee to the specified true anomaly."""
 
-    M_delta = (
-        float(
-            kepler_equation(
-                eccentric_anomaly_from_true_anomaly(
-                    target_true_anomaly,
-                    elements.eccentricity,
-                ),
-                elements.eccentricity,
+    M_delta = normalise_angle(
+        make_radians(
+            (
+                float(
+                    kepler_equation(
+                        eccentric_anomaly_from_true_anomaly(
+                            target_true_anomaly,
+                            elements.eccentricity,
+                        ),
+                        elements.eccentricity,
+                    )
+                )
+                - float(
+                    kepler_equation(
+                        eccentric_anomaly_from_true_anomaly(
+                            elements.true_anomaly,
+                            elements.eccentricity,
+                        ),
+                        elements.eccentricity,
+                    )
+                )
             )
         )
-        - float(
-            kepler_equation(
-                eccentric_anomaly_from_true_anomaly(
-                    elements.true_anomaly,
-                    elements.eccentricity,
-                ),
-                elements.eccentricity,
-            )
-        )
-    ) % (2 * math.pi)
+    )
 
     return Second(Scalar(M_delta / float(mean_motion(elements.semi_major_axis))))
 
@@ -328,7 +334,7 @@ def argument_of_latitude_from_true_anomaly(
     argument_of_periapsis: ArgumentOfPeriapsis, theta: TrueAnomaly
 ) -> Latitude:
     """Calculates the argument of latitude from the right ascension of the ascending node and the true anomaly."""
-    return Radians(Scalar(add(argument_of_periapsis)(theta)))
+    return make_radians(add(argument_of_periapsis)(theta))
 
 
 def argument_of_latitude(
@@ -343,7 +349,7 @@ def argument_of_latitude(
     y = divide_by(math.sin(i))(position.z)
     x = add(multiply(position.x)(math.cos(raan)))(multiply(position.y)(math.sin(raan)))
 
-    return Radians(Scalar(math.atan2(y, x) % (2 * math.pi)))
+    return normalise_angle(make_radians(math.atan2(y, x)))
 
 
 # region ## Velocity
@@ -897,17 +903,11 @@ def right_ascension_of_ascending_node_from_angular_momentum_vector(
 
     divide_by_vector_magnitude = divide_by(vector_magnitude_3d(n))
     if n.y >= 0:
-        return RightAscension(
-            Radians(Scalar(math.acos(divide_by_vector_magnitude(n.x))))
-        )
+        return RightAscension(make_radians(math.acos(divide_by_vector_magnitude(n.x))))
     else:
         return RightAscension(
-            Radians(
-                Scalar(
-                    subtract(math.acos(divide_by_vector_magnitude(n.x)))(
-                        DOUBLE(math.pi)
-                    )
-                )
+            make_radians(
+                subtract(math.acos(divide_by_vector_magnitude(n.x)))(DOUBLE(math.pi))
             )
         )
 
@@ -956,7 +956,7 @@ def true_anomaly_from_eccentric_anomaly(
     y = multiply(sqrt_term)(sin_E)  # √(1 - e²) * sin(E)
     x = subtract(e)(cos_E)
 
-    theta = math.atan2(y, x) % (2 * math.pi)
+    theta = normalise_angle(make_radians(math.atan2(y, x)))
 
     return make_true_anomaly(theta)
 
@@ -1034,17 +1034,19 @@ def eccentric_anomaly(
     )
     x = multiply(SQUARE(a))(multiply(n)((subtract(divide_by(a)(radius))(1))))
 
-    return make_eccentric_anomaly(math.atan2(y, x) % (2 * math.pi))
+    return make_eccentric_anomaly(normalise_angle(make_radians(math.atan2(y, x))))
 
 
 def eccentric_anomaly_from_true_anomaly(
     theta: TrueAnomaly, e: Eccentricity
 ) -> EccentricAnomaly:
     return make_eccentric_anomaly(
-        DOUBLE(
-            math.atan2(
-                math.sqrt(eccentricity_factor_minus(e)) * math.sin(theta / 2),
-                math.sqrt(eccentricity_factor_plus(e)) * math.cos(theta / 2),
+        normalise_angle(
+            DOUBLE(
+                math.atan2(
+                    math.sqrt(eccentricity_factor_minus(e)) * math.sin(theta / 2),
+                    math.sqrt(eccentricity_factor_plus(e)) * math.cos(theta / 2),
+                )
             )
         )
     )

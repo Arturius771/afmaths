@@ -33,6 +33,7 @@ from afmaths.operation import (
 import math
 
 from afmaths.physics.space.type_conversion_helpers import (
+    make_radians,
     make_vector2d,
     make_vector3d,
     vector2d_from_coordinate2d,
@@ -129,6 +130,11 @@ def sieve_of_eratosthenes(n: int) -> list[int]:
 #     return (
 #         (coordinates2.x - coordinates1.x) ** 2 + (coordinates2.y - coordinates1.y) ** 2
 #     ) ** 0.5
+
+
+def normalise_angle(angle: Radians) -> Radians:
+    """Normalises an angle in radians to the range [0, 2π)."""
+    return make_radians(float(angle) % (2 * math.pi))
 
 
 def calculate_distance(coord1: Coordinate2D, coord2: Coordinate2D) -> Distance:
