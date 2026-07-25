@@ -109,6 +109,7 @@ def angle_above_orbital_plane(
     target_object: EquatorialCoordinates,
     orbit: OrbitalElements,
 ) -> Radians:
+    """Calculates the angle of a target object above or below the orbital plane of a given orbit."""
     value = math.cos(target_object.declination) * math.sin(
         orbit.inclination
     ) * math.sin(
@@ -138,6 +139,7 @@ def angular_velocity_from_sidereal_period(
 
 
 def delta_v(initial_velocity: Velocity, final_velocity: Velocity) -> DeltaV:
+    """Calculates the delta-v required to change from an initial velocity to a final velocity."""
     return abs(subtract(initial_velocity)(final_velocity))
 
 

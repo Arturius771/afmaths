@@ -49,10 +49,12 @@ def momentum(mass: Mass, velocity: Velocity) -> Momentum:
 def moment_of_inertia(
     angular_momentum: AngularMomentum, angular_velocity: Velocity
 ) -> Scalar:
+    """Calculates the moment of inertia of an object given its angular momentum and angular velocity."""
     return divide_by(angular_velocity)(angular_momentum)
 
 
 def torque(force: Force, angle: Radians, length: Distance) -> Torque:
+    """Calculates the torque applied to an object given the force, angle and length of application."""
     return multiply(force)(multiply(length)(math.sin(angle)))
 
 

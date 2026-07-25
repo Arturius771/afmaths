@@ -63,6 +63,7 @@ def phase_semi_major_axis(
     true_anomaly_delta: TrueAnomaly,
     mu: GravitationalParameter,
 ) -> SemiMajorAxis:
+    """Returns the semi-major axis of the phase orbit."""
     return semi_major_axis_from_period(
         phase_period(
             orbital_period(original_orbit.semi_major_axis, mu),
@@ -110,6 +111,7 @@ def phase_periapsis(
     phase_semi_major_axis: SemiMajorAxis,
     original_orbit: OrbitalElements,
 ) -> Distance:
+    """Returns the periapsis of the phase orbit."""
     periapsis, _ = phase_apsides(phase_semi_major_axis, original_orbit)
     return periapsis
 
@@ -118,6 +120,7 @@ def phase_apoapsis(
     phase_semi_major_axis: SemiMajorAxis,
     original_orbit: OrbitalElements,
 ) -> Distance:
+    """Returns the apoapsis of the phase orbit."""
     _, apoapsis = phase_apsides(phase_semi_major_axis, original_orbit)
     return apoapsis
 
@@ -126,6 +129,7 @@ def phase_eccentricity(
     phase_semi_major_axis: SemiMajorAxis,
     original_orbit: OrbitalElements,
 ) -> Eccentricity:
+    """Returns the eccentricity of the phase orbit."""
 
     periapsis, apoapsis = phase_apsides(phase_semi_major_axis, original_orbit)
 
@@ -156,6 +160,7 @@ def phase_delta_v(
     original_orbit: OrbitalElements,
     mu: GravitationalParameter,
 ) -> DeltaV:
+    """Returns the Point of Impulse (POI) DeltaV required to transfer from the original orbit to the phase orbit."""
     poi = phase_poi_radius(phase_semi_major_axis, original_orbit)
 
     original_velocity = vis_viva(

@@ -13,7 +13,6 @@ from astronomy_types import (
     Second,
     Vector3D,
 )
-from afmaths.constants import MINUTES_PER_DAY
 from afmaths.geometry.transformations import (
     orthonormal_frame_transform_3d,
     transformation_matrix_from_basis_vectors,
@@ -26,7 +25,7 @@ from afmaths.physics.space.astronomy.time_functions import (
     seconds_from_minutes,
 )
 from afmaths.physics.space.type_conversion_helpers import make_vector2d, make_vector3d
-from afmaths.tensors import vector_magnitude, vector_magnitude_3d
+from afmaths.tensors import vector_magnitude
 from afmaths.types import TransformationMatrix3D
 
 
