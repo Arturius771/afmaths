@@ -16,7 +16,7 @@ from astronomy_types import (
 from afmaths.constants import MINUTES_PER_DAY
 from afmaths.geometry.transformations import (
     orthonormal_frame_transform_3d,
-    rotation_matrix_3d,
+    transformation_matrix_from_basis_vectors,
 )
 from afmaths.operation import DOUBLE, add, multiply, negate
 from afmaths.physics.space.astronomy.time_functions import (
@@ -178,7 +178,7 @@ def transform_element_reference_frame_from_perifocal(
         math.cos(orbital_elements.inclination),
     ]
 
-    return rotation_matrix_3d(
+    return transformation_matrix_from_basis_vectors(
         make_vector3d(Scalar(p[0]), Scalar(p[1]), Scalar(p[2])),
         make_vector3d(Scalar(q[0]), Scalar(q[1]), Scalar(q[2])),
         make_vector3d(Scalar(w[0]), Scalar(w[1]), Scalar(w[2])),
@@ -187,7 +187,7 @@ def transform_element_reference_frame_from_perifocal(
 
 def x_axis_passive_xrotation(angle: Radians) -> TransformationMatrix3D:
     """Passive coordinate-frame rotation about the x-axis."""
-    return rotation_matrix_3d(
+    return transformation_matrix_from_basis_vectors(
         make_vector3d(
             Scalar(1),
             Scalar(0),
@@ -208,7 +208,7 @@ def x_axis_passive_xrotation(angle: Radians) -> TransformationMatrix3D:
 
 def y_axis_passive_rotation(angle: Radians) -> TransformationMatrix3D:
     """Passive coordinate-frame rotation about the y-axis."""
-    return rotation_matrix_3d(
+    return transformation_matrix_from_basis_vectors(
         make_vector3d(
             Scalar(math.cos(angle)),
             Scalar(0),
@@ -228,7 +228,7 @@ def y_axis_passive_rotation(angle: Radians) -> TransformationMatrix3D:
 
 
 def z_axis_passive_rotation(angle: Radians) -> TransformationMatrix3D:
-    return rotation_matrix_3d(
+    return transformation_matrix_from_basis_vectors(
         make_vector3d(
             Scalar(math.cos(angle)),
             Scalar(negate(math.sin(angle))),
@@ -248,7 +248,7 @@ def z_axis_passive_rotation(angle: Radians) -> TransformationMatrix3D:
 
 
 def x_axis_active_rotation(angle: Radians) -> TransformationMatrix3D:
-    return rotation_matrix_3d(
+    return transformation_matrix_from_basis_vectors(
         make_vector3d(Scalar(1), Scalar(0), Scalar(0)),
         make_vector3d(Scalar(0), Scalar(math.cos(angle)), Scalar(math.sin(angle))),
         make_vector3d(
@@ -258,7 +258,7 @@ def x_axis_active_rotation(angle: Radians) -> TransformationMatrix3D:
 
 
 def y_axis_active_rotation(angle: Radians) -> TransformationMatrix3D:
-    return rotation_matrix_3d(
+    return transformation_matrix_from_basis_vectors(
         make_vector3d(
             Scalar(math.cos(angle)), Scalar(0), Scalar(negate(math.sin(angle)))
         ),
@@ -268,7 +268,7 @@ def y_axis_active_rotation(angle: Radians) -> TransformationMatrix3D:
 
 
 def z_axis_active_rotation(angle: Radians) -> TransformationMatrix3D:
-    return rotation_matrix_3d(
+    return transformation_matrix_from_basis_vectors(
         make_vector3d(Scalar(math.cos(angle)), Scalar(math.sin(angle)), Scalar(0)),
         make_vector3d(
             Scalar(negate(math.sin(angle))), Scalar(math.cos(angle)), Scalar(0)

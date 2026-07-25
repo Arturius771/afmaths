@@ -53,7 +53,7 @@ class PlotHelperTests(unittest.TestCase):
 
     def test_scaled_radius(self) -> None:
         result = scaled_radius(
-            radius=1_000.0,
+            radius=Distance(Scalar(1_000.0)),
             radius_scale=5.0,
             distance_scale=10_000.0,
         )

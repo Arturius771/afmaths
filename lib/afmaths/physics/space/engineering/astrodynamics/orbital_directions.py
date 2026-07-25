@@ -18,26 +18,32 @@ from afmaths.tensors import (
 
 
 def radial(position: PositionVector) -> tuple[Vector3D, OrbitalDirection]:
+    """Calculates the radial direction vector from a given position vector."""
     return (zenith_vector(position), OrbitalDirection.RADIAL)
 
 
 def anti_radial(position: PositionVector) -> tuple[Vector3D, OrbitalDirection]:
-    return (nadir_vector(position), OrbitalDirection.ANTIRADIAl)
+    """Calculates the anti-radial direction vector from a given position vector."""
+    return (nadir_vector(position), OrbitalDirection.ANTIRADIAL)
 
 
 def prograde(velocity: VelocityVector) -> tuple[Vector3D, OrbitalDirection]:
+    """Calculates the prograde direction vector from a given velocity vector."""
     return (vector_normalise(velocity), OrbitalDirection.PROGRADE)
 
 
 def retrograde(velocity: VelocityVector) -> tuple[Vector3D, OrbitalDirection]:
+    """Calculates the retrograde direction vector from a given velocity vector."""
     return (vector_negate(prograde(velocity)[0]), OrbitalDirection.RETROGRADE)
 
 
 def normal(state: StateVector) -> tuple[Vector3D, OrbitalDirection]:
+    """Calculates the normal direction vector from a given state vector."""
     return (vector_normalise(angular_momentum(state)), OrbitalDirection.NORMAL)
 
 
 def anti_normal(state: StateVector) -> tuple[Vector3D, OrbitalDirection]:
+    """Calculates the anti-normal direction vector from a given state vector."""
     return (vector_negate(normal(state)[0]), OrbitalDirection.ANTINORMAL)
 
 

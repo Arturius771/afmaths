@@ -8,17 +8,32 @@ from pathlib import Path
 import requests
 
 from afmaths.constants import SECONDS_PER_HOUR
+from afmaths.physics.space.external.http_helpers import build_url, send_request
 
 SPACE_TRACK_BASE_URL = "https://www.space-track.org"
 
-LOGIN_URL = f"{SPACE_TRACK_BASE_URL}/ajaxauth/login"
+LOGIN_URL = build_url(
+    SPACE_TRACK_BASE_URL,
+    "ajaxauth",
+    "login",
+)
 
-GP_UPDATES_URL = (
-    f"{SPACE_TRACK_BASE_URL}/basicspacedata/query"
-    f"/class/gp"
-    f"/decay_date/null-val"
-    f"/CREATION_DATE/%3Enow-0.042"
-    f"/format/tle"
+SPACE_TRACK_QUERY_URL = build_url(
+    SPACE_TRACK_BASE_URL,
+    "basicspacedata",
+    "query",
+)
+
+GP_UPDATES_URL = build_url(
+    SPACE_TRACK_QUERY_URL,
+    "class",
+    "gp",
+    "decay_date",
+    "null-val",
+    "CREATION_DATE",
+    "%3Enow-0.042",
+    "format",
+    "tle",
 )
 
 SECRETS_FILE = Path(__file__).with_name("secrets.txt")
@@ -143,7 +158,6 @@ def ensure_tle_cache_exists() -> None:
 
 def load_tle_cache() -> dict[int, str]:
     ensure_tle_cache_exists()
-
     return parse_tles(TLE_CACHE_FILE.read_text(encoding="utf-8"))
 
 
@@ -222,19 +236,19 @@ def record_refresh_time(refresh_time: float) -> None:
 
 def authenticated_session() -> requests.Session:
     secrets = load_secrets()
-
     session = requests.Session()
 
     try:
-        response = session.post(
+        send_request(
+            "POST",
             LOGIN_URL,
+            session=session,
             data={
                 "identity": secrets["SPACE_TRACK_USERNAME"],
                 "password": secrets["SPACE_TRACK_PASSWORD"],
             },
             timeout=30,
         )
-        response.raise_for_status()
     except Exception:
         session.close()
         raise
@@ -244,11 +258,10 @@ def authenticated_session() -> requests.Session:
 
 def refresh_tle_cache() -> int:
     """
-    Fetch TLEs published during the previous hour and merge them into the
-    local cache.
+    Fetch recently published TLEs and merge them into the local cache.
 
-    If the cache was refreshed less than one hour ago, no request is made
-    and zero is returned.
+    If the cache was refreshed within the configured minimum refresh interval,
+    no request is made and zero is returned.
     """
     ensure_tle_cache_exists()
 
@@ -264,11 +277,12 @@ def refresh_tle_cache() -> int:
         # retry from violating the API limit if a later operation fails.
         record_gp_request_time(request_time)
 
-        response = session.get(
+        response = send_request(
+            "GET",
             GP_UPDATES_URL,
+            session=session,
             timeout=60,
         )
-        response.raise_for_status()
 
         if "You must be logged in" in response.text:
             raise RuntimeError("Space-Track authentication failed")

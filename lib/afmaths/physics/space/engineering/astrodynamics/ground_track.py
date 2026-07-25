@@ -54,6 +54,7 @@ def min_latitude(i: Inclination) -> Latitude:
 
 
 def westward_drift_from_mean_motion(n: MeanMotion) -> Degrees:
+    """Calculates the westward drift of a satellite in degrees per orbit based on its mean motion."""
     return Degrees(Scalar(multiply(360)(divide_by(n)(1))))
 
 
@@ -61,12 +62,14 @@ def westward_drift_from_angular_velocity_and_period(
     orbital_period: Second,
     body_angular_velocity: Radians = EARTH_ANGULAR_VELOCITY,
 ) -> Degrees:
+    """Calculates the westward drift of a satellite in degrees per orbit based on the orbital period and the angular velocity of the central body (default is Earth)."""
     return degrees_from_radians(multiply(body_angular_velocity)(orbital_period))
 
 
 def earth_geographic_coordinate_from_itrs(
     itrs: PositionVector,
 ) -> GeographicCoordinates:
+    """Converts ITRS cartesian coordinates to geographic Lat/Lon (degrees). Useful for ground track plotting."""
     return transform_geographic_coordinates_from_itrs(itrs)
 
 
@@ -74,11 +77,13 @@ def earth_ground_track_positions(
     gcrs_positions: list[PositionVector],
     epoch: Epoch,
 ) -> list[PositionVector]:
+    """Transforms a list of GCRS positions to ITRS positions at a given epoch."""
 
     return itrs_positions_from_gcrs_position(gcrs_positions, epoch)
 
 
 def orbits_per_day(orbital_period, day_duration: Second = SECONDS_PER_DAY) -> float:
+    """Calculates the number of orbits completed in a day based on the orbital period."""
     return day_duration / orbital_period
 
 
@@ -87,6 +92,10 @@ def earth_start_of_orbit_coordinates(
     epoch: Epoch,
     number_of_orbits: int,
 ) -> list[GeographicCoordinates]:
+    """Calculates the geographic coordinates of the start of each orbit for a given number of orbits based on the orbital elements and epoch.
+
+    Start is defined as the point where the satellite crosses the ascending node.
+    """
     if number_of_orbits < 1:
         return []
 

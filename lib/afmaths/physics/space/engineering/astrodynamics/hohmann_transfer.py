@@ -91,6 +91,7 @@ def hohmann_transfer_parameters(
     initial_body_radius: Distance = EARTH_RADIUS,
     mu: GravitationalParameter = EARTH_MU,
 ) -> tuple[tuple[DeltaV, ...], OrbitalDirection, Second]:
+    """Calculates the delta-v, direction, and transfer period for a Hohmann transfer between two circular orbits."""
 
     initial_r = orbit_radius(initial_altitude, initial_body_radius)
     target_r = orbit_radius(target_altitude, initial_body_radius)

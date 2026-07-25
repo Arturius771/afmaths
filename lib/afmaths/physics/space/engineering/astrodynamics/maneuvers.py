@@ -128,6 +128,7 @@ def angle_above_orbital_plane(
 def angular_velocity_from_sidereal_period(
     sidereal_period: Second = Second(Scalar(86164.09)),
 ) -> Radians:
+    """Calculates the angular velocity of a body given its sidereal period."""
     return divide_by(sidereal_period)(DOUBLE(math.pi))
 
 
@@ -193,6 +194,7 @@ def inclination_change_at_node(
     current_inclination: Inclination,
     target_inclination: Inclination,
 ) -> DeltaV:
+    """Calculates the delta-v required to change the inclination of an orbit at a node (ascending or descending)."""
     difference = abs(subtract(target_inclination)(current_inclination))
     return DeltaV(
         Velocity(Scalar(multiply(DOUBLE(velocity_at_node))(math.sin(HALF(difference)))))

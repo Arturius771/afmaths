@@ -13,6 +13,7 @@ from astronomy_types import (
 
 
 def vector_negate(vector: Vector3D) -> Vector3D:
+    """Negates a 3D vector"""
     return make_vector3d(
         negate(vector.x),
         negate(vector.y),
@@ -25,6 +26,7 @@ def vector_negate(vector: Vector3D) -> Vector3D:
 
 # region Vectors
 def dot_product(vector_a: Vector2D[Scalar], vector_b: Vector2D[Scalar]) -> Scalar:
+    """Returns the dot product of two vectors"""
     a = multiply(vector_a.x)(vector_b.x)
     b = multiply(vector_a.y)(vector_b.y)
 
@@ -54,6 +56,7 @@ def vector_magnitude_3d(vector: Vector3D[Scalar]) -> Scalar:
 
 
 def vector_normalise(vector: Vector3D) -> Vector3D:
+    """Returns the normalised vector of a 3D vector"""
     magnitude = vector_magnitude_3d(vector)
 
     return make_vector3d(
@@ -66,6 +69,7 @@ def vector_normalise(vector: Vector3D) -> Vector3D:
 def vector_multiplication_2d(
     vector: Vector2D[Scalar], scalar: Scalar
 ) -> Vector2D[Scalar]:
+    """Multiplies a 2D vector by a scalar"""
     scalar_multiply = multiply(scalar)
     i = scalar_multiply(vector.x)
     j = scalar_multiply(vector.y)
@@ -81,6 +85,7 @@ def vector_multiplication_3d(
     j = scalar_multiply(vector.y)
     k = scalar_multiply(vector.z)
 
+    """Multiplies a 3D vector by a scalar"""
     return make_vector3d(i, j, k)
 
 
@@ -123,6 +128,7 @@ def vector_cross_multiplication_3d(
 
 
 def vector_subtract(vector_a: Vector2D, vector_b: Vector2D) -> Vector2D:
+    """Subtracts two 2D vectors"""
     return Vector2D(
         subtract(vector_b.x)(vector_a.x),
         subtract(vector_b.y)(vector_a.y),
@@ -130,6 +136,7 @@ def vector_subtract(vector_a: Vector2D, vector_b: Vector2D) -> Vector2D:
 
 
 def vector_subtract_3d(vector_a: Vector3D, vector_b: Vector3D) -> Vector3D:
+    """Subtracts two 3D vectors"""
     return Vector3D(
         subtract(vector_b.x)(vector_a.x),
         subtract(vector_b.y)(vector_a.y),
@@ -138,6 +145,7 @@ def vector_subtract_3d(vector_a: Vector3D, vector_b: Vector3D) -> Vector3D:
 
 
 def vector_add_3d(vector_a: Vector3D, vector_b: Vector3D) -> Vector3D:
+    """Adds two 3D vectors"""
     return Vector3D(
         add(vector_b.x)(vector_a.x),
         add(vector_b.y)(vector_a.y),
@@ -151,9 +159,10 @@ def vector_add_3d(vector_a: Vector3D, vector_b: Vector3D) -> Vector3D:
 
 
 def matrix_vector_multiply_2d(
-    matrix: TransformationMatrix2D,
+    matrix: Vector2D[Vector2D[Scalar]],
     vector: Vector2D[Scalar],
 ) -> Vector2D[Scalar]:
+    """Multiplies a 2D transformation matrix by a 2D vector"""
     return Vector2D(
         dot_product(matrix.x, vector),
         dot_product(matrix.y, vector),
@@ -161,9 +170,10 @@ def matrix_vector_multiply_2d(
 
 
 def matrix_vector_multiply_3d(
-    matrix: TransformationMatrix3D,
+    matrix: Vector3D[Vector3D[Scalar]],
     vector: Vector3D[Scalar],
 ) -> Vector3D[Scalar]:
+    """Multiplies a 3D transformation matrix by a 3D vector"""
     return make_vector3d(
         dot_product_3d(matrix.x, vector),
         dot_product_3d(matrix.y, vector),

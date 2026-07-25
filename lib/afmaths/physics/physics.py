@@ -62,12 +62,14 @@ def impulse(initial: Momentum, final: Momentum) -> Impulse:
 
 
 def impulse_from_force(force: Force, duration: Second) -> Impulse:
+    """Calculates the impulse applied to an object given the force and duration of application."""
     return multiply(force)(duration)
 
 
 def applied_torque(
     moment_of_inertia: Scalar, angular_acceleration: Acceleration
 ) -> Torque:
+    """Calculates the torque applied to an object given its moment of inertia and angular acceleration."""
     return multiply(moment_of_inertia)(angular_acceleration)
 
 

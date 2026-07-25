@@ -270,6 +270,7 @@ def eccentricity(a: SemiMajorAxis, b: SemiMinorAxis) -> Eccentricity:
 
 
 def semi_minor_axis(a: SemiMajorAxis, e: Eccentricity) -> SemiMinorAxis:
+    """Calculates the semi-minor axis of an ellipse given the semi-major axis and eccentricity."""
     # a * sqrt(1 - e**2)
     return multiply(a)(square_root(eccentricity_factor_minus(SQUARE(e))))
 
@@ -332,6 +333,7 @@ def generate_angles_on_circle(resolution: int) -> list[Radians]:
 
 # region Areas
 def area_rectangle(length: float, height: float) -> Area:
+    """Area = length * height"""
     return multiply(length)(height)
 
 
@@ -356,26 +358,32 @@ def area_of_sphere(radius: Distance) -> Area:
 
 
 def coordinate_90(coord: Coordinate2D) -> Coordinate2D:
+    """Rotates a coordinate 90 degrees counter-clockwise around the origin."""
     return Coordinate2D(negate(coord.y), coord.x)
 
 
 def coordinate_180(coord: Coordinate2D) -> Coordinate2D:
+    """Rotates a coordinate 180 degrees counter-clockwise around the origin."""
     return Coordinate2D(negate(coord.x), negate(coord.y))
 
 
 def coordinate_270(coord: Coordinate2D) -> Coordinate2D:
+    """Rotates a coordinate 270 degrees counter-clockwise around the origin."""
     return Coordinate2D(coord.y, negate(coord.x))
 
 
 def coordinate_minus_90(coord: Coordinate2D) -> Coordinate2D:
+    """Rotates a coordinate -90 degrees (or 270 degrees clockwise) around the origin."""
     return coordinate_270(coord)
 
 
 def coordinate_minus_180(coord: Coordinate2D) -> Coordinate2D:
+    """Rotates a coordinate -180 degrees (or 180 degrees clockwise) around the origin."""
     return coordinate_180(coord)
 
 
 def coordinate_minus_270(coord: Coordinate2D) -> Coordinate2D:
+    """Rotates a coordinate -270 degrees (or 90 degrees clockwise) around the origin."""
     return coordinate_90(coord)
 
 

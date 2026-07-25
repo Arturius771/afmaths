@@ -22,6 +22,6 @@ class OrbitalDirection(Enum):
     PROGRADE = "prograde"
     RETROGRADE = "retrograde"
     RADIAL = "radial"
-    ANTIRADIAl = "antiradial"
+    ANTIRADIAL = "antiradial"
     NORMAL = "normal"
     ANTINORMAL = "antinormal"

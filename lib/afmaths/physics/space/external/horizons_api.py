@@ -25,11 +25,22 @@ from astronomy_types import (
 from afmaths.physics.space.celestial_mechanics import (
     orbital_elements_from_state_vectors,
 )
+from afmaths.physics.space.external.http_helpers import (
+    build_url,
+    prepare_url,
+    send_request,
+)
 from afmaths.physics.space.type_conversion_helpers import (
     radians_from_dms,
     string_from_fulldate,
     radians_from_hms,
     fulldate_from_python_datetime,
+)
+
+HORIZONS_API_URL = build_url(
+    "https://ssd.jpl.nasa.gov",
+    "api",
+    "horizons.api",
 )
 
 
@@ -108,32 +119,25 @@ def build_horizons_url(query: HorizonsObserverQuery) -> str:
         "QUANTITIES": quote_horizons(quantities),
     }
 
-    # Horizons does not support metres/second directly. Request its native KM-S
-    # vector format and convert to SI after parsing.
+    # Horizons does not support metres/second directly. Request its native
+    # KM-S vector format and convert to SI after parsing.
     if query.ephemeris_type in {
         HorizonsEphemerisType.VECTORS,
         HorizonsEphemerisType.ELEMENTS,
     }:
         params["OUT_UNITS"] = quote_horizons(HORIZONS_VECTOR_OUTPUT_UNITS)
 
-    request = requests.Request(
-        "GET",
-        "https://ssd.jpl.nasa.gov/api/horizons.api",
-        params=params,
-    ).prepare()
-
-    if request.url is None:
-        raise ValueError("Failed to build Horizons URL")
-
-    return request.url
+    return prepare_url(HORIZONS_API_URL, params)
 
 
 def fetch_horizons_result(query: HorizonsObserverQuery) -> str:
     url = build_horizons_url(query)
-    print(url)
 
-    response = requests.get(url, timeout=30)
-    response.raise_for_status()
+    response = send_request(
+        "GET",
+        url,
+        timeout=30,
+    )
 
     if query.response_format == HorizonsFormat.JSON:
         data = response.json()
@@ -142,7 +146,9 @@ def fetch_horizons_result(query: HorizonsObserverQuery) -> str:
             raise ValueError(data["error"])
 
         if "result" not in data:
-            raise ValueError(f"Horizons JSON response did not contain result: {data}")
+            raise ValueError(
+                "Horizons JSON response did not contain result: " f"{data}"
+            )
 
         return data["result"]
 
