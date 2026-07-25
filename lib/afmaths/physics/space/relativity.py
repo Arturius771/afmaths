@@ -5,7 +5,7 @@ from afmaths.constants import (
 from afmaths.operation import DOUBLE, SQUARE, divide_by, multiply
 from astronomy_types import Distance
 
-from afmaths.types import Mass
+from afmaths.afmath_types import Mass
 
 
 def calculate_schwarzschild_radius(mass: Mass) -> Distance:

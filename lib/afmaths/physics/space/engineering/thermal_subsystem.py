@@ -11,7 +11,7 @@ from afmaths.physics.electromagnetism import stefan_boltzmann_law
 from afmaths.physics.space.engineering.astrodynamics.maneuvers import (
     angle_above_orbital_plane,
 )
-from afmaths.types import Area
+from afmaths.afmath_types import Area
 
 
 def beta_angle(sun: EquatorialCoordinates, orbit: OrbitalElements) -> Radians:

@@ -1,6 +1,6 @@
 import unittest
 
-from afmaths.types import Area, DeltaV, Force, Mass, Pressure
+from afmaths.afmath_types import Area, DeltaV, Force, Mass, Pressure
 from afmaths.physics.space.engineering.astrodynamics.hohmann_transfer import (
     hohmann_transfer_parameters,
 )

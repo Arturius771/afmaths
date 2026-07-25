@@ -26,7 +26,7 @@ from afmaths.physics.space.astronomy.time_functions import (
 )
 from afmaths.physics.space.type_conversion_helpers import make_vector2d, make_vector3d
 from afmaths.tensors import vector_magnitude
-from afmaths.types import TransformationMatrix3D
+from afmaths.afmath_types import TransformationMatrix3D
 
 
 def transform_element_reference_frame_from_perifocal_vector(

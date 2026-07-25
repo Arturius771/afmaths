@@ -17,7 +17,7 @@ from afmaths.physics.space.celestial_mechanics import (
     orbit_radius,
     periapsis_radius,
 )
-from afmaths.types import OrbitalDirection
+from afmaths.afmath_types import OrbitalDirection
 from afmaths.visualisations.base import (
     coordinates_for_elements,
     eccentric_anomaly,

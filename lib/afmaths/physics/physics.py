@@ -1,6 +1,6 @@
 import math
 from afmaths.geometry.geometry import area_of_sphere
-from afmaths.types import (
+from afmaths.afmath_types import (
     AngularMomentum,
     Force,
     Impulse,
@@ -43,6 +43,7 @@ def decibels(power1: float):
 
 
 def momentum(mass: Mass, velocity: Velocity) -> Momentum:
+    """Calculates the momentum of an object given its mass and velocity."""
     return multiply(mass)(velocity)
 
 

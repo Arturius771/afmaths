@@ -16,7 +16,7 @@ from afmaths.tensors import (
     vector_subtract,
     vector_subtract_3d,
 )
-from afmaths.types import Area
+from afmaths.afmath_types import Area
 from afmaths.geometry.transformations import translate_coordinate
 from afmaths.operation import (
     DOUBLE,

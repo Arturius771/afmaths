@@ -17,7 +17,7 @@ from astronomy_types import (
 from afmaths.constants import (
     EARTH_MU,
 )
-from afmaths.types import DeltaV
+from afmaths.afmath_types import DeltaV
 from afmaths.geometry.geometry import (
     eccentricity_factor_plus,
     semi_major_axis_from_vertex_distances,

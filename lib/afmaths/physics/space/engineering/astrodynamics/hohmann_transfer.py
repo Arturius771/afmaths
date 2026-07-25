@@ -19,7 +19,7 @@ from afmaths.physics.space.engineering.astrodynamics.maneuvers import (
 from afmaths.physics.space.engineering.astrodynamics.orbital_directions import (
     burn_direction_at_apsis,
 )
-from afmaths.types import OrbitalDirection, DeltaV
+from afmaths.afmath_types import OrbitalDirection, DeltaV
 from afmaths.operation import (
     add,
 )

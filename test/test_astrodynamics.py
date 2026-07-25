@@ -22,7 +22,7 @@ from astronomy_types import (
 from afmaths.physics.space.engineering.astrodynamics.hohmann_transfer import (
     hohmann_transfer_parameters,
 )
-from afmaths.types import OrbitalDirection
+from afmaths.afmath_types import OrbitalDirection
 
 
 class AstrodynamicsTestMethods(unittest.TestCase):

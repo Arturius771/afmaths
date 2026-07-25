@@ -29,7 +29,7 @@ from afmaths.physics.physics import (
 )
 
 from afmaths.physics.space.engineering.astrodynamics.maneuvers import delta_v
-from afmaths.types import DeltaV, Force, Impulse, Mass, Momentum, Pressure
+from afmaths.afmath_types import DeltaV, Force, Impulse, Mass, Momentum, Pressure
 
 
 def delta_v_from_tsiolkovsky(

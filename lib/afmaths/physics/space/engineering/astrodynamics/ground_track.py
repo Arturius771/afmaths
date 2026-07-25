@@ -42,7 +42,7 @@ from afmaths.physics.space.transformations import (
     transform_geographic_coordinates_from_itrs,
 )
 from afmaths.physics.space.type_conversion_helpers import degrees_from_radians
-from afmaths.types import OrbitalDirection
+from afmaths.afmath_types import OrbitalDirection
 
 
 def max_latitude(i: Inclination) -> Latitude:

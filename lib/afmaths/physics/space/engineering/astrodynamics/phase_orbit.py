@@ -16,7 +16,7 @@ from afmaths.constants import (
     EARTH_MU,
 )
 from afmaths.physics.space.engineering.astrodynamics.maneuvers import delta_v
-from afmaths.types import OrbitalDirection, DeltaV
+from afmaths.afmath_types import OrbitalDirection, DeltaV
 
 from afmaths.operation import (
     DOUBLE,

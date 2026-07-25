@@ -18,7 +18,7 @@ from afmaths.tensors import (
     matrix_vector_multiply_2d,
     matrix_vector_multiply_3d,
 )
-from afmaths.types import TransformationMatrix2D, TransformationMatrix3D
+from afmaths.afmath_types import TransformationMatrix2D, TransformationMatrix3D
 
 
 def translate_coordinate(coord: Coordinate2D, offset: Vector2D) -> Coordinate2D:

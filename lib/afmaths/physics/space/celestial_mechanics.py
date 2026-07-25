@@ -94,7 +94,14 @@ from astronomy_types import (
     Distance,
 )
 
-from afmaths.types import AngularMomentum, Area, DeltaV, Force, Mass, OrbitalDirection
+from afmaths.afmath_types import (
+    AngularMomentum,
+    Area,
+    DeltaV,
+    Force,
+    Mass,
+    OrbitalDirection,
+)
 
 ## Check if this belongs in geometry.py
 # def true_anomaly_from_eccentric_anomaly(

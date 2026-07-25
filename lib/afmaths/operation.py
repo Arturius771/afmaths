@@ -2,7 +2,7 @@ import math
 from typing import Callable
 from astronomy_types import Coordinate2D, Ratio
 
-from afmaths.types import Percentage
+from afmaths.afmath_types import Percentage
 
 # region Basic Operations
 

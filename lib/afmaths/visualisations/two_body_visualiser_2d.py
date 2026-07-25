@@ -38,7 +38,7 @@ from afmaths.physics.space.celestial_mechanics import (
     vis_viva,
 )
 from afmaths.physics.space.engineering.thermal_subsystem import EXAMPLE_ELEMENTS
-from afmaths.types import Mass
+from afmaths.afmath_types import Mass
 from afmaths.visualisations.base import (
     coordinates_for_elements,
     scale_orbital_elements_for_plot,

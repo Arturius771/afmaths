@@ -15,7 +15,7 @@ from afmaths.physics.space.celestial_mechanics import (
     orbital_period,
     periapsis_radius,
 )
-from afmaths.types import DeltaV
+from afmaths.afmath_types import DeltaV
 from afmaths.visualisations.base import (
     coordinates_for_elements,
     eccentric_anomaly,

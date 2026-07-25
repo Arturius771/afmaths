@@ -1,7 +1,7 @@
 import math
 import unittest
 
-from afmaths.types import Force, Mass, OrbitalDirection
+from afmaths.afmath_types import Force, Mass, OrbitalDirection
 from afmaths.physics.space.celestial_mechanics import (
     distance_between_positions,
     eccentric_anomaly_solved,
