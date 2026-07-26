@@ -211,7 +211,7 @@ class RocketryTestMethods(unittest.TestCase):
                 Distance(Scalar(100)),
                 Velocity(Scalar(10)),
             ),
-            81580.20813682553,
+            81905.20813682553,
             6,
         )
 

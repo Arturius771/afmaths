@@ -3,6 +3,7 @@ import math
 from afmaths.constants import STANDARD_GRAVITY
 from afmaths.geometry.geometry import Area
 from afmaths.operation import (
+    DOUBLE,
     HALF,
     SQUARE,
     add,
@@ -289,7 +290,7 @@ def max_height_after_powered_ascent(
     )
 
     height_at_burnout = height_from_acceleration(
-        total_acceleration,
+        add(initial_velocity_acceleration)(total_acceleration),
         burn_duration,
         initial_height,
     )
