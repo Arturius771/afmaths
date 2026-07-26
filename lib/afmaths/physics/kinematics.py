@@ -14,7 +14,7 @@ from astronomy_types import (
 
 from afmaths.geometry.geometry import area_rectangle
 from afmaths.graph import slope_gradiant
-from afmaths.operation import add, multiply, trapezoidal_rule
+from afmaths.operation import HALF, SQUARE, add, divide_by, multiply, trapezoidal_rule
 from afmaths.physics.space.type_conversion_helpers import make_vector3d
 from afmaths.tensors import vector_multiplication_2d, vector_multiplication_3d
 
@@ -31,6 +31,20 @@ def position_displacement(
         ),
         Position(v.y),
         Position(v.z),
+    )
+
+
+def displacement_factor_from_acceleration(acceleration: Acceleration) -> Displacement:
+    """This is not the actual displacement, but a factor that can be used to calculate the displacement after a given duration of constant acceleration, starting from an initial velocity.
+
+    See: Integration in Notion"""
+    return Displacement(Scalar(HALF(velocity_factor_from_acceleration(acceleration))))
+
+
+def displacement(acceleration: Acceleration, duration: Second) -> Displacement:
+    """Calculates the displacement of an object after a given duration of constant acceleration, starting from an initial velocity."""
+    return multiply(displacement_factor_from_acceleration(acceleration))(
+        SQUARE(duration)
     )
 
 
@@ -82,7 +96,7 @@ def velocity_time_displacement_curve_section(
 
 # endregion
 # region Speed & Velocity
-def velocity_time_average_acceleration_from_slope(
+def average_acceleration_from_slope_velocity_time(
     time_and_velocity1: Coordinate2D, time_and_velocity2: Coordinate2D
 ) -> Acceleration:
     """Calculates the average acceleration of an object given two points on a velocity-time graph. The points must be in the form (time, velocity)"""
@@ -93,10 +107,12 @@ def velocity_after_duration(
     acceleration: Acceleration, initial_velocity: Velocity, duration: Second
 ) -> Velocity:
     """Calculates the velocity of an object after a given duration of constant acceleration, starting from an initial velocity."""
-    return add(initial_velocity)(multiply(acceleration)(duration))
+    return add(initial_velocity)(
+        multiply(velocity_factor_from_acceleration(acceleration))(duration)
+    )
 
 
-def velocity_time_total_displacement(sorted_points: list[Coordinate2D]) -> Displacement:
+def displacement_velocity_time(sorted_points: list[Coordinate2D]) -> Displacement:
     """Calculates the total displacement of an object given a velocity-time graph with multiple segments. The points must be sorted in order of time."""
     total = 0
 
@@ -104,6 +120,19 @@ def velocity_time_total_displacement(sorted_points: list[Coordinate2D]) -> Displ
         total += velocity_time_displacement_curve_section(start, end)
 
     return Displacement(Scalar(total))
+
+
+def velocity_factor_from_acceleration(acceleration_m_s: Acceleration) -> Velocity:
+    """This is not the actual velocity, but a factor that can be used to calculate the velocity after a given duration of constant acceleration, starting from an initial velocity."""
+    return Velocity(Scalar(acceleration_m_s))
+
+
+def acceleration_from_velocity(
+    velocity: Velocity,
+    duration: Second,
+) -> Acceleration:
+    """Calculates the constant acceleration required to reach a velocity over a duration."""
+    return divide_by(duration)(velocity)
 
 
 # endregion

@@ -2,9 +2,10 @@ import unittest
 
 from afmaths.physics.kinematics import (
     detect_collision,
+    displacement,
     propagate_vector,
     velocity_after_duration,
-    velocity_time_average_acceleration_from_slope,
+    average_acceleration_from_slope_velocity_time,
     velocity_time_curve_displacement,
     velocity_time_displacement_curve_section,
     velocity_time_displacement_flat,
@@ -42,7 +43,7 @@ class KinematicsTestMethods(unittest.TestCase):
 
     def test_velocity_time_average_acceleration_from_slope(self):
         self.assert_scalar_almost_equal(
-            velocity_time_average_acceleration_from_slope(
+            average_acceleration_from_slope_velocity_time(
                 Coordinate2D(0, 3),
                 Coordinate2D(6, 0),
             ),
@@ -104,6 +105,15 @@ class KinematicsTestMethods(unittest.TestCase):
             Velocity(Scalar(5)),
         )
 
+        self.assertEqual(
+            velocity_after_duration(
+                Acceleration(Scalar(25)),
+                Velocity(Scalar(26)),
+                Second(Scalar(2)),
+            ),
+            Velocity(Scalar(76)),
+        )
+
     def test_propagate_vector(self):
         self.assertEqual(
             propagate_vector(
@@ -122,6 +132,12 @@ class KinematicsTestMethods(unittest.TestCase):
                 Vector2D(1, 0),
                 Vector2D(-1, 0),
             )
+        )
+
+    def test_displacement(self):
+        self.assert_scalar_almost_equal(
+            float(displacement(Acceleration(Scalar(25)), Second(Scalar(2)))),
+            50,
         )
 
 

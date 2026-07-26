@@ -11,6 +11,7 @@ from afmaths.physics.space.engineering.rocketry import (
     effective_exhaust_velocity,
     full_mass,
     mass_flow_rate,
+    max_height_after_powered_ascent,
     max_payload_mass,
     propellant_mass_from_full_mass,
     required_mass_ratio,
@@ -22,7 +23,7 @@ from afmaths.physics.space.engineering.rocketry import (
     total_impulse,
     total_impulse_from_exhaust_velocity,
 )
-from astronomy_types import Distance, Rate, Scalar, Second, Velocity
+from astronomy_types import Acceleration, Distance, Rate, Scalar, Second, Velocity
 
 
 class RocketryTestMethods(unittest.TestCase):
@@ -189,6 +190,29 @@ class RocketryTestMethods(unittest.TestCase):
                 exhaust_velocity,
             ),
             specific_impulse_seconds,
+        )
+
+    def test_max_height_after_powered_ascent(self):
+
+        self.assertAlmostEqual(
+            max_height_after_powered_ascent(
+                Acceleration(Scalar(25)),
+                Second(Scalar(2)),
+                Distance(Scalar(0)),
+                Velocity(Scalar(0)),
+            ),
+            177.46452662224107,
+        )
+
+        self.assertAlmostEqual(
+            max_height_after_powered_ascent(
+                Acceleration(Scalar(15)),
+                Second(Scalar(65)),
+                Distance(Scalar(100)),
+                Velocity(Scalar(10)),
+            ),
+            81580.20813682553,
+            6,
         )
 
 

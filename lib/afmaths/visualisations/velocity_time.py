@@ -1,8 +1,7 @@
 import plotly.graph_objects as go
 from astronomy_types import Coordinate2D
 
-from afmaths.physics.kinematics import velocity_time_total_displacement
-
+from afmaths.physics.kinematics import displacement_velocity_time
 
 VELOCITY_POINTS = [
     Coordinate2D(4.8, 2.3),
@@ -34,7 +33,7 @@ def build_velocity_time_figure(
     fig.update_layout(
         title=(
             "Velocity over time "
-            f"(displacement: {velocity_time_total_displacement(points)})"
+            f"(displacement: {displacement_velocity_time(points)})"
         ),
         xaxis_title="Time",
         yaxis_title="Velocity",

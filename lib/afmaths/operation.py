@@ -210,6 +210,7 @@ def herons_method(value: float):
 
 
 def trapezoidal_rule(curve: list[Coordinate2D]) -> float:
+    """Calculates the area under a curve using the trapezoidal rule."""
     if len(curve) < 2:
         return 0.0
 

@@ -3,6 +3,8 @@ import math
 from afmaths.constants import STANDARD_GRAVITY
 from afmaths.geometry.geometry import Area
 from afmaths.operation import (
+    HALF,
+    SQUARE,
     add,
     divide_by,
     exponentiate,
@@ -13,6 +15,7 @@ from afmaths.operation import (
 )
 from astronomy_types import (
     Acceleration,
+    Distance,
     Rate,
     Ratio,
     Scalar,
@@ -20,6 +23,13 @@ from astronomy_types import (
     Velocity,
 )
 
+from afmaths.physics.ballistics import (
+    duration_to_max_height,
+    height_from_acceleration,
+    max_velocity,
+)
+
+from afmaths.physics.kinematics import acceleration_from_velocity
 from afmaths.physics.physics import (
     impulse_from_force,
     net_acceleration,
@@ -254,6 +264,51 @@ def max_payload_mass(
     return subtract(dry_non_payload_mass)(
         divide_by(subtract(1)(required_mass_ratio))(propellant_mass)
     )
+
+
+def max_height_after_powered_ascent(
+    powered_acceleration: Acceleration,
+    burn_duration: Second,
+    initial_height: Distance = Distance(Scalar(0)),
+    initial_velocity: Velocity = Velocity(Scalar(0)),
+    prior_burn_duration: Second | None = None,
+    gravitational_acceleration: Acceleration = STANDARD_GRAVITY,
+) -> Distance:
+    """Calculates the maximum height of a rocket after its engines stop firing, given the powered acceleration and burn duration."""
+
+    initial_velocity_acceleration = acceleration_from_velocity(
+        initial_velocity,
+        prior_burn_duration if prior_burn_duration is not None else burn_duration,
+    )
+
+    total_acceleration = add(powered_acceleration)(initial_velocity_acceleration)
+
+    velocity_at_burnout = max_velocity(
+        total_acceleration,
+        burn_duration,
+    )
+
+    height_at_burnout = height_from_acceleration(
+        total_acceleration,
+        burn_duration,
+        initial_height,
+    )
+
+    t_max = duration_to_max_height(
+        burn_duration,
+        total_acceleration,
+        gravitational_acceleration,
+    )
+
+    coasting_duration = subtract(burn_duration)(t_max)
+
+    loss_due_to_gravity = multiply(HALF(negate(gravitational_acceleration)))(
+        SQUARE(coasting_duration)
+    )
+
+    gain_due_to_inertia = multiply(velocity_at_burnout)(coasting_duration)
+
+    return add(height_at_burnout)(add(loss_due_to_gravity)(gain_due_to_inertia))
 
 
 # endregion
