@@ -525,12 +525,10 @@ def build_2d_orbit_visualiser_figure(
 DISTANCE_SCALE = 17_000.0 * 1000
 
 
-def main() -> None:
-    settings = PlotOrbital2DSettings(
-        distance_scale=DISTANCE_SCALE,
-    )
+def build_default_two_body_visualiser_2d_figure() -> go.Figure:
+    settings = PlotOrbital2DSettings(distance_scale=DISTANCE_SCALE)
 
-    build_2d_orbit_visualiser_figure(
+    return build_2d_orbit_visualiser_figure(
         settings=settings,
         central_body_name="Earth",
         central_body_radius=6_371.0,
@@ -539,13 +537,6 @@ def main() -> None:
         orbiting_body_radius=[1_737.4 * 1000, 1_737.4 * 1000],
         orbiting_body_mass_kg=[7.346e22, 1000],
         orbiting_body_is_satellite=[False, True],
-        orbital_elements=[
-            MOON_ELEMENTS,
-            SATELLITE_EXAMPLE_ELEMENTS,
-        ],
+        orbital_elements=[MOON_ELEMENTS, SATELLITE_EXAMPLE_ELEMENTS],
         title="Earth-Moon system",
-    ).show()
-
-
-if __name__ == "__main__":
-    main()
+    )

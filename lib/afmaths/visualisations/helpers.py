@@ -21,7 +21,7 @@ from astronomy_types import (
 )
 
 from afmaths.geometry.geometry import circle_bounding_box
-from afmaths.operation import interval
+from afmaths.operation import interval_points
 from afmaths.physics.space.type_conversion_helpers import make_vector3d
 from pathlib import Path
 
@@ -401,8 +401,8 @@ def plot_sphere_surface(
     centre: PositionVector | None = None,
     resolution: int = 50,
 ) -> Vector3D:
-    u = interval(0, 2 * math.pi, resolution)
-    v = interval(0, math.pi, resolution)
+    u = interval_points(0, 2 * math.pi, resolution)
+    v = interval_points(0, math.pi, resolution)
 
     centre_x = 0 if centre is None else centre.x
     centre_y = 0 if centre is None else centre.y

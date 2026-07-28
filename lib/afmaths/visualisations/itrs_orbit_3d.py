@@ -1,5 +1,7 @@
 import datetime
 
+import plotly.graph_objects as go
+
 from astronomy_types import Epoch, GravitationalParameter, Scalar, JulianDate, Second
 from afmaths.constants import (
     BEIDOU_IGSO_6,
@@ -39,7 +41,7 @@ BODY_RADIUS_SCALE = 1.0
 ORBIT_POINTS = 50
 
 
-def visualisation_3d_itrs(tle: str, track_for_orbits: int = 3):
+def visualisation_3d_itrs(tle: str, track_for_orbits: int = 3) -> go.Figure:
     if track_for_orbits < 1:
         track_for_orbits = 1
 
@@ -83,4 +85,4 @@ def visualisation_3d_itrs(tle: str, track_for_orbits: int = 3):
         central_body_radius=EARTH_RADIUS,
         central_body_radius_scale=1.0,
         orbit_name="ISS ITRS track",
-    ).show()
+    )

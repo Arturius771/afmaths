@@ -49,9 +49,3 @@ def build_collision_detection_figure() -> go.Figure:
     return fig
 
 
-def main() -> None:
-    build_collision_detection_figure().show()
-
-
-if __name__ == "__main__":
-    main()

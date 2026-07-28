@@ -91,19 +91,33 @@ def termial(number: int) -> int:
     return HALF(multiply(number)(add(number)(1)))
 
 
-def interval(start: float, end: float, number_of_intervals: int) -> list[float]:
-    """Creates n evenly spaced points between a and b."""
+def interval_points(
+    start: float, end: float, number_of_intervals: int, step: float | None = None
+) -> list[float]:
+    """
+    Creates a fixed number of points starting at ``start``.
+
+    When ``step`` is not provided, ``number_of_intervals`` points are distributed
+    evenly between ``start`` and ``end``, including both endpoints.
+
+    When ``step`` is provided, exactly ``number_of_intervals`` points are created
+    using that spacing. In this case, ``end`` does not limit the generated range;
+    the final point is:
+
+        start + (number_of_intervals - 1) * step
+
+    Therefore, callers using ``step`` must calculate an appropriate
+    ``number_of_intervals`` if the points should cover a specific duration.
+    """
+
     if number_of_intervals < 2:
         return [start]
-    step = (subtract(start)(end)) / (subtract(1)(number_of_intervals))
-    return [start + i * step for i in range(number_of_intervals)]
+    if step is None:
+        used_step = (subtract(start)(end)) / (subtract(1)(number_of_intervals))
+    else:
+        used_step = step
 
-
-# Apply a function of two arguments cumulatively to the items of an iterable, from left to right.
-
-# This effectively reduces the iterable to a single value. If initial is present,
-# it is placed before the items of the iterable in the calculation, and serves as
-# a default when the iterable is empty.
+    return [start + i * used_step for i in range(number_of_intervals)]
 
 
 def reduce(
@@ -146,6 +160,7 @@ def product(
     start_index: int,
     stop_index: int,
 ) -> float:
+    """Function that takes a rule, and then iteratively multiplies according to that rule."""
     total = 1.0
 
     for val in range(round(start_index), round(stop_index + 1)):
@@ -155,6 +170,7 @@ def product(
 
 
 def percentage_from_ratio(ratio: Ratio) -> Percentage:
+    """Converts a ratio to a percentage."""
     return multiply(100)(ratio)
 
 
@@ -231,6 +247,7 @@ def trapezoidal_rule(curve: list[Coordinate2D]) -> float:
 
 
 def power_rule_string(symbol: float, exponent: float) -> str:
+    """Returns a string representation of the power rule for differentiation."""
     return f"f'({symbol}^{{{exponent}}}) = {exponent} * {symbol}^{{{exponent - 1}}}"
 
 

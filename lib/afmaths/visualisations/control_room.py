@@ -1,63 +1,74 @@
-import random
+from __future__ import annotations
 
-from afmaths.constants import (
-    ARIANE_6_FM1_UPPER,
-    BEIDOU_IGSO_6,
-    GALILEO_7_NORAD_ID,
-    ISS_NORAD_ID,
-    ISS_TLE_EXAMPLE,
-    JAMES_WEBB,
-    MINUTES_PER_DAY,
-    MOLNIYA_3_50_NORAD_ID,
-)
-from afmaths.physics.space.astronomy.time_functions import julian_date_now
-from afmaths.physics.space.engineering.astrodynamics.ground_track import orbits_per_day
-from afmaths.physics.space.engineering.two_line_elements import (
-    orbital_period_from_tle,
-)
+from pathlib import Path
+
 from afmaths.physics.space.external.space_track_api import (
     get_tle_from_norad_id,
     refresh_tle_cache,
 )
+from astronomy_types import Degrees, GeographicCoordinates, Scalar, Second
 
+from dashboard import show_visualisation_dashboard
 from eci_orbit_3d import visualisation_3d_satellite_earth
+from ground_track import (
+    visualisation_2d_ground_track_current_position_propogation,
+    visualisation_2d_ground_track_tle_propagation,
+)
 from itrs_orbit_3d import visualisation_3d_itrs
-from ground_track import visualisation_2d_ground_track
-from astronomy_types import Degrees, Distance, GeographicCoordinates, Scalar, Second
+
+
+def build_control_room_figures(
+    norad_ids: list[int],
+    total_orbits: int,
+    point_interval: int = 60,
+    ground_station: GeographicCoordinates = GeographicCoordinates(
+        Degrees(Scalar(53)),
+        Degrees(Scalar(-6)),
+    ),
+    ground_station_name: str = "Dublin, Ireland",
+    ground_station_longitude_range: Degrees = Degrees(Scalar(5)),
+):
+    """Build the four independent figures used by the control-room dashboard."""
+    if not norad_ids:
+        raise ValueError("At least one NORAD ID is required.")
+
+    refresh_tle_cache()
+    tles = [get_tle_from_norad_id(norad_id) for norad_id in norad_ids]
+    selected_tle = tles[0]
+
+    return [
+        visualisation_3d_itrs(selected_tle, total_orbits),
+        visualisation_2d_ground_track_tle_propagation(
+            tle=selected_tle,
+            track_for_orbits=total_orbits,
+            show_orbit_markers=True,
+            time_interval=Second(Scalar(point_interval)),
+        ),
+        visualisation_2d_ground_track_current_position_propogation(
+            tle=selected_tle,
+            ground_station=ground_station,
+            ground_station_name=ground_station_name,
+            ground_station_longitude_range=ground_station_longitude_range,
+        ),
+        visualisation_3d_satellite_earth(tles),
+    ]
 
 
 def launch_control_room(
-    norad_ids: list[int], total_orbits: int, point_interval: int = 60
-):
-    refresh_tle_cache()
-
-    for id in norad_ids:
-        tle = get_tle_from_norad_id(id)
-        visualisation_3d_itrs(tle, total_orbits)
-
-        visualisation_2d_ground_track(
-            tle,
-            GeographicCoordinates(Degrees(Scalar(53)), Degrees(Scalar(-6))),
-            total_orbits,
-            Second(Scalar(point_interval)),
-            show_orbit_markers=True,
-            ground_station_name="Dublin, Ireland",
-            ground_station_longitude_range=Degrees(Scalar(5)),
-        ).show()
-
-    visualisation_3d_satellite_earth([get_tle_from_norad_id(id) for id in norad_ids])
-
-
-# 41321, 25867, 13901, 26402 interesting sat
-# 10967 retrograde
-if __name__ == "__main__":
-    norad_id: int = ISS_NORAD_ID or random.randrange(1, 69999)
-    tle = get_tle_from_norad_id(norad_id)
-    total_orbits = round(orbits_per_day(orbital_period_from_tle(tle)))
-    point_interval = 30
-
-    # launch_control_room(
-    #     [ISS_NORAD_ID, 26402, 26382, 63326, 52708], total_orbits, point_interval
-    # )
-
-    launch_control_room([norad_id], total_orbits, point_interval)
+    norad_ids: list[int],
+    total_orbits: int,
+    point_interval: int = 60,
+    output_path: Path | None = None,
+) -> Path:
+    """Open the four control-room figures in one 2x2 browser dashboard."""
+    figures = build_control_room_figures(
+        norad_ids=norad_ids,
+        total_orbits=total_orbits,
+        point_interval=point_interval,
+    )
+    return show_visualisation_dashboard(
+        figures,
+        title=f"AFMaths Control Room — NORAD {norad_ids[0]}",
+        columns=2,
+        output_path=output_path,
+    )

@@ -16,7 +16,7 @@ ORBIT_POINTS = 50
 MOON_RADIUS = 1_737.4 * 1000
 
 
-if __name__ == "__main__":
+def build_moon_earth_3d_figure():
     settings = OrbitPlotSettings(
         centre=HorizonsCommandTarget.EARTH,
         gravitational_parameter=EARTH_MU,
@@ -27,7 +27,7 @@ if __name__ == "__main__":
         add_prediction_to_orbit=True,
     )
 
-    build_3d_orbit_figure(
+    return build_3d_orbit_figure(
         settings=settings,
         title="Earth-Moon system",
         central_body_name="Earth",
@@ -41,4 +41,4 @@ if __name__ == "__main__":
                 radius_scale=BODY_RADIUS_SCALE,
             )
         ],
-    ).show()
+    )

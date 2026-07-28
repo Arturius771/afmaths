@@ -1,6 +1,8 @@
 import datetime
 import random
 
+import plotly.graph_objects as go
+
 from astronomy_types import Distance, GravitationalParameter, Scalar
 
 from afmaths.constants import (
@@ -33,7 +35,7 @@ ORBIT_POINTS = 100
 SATELLITE_DISPLAY_RADIUS = Distance(Scalar(200_000))
 
 
-def visualisation_3d_satellite_earth(tles: list[str]):
+def visualisation_3d_satellite_earth(tles: list[str]) -> go.Figure:
     settings = OrbitPlotSettings(
         centre=HorizonsCommandTarget.EARTH,
         gravitational_parameter=EARTH_MU,
@@ -61,4 +63,4 @@ def visualisation_3d_satellite_earth(tles: list[str]):
             )
             for tle in tles
         ],
-    ).show()
+    )

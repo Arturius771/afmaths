@@ -32,7 +32,7 @@ INITIAL_ALTITUDE_M = Distance(Scalar(10_000_000))
 MAX_ALTITUDE_M = INITIAL_ALTITUDE_M * 500
 ALTITUDE_INTERVAL_M = INITIAL_ALTITUDE_M / 2
 
-if __name__ == "__main__":
+def build_hohmann_tradeoff_figure() -> go.Figure:
     initial_orbit = OrbitalElements(
         Inclination(Radians(Scalar(0))),
         RightAscension(Radians(Scalar(0))),
@@ -264,4 +264,4 @@ if __name__ == "__main__":
         col=1,
     )
 
-    fig.show()
+    return fig

@@ -7,7 +7,7 @@ from afmaths.operation import (
     divide_by,
     exponentiate,
     exponentiate_by_repeated_multiplication,
-    interval,
+    interval_points,
     multiply,
     multiply_by_repeated_addition,
     negate,
@@ -105,7 +105,7 @@ class OperatioTestMethods(unittest.TestCase):
         self.assertEqual(result, 5050.0)
 
     def test_interval(self):
-        result = interval(0, 10, 5)
+        result = interval_points(0, 10, 5)
 
         self.assertEqual(result, [0.0, 2.5, 5.0, 7.5, 10.0])
 

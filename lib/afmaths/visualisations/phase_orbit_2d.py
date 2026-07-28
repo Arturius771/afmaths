@@ -12,18 +12,17 @@ from afmaths.physics.space.engineering.astrodynamics.phase_orbit import (
 )
 from afmaths.physics.space.celestial_mechanics import (
     apoapsis_radius,
+    eccentric_anomaly_from_true_anomaly,
     orbital_period,
     periapsis_radius,
 )
 from afmaths.afmath_types import DeltaV
+from afmaths.physics.space.type_conversion_helpers import make_eccentric_anomaly
 from afmaths.visualisations.base import (
     coordinates_for_elements,
-    eccentric_anomaly,
-    eccentric_anomaly_from_true_anomaly,
     normalise_angle_rad,
     plotted_radius_for_eccentric_anomaly,
     scale_orbital_elements_for_plot,
-    true_anomaly,
 )
 from afmaths.visualisations.helpers import (
     PlotOrbital2DSettings,
@@ -99,7 +98,7 @@ def phase_true_anomaly_delta(
     else:
         signed_delta = -(2 * math.pi - forward_delta)
 
-    return true_anomaly(signed_delta)
+    return TrueAnomaly(Anomaly(Radians(Scalar(signed_delta))))
 
 
 def phase_direction_label(
@@ -127,8 +126,8 @@ def true_anomaly_plot_node(
     symbol: str,
 ) -> PlotNode:
     E = eccentric_anomaly_from_true_anomaly(
-        orbital_elements.eccentricity,
         true_anomaly_value,
+        orbital_elements.eccentricity,
     )
 
     return PlotNode(
@@ -222,8 +221,8 @@ def phase_poi_eccentric_anomaly_for_plot(
     endpoint whose plotted radius from the primary focus matches the expected
     shared original-orbit apsis radius.
     """
-    endpoint_a = eccentric_anomaly(0.0)
-    endpoint_b = eccentric_anomaly(math.pi)
+    endpoint_a = make_eccentric_anomaly(0.0)
+    endpoint_b = make_eccentric_anomaly(math.pi)
 
     endpoint_a_radius = plotted_radius_for_eccentric_anomaly(
         primary_focus_plot_coordinate,
@@ -452,7 +451,7 @@ DISTANCE_SCALE = 12_824.9333333 * 1000
 INITIAL_ALTITUDE_M = Distance(Scalar(200_000_000))
 
 
-if __name__ == "__main__":
+def build_default_phase_orbit_2d_perifocal_figure() -> go.Figure:
     original_orbit = OrbitalElements(
         Inclination(Radians(Scalar(0))),
         RightAscension(Radians(Scalar(0))),
@@ -462,16 +461,14 @@ if __name__ == "__main__":
         TrueAnomaly(Anomaly(Radians(Scalar(0.0)))),
     )
 
-    build_phase_orbit_2d_perifocal_figure(
+    return build_phase_orbit_2d_perifocal_figure(
         settings=PlotOrbital2DSettings(
             distance_scale=DISTANCE_SCALE,
             plot_width=1000,
             plot_height=1000,
         ),
         original_orbit=original_orbit,
-        # 1 rad -> 5 rad has forward Δν = 4 rad.
-        # Since 4 > 3.14, it is treated as "behind" and uses a higher phase orbit.
         initial_true_anomaly=TrueAnomaly(Anomaly(Radians(Scalar(0.5)))),
         desired_true_anomaly=TrueAnomaly(Anomaly(Radians(Scalar(1.0)))),
         gravitational_parameter=EARTH_MU,
-    ).show()
+    )

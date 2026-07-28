@@ -42,9 +42,3 @@ def build_velocity_time_figure(
     return fig
 
 
-def main() -> None:
-    build_velocity_time_figure().show()
-
-
-if __name__ == "__main__":
-    main()

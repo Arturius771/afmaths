@@ -300,8 +300,8 @@ INITIAL_ALTITUDE_M = Distance(Scalar(200_000_000))
 TARGET_ALTITUDE_M = Distance(Scalar(140_000_000))
 
 
-if __name__ == "__main__":
-    build_hohmann_transfer_2d_perifocal_figure(
+def build_default_hohmann_transfer_2d_perifocal_figure() -> go.Figure:
+    return build_hohmann_transfer_2d_perifocal_figure(
         settings=PlotOrbital2DSettings(
             distance_scale=DISTANCE_SCALE,
             plot_width=1000,
@@ -311,15 +311,10 @@ if __name__ == "__main__":
             Inclination(Radians(Scalar(0))),
             RightAscension(Radians(Scalar(0))),
             ArgumentOfPeriapsis(Radians(Scalar(math.radians(10)))),
-            SemiMajorAxis(
-                orbit_radius(
-                    INITIAL_ALTITUDE_M,
-                    EARTH_RADIUS,
-                )
-            ),
+            SemiMajorAxis(orbit_radius(INITIAL_ALTITUDE_M, EARTH_RADIUS)),
             Eccentricity(Ratio(Scalar(0.0))),
             TrueAnomaly(Anomaly(Radians(Scalar(0)))),
         ),
         final_altitude=TARGET_ALTITUDE_M,
         gravitational_parameter=EARTH_MU,
-    ).show()
+    )

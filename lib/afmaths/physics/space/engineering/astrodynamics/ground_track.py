@@ -19,12 +19,12 @@ from astronomy_types import (
 from afmaths.constants import EARTH_ANGULAR_VELOCITY, MINUTES_PER_DAY, SECONDS_PER_DAY
 from afmaths.operation import (
     divide_by,
+    interval_points,
     multiply,
     negate,
 )
 from afmaths.physics.space.astronomy.time_functions import (
     epoch_offset,
-    minutes_from_seconds,
 )
 from afmaths.physics.space.celestial_mechanics import (
     orbital_direction_from_inclination,
@@ -85,6 +85,21 @@ def earth_ground_track_positions(
 def orbits_per_day(orbital_period, day_duration: Second = SECONDS_PER_DAY) -> float:
     """Calculates the number of orbits completed in a day based on the orbital period."""
     return day_duration / orbital_period
+
+
+def second_intervals_for_orbits(
+    start: Second,
+    total_duration: Second,
+    number_of_intervals: int,
+    step: Second | None = None,
+) -> list[Second]:
+    """Generates a list of time intervals in seconds for a given number of orbits based on the orbital period and a specified interval."""
+    return [
+        Second(Scalar(second))
+        for second in interval_points(
+            float(start), float(total_duration + start), number_of_intervals, step
+        )
+    ]
 
 
 def earth_start_of_orbit_coordinates(

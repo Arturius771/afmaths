@@ -70,7 +70,7 @@ PLANETS = [
 ]
 
 
-def main() -> None:
+def build_solar_system_3d_figure():
     settings = OrbitPlotSettings(
         centre=HorizonsCommandTarget.SUN,
         gravitational_parameter=SUN_GRAVITATIONAL_PARAMETER,
@@ -81,7 +81,7 @@ def main() -> None:
         add_prediction_to_orbit=False,
     )
 
-    build_3d_orbit_figure(
+    return build_3d_orbit_figure(
         settings=settings,
         title="Heliocentric solar system model",
         central_body_name="Sun",
@@ -89,8 +89,4 @@ def main() -> None:
         central_body_radius_scale=SUN_RADIUS_SCALE,
         central_body_opacity=0.6,
         orbiting_bodies=PLANETS,
-    ).show()
-
-
-if __name__ == "__main__":
-    main()
+    )

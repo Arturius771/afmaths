@@ -24,7 +24,7 @@ from afmaths.operation import (
     SQUARE,
     add,
     divide_by,
-    interval,
+    interval_points,
     multiply,
     negate,
     square_root,
@@ -328,7 +328,7 @@ def ellipse_bounding_box(
 
 def generate_angles_on_circle(resolution: int) -> list[Radians]:
     angles = []
-    for val in interval(0, DOUBLE(math.pi), resolution):
+    for val in interval_points(0, DOUBLE(math.pi), resolution):
         angles.append(Radians(Scalar(val)))
 
     return angles
