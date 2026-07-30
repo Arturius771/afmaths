@@ -627,16 +627,16 @@ from afmaths.visualisations.helpers import (
 
 # Subject: 3D ITRS orbit trace construction.
 # Scales a sequence of ITRS position vectors and returns a Plotly 3D line trace.
-def add_itrs_orbit_trace(
+def add_itrf_orbit_trace(
     name: str,
-    itrs_positions: list[PositionVector],
+    itrf_positions: list[PositionVector],
     distance_scale: float,
 ) -> go.Scatter3d:
     x = []
     y = []
     z = []
 
-    for position in itrs_positions:
+    for position in itrf_positions:
         scaled = scale_position(position, distance_scale)
         x.append(scaled.x)
         y.append(scaled.y)
@@ -653,9 +653,9 @@ def add_itrs_orbit_trace(
 
 # Subject: high-level 3D ITRS orbit visualisation composition.
 # Builds a 3D figure with a central body at the origin and a supplied ITRS orbit trace.
-def build_3d_itrs_orbit_figure(
+def build_3d_itrf_orbit_figure(
     settings: OrbitPlotSettings,
-    itrs_positions: list[PositionVector],
+    itrf_positions: list[PositionVector],
     title: str = "ITRS orbit view",
     central_body_name: str = "Earth",
     central_body_radius: Distance = EARTH_RADIUS,
@@ -671,9 +671,9 @@ def build_3d_itrs_orbit_figure(
             settings.distance_scale,
             opacity=central_body_opacity,
         ),
-        add_itrs_orbit_trace(
+        add_itrf_orbit_trace(
             orbit_name,
-            itrs_positions,
+            itrf_positions,
             settings.distance_scale,
         ),
     ]

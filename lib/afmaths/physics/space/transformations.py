@@ -29,30 +29,30 @@ from afmaths.tensors import vector_magnitude
 from afmaths.afmath_types import TransformationMatrix3D
 
 
-def transform_element_reference_frame_from_perifocal_vector(
+def transform_vector_from_perifocal(
     orbital_elements: OrbitalElements,
-    perifocal_vector: Vector3D[Scalar],
+    vector_in_perifocal_frame: Vector3D[Scalar],
 ) -> Vector3D[Scalar]:
     """Transforms a vector from the perifocal coordinate system to the ECI coordinate system using the provided transformation matrix"""
     return orthonormal_frame_transform_3d(
-        transform_element_reference_frame_from_perifocal(orbital_elements),
-        perifocal_vector,
+        perifocal_to_reference_frame_matrix(orbital_elements),
+        vector_in_perifocal_frame,
     )
 
 
-def transform_geographic_coordinates_from_itrs(
-    itrs: PositionVector,
+def geographic_coordinates_from_itrf(
+    itrf: PositionVector,
 ) -> GeographicCoordinates:
     """Converts ITRS cartesian coordinates to geographic Lat/Lon (degrees). Useful for ground track plotting."""
     return GeographicCoordinates(
         Degrees(
             Scalar(
                 math.degrees(
-                    math.atan2(itrs.z, vector_magnitude(make_vector2d(itrs.x, itrs.y)))
+                    math.atan2(itrf.z, vector_magnitude(make_vector2d(itrf.x, itrf.y)))
                 )
             )
         ),
-        Degrees(Scalar(math.degrees(math.atan2(itrs.y, itrs.x)))),
+        Degrees(Scalar(math.degrees(math.atan2(itrf.y, itrf.x)))),
     )
 
 
@@ -72,59 +72,148 @@ def earth_rotation_angle(jd: JulianDate) -> Radians:
     )
 
 
-def itrs_position_from_gmst_passive(
+def itrf_position_from_gmst_passive(
     gmst: Radians, gcrs_position: PositionVector
 ) -> PositionVector:
-    """Simplified conversion not taking into account any perturbations or time compatibility."""
-    itrs_position = orthonormal_frame_transform_3d(
+    """Simplified conversion not taking into account any perturbations or time compatibility. Calculated using the passive rotation of the GCRS frame to the ITRF frame."""
+    itrf_position = orthonormal_frame_transform_3d(
         z_axis_passive_rotation(gmst),
         make_vector3d(gcrs_position.x, gcrs_position.y, gcrs_position.z),
     )
     return PositionVector(
-        Position(itrs_position.x), Position(itrs_position.y), Position(itrs_position.z)
+        Position(itrf_position.x), Position(itrf_position.y), Position(itrf_position.z)
     )
 
 
-def itrs_position_from_gmst(
+def itrf_position_from_gmst(
     gmst: Radians, gcrs_position: PositionVector
 ) -> PositionVector:
-    itrs_position = orthonormal_frame_transform_3d(
+    """Simplified conversion not taking into account any perturbations or time compatibility. Calculated using the active rotation of the GCRS frame to the ITRF frame."""
+    itrf_position = orthonormal_frame_transform_3d(
         z_axis_active_rotation(gmst),
         make_vector3d(gcrs_position.x, gcrs_position.y, gcrs_position.z),
     )
     return PositionVector(
-        Position(itrs_position.x), Position(itrs_position.y), Position(itrs_position.z)
+        Position(itrf_position.x), Position(itrf_position.y), Position(itrf_position.z)
     )
 
 
-def itrs_position_from_gcrs_position(
+def itrf_position_from_gcrs_position(
     jd: JulianDate, gcrs_position: PositionVector
 ) -> PositionVector:
+    """Simplified conversion not taking into account any perturbations or time compatibility. Calculated using the active rotation of the GCRS frame to the ITRF frame."""
     gmst = greenwich_mean_sidereal_time_radians_from_julian_date(jd)
-    return itrs_position_from_gmst_passive(gmst, gcrs_position)
+    return itrf_position_from_gmst_passive(gmst, gcrs_position)
 
 
-def itrs_positions_from_gcrs_position(
+def itrf_positions_from_gcrs_position(
     gcrs_positions: list[PositionVector],
     epoch: Epoch,
 ) -> list[PositionVector]:
-    itrs_positions: list[PositionVector] = []
+    """Converts a list of GCRS positions to ITRF positions, taking into account the epoch offset for each position based on its index in the list."""
+    itrf_positions: list[PositionVector] = []
 
     for minute, gcrs_position in enumerate(gcrs_positions):
         offset_jd = epoch_offset(
             epoch, Second(Scalar(seconds_from_minutes(Minute(minute))))
         )
-        itrs_positions.append(
-            itrs_position_from_gcrs_position(offset_jd, gcrs_position)
+        itrf_positions.append(
+            itrf_position_from_gcrs_position(offset_jd, gcrs_position)
         )
 
-    return itrs_positions
+    return itrf_positions
+
+
+## TODO
+# def itrf_position_from_icrf_position(
+#     jd_tt: JulianDate,
+#     jd_ut1: JulianDate,
+#     icrf_position: PositionVector,
+#     earth_icrf_position: PositionVector,
+#     polar_motion_x: Angle = Angle(Scalar(0)),
+#     polar_motion_y: Angle = Angle(Scalar(0)),
+# ) -> PositionVector:
+#     """Transforms a barycentric ICRF position into an Earth-fixed ITRF position."""
+
+#     geocentric_position = make_vector3d(
+#         subtract(earth_icrf_position.x)(icrf_position.x),
+#         subtract(earth_icrf_position.y)(icrf_position.y),
+#         subtract(earth_icrf_position.z)(icrf_position.z),
+#     )
+
+#     precessed_position = orthonormal_frame_transform_3d(
+#         precession_matrix(jd_tt),
+#         geocentric_position,
+#     )
+
+#     nutated_position = orthonormal_frame_transform_3d(
+#         nutation_matrix(jd_tt),
+#         precessed_position,
+#     )
+
+#     earth_rotated_position = orthonormal_frame_transform_3d(
+#         earth_rotation_matrix(jd_ut1),
+#         nutated_position,
+#     )
+
+#     itrf_position = orthonormal_frame_transform_3d(
+#         polar_motion_matrix(
+#             polar_motion_x,
+#             polar_motion_y,
+#         ),
+#         earth_rotated_position,
+#     )
+
+#     return PositionVector(
+#         Position(itrf_position.x),
+#         Position(itrf_position.y),
+#         Position(itrf_position.z),
+#     )
 
 
 # region Transformation Matrices
 
 
-def transform_element_reference_frame_from_perifocal(
+## TODO: Implement the following transformation matrices:
+# def precession_matrix() -> TransformationMatrix3D:
+#     """Calculates the precession matrix for a given Julian Date."""
+#     # Implementation of precession matrix calculation goes here
+#     return transformation_matrix_from_basis_vectors(
+#         make_vector3d(Scalar(1), Scalar(0), Scalar(0)),
+#         make_vector3d(Scalar(0), Scalar(1), Scalar(0)),
+#         make_vector3d(Scalar(0), Scalar(0), Scalar(1)),
+#     )
+
+# def nutation_matrix() -> TransformationMatrix3D:
+#     """Calculates the precession matrix for a given Julian Date."""
+#     # Implementation of precession matrix calculation goes here
+#     return transformation_matrix_from_basis_vectors(
+#         make_vector3d(Scalar(1), Scalar(0), Scalar(0)),
+#         make_vector3d(Scalar(0), Scalar(1), Scalar(0)),
+#         make_vector3d(Scalar(0), Scalar(0), Scalar(1)),
+#     )
+
+## Maybe the same as itrf_position_from_gmst()?
+# def earth_rotation_matrix() -> TransformationMatrix3D:
+#     """Calculates the precession matrix for a given Julian Date."""
+#     # Implementation of precession matrix calculation goes here
+#     return transformation_matrix_from_basis_vectors(
+#         make_vector3d(Scalar(1), Scalar(0), Scalar(0)),
+#         make_vector3d(Scalar(0), Scalar(1), Scalar(0)),
+#         make_vector3d(Scalar(0), Scalar(0), Scalar(1)),
+#     )
+
+# def polar_motion_matrix() -> TransformationMatrix3D:
+#     """Calculates the precession matrix for a given Julian Date."""
+#     # Implementation of precession matrix calculation goes here
+#     return transformation_matrix_from_basis_vectors(
+#         make_vector3d(Scalar(1), Scalar(0), Scalar(0)),
+#         make_vector3d(Scalar(0), Scalar(1), Scalar(0)),
+#         make_vector3d(Scalar(0), Scalar(0), Scalar(1)),
+#     )
+
+
+def perifocal_to_reference_frame_matrix(
     orbital_elements: OrbitalElements,
 ) -> TransformationMatrix3D:
     """

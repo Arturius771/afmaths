@@ -22,7 +22,7 @@ from hohmann_tradeoff import build_hohmann_tradeoff_figure
 from hohmann_transfer_perifocal_2d import (
     build_default_hohmann_transfer_2d_perifocal_figure,
 )
-from itrs_orbit_3d import visualisation_3d_itrs
+from itrf_orbit_3d import visualisation_3d_itrf
 from keplers_ellipse_2d import build_default_keplers_ellipse_2d_figure
 from moon_earth_3d import build_moon_earth_3d_figure
 from newton_iteration import build_newton_iteration_figure
@@ -44,22 +44,20 @@ def satellite_figure_builder(
     name: str,
     norad_ids: list[int],
     total_orbits: int | None,
-    point_interval: int,
 ) -> go.Figure:
     tles = [get_tle_from_norad_id(norad_id) for norad_id in norad_ids]
     selected_tle = tles[0]
     orbit_count = total_orbits or default_orbit_count(selected_tle)
 
-    if name == "itrs_orbit_3d":
-        return visualisation_3d_itrs(selected_tle, orbit_count)
+    if name == "itrf_orbit_3d":
+        return visualisation_3d_itrf(selected_tle, orbit_count)
     if name == "satellite_earth_3d":
         return visualisation_3d_satellite_earth(tles)
     if name == "ground_track_tle":
         return visualisation_2d_ground_track_tle_propagation(
             tle=selected_tle,
-            track_for_orbits=orbit_count,
+            orbit_count=orbit_count,
             show_orbit_markers=True,
-            time_interval=Second(Scalar(point_interval)),
         )
     if name == "ground_track_current":
         return visualisation_2d_ground_track_current_position_propogation(
@@ -70,6 +68,7 @@ def satellite_figure_builder(
             ),
             ground_station_name="Dublin, Ireland",
             ground_station_longitude_range=Degrees(Scalar(5)),
+            orbit_count=orbit_count,
         )
 
     raise ValueError(f"Unknown satellite visualisation: {name}")
@@ -90,7 +89,7 @@ STATIC_VISUALISATIONS: dict[str, Callable[[], go.Figure]] = {
 
 ALIASES = {
     "controlroom": "control_room",
-    "itrs": "itrs_orbit_3d",
+    "itrf": "itrf_orbit_3d",
     "satellite_earth": "satellite_earth_3d",
     "ground_track": "ground_track_tle",
     "current_ground_track": "ground_track_current",
@@ -103,7 +102,7 @@ ALIASES = {
 }
 
 SATELLITE_VISUALISATIONS = {
-    "itrs_orbit_3d",
+    "itrf_orbit_3d",
     "satellite_earth_3d",
     "ground_track_tle",
     "ground_track_current",
@@ -113,8 +112,8 @@ SATELLITE_VISUALISATIONS = {
 def launch_visualisation(
     name: str,
     norad_ids: list[int] | None = None,
-    total_orbits: int | None = None,
-    point_interval: int = 60,
+    total_tle_orbits: int | None = None,
+    total_current_orbits: int | None = None,
 ) -> None:
     """Launch one named visualisation or the multi-plot control room."""
     resolved_name = ALIASES.get(normalise_name(name), normalise_name(name))
@@ -124,8 +123,9 @@ def launch_visualisation(
         selected_tle = get_tle_from_norad_id(resolved_ids[0])
         launch_control_room(
             norad_ids=resolved_ids,
-            total_orbits=total_orbits or default_orbit_count(selected_tle),
-            point_interval=point_interval,
+            total_tle_orbits=total_tle_orbits or default_orbit_count(selected_tle),
+            total_current_orbits=total_current_orbits
+            or default_orbit_count(selected_tle),
         )
         return
 
@@ -133,8 +133,7 @@ def launch_visualisation(
         satellite_figure_builder(
             resolved_name,
             resolved_ids,
-            total_orbits,
-            point_interval,
+            total_tle_orbits,
         ).show()
         return
 
@@ -163,8 +162,8 @@ def parse_args() -> argparse.Namespace:
         action="append",
         help="NORAD ID. Repeat to include multiple satellites.",
     )
-    parser.add_argument("--orbits", type=int, default=None)
-    parser.add_argument("--point-interval", type=int, default=60)
+    parser.add_argument("--tle-orbits", type=int, default=None)
+    parser.add_argument("--current-orbits", type=int, default=None)
     return parser.parse_args()
 
 
@@ -173,8 +172,8 @@ def main() -> None:
     launch_visualisation(
         name=args.name,
         norad_ids=args.norad_ids,
-        total_orbits=args.orbits,
-        point_interval=args.point_interval,
+        total_tle_orbits=args.tle_orbits,
+        total_current_orbits=args.current_orbits,
     )
 
 

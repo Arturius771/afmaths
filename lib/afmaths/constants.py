@@ -31,6 +31,7 @@ from afmaths.operation import exponentiate, multiply, negate
 
 EARTH_MU_KM_CUBED = GravitationalParameter(Scalar(398_600.4418))  # km^3 / s^2
 EARTH_MU = GravitationalParameter(Scalar(3.986004418e14))  # m^3 / s^2
+SUN_MU = GravitationalParameter(Scalar(1.32712440018e20))  # m^3 / s^2
 EARTH_RADIUS = Distance(Scalar(6_378_137.0))  # m
 EARTH_RADIUS_KM = Distance(Scalar(6378.0))  # km
 EARTH_ANGULAR_VELOCITY = Radians(

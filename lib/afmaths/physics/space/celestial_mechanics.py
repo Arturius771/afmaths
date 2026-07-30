@@ -14,7 +14,7 @@ from afmaths.geometry.transformations import (
 )
 from afmaths.physics.physics import centripetal_acceleration, centripetal_force
 from afmaths.physics.space.transformations import (
-    transform_element_reference_frame_from_perifocal_vector,
+    transform_vector_from_perifocal,
 )
 from afmaths.physics.space.type_conversion_helpers import (
     coordinate3d_from_vector,
@@ -250,17 +250,22 @@ def kepler_equation(E: EccentricAnomaly, e: Eccentricity) -> MeanAnomaly:
     return subtract(multiply(e)(math.sin(E)))(E)
 
 
-def orbit_centripetal_force(velocity: Velocity, radius: Distance, mass: Mass) -> Force:
+def orbit_gravitational_force(
+    velocity: Velocity, radius: Distance, mass: Mass
+) -> Force:
+    """Calculates the gravitational force of an orbiting object."""
     return centripetal_force(centripetal_acceleration(velocity, radius), mass)
 
 
 def orbital_period(a: SemiMajorAxis, mu: GravitationalParameter = EARTH_MU) -> Second:
+    """Calculates the orbital period of an orbit from the semi major axis in seconds"""
     return DOUBLE(multiply(math.pi)(square_root(divide_by(mu)(CUBE(a)))))
 
 
 def swept_area_of_ellipse(
     angular_momentum: AngularMomentum, time_since_periapsis: Second
 ) -> Area:
+    """Calculates the area swept out by a satellite in an elliptical orbit since periapsis."""
     # From MSE SFM Exercise 1
     return multiply(HALF(angular_momentum_magnitude(angular_momentum)))(
         time_since_periapsis
@@ -283,22 +288,28 @@ def distance_between_positions(pos1: PositionVector, pos2: PositionVector) -> Di
     )
 
 
+# region ## Time
+
+
 def orbital_period_from_mean_motion(mean_motion_per_day: MeanMotion) -> Second:
+    """Calculates the orbital period of an orbit from the mean motion in seconds"""
     return Second(Scalar(divide_by(mean_motion_per_day)(SECONDS_PER_DAY)))
 
 
 def current_orbital_elapsed_period_from_epoch(
     epoch_elapsed_seconds: Second, orbital_period: Second
 ) -> Second:
+    """Calculates the current orbital period elapsed from the epoch time and the orbital period."""
     return Second(Scalar(epoch_elapsed_seconds % orbital_period))
 
 
-def elapsed_time_to_true_anomaly(
-    elements: OrbitalElements,
+def time_to_true_anomaly(
+    current_position: OrbitalElements,
     target_true_anomaly: TrueAnomaly,
 ) -> Second:
-    """Calculates how much time in seconds has passed from perigee to the specified true anomaly."""
+    """Calculates the time delta to reach a target true anomaly from the current position in the orbit."""
 
+    # Mean anomaly at the target true anomaly
     M_delta = normalise_angle(
         make_radians(
             (
@@ -306,25 +317,47 @@ def elapsed_time_to_true_anomaly(
                     kepler_equation(
                         eccentric_anomaly_from_true_anomaly(
                             target_true_anomaly,
-                            elements.eccentricity,
+                            current_position.eccentricity,
                         ),
-                        elements.eccentricity,
+                        current_position.eccentricity,
                     )
                 )
                 - float(
                     kepler_equation(
                         eccentric_anomaly_from_true_anomaly(
-                            elements.true_anomaly,
-                            elements.eccentricity,
+                            current_position.true_anomaly,
+                            current_position.eccentricity,
                         ),
-                        elements.eccentricity,
+                        current_position.eccentricity,
                     )
                 )
             )
         )
     )
 
-    return Second(Scalar(M_delta / float(mean_motion(elements.semi_major_axis))))
+    return Second(
+        Scalar(M_delta / float(mean_motion(current_position.semi_major_axis)))
+    )
+
+
+def rate_of_change_true_anomaly(
+    p: SemiLatusRectum, mu: GravitationalParameter, r: Distance
+) -> Rate:
+    """Calculates the rate of change of the true anomaly for a given radius from periapsis. This is expressed in radians per second."""
+    # MSE Excercise 1: dtheta/dt = (p/r^2) * sqrt(mu/p)
+
+    return Rate(Scalar(multiply(divide_by(SQUARE(r))(1))(square_root(multiply(p)(mu)))))
+
+
+def time_since_periapsis_mean_anomaly(
+    a: SemiMajorAxis, mu: GravitationalParameter, mean_anomaly: MeanAnomaly
+) -> Second:
+    """Calculates the time delta for a given mean anomaly."""
+    return Second(
+        Scalar(
+            multiply(orbital_period(a, mu))(ratio(float(mean_anomaly))(DOUBLE(math.pi)))
+        )
+    )
 
 
 # region ## Latitude
@@ -383,6 +416,26 @@ def velocity_at_radius(
     return Velocity(Scalar(square_root(divide_by(r)(mu))))
 
 
+def periapsis_velocity(
+    mu: GravitationalParameter, elements: OrbitalElements
+) -> Velocity:
+    return vis_viva(
+        mu,
+        periapsis_radius(elements.semi_major_axis, elements.eccentricity),
+        elements.semi_major_axis,
+    )
+
+
+def apoapsis_velocity(
+    mu: GravitationalParameter, elements: OrbitalElements
+) -> Velocity:
+    return vis_viva(
+        mu,
+        apoapsis_radius(elements.semi_major_axis, elements.eccentricity),
+        elements.semi_major_axis,
+    )
+
+
 # region ## Radius
 
 
@@ -391,9 +444,9 @@ def orbit_equation(
     e: Eccentricity,
     theta: TrueAnomaly,
 ) -> Distance:
+    """Calculates the instantaneos radius of an orbit at a given true anomaly. This is the equation of motion for an elliptical orbit."""
     # Trajectory equation: r = p / (1 + e * cos(theta))
     # Kepler's first law: r = a * (1 - e^2) / (1 + e * cos(theta))
-    """Calculates the instantaneos radius of an orbit at a given true anomaly"""
     return divide_by(eccentricity_factor_plus(multiply(e)(math.cos(theta))))(
         semi_latus_rectum(a, e)
     )
@@ -404,6 +457,7 @@ def gravitational_acceleration_at_altitude(
     central_body_radius: Distance,
     mu: GravitationalParameter,
 ) -> Acceleration:
+    """Calculates the gravitational acceleration at a given altitude above a central body."""
     # From MSE SFM Exercise 1
     return gravitational_acceleration_at_radius(
         mu,
@@ -414,23 +468,26 @@ def gravitational_acceleration_at_altitude(
 def orbit_radius(
     alt: Distance, central_body_radius: Distance = EARTH_RADIUS
 ) -> Distance:
+    """Calculates the radius of an orbit from the altitude and the central body radius."""
     return add(alt)(central_body_radius)
 
 
 def orbit_altitude(
     radius: Distance, central_body_radius: Distance = EARTH_RADIUS
 ) -> Distance:
+    """Calculates the altitude of an orbit from the radius and the central body radius."""
     return Distance(subtract(central_body_radius)(radius))
 
 
 def distance_satellite_observer(
-    itrs_position: PositionVector, observer: Coordinate3D
+    itrf_position: PositionVector, observer: Coordinate3D
 ) -> Distance:
+    # MSE ISG
     return Distance(
         Scalar(
             vector_magnitude_3d(
                 vector_subtract_3d(
-                    itrs_position, make_vector3d(observer.x, observer.y, observer.z)
+                    itrf_position, make_vector3d(observer.x, observer.y, observer.z)
                 )
             )
         )
@@ -439,6 +496,16 @@ def distance_satellite_observer(
 
 def orbital_radius_from_position_vector(pos: PositionVector) -> Distance:
     return Distance(vector_magnitude_3d(make_vector3d(pos.x, pos.y, pos.z)))
+
+
+def periapsis_radius(a: SemiMajorAxis, e: Eccentricity) -> Distance:
+    """r_p=a(1-e)"""
+    return multiply(a)(eccentricity_factor_minus(e))
+
+
+def apoapsis_radius(a: SemiMajorAxis, e: Eccentricity) -> Distance:
+    """r_p=a(1+e)"""
+    return multiply(a)(eccentricity_factor_plus(e))
 
 
 # region ## Angular Momentum
@@ -474,79 +541,6 @@ def angular_momentum_magnitude_from_apsides(
 ) -> Scalar:
     return multiply(square_root(DOUBLE(mu)))(
         square_root(divide_by(add(apoapsis)(periapsis))(multiply(apoapsis)(periapsis)))
-    )
-
-
-# region ##Apsides
-
-
-def time_since_periapsis(
-    a: SemiMajorAxis, g: GravitationalParameter, mean_anomaly: MeanAnomaly
-) -> Second:
-    return Second(
-        Scalar(
-            multiply(orbital_period(a, g))(ratio(float(mean_anomaly))(DOUBLE(math.pi)))
-        )
-    )
-
-
-def periapsis_radius(a: SemiMajorAxis, e: Eccentricity) -> Distance:
-    """r_p=a(1-e)"""
-    return multiply(a)(eccentricity_factor_minus(e))
-
-
-def apoapsis_radius(a: SemiMajorAxis, e: Eccentricity) -> Distance:
-    """r_p=a(1+e)"""
-    return multiply(a)(eccentricity_factor_plus(e))
-
-
-def periapsis_velocity(
-    mu: GravitationalParameter, elements: OrbitalElements
-) -> Velocity:
-    return vis_viva(
-        mu,
-        periapsis_radius(elements.semi_major_axis, elements.eccentricity),
-        elements.semi_major_axis,
-    )
-
-
-def apoapsis_velocity(
-    mu: GravitationalParameter, elements: OrbitalElements
-) -> Velocity:
-    return vis_viva(
-        mu,
-        apoapsis_radius(elements.semi_major_axis, elements.eccentricity),
-        elements.semi_major_axis,
-    )
-
-
-def periapsis_true_anomaly() -> TrueAnomaly:
-    return make_true_anomaly(0)
-
-
-def apoapsis_true_anomaly() -> TrueAnomaly:
-    return make_true_anomaly(math.pi)
-
-
-def perifocal_position_at_periapsis(
-    orbital_elements: OrbitalElements,
-) -> PositionVector:
-    return perifocal_position_vector(
-        replace(
-            orbital_elements,
-            true_anomaly=periapsis_true_anomaly(),
-        )
-    )
-
-
-def perifocal_position_at_apoapsis(
-    orbital_elements: OrbitalElements,
-) -> PositionVector:
-    return perifocal_position_vector(
-        replace(
-            orbital_elements,
-            true_anomaly=apoapsis_true_anomaly(),
-        )
     )
 
 
@@ -644,8 +638,8 @@ def state_vector_from_orbital_elements(
     The reference frame for the state vector will match the reference frame for the orbital elements. However it is calculated using idea two body interactions. Perturbations are not accounted for.
     """
 
+    # PQW frame position and velocity vectors
     perifocal_position_gaussian = perifocal_position_vector(orbital_elements)
-
     perifocal_velocity_gaussian = perifocal_velocity_vector(
         orbital_elements.true_anomaly,
         orbital_elements.eccentricity,
@@ -655,13 +649,13 @@ def state_vector_from_orbital_elements(
 
     return make_state_vector(
         position_from_vector(
-            transform_element_reference_frame_from_perifocal_vector(
+            transform_vector_from_perifocal(
                 orbital_elements,
                 vector3d_from_position(perifocal_position_gaussian),
             )
         ),
         velocity_from_vector(
-            transform_element_reference_frame_from_perifocal_vector(
+            transform_vector_from_perifocal(
                 orbital_elements,
                 vector3d_from_velocity(perifocal_velocity_gaussian),
             )
@@ -748,7 +742,11 @@ def velocity_vector_at_time(
 def perifocal_radial_unit_vector(
     theta: TrueAnomaly,
 ) -> Vector3D[Scalar]:
-    """Calculates the direction vector of an orbit in the perifocal coordinate system from the orbital elements."""
+    """Calculates the direction vector of an orbit in the perifocal coordinate system from the orbital elements.
+
+    [cos(theta), sin(theta), 0] is the unit vector in the direction of the radius vector in the perifocal coordinate system.
+    """
+    # MSE SFM L02.
     return make_vector3d(
         Scalar(math.cos(theta)),
         Scalar(math.sin(theta)),
@@ -772,7 +770,10 @@ def perifocal_velocity_direction_vector(
 def perifocal_position_coordinate_2d(
     orbital_elements: OrbitalElements,
 ) -> Coordinate2D[Scalar]:
+    """Calculates the position coordinate of an orbit in the perifocal coordinate system from the orbital elements.
 
+    This is a 2D coordinate in the orbital plane, with the origin at the focus of the ellipse (the central body).
+    """
     pqw = perifocal_radial_unit_vector(orbital_elements.true_anomaly)
 
     return coordinate2d_from_vector(
@@ -794,6 +795,7 @@ def perifocal_position_vector(
     orbital_elements: OrbitalElements,
 ) -> PositionVector:
     """Calculates the position vector in the perifocal coordinate system"""
+    # SFM L02: r = p / (1 + e * cos(theta)) * [cos(theta), sin(theta), 0]
     return position_from_vector(
         vector_multiplication_3d(
             perifocal_radial_unit_vector(orbital_elements.true_anomaly),
@@ -820,6 +822,37 @@ def perifocal_velocity_vector(
             Scalar(square_root(divide_by(multiply(a)(subtract(SQUARE(e))(1)))(mu))),
         )
     )
+
+
+def perifocal_position_at_periapsis(
+    orbital_elements: OrbitalElements,
+) -> PositionVector:
+    """Calculates the position vector of an orbit at periapsis in the perifocal reference frame."""
+    return perifocal_position_vector(
+        replace(
+            orbital_elements,
+            true_anomaly=periapsis_true_anomaly(),
+        )
+    )
+
+
+def perifocal_position_at_apoapsis(
+    orbital_elements: OrbitalElements,
+) -> PositionVector:
+    """Calculates the position vector of an orbit at apoapsis in the perifocal reference frame."""
+    return perifocal_position_vector(
+        replace(
+            orbital_elements,
+            true_anomaly=apoapsis_true_anomaly(),
+        )
+    )
+
+
+def oribtal_plane_position_at_true_anomaly(
+    orbital_elements: OrbitalElements,
+) -> PositionVector:
+    """Calculates the position vector of an orbit at a given true anomaly in the orbital plane reference frame."""
+    return perifocal_position_vector(orbital_elements)
 
 
 # region ## Argument of Periapsis
@@ -988,6 +1021,14 @@ def true_anomaly_at_time(
     )
 
 
+def periapsis_true_anomaly() -> TrueAnomaly:
+    return make_true_anomaly(0)
+
+
+def apoapsis_true_anomaly() -> TrueAnomaly:
+    return make_true_anomaly(math.pi)
+
+
 # region ## Eccentric Anomaly
 
 
@@ -1004,7 +1045,9 @@ def newtons_method_eccentric_anomaly(
 
     For an incorrect guess: E_i - e * sin(E_i) - M != 0
 
-    Derivative: (1 - e * np.cos(E_i)
+    Derivative: (1 - e * np.cos(E_i).
+
+    This is used in iterative methods to find the root of the equation, which is the eccentric anomaly E that satisfies Kepler's equation for a given mean anomaly M and eccentricity e.
     """
 
     return make_eccentric_anomaly(

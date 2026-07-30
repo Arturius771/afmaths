@@ -1,15 +1,21 @@
 import math
 import unittest
 
-from afmaths.afmath_types import Force, Mass, OrbitalDirection
+from afmaths.afmath_types import AngularMomentum, Force, Mass, OrbitalDirection
+from afmaths.constants import EARTH_MU, SUN_MU
 from afmaths.physics.space.celestial_mechanics import (
+    apoapsis_radius,
     distance_between_positions,
     eccentric_anomaly_solved,
     newtons_method_eccentric_anomaly,
-    orbit_centripetal_force,
+    orbit_gravitational_force,
     orbital_direction_from_inclination,
+    periapsis_radius,
     state_vector_at_time,
     orbital_elements_from_state_vectors,
+    swept_area_of_ellipse,
+    rate_of_change_true_anomaly,
+    vis_viva,
 )
 from astronomy_types import (
     Anomaly,
@@ -17,6 +23,7 @@ from astronomy_types import (
     Degrees,
     Distance,
     Eccentricity,
+    GravitationalParameter,
     Inclination,
     MeanAnomaly,
     OrbitalElements,
@@ -27,9 +34,11 @@ from astronomy_types import (
     RightAscension,
     Scalar,
     Second,
+    SemiLatusRectum,
     SemiMajorAxis,
     StateVector,
     TrueAnomaly,
+    Vector3D,
     Velocity,
     VelocityVector,
 )
@@ -75,6 +84,63 @@ class CelestialMechanicsTestMethods(unittest.TestCase):
         self.assertAlmostEqual(
             result.true_anomaly,
             2.9875547591835923,
+            places=6,
+        )
+
+    def test_vis_viva(self):
+        self.assertAlmostEqual(
+            vis_viva(
+                SUN_MU,
+                periapsis_radius(
+                    SemiMajorAxis(Distance(Scalar(149_597_870_700))),
+                    Eccentricity(Ratio(Scalar(0.0167))),
+                ),
+                SemiMajorAxis(Distance(Scalar(149_597_870_700))),
+            ),
+            30286.31975564289,
+            places=3,
+        )
+
+        self.assertAlmostEqual(
+            vis_viva(
+                SUN_MU,
+                apoapsis_radius(
+                    SemiMajorAxis(Distance(Scalar(149_597_870_700))),
+                    Eccentricity(Ratio(Scalar(0.0167))),
+                ),
+                SemiMajorAxis(Distance(Scalar(149_597_870_700))),
+            ),
+            29291.37229834135,
+            places=3,
+        )
+
+    def test_swept_area_of_ellipse(self):
+        self.assertAlmostEqual(
+            swept_area_of_ellipse(
+                AngularMomentum(Vector3D(Scalar(1), Scalar(0), Scalar(0))),
+                Second(Scalar(0)),
+            ),
+            0.0,
+            places=20,
+        )
+
+        self.assertAlmostEqual(
+            swept_area_of_ellipse(
+                AngularMomentum(Vector3D(Scalar(1), Scalar(0), Scalar(0))),
+                Second(Scalar(5000)),
+            ),
+            2500,
+            places=20,
+        )
+
+    def test_rate_of_change_true_anomaly(self):
+        self.assertAlmostEqual(
+            rate_of_change_true_anomaly(
+                SemiLatusRectum(Distance(Scalar(10000))),
+                GravitationalParameter(Scalar(398600.4418)),
+                Distance(Scalar(5000)),
+            ),
+            0.0025253924583715694,
             places=6,
         )
 
@@ -148,7 +214,7 @@ class CelestialMechanicsTestMethods(unittest.TestCase):
 
     def test_orbit_centripetal_force(self):
         self.assertEqual(
-            orbit_centripetal_force(
+            orbit_gravitational_force(
                 Velocity(Scalar(2)),
                 Distance(Scalar(4)),
                 Mass(Scalar(10)),
@@ -157,7 +223,7 @@ class CelestialMechanicsTestMethods(unittest.TestCase):
         )
 
         self.assertEqual(
-            orbit_centripetal_force(
+            orbit_gravitational_force(
                 Velocity(Scalar(20)),
                 Distance(Scalar(4124)),
                 Mass(Scalar(11.4)),

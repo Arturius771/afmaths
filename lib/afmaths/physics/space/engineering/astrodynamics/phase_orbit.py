@@ -31,7 +31,7 @@ from afmaths.physics.space.celestial_mechanics import (
     orbital_period,
     periapsis_radius,
     semi_major_axis_from_period,
-    time_since_periapsis,
+    time_since_periapsis_mean_anomaly,
     vis_viva,
 )
 
@@ -41,7 +41,8 @@ def phase_angle_time(
     original_orbit: OrbitalElements,
     mu: GravitationalParameter,
 ) -> Second:
-    return time_since_periapsis(
+    """Calculates the time delta to reach a target true anomaly from the current position in the orbit."""
+    return time_since_periapsis_mean_anomaly(
         original_orbit.semi_major_axis,
         mu,
         kepler_equation(E_phase_orbit, original_orbit.eccentricity),

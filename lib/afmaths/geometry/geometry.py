@@ -178,6 +178,7 @@ def geometric_mean_distance(x: Distance, y: Distance) -> Distance:
 
 
 def semi_latus_rectum(a: SemiMajorAxis, e: Eccentricity) -> SemiLatusRectum:
+    """Calculates the semi-latus rectum of an ellipse given the semi-major axis and eccentricity."""
     return multiply(a)(eccentricity_factor_minus(SQUARE(e)))
 
 

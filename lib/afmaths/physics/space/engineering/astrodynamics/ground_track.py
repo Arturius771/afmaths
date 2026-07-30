@@ -37,9 +37,9 @@ from afmaths.physics.space.engineering.two_line_elements import (
     parse_julian_date,
 )
 from afmaths.physics.space.transformations import (
-    itrs_position_from_gcrs_position,
-    itrs_positions_from_gcrs_position,
-    transform_geographic_coordinates_from_itrs,
+    itrf_position_from_gcrs_position,
+    itrf_positions_from_gcrs_position,
+    geographic_coordinates_from_itrf,
 )
 from afmaths.physics.space.type_conversion_helpers import degrees_from_radians
 from afmaths.afmath_types import OrbitalDirection
@@ -66,11 +66,11 @@ def westward_drift_from_angular_velocity_and_period(
     return degrees_from_radians(multiply(body_angular_velocity)(orbital_period))
 
 
-def earth_geographic_coordinate_from_itrs(
-    itrs: PositionVector,
+def earth_geographic_coordinate_from_itrf(
+    itrf: PositionVector,
 ) -> GeographicCoordinates:
     """Converts ITRS cartesian coordinates to geographic Lat/Lon (degrees). Useful for ground track plotting."""
-    return transform_geographic_coordinates_from_itrs(itrs)
+    return geographic_coordinates_from_itrf(itrf)
 
 
 def earth_ground_track_positions(
@@ -79,7 +79,7 @@ def earth_ground_track_positions(
 ) -> list[PositionVector]:
     """Transforms a list of GCRS positions to ITRS positions at a given epoch."""
 
-    return itrs_positions_from_gcrs_position(gcrs_positions, epoch)
+    return itrf_positions_from_gcrs_position(gcrs_positions, epoch)
 
 
 def orbits_per_day(orbital_period, day_duration: Second = SECONDS_PER_DAY) -> float:
@@ -126,12 +126,12 @@ def earth_start_of_orbit_coordinates(
             elapsed_time,
         ).position
 
-        itrs_position = itrs_position_from_gcrs_position(
+        itrf_position = itrf_position_from_gcrs_position(
             epoch_offset(epoch, elapsed_time),
             gcrs_position,
         )
 
-        coordinates.append(earth_geographic_coordinate_from_itrs(itrs_position))
+        coordinates.append(earth_geographic_coordinate_from_itrf(itrf_position))
 
     return coordinates
 

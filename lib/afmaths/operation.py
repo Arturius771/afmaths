@@ -261,18 +261,22 @@ def is_divisible(num: int, factor: int) -> bool:
 
 def newtons_raphson_method(
     current_estimate: float,
-    function_value: float,
+    auxiliary_function: float,
     derivative_value: float,
 ) -> float:
     """x_1=x_0-(f(x_0)/f'(x_0))
 
     The function value either equals 0, in which case we have solved the equation, or it gives the vertical error.
 
-    The derivative value, the tangent of the function value, tells us the horizontal error when it is used to divide the function value, as a correction.
+    The provided derivative value, the tangent of the function value, tells us the horizontal error when it is used to divide the function value, as a correction.
 
     We subtract the division from the current estimate to get the next guess to iterate for. In other words, we apply the correction to our current guess.
+
+    This is used in iterative methods to find roots of equations, such as finding the eccentric anomaly in orbital mechanics.
+
+    This is named for Sir Isaac Newton and Joseph Raphson, who independently developed the method in the 17th century.
     """
 
-    correction = divide_by(derivative_value)(function_value)
+    correction = divide_by(derivative_value)(auxiliary_function)
 
     return subtract(correction)(current_estimate)

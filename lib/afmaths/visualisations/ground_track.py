@@ -15,7 +15,7 @@ from afmaths.physics.space.astronomy.time_functions import (
 from afmaths.physics.space.celestial_mechanics import (
     apoapsis_true_anomaly,
     current_orbital_elapsed_period_from_epoch,
-    elapsed_time_to_true_anomaly,
+    time_to_true_anomaly,
     orbital_elements_from_state_vectors,
     orbital_radius_from_position_vector,
     periapsis_true_anomaly,
@@ -23,10 +23,9 @@ from afmaths.physics.space.celestial_mechanics import (
     vis_viva,
 )
 from afmaths.physics.space.engineering.astrodynamics.ground_track import (
-    earth_geographic_coordinate_from_itrs,
+    earth_geographic_coordinate_from_itrf,
     earth_start_of_orbit_coordinates,
     general_orbital_characteristics,
-    ground_station_cardinal_points,
     second_intervals_for_orbits,
 )
 from afmaths.physics.space.engineering.two_line_elements import (
@@ -36,12 +35,11 @@ from afmaths.physics.space.engineering.two_line_elements import (
     parse_norad_id,
 )
 from afmaths.physics.space.transformations import (
-    itrs_position_from_gcrs_position,
+    itrf_position_from_gcrs_position,
 )
 from afmaths.visualisations.helpers import (
     PlotNode,
     add_plot_nodes,
-    distance_to_scale_distance,
     figure_circle,
     with_data_background_image,
 )
@@ -58,15 +56,17 @@ from astronomy_types import (
 
 def visualisation_2d_ground_track_tle_propagation(
     tle: str,
-    track_for_orbits: int = 3,
+    orbit_count: int = 3,
     show_orbit_markers: bool = False,
     background_image_path: Path = Path(__file__).with_name("Earth-hires.jpg"),
-    time_interval: Second = Second(Scalar(60)),
+    time_interval: Second | None = None,
     lines: bool = False,
     number_of_points: int = 2000,
 ) -> go.Figure:
 
-    track_for_duration = orbital_period_from_tle(tle) * track_for_orbits
+    orbital_period = orbital_period_from_tle(tle)
+
+    track_for_duration = orbital_period * orbit_count
 
     tle_epoch_elements = orbital_elements_from_tle(tle)
 
@@ -80,8 +80,8 @@ def visualisation_2d_ground_track_tle_propagation(
     )
 
     geographic_coordinates = [
-        earth_geographic_coordinate_from_itrs(
-            itrs_position_from_gcrs_position(
+        earth_geographic_coordinate_from_itrf(
+            itrf_position_from_gcrs_position(
                 epoch_offset(tle_epoch, elapsed_time),
                 gcrs_position,
             )
@@ -97,8 +97,6 @@ def visualisation_2d_ground_track_tle_propagation(
             ],
         )
     ]
-
-    orbital_period = orbital_period_from_tle(tle)
 
     fig = (
         go.Figure()
@@ -137,7 +135,7 @@ def visualisation_2d_ground_track_tle_propagation(
     if show_orbit_markers:
 
         orbit_marker_coordinates = earth_start_of_orbit_coordinates(
-            tle_epoch_elements, tle_epoch, track_for_orbits
+            tle_epoch_elements, tle_epoch, orbit_count
         )
 
         orbit_epoch = [
@@ -194,14 +192,15 @@ def visualisation_2d_ground_track_current_position_propogation(
     background_image_path: Path = Path(__file__).with_name("Earth-hires.jpg"),
     lines: bool = False,
     number_of_points: int = 2000,
+    orbit_count: int = 1,
 ) -> go.Figure:
-    track_for_duration = orbital_period_from_tle(tle)
+    orbital_period = orbital_period_from_tle(tle)
+
+    track_for_duration = orbital_period * orbit_count
 
     tle_epoch_elements = orbital_elements_from_tle(tle)
 
     tle_epoch = Epoch(parse_julian_date(tle))
-
-    orbital_period = orbital_period_from_tle(tle)
 
     epoch_to_now_seconds = seconds_from_julian_date_delta(julian_date_delta(tle_epoch))
 
@@ -218,12 +217,12 @@ def visualisation_2d_ground_track_current_position_propogation(
     )
 
     elapsed_times = second_intervals_for_orbits(
-        epoch_to_now_seconds, orbital_period, number_of_points
+        epoch_to_now_seconds, Second(Scalar(track_for_duration)), number_of_points
     )
 
     geographic_coordinates = [
-        earth_geographic_coordinate_from_itrs(
-            itrs_position_from_gcrs_position(
+        earth_geographic_coordinate_from_itrf(
+            itrf_position_from_gcrs_position(
                 epoch_offset(tle_epoch, elapsed_time),
                 gcrs_position,
             )
@@ -240,18 +239,18 @@ def visualisation_2d_ground_track_current_position_propogation(
         )
     ]
 
-    time_to_perigee = elapsed_time_to_true_anomaly(
+    time_to_perigee = time_to_true_anomaly(
         current_elements,
         periapsis_true_anomaly(),
     )
 
-    time_to_apogee = elapsed_time_to_true_anomaly(
+    time_to_apogee = time_to_true_anomaly(
         current_elements,
         apoapsis_true_anomaly(),
     )
 
-    perigee = earth_geographic_coordinate_from_itrs(
-        itrs_position_from_gcrs_position(
+    perigee = earth_geographic_coordinate_from_itrf(
+        itrf_position_from_gcrs_position(
             epoch_offset(current_epoch, time_to_perigee),
             state_vector_at_time(
                 current_elements,
@@ -260,8 +259,8 @@ def visualisation_2d_ground_track_current_position_propogation(
         )
     )
 
-    apogee = earth_geographic_coordinate_from_itrs(
-        itrs_position_from_gcrs_position(
+    apogee = earth_geographic_coordinate_from_itrf(
+        itrf_position_from_gcrs_position(
             epoch_offset(current_epoch, time_to_apogee),
             state_vector_at_time(
                 current_elements,
@@ -272,8 +271,8 @@ def visualisation_2d_ground_track_current_position_propogation(
 
     current_radius = orbital_radius_from_position_vector(current_state.position)
 
-    current_position = earth_geographic_coordinate_from_itrs(
-        itrs_position_from_gcrs_position(
+    current_position = earth_geographic_coordinate_from_itrf(
+        itrf_position_from_gcrs_position(
             current_epoch,
             current_state.position,
         )

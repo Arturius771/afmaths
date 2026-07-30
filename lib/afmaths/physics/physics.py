@@ -113,12 +113,14 @@ def diameter_of_distant_object(
 
 
 def centripetal_acceleration(velocity: Velocity, radius: Distance) -> Acceleration:
+    """Calculates the centripetal acceleration of an object moving in a circular path."""
     # From MSE SFM Exercise 1
     # Equal to gravitational acceleration for circular orbits.
     return divide_by(radius)(SQUARE(velocity))
 
 
 def centripetal_force(acceleration: Acceleration, mass: Mass) -> Force:
+    """Calculates the centripetal force required to keep an object moving in a circular path."""
     return force(mass, acceleration)
 
 

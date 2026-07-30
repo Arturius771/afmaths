@@ -565,7 +565,7 @@ import math
 from astronomy_types import Coordinate3D, Scalar
 
 
-def synthetic_iss_like_itrs_positions(
+def synthetic_iss_like_itrf_positions(
     samples: int = 360,
     orbits: float = 2.0,
     radius_metres: float = 6_790_000.0,
@@ -589,7 +589,7 @@ def synthetic_iss_like_itrs_positions(
     def wrap_degrees(longitude: float) -> float:
         return ((longitude + 180.0) % 360.0) - 180.0
 
-    def itrs_position_from_longitude_latitude(
+    def itrf_position_from_longitude_latitude(
         longitude_degrees: float,
         latitude_degrees: float,
     ) -> PositionVector:
@@ -634,7 +634,7 @@ def synthetic_iss_like_itrs_positions(
         )
 
         positions.append(
-            itrs_position_from_longitude_latitude(
+            itrf_position_from_longitude_latitude(
                 longitude_degrees,
                 latitude_degrees,
             )
