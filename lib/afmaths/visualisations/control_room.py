@@ -19,15 +19,15 @@ from itrf_orbit_3d import visualisation_3d_itrf
 
 def build_control_room_figures(
     norad_ids: list[int],
-    total_tle_orbits: int,
-    total_current_orbits: int,
+    total_tle_orbits: float,
+    total_current_orbits: float,
     ground_station: GeographicCoordinates = GeographicCoordinates(
         Degrees(Scalar(53)),
         Degrees(Scalar(-6)),
     ),
     ground_station_name: str = "Dublin, Ireland",
     ground_station_longitude_range: Degrees = Degrees(Scalar(5)),
-):
+) -> list:
     """Build the four independent figures used by the control-room dashboard."""
     if not norad_ids:
         raise ValueError("At least one NORAD ID is required.")
@@ -42,6 +42,7 @@ def build_control_room_figures(
             orbit_count=total_tle_orbits,
             show_orbit_markers=True,
         ),
+        visualisation_3d_itrf(tles, total_tle_orbits),
         visualisation_2d_ground_track_current_position_propogation(
             tle=selected_tle,
             ground_station=ground_station,
@@ -50,14 +51,13 @@ def build_control_room_figures(
             orbit_count=total_current_orbits,
         ),
         visualisation_3d_satellite_earth(tles),
-        visualisation_3d_itrf(selected_tle, total_tle_orbits),
     ]
 
 
 def launch_control_room(
     norad_ids: list[int],
-    total_tle_orbits: int,
-    total_current_orbits: int,
+    total_tle_orbits: float,
+    total_current_orbits: float,
     output_path: Path | None = None,
 ) -> Path:
     """Open the four control-room figures in one 2x2 browser dashboard."""
@@ -68,7 +68,7 @@ def launch_control_room(
     )
     return show_visualisation_dashboard(
         figures,
-        title=f"AFMaths Control Room — NORAD {norad_ids[0]}",
+        title=f"AFMaths Control Room - NORAD {norad_ids[0]}",
         columns=1,
         output_path=output_path,
     )

@@ -162,4 +162,4 @@ def general_orbital_characteristics(tle: str) -> str:
     )
     orbital_period = orbital_period_from_tle(tle)
 
-    return f"Drift: { westward_drift_from_angular_velocity_and_period   (orbital_period):.2f}° | Direction: {"Prograde" if direction == OrbitalDirection.PROGRADE else "Retrograde"} | Epoch (JD): {parse_julian_date(tle)} | Period: {orbital_period:.0f}s"
+    return f"Drift: { westward_drift_from_angular_velocity_and_period   (orbital_period):.2f}° | Direction: {"Prograde" if direction == OrbitalDirection.PROGRADE else "Retrograde"} | Epoch (JD): {parse_julian_date(tle)} | Orbital period: {orbital_period:.0f}s"

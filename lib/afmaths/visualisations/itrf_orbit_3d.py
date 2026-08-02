@@ -41,28 +41,33 @@ BODY_RADIUS_SCALE = 1.0
 ORBIT_POINTS = 50
 
 
-def visualisation_3d_itrf(tle: str, track_for_orbits: int = 3) -> go.Figure:
+def visualisation_3d_itrf(tles: list[str], track_for_orbits: float = 3) -> go.Figure:
     if track_for_orbits < 1:
         track_for_orbits = 1
 
-    track_for = minutes_from_seconds(orbital_period_from_tle(tle)) * track_for_orbits
+    itrf_positions = []
 
-    orbital_elements = orbital_elements_from_tle(tle)
+    for tle in tles:
+        track_for = (
+            minutes_from_seconds(orbital_period_from_tle(tle)) * track_for_orbits
+        )
 
-    gcrs_positions = [
-        state_vector_at_time(
-            orbital_elements,
-            Second(Scalar(minute * 60)),
-            EARTH_MU,
-        ).position
-        for minute in range(track_for)
-    ]
+        orbital_elements = orbital_elements_from_tle(tle)
 
-    epoch = Epoch(
-        JulianDate(Scalar(float(julian_date_from_full_Date(parse_full_date(tle)))))
-    )
+        gcrs_positions = [
+            state_vector_at_time(
+                orbital_elements,
+                Second(Scalar(minute * 60)),
+                EARTH_MU,
+            ).position
+            for minute in range(int(track_for))
+        ]
 
-    itrf_positions = itrf_positions_from_gcrs_position(gcrs_positions, epoch)
+        epoch = Epoch(
+            JulianDate(Scalar(float(julian_date_from_full_Date(parse_full_date(tle)))))
+        )
+
+        itrf_positions.append(itrf_positions_from_gcrs_position(gcrs_positions, epoch))
 
     settings = OrbitPlotSettings(
         centre=HorizonsCommandTarget.EARTH,
@@ -78,11 +83,11 @@ def visualisation_3d_itrf(tle: str, track_for_orbits: int = 3) -> go.Figure:
         settings=settings,
         itrf_positions=itrf_positions,
         title=(
-            f"{parse_norad_id(tle)} ITRS orbit view"
-            f"<br>{general_orbital_characteristics(tle)}"
+            f"Satellite {parse_norad_id(tles[0])} TLE ground track | Orbits: {track_for_orbits}"
+            f"<br>{general_orbital_characteristics(tles[0])}"
         ),
         central_body_name="Earth",
         central_body_radius=EARTH_RADIUS,
-        central_body_radius_scale=1.0,
-        orbit_name="ISS ITRS track",
+        central_body_radius_scale=BODY_RADIUS_SCALE,
+        orbit_name=[f"{parse_norad_id(tles[i])}" for i in range(len(tles))],
     )

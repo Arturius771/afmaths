@@ -25,7 +25,7 @@ from astronomy_types import (
     Velocity,
     VelocityVector,
 )
-
+from plotly.basedatatypes import BaseTraceType
 from afmaths.constants import EARTH_RADIUS
 from afmaths.geometry.geometry import semi_minor_axis
 from afmaths.geometry.transformations import translate_ellipse
@@ -70,7 +70,7 @@ from afmaths.visualisations.helpers import (
 @dataclass(frozen=True)
 class BodyPlotConfig:
     name: str
-    target: HorizonsCommandTarget | OrbitalElements
+    target_object: HorizonsCommandTarget | OrbitalElements
     radius: Distance  # metres
     radius_scale: float
 
@@ -506,10 +506,10 @@ def add_orbiting_body_to_traces(
 ) -> None:
     from afmaths.visualisations.helpers import add_body_surface
 
-    if isinstance(body.target, HorizonsCommandTarget):
+    if isinstance(body.target_object, HorizonsCommandTarget):
 
         horizon_state_vectors = get_object_state_vectors_from_horizon(
-            target=HorizonsCommandTarget(body.target),
+            target=HorizonsCommandTarget(body.target_object),
             centre=settings.centre,
             start_time=fulldate_from_python_datetime(settings.start_time),
             stop_time=fulldate_from_python_datetime(settings.stop_time),
@@ -522,10 +522,10 @@ def add_orbiting_body_to_traces(
             horizon_state_vectors[0],
             mu=settings.gravitational_parameter,
         )
-    elif isinstance(body.target, OrbitalElements):
-        orbital_elements = body.target
+    elif isinstance(body.target_object, OrbitalElements):
+        orbital_elements = body.target_object
     else:
-        print(body.target)
+        print(body.target_object)
         raise ValueError("Orbital elements ain't right")
 
     model_current_state = state_vector_at_time(
@@ -655,15 +655,15 @@ def add_itrf_orbit_trace(
 # Builds a 3D figure with a central body at the origin and a supplied ITRS orbit trace.
 def build_3d_itrf_orbit_figure(
     settings: OrbitPlotSettings,
-    itrf_positions: list[PositionVector],
+    itrf_positions: list[list[PositionVector]],
     title: str = "ITRS orbit view",
     central_body_name: str = "Earth",
     central_body_radius: Distance = EARTH_RADIUS,
     central_body_radius_scale: float = 5.0,
-    orbit_name: str = "orbit",
+    orbit_name: list[str] = ["orbit"],
     central_body_opacity: float = 0.7,
 ) -> go.Figure:
-    traces = [
+    traces: list[BaseTraceType] = [
         add_body_surface(
             central_body_name,
             central_body_radius,
@@ -671,12 +671,16 @@ def build_3d_itrf_orbit_figure(
             settings.distance_scale,
             opacity=central_body_opacity,
         ),
-        add_itrf_orbit_trace(
-            orbit_name,
-            itrf_positions,
-            settings.distance_scale,
-        ),
     ]
+
+    for index, positions in enumerate(itrf_positions):
+        traces.append(
+            add_itrf_orbit_trace(
+                f"SAT: {orbit_name[index]} ITRS track",
+                positions,
+                settings.distance_scale,
+            )
+        )
 
     return make_3d_orbit_figure(
         traces,

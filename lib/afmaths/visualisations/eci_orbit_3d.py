@@ -1,9 +1,8 @@
 import datetime
-import random
 
 import plotly.graph_objects as go
 
-from astronomy_types import Distance, GravitationalParameter, Scalar
+from astronomy_types import Distance, Scalar
 
 from afmaths.constants import (
     EARTH_MU,
@@ -13,15 +12,23 @@ from afmaths.constants import (
     ISS_NORAD_ID,
     MOLNIYA_3_50_NORAD_ID,
 )
+from afmaths.physics.space.astronomy.time_functions import (
+    julian_date_delta,
+    seconds_from_julian_date_delta,
+)
+from afmaths.physics.space.celestial_mechanics import (
+    orbital_elements_from_state_vectors,
+    state_vector_at_time,
+)
 from afmaths.physics.space.engineering.astrodynamics.ground_track import (
     general_orbital_characteristics,
 )
 from afmaths.physics.space.engineering.two_line_elements import (
     orbital_elements_from_tle,
+    parse_julian_date,
     parse_norad_id,
 )
 from afmaths.physics.space.external.horizons_api import HorizonsCommandTarget
-from afmaths.physics.space.external.space_track_api import get_tle_from_norad_id
 from afmaths.visualisations.base import (
     BodyPlotConfig,
     OrbitPlotSettings,
@@ -45,10 +52,24 @@ def visualisation_3d_satellite_earth(tles: list[str]) -> go.Figure:
         add_prediction_to_orbit=False,
     )
 
+    adjusted_elements = []
+
+    # Adjust elements to current time for each TLE
+    for tle in tles:
+        current_elements = orbital_elements_from_state_vectors(
+            state_vector_at_time(
+                orbital_elements_from_tle(tle),
+                seconds_from_julian_date_delta(
+                    julian_date_delta(parse_julian_date(tle))
+                ),
+            )
+        )
+        adjusted_elements.append(current_elements)
+
     return build_3d_orbit_figure(
         settings=settings,
         title=(
-            f"Earth Artificial Satellites"
+            f"Satellite {parse_norad_id(tles[0])} orbit"
             f"<br>{general_orbital_characteristics(tles[0])}"
         ),
         central_body_name="Earth",
@@ -57,10 +78,10 @@ def visualisation_3d_satellite_earth(tles: list[str]) -> go.Figure:
         orbiting_bodies=[
             BodyPlotConfig(
                 name=f"SAT: {parse_norad_id(tle)}",
-                target=orbital_elements_from_tle(tle),
-                radius=Distance(Scalar(200_000)),
-                radius_scale=1.0,
+                target_object=elements,
+                radius=SATELLITE_DISPLAY_RADIUS,
+                radius_scale=BODY_RADIUS_SCALE,
             )
-            for tle in tles
+            for elements, tle in zip(adjusted_elements, tles)
         ],
     )

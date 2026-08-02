@@ -43,14 +43,14 @@ def default_orbit_count(tle: str) -> int:
 def satellite_figure_builder(
     name: str,
     norad_ids: list[int],
-    total_orbits: int | None,
+    total_orbits: float | None,
 ) -> go.Figure:
     tles = [get_tle_from_norad_id(norad_id) for norad_id in norad_ids]
     selected_tle = tles[0]
     orbit_count = total_orbits or default_orbit_count(selected_tle)
 
     if name == "itrf_orbit_3d":
-        return visualisation_3d_itrf(selected_tle, orbit_count)
+        return visualisation_3d_itrf(tles, orbit_count)
     if name == "satellite_earth_3d":
         return visualisation_3d_satellite_earth(tles)
     if name == "ground_track_tle":
@@ -112,8 +112,8 @@ SATELLITE_VISUALISATIONS = {
 def launch_visualisation(
     name: str,
     norad_ids: list[int] | None = None,
-    total_tle_orbits: int | None = None,
-    total_current_orbits: int | None = None,
+    total_tle_orbits: float | None = None,
+    total_current_orbits: float | None = None,
 ) -> None:
     """Launch one named visualisation or the multi-plot control room."""
     resolved_name = ALIASES.get(normalise_name(name), normalise_name(name))
@@ -159,11 +159,11 @@ def parse_args() -> argparse.Namespace:
         "--norad-id",
         dest="norad_ids",
         type=int,
-        action="append",
-        help="NORAD ID. Repeat to include multiple satellites.",
+        nargs="+",
+        help="One or more NORAD IDs.",
     )
-    parser.add_argument("--tle-orbits", type=int, default=None)
-    parser.add_argument("--current-orbits", type=int, default=None)
+    parser.add_argument("--tle-orbits", type=float, default=1)
+    parser.add_argument("--current-orbits", type=float, default=1)
     return parser.parse_args()
 
 

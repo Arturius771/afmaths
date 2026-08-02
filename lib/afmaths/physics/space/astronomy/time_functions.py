@@ -455,10 +455,12 @@ def greenwich_mean_sidereal_time_radians_from_julian_date(jd: JulianDate) -> Rad
 
 
 def seconds_from_minutes(min: Minute) -> Second:
+    """Calculates the number of seconds that have elapsed in a given number of minutes."""
     return multiply(min)(SECONDS_PER_MINUTE)
 
 
 def seconds_from_hours(hours: Hour) -> Second:
+    """Calculates the number of seconds that have elapsed in a given number of hours."""
     return multiply(hours)(SECONDS_PER_HOUR)
 
 
@@ -468,6 +470,7 @@ def epoch_offset(epoch: Epoch, offset: Second) -> Epoch:
 
 
 def time_from_julian_date(julian_date: JulianDate) -> Time:
+    """Calculates the time based on the fractional part of a Julian Date."""
     date = greenwich_date_from_julian(julian_date)
     day_fraction = float(date.day) - math.floor(float(date.day))
 
@@ -489,6 +492,7 @@ def julian_date_now(timesystem: datetime.timezone = datetime.UTC) -> JulianDate:
 def julian_date_delta(
     epoch: JulianDate, to_time: JulianDate = julian_date_now()
 ) -> JulianDate:
+    """Calculates the difference between two Julian Dates."""
     return JulianDate(Scalar(to_time - epoch))
 
 
@@ -503,6 +507,7 @@ def pretty_print_full_date(
     timesystem: str = "UTC",
     show_timesystem: bool = False,
 ) -> str:
+    """Returns a human-readable string representation of a FullDate."""
     suffix = f" {timesystem}" if show_timesystem else ""
 
     return (

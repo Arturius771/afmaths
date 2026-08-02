@@ -56,7 +56,7 @@ from astronomy_types import (
 
 def visualisation_2d_ground_track_tle_propagation(
     tle: str,
-    orbit_count: int = 3,
+    orbit_count: float = 3,
     show_orbit_markers: bool = False,
     background_image_path: Path = Path(__file__).with_name("Earth-hires.jpg"),
     time_interval: Second | None = None,
@@ -122,7 +122,7 @@ def visualisation_2d_ground_track_tle_propagation(
         )
         .update_layout(
             title=(
-                f"Satellite {parse_norad_id(tle)} ground track | Duration: {track_for_duration:.0f}s"
+                f"Satellite {parse_norad_id(tle)} TLE ground track | Orbits: {orbit_count}"
                 f"<br>{general_orbital_characteristics(tle)}"
             ),
             xaxis_title="Longitude [deg]",
@@ -135,7 +135,7 @@ def visualisation_2d_ground_track_tle_propagation(
     if show_orbit_markers:
 
         orbit_marker_coordinates = earth_start_of_orbit_coordinates(
-            tle_epoch_elements, tle_epoch, orbit_count
+            tle_epoch_elements, tle_epoch, int(orbit_count)
         )
 
         orbit_epoch = [
@@ -192,7 +192,7 @@ def visualisation_2d_ground_track_current_position_propogation(
     background_image_path: Path = Path(__file__).with_name("Earth-hires.jpg"),
     lines: bool = False,
     number_of_points: int = 2000,
-    orbit_count: int = 1,
+    orbit_count: float = 1,
 ) -> go.Figure:
     orbital_period = orbital_period_from_tle(tle)
 
@@ -362,7 +362,7 @@ def visualisation_2d_ground_track_current_position_propogation(
                 ],
             ).update_layout(
                 title=(
-                    f"Satellite {parse_norad_id(tle)} ground track | Duration: {track_for_duration:.0f}s"
+                    f"Satellite {parse_norad_id(tle)} TLE ground track | Orbits: {orbit_count}"
                     f"<br>{general_orbital_characteristics(tle)}"
                 ),
                 xaxis_title="Longitude [deg]",

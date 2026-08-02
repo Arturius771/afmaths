@@ -36,7 +36,7 @@ def build_moon_earth_3d_figure():
         orbiting_bodies=[
             BodyPlotConfig(
                 name="Moon",
-                target=HorizonsCommandTarget.MOON,
+                target_object=HorizonsCommandTarget.MOON,
                 radius=Distance(Scalar(MOON_RADIUS)),
                 radius_scale=BODY_RADIUS_SCALE,
             )

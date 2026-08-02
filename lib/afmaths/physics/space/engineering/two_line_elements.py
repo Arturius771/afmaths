@@ -87,16 +87,19 @@ COLUMN_2_REVOLUTION_NUMBER = 63
 
 
 def tle_column_one(tle: str) -> str:
+    """Returns the first line of a TLE, which contains the satellite's catalog number and epoch."""
     return tle[0:69]
 
 
 def tle_column_two(tle: str) -> str:
+    """Returns the second line of a TLE, which contains the orbital elements."""
     return tle[69:].lstrip("\r\n")
 
 
 def get_tle_element_from_column(
     tle_column: str, start_index: int, next_index: int
 ) -> str:
+    """Extracts an element from a TLE column based on start and end indices."""
     return tle_column[start_index:next_index].strip()
 
 
@@ -104,12 +107,14 @@ def get_tle_element_from_column(
 
 
 def parse_norad_id(tle: str) -> str:
+    """Returns the NORAD ID of the satellite represented in the TLE."""
     return get_tle_element_from_column(
         tle_column_one(tle), SATELLITE_CATALOGUE_NUMBER, COLUMN_1_ELSET
     )
 
 
 def parse_epoch(tle: str) -> str:
+    """Epoch of the TLE, in the format YYDDD.DDDDDDDD."""
     return get_tle_element_from_column(
         tle_column_one(tle), COLUMN_1_EPOCH, COLUMN_1_FIRST_DX_MEAN_MOTION
     )
@@ -131,6 +136,7 @@ def parse_full_date(tle: str) -> FullDate:
 
 
 def parse_inclination(tle: str) -> Inclination:
+    """Calculates the inclination of a satellite based on its TLE."""
     return Inclination(
         radians_from_string(
             get_tle_element_from_column(
@@ -141,6 +147,7 @@ def parse_inclination(tle: str) -> Inclination:
 
 
 def parse_right_ascension_ascending_node(tle: str) -> RightAscension:
+    """Calculates the right ascension of the ascending node of a satellite based on its TLE."""
     return RightAscension(
         Radians(
             radians_from_string(
@@ -153,6 +160,7 @@ def parse_right_ascension_ascending_node(tle: str) -> RightAscension:
 
 
 def parse_eccentricity(tle: str) -> Eccentricity:
+    """Calculates the eccentricity of a satellite based on its TLE."""
     return Eccentricity(
         Ratio(
             Scalar(
@@ -170,6 +178,7 @@ def parse_eccentricity(tle: str) -> Eccentricity:
 
 
 def parse_argument_of_periapsis(tle: str) -> ArgumentOfPeriapsis:
+    """Calculates the argument of periapsis of a satellite based on its TLE."""
     return ArgumentOfPeriapsis(
         Radians(
             radians_from_string(
@@ -184,6 +193,7 @@ def parse_argument_of_periapsis(tle: str) -> ArgumentOfPeriapsis:
 
 
 def parse_mean_anomaly(tle: str) -> MeanAnomaly:
+    """Calculates the mean anomaly of a satellite based on its TLE."""
     return MeanAnomaly(
         Anomaly(
             radians_from_string(
@@ -196,6 +206,7 @@ def parse_mean_anomaly(tle: str) -> MeanAnomaly:
 
 
 def parse_mean_motion_per_day(tle: str) -> MeanMotion:
+    """Calculates the mean motion of a satellite based on its TLE."""
     return MeanMotion(
         Rate(
             Scalar(
@@ -212,12 +223,14 @@ def parse_mean_motion_per_day(tle: str) -> MeanMotion:
 
 
 def orbital_period_from_tle(tle: str, mu: GravitationalParameter = EARTH_MU) -> Second:
+    """Calculates the orbital period of a satellite based on its TLE."""
     return orbital_period(orbital_elements_from_tle(tle).semi_major_axis, mu)
 
 
 def orbital_elements_from_tle(
     tle: str, mu: GravitationalParameter = EARTH_MU
 ) -> OrbitalElements:
+    """Calculates the orbital elements of a satellite based on its TLE."""
     e = parse_eccentricity(tle)
 
     return OrbitalElements(
