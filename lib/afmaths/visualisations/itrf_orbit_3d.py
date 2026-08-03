@@ -42,8 +42,6 @@ ORBIT_POINTS = 50
 
 
 def visualisation_3d_itrf(tles: list[str], track_for_orbits: float = 3) -> go.Figure:
-    if track_for_orbits < 1:
-        track_for_orbits = 1
 
     itrf_positions = []
 

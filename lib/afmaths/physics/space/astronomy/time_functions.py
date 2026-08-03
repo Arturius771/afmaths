@@ -12,6 +12,7 @@ from astronomy_types import (
     Longitude,
     Minute,
     Month,
+    Obliquity,
     Radians,
     Scalar,
     Second,
@@ -28,11 +29,13 @@ from afmaths.constants import (
 )
 from afmaths.operation import (
     CUBE,
+    DOUBLE,
     SQUARE,
     add,
     divide_by,
     is_divisible,
     multiply,
+    negate,
     subtract,
 )
 from afmaths.physics.space.type_conversion_helpers import (
@@ -145,6 +148,22 @@ def julian_date_from_full_Date(full_date: FullDate) -> JulianDate:
     )
 
 
+def julian_date_ut1_from_julian_date_utc(
+    julian_date_utc: JulianDate, delta_ut1: Second
+) -> JulianDate:
+    """Calculates the Julian Date in UT1 from the Julian Date in UTC and the delta UT1."""
+    # MSE SFM E03
+    return JulianDate(
+        Scalar(float(julian_date_utc) + (float(delta_ut1) / SECONDS_PER_DAY))
+    )
+
+
+def julian_centuries_from_julian_date(julian_date: JulianDate) -> Scalar:
+    """Calculates the number of Julian centuries that have elapsed since J2000.0. This is also known as T, the time argument."""
+    # MSE SFM E03
+    return Scalar(j200_from_julian_Date(julian_date) / 36525.0)
+
+
 def greenwich_date_from_julian(julian_date: JulianDate) -> Date:
     """The day part is fractional."""
     jd = float(julian_date) + 0.5
@@ -174,7 +193,7 @@ def greenwich_date_from_julian(julian_date: JulianDate) -> Date:
 
 
 def j200_from_julian_Date(julian_date: JulianDate) -> Epoch:
-    return epoch_from_julian_date(julian_date, -2451545.0)
+    return epoch_from_julian_date(julian_date, negate(2451545.0))
 
 
 def epoch_from_julian_date(julian_date: JulianDate, adjustment: float) -> Epoch:
@@ -440,7 +459,39 @@ def date_from_day_number(day_number: int, year: Year) -> Date:
     return Date(year, Month(int(month)), Day(Scalar(day)))
 
 
+def greenwich_mean_sidereal_time_seconds_from_julian_date(jd: JulianDate) -> Second:
+    """Calculates the Greenwich Mean Sidereal Time (GMST) in seconds from a given Julian Date."""
+    # SFM E03
+    T = julian_centuries_from_julian_date(jd)
+
+    return Second(
+        Scalar(
+            (
+                67310.54841
+                + (876600 * 3600 + 8640184.812866) * T
+                + 0.093104 * T**2
+                - 6.2e-6 * T**3
+            )
+        )
+    )
+
+
+def greenwich_apparent_sidereal_time_from_julian_date(
+    jd: JulianDate,
+    delta_precession_vernal_equinox: float,
+    obliquity_ecliptic: Obliquity,
+) -> Second:
+    """Calculates the Greenwich Apparent Sidereal Time (GAST) in seconds from a given Julian Date."""
+    # SFM E03
+    gmst = greenwich_mean_sidereal_time_seconds_from_julian_date(jd)
+
+    return add(gmst)(
+        multiply(delta_precession_vernal_equinox)(math.cos(float(obliquity_ecliptic)))
+    )
+
+
 def greenwich_mean_sidereal_time_radians_from_julian_date(jd: JulianDate) -> Radians:
+    """Calculates the Greenwich Mean Sidereal Time (GMST) in radians from a given Julian Date."""
     j200 = j200_from_julian_Date(jd)
     jd_centuries = j200 / 36525
     gmstDegrees = add(280.46061837)(
@@ -452,6 +503,29 @@ def greenwich_mean_sidereal_time_radians_from_julian_date(jd: JulianDate) -> Rad
     )
 
     return radians_from_degrees(gmstDegrees % 360)
+
+
+def earth_rotation_angle_from_greenwich_apparent_sidereal_time(gast: Second) -> Radians:
+    """Calculates the Earth Rotation Angle (ERA) in radians from a given Greenwich Apparent Sidereal Time (GAST)."""
+    gast_seconds = gast % SECONDS_PER_DAY
+
+    return Radians(Scalar(math.radians(gast_seconds * 1 / 240)))
+
+
+def earth_rotation_angle(jd: JulianDate) -> Radians:
+    # ISG lecture no. 2
+    return Radians(
+        Scalar(
+            DOUBLE(
+                multiply(math.pi)(
+                    add(0.7790572732640)(
+                        multiply(1.00273781191135448)(j200_from_julian_Date(jd))
+                    )
+                )
+            )
+            % DOUBLE(math.pi)
+        )
+    )
 
 
 def seconds_from_minutes(min: Minute) -> Second:

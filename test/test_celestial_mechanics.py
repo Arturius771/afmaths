@@ -3,6 +3,7 @@ import unittest
 
 from afmaths.afmath_types import AngularMomentum, Force, Mass, OrbitalDirection
 from afmaths.constants import EARTH_MU, SUN_MU
+from afmaths.operation import add, multiply, multiply, subtract
 from afmaths.physics.space.celestial_mechanics import (
     apoapsis_radius,
     distance_between_positions,
@@ -22,6 +23,7 @@ from astronomy_types import (
     ArgumentOfPeriapsis,
     Degrees,
     Distance,
+    EccentricAnomaly,
     Eccentricity,
     GravitationalParameter,
     Inclination,
@@ -309,6 +311,43 @@ class CelestialMechanicsTestMethods(unittest.TestCase):
             )[0],
             1.6968274346828216,
         )
+
+        solution_a = eccentric_anomaly_solved(
+            newtons_method_eccentric_anomaly,
+            Eccentricity(Ratio(Scalar(0.72))),
+            MeanAnomaly(Anomaly(Radians(Scalar(0.8726646)))),
+        )
+
+        self.assertEqual(
+            solution_a[0],
+            1.5924951053340866,
+        )
+
+        self.assertEqual(
+            len(solution_a[1]),
+            6,
+        )
+
+        def example_fixed_point_function(
+            E_i_guess: EccentricAnomaly, e: Eccentricity, M: MeanAnomaly
+        ) -> MeanAnomaly:
+            return add(M)(e * math.sin(E_i_guess))
+
+        solution_b = eccentric_anomaly_solved(
+            example_fixed_point_function,
+            Eccentricity(Ratio(Scalar(0.72))),
+            MeanAnomaly(Anomaly(Radians(Scalar(0.8726646)))),
+            tolerance=1e-11,
+        )
+
+        self.assertAlmostEqual(solution_b[0], solution_a[0], 5)
+
+        self.assertEqual(
+            len(solution_b[1]),
+            9,
+        )
+
+        self.assertTrue(len(solution_b[1]) > len(solution_a[1]))
 
         self.assertEqual(
             eccentric_anomaly_solved(

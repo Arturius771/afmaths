@@ -11,6 +11,7 @@ from astronomy_types import (
     JulianDate,
     Minute,
     Month,
+    Obliquity,
     Radians,
     Scalar,
     Second,
@@ -24,9 +25,16 @@ from afmaths.physics.space.astronomy.time_functions import (
     date_from_day_number,
     date_of_easter,
     day_number_from_date,
+    earth_rotation_angle,
+    earth_rotation_angle_from_greenwich_apparent_sidereal_time,
+    greenwich_apparent_sidereal_time_from_julian_date,
+    greenwich_mean_sidereal_time_seconds_from_julian_date,
+    greenwich_mean_sidereal_time_radians_from_julian_date,
     hms_from_decimal,
     finding_day_of_week,
+    julian_centuries_from_julian_date,
     julian_date_from_full_Date,
+    julian_date_ut1_from_julian_date_utc,
     time_from_seconds,
     local_sidereal_time_from_greenwich_sidereal,
     time_from_day_fraction,
@@ -362,6 +370,24 @@ class TimeTestMethods(unittest.TestCase):
             Date(Year(int(2050)), Month(int(3)), Day(Scalar(1))),
         )
 
+    def test_julian_date_ut1_from_julian_date_utc(self):
+        self.assertEqual(
+            julian_date_ut1_from_julian_date_utc(
+                JulianDate(Scalar(2461181.8958333335)), Second(Scalar(0.02537))
+            ),
+            JulianDate(Scalar(2461181.8958336273)),
+        )
+
+    def test_julian_centuries_from_julian_date(self):
+        self.assertEqual(
+            julian_centuries_from_julian_date(
+                julian_date_ut1_from_julian_date_utc(
+                    JulianDate(Scalar(2461181.8958333335)), Second(Scalar(0.02537))
+                )
+            ),
+            Scalar(0.2638438284360663),
+        )
+
     def test_julian_date_from_full_Date(self):
         self.assertEqual(
             julian_date_from_full_Date(
@@ -396,6 +422,71 @@ class TimeTestMethods(unittest.TestCase):
                 )
             ),
             2461230.0810532407,
+        )
+        self.assertEqual(
+            julian_date_from_full_Date(
+                FullDate(
+                    Date(
+                        Year(int(2026)),
+                        Month(int(5)),
+                        Day(Scalar(21)),
+                    ),
+                    Time(
+                        hour=Hour(int(9)),
+                        minute=Minute(int(30)),
+                        second=Second(Scalar(0)),
+                    ),
+                )
+            ),
+            2461181.8958333335,
+        )
+
+    def test_greenwich_mean_sidereal_time_radians_from_julian_date(self):
+        self.assertEqual(
+            greenwich_mean_sidereal_time_seconds_from_julian_date(
+                JulianDate(Scalar(2461181.8958333335))
+            ),
+            Radians(Scalar(834974769.9942569)),
+        )
+
+    def test_greenwich_apparent_sidereal_time_from_julian_date(self):
+        self.assertEqual(
+            greenwich_apparent_sidereal_time_from_julian_date(
+                JulianDate(Scalar(2461181.8958333335)),
+                Scalar(6.2),
+                Obliquity(Radians(Scalar(84381.406))),
+            ),
+            Second(Scalar(834974768.751091)),
+        )
+
+    def test_earth_rotation_angle_from_greenwich_apparent_sidereal_time(self):
+        self.assertEqual(
+            earth_rotation_angle_from_greenwich_apparent_sidereal_time(
+                greenwich_apparent_sidereal_time_from_julian_date(
+                    JulianDate(Scalar(2461181.8958333335)),
+                    Scalar(6.2),
+                    Obliquity(Radians(Scalar(84381.406))),
+                )
+            ),
+            0.37588218647524463,
+        )
+
+    def test_earth_rotation_angle(self):
+        self.assertEqual(
+            earth_rotation_angle(JulianDate(Scalar(2461181.8958333335))),
+            0.3700721233813056,
+        )
+
+        self.assertAlmostEqual(
+            earth_rotation_angle(JulianDate(Scalar(2461181.8958333335))),
+            earth_rotation_angle_from_greenwich_apparent_sidereal_time(
+                greenwich_apparent_sidereal_time_from_julian_date(
+                    JulianDate(Scalar(2461181.8958333335)),
+                    Scalar(6.2),
+                    Obliquity(Radians(Scalar(84381.406))),
+                )
+            ),
+            1,
         )
 
 

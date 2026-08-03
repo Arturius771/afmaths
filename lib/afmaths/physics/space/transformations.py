@@ -56,22 +56,6 @@ def geographic_coordinates_from_itrf(
     )
 
 
-def earth_rotation_angle(jd: JulianDate) -> Radians:
-    # ISG lecture no. 2
-    return Radians(
-        Scalar(
-            DOUBLE(
-                multiply(math.pi)(
-                    add(0.7790572732640)(
-                        multiply(1.00273781191135448)(j200_from_julian_Date(jd))
-                    )
-                )
-            )
-            % DOUBLE(math.pi)
-        )
-    )
-
-
 def itrf_position_from_gmst_passive(
     gmst: Radians, gcrs_position: PositionVector
 ) -> PositionVector:
