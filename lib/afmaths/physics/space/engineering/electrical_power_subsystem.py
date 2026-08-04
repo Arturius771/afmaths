@@ -1,0 +1,1 @@
+# TODO: def solar_panel_area, def eclipse_duration, def power_requirement, def solar_cells_in_series, def solar_cells_in_parallel, def min_required_battery_capacity, def battery_discharge_time, def battery_charge_time, def battery_life_expectancy, 
