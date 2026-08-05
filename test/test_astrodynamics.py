@@ -1,5 +1,19 @@
+import math
 import unittest
 
+from afmaths.constants import MEAN_SOLAR_DAY, SIDEREAL_DAY
+from afmaths.operation import divide_by, multiply
+from afmaths.physics.space.celestial_mechanics.celestial_mechanics import (
+    angular_velocity_from_period,
+    mean_motion,
+)
+from afmaths.physics.space.celestial_mechanics.time import (
+    orbital_period_from_mean_motion,
+)
+from afmaths.physics.space.engineering.astrodynamics.ground_track import (
+    westward_drift_from_angular_velocity_and_period,
+    westward_drift_from_mean_motion,
+)
 from afmaths.physics.space.engineering.astrodynamics.orbital_directions import (
     anti_normal,
     anti_radial,
@@ -9,10 +23,17 @@ from afmaths.physics.space.engineering.astrodynamics.orbital_directions import (
     retrograde,
 )
 from astronomy_types import (
+    Degrees,
     Distance,
+    Inclination,
+    MeanMotion,
     Position,
     PositionVector,
+    Radians,
+    Rate,
     Scalar,
+    Second,
+    SemiMajorAxis,
     StateVector,
     Vector3D,
     Velocity,
@@ -186,6 +207,39 @@ class AstrodynamicsTestMethods(unittest.TestCase):
             Vector3D(
                 x=1.4093988070694925e-05, y=0.013331960418386137, z=-0.9999111253670309
             ),
+        )
+
+    def test_westward_drift(self):
+        n = mean_motion(SemiMajorAxis(Distance(Scalar(7000))))
+        orbital_period = orbital_period_from_mean_motion(n)
+        mean_solar_day_angular_velocity = angular_velocity_from_period(MEAN_SOLAR_DAY)
+
+        self.assertAlmostEqual(
+            westward_drift_from_angular_velocity_and_period(
+                orbital_period=orbital_period,
+                body_angular_velocity=mean_solar_day_angular_velocity,
+            ),
+            westward_drift_from_mean_motion(n, mean_solar_day_angular_velocity),
+            places=4,
+        )
+
+        mean_solar_day_angular_velocity = angular_velocity_from_period(SIDEREAL_DAY)
+
+        self.assertAlmostEqual(
+            westward_drift_from_angular_velocity_and_period(
+                orbital_period=orbital_period,
+                body_angular_velocity=mean_solar_day_angular_velocity,
+            ),
+            westward_drift_from_mean_motion(n, mean_solar_day_angular_velocity),
+            places=4,
+        )
+
+        self.assertAlmostEqual(
+            westward_drift_from_angular_velocity_and_period(
+                orbital_period=orbital_period,
+            ),
+            westward_drift_from_mean_motion(n),
+            places=4,
         )
 
 

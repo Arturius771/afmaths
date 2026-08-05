@@ -22,7 +22,8 @@ from astronomy_types import (
     VelocityVector,
 )
 
-from afmaths.physics.space.celestial_mechanics import (
+
+from afmaths.physics.space.celestial_mechanics.orbital_elements import (
     orbital_elements_from_state_vectors,
 )
 from afmaths.physics.space.external.http_helpers import (

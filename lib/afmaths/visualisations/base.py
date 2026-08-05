@@ -29,17 +29,21 @@ from plotly.basedatatypes import BaseTraceType
 from afmaths.constants import EARTH_RADIUS
 from afmaths.geometry.geometry import semi_minor_axis
 from afmaths.geometry.transformations import translate_ellipse
-from afmaths.physics.space.celestial_mechanics import (
+from afmaths.physics.space.celestial_mechanics.celestial_mechanics import (
     EARTH_MU,
-    apoapsis_true_anomaly,
-    generate_all_orbit_positions,
-    orbital_elements_from_state_vectors,
+)
+from afmaths.physics.space.celestial_mechanics.nodes import (
     perifocal_position_at_ascending_node,
     perifocal_position_at_descending_node,
-    perifocal_position_vector,
+)
+from afmaths.physics.space.celestial_mechanics.orbital_elements import (
+    apoapsis_true_anomaly,
+    orbital_elements_from_state_vectors,
     periapsis_true_anomaly,
+    perifocal_position_vector,
     state_vector_at_time,
 )
+from afmaths.physics.space.celestial_mechanics.utils import generate_all_orbit_positions
 from afmaths.physics.space.external.horizons_api import (
     HorizonsCommandTarget,
     get_object_state_vectors_from_horizon,

@@ -23,7 +23,7 @@ from afmaths.afmath_types import OrbitalDirection, DeltaV
 from afmaths.operation import (
     add,
 )
-from afmaths.physics.space.celestial_mechanics import (
+from afmaths.physics.space.celestial_mechanics.celestial_mechanics import (
     apoapsis_radius,
     orbit_altitude,
     orbit_radius,

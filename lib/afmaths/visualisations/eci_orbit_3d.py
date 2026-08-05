@@ -16,7 +16,7 @@ from afmaths.physics.space.astronomy.time_functions import (
     julian_date_delta,
     seconds_from_julian_date_delta,
 )
-from afmaths.physics.space.celestial_mechanics import (
+from afmaths.physics.space.celestial_mechanics.orbital_elements import (
     orbital_elements_from_state_vectors,
     state_vector_at_time,
 )

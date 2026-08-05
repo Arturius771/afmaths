@@ -16,8 +16,14 @@ from astronomy_types import (
     MeanMotion,
 )
 
-from afmaths.constants import EARTH_ANGULAR_VELOCITY, MINUTES_PER_DAY, SECONDS_PER_DAY
+from afmaths.constants import (
+    EARTH_ANGULAR_VELOCITY,
+    MEAN_SOLAR_DAY,
+    MINUTES_PER_DAY,
+    SECONDS_PER_DAY,
+)
 from afmaths.operation import (
+    DOUBLE,
     divide_by,
     interval_points,
     multiply,
@@ -26,11 +32,14 @@ from afmaths.operation import (
 from afmaths.physics.space.astronomy.time_functions import (
     epoch_offset,
 )
-from afmaths.physics.space.celestial_mechanics import (
+from afmaths.physics.space.celestial_mechanics.celestial_mechanics import (
+    angular_velocity_from_period,
     orbital_direction_from_inclination,
-    orbital_period,
+)
+from afmaths.physics.space.celestial_mechanics.orbital_elements import (
     state_vector_at_time,
 )
+from afmaths.physics.space.celestial_mechanics.time import orbital_period
 from afmaths.physics.space.engineering.two_line_elements import (
     orbital_elements_from_tle,
     orbital_period_from_tle,
@@ -53,16 +62,35 @@ def min_latitude(i: Inclination) -> Latitude:
     return Degrees(Scalar(negate(math.degrees(i))))
 
 
-def westward_drift_from_mean_motion(n: MeanMotion) -> Degrees:
-    """Calculates the westward drift of a satellite in degrees per orbit based on its mean motion."""
-    return Degrees(Scalar(multiply(360)(divide_by(n)(1))))
+def body_rotations_per_reference_period(
+    body_angular_velocity: Radians = EARTH_ANGULAR_VELOCITY,
+    reference_period: Second = MEAN_SOLAR_DAY,
+) -> Scalar:
+    """Calculate the body's number of rotations during a reference period."""
+    reference_angular_velocity = angular_velocity_from_period(reference_period)
+
+    return Scalar(divide_by(reference_angular_velocity)(body_angular_velocity))
+
+
+def westward_drift_from_mean_motion(
+    n: MeanMotion,
+    body_angular_velocity: Radians = EARTH_ANGULAR_VELOCITY,
+    reference_period: Second = MEAN_SOLAR_DAY,
+) -> Degrees:
+    """Calculate westward drift per orbit from reference-period mean motion."""
+    rotations_per_reference_period = body_rotations_per_reference_period(
+        body_angular_velocity=body_angular_velocity,
+        reference_period=reference_period,
+    )
+
+    return Degrees(Scalar(multiply(360)(divide_by(n)(rotations_per_reference_period))))
 
 
 def westward_drift_from_angular_velocity_and_period(
     orbital_period: Second,
     body_angular_velocity: Radians = EARTH_ANGULAR_VELOCITY,
 ) -> Degrees:
-    """Calculates the westward drift of a satellite in degrees per orbit based on the orbital period and the angular velocity of the central body (default is Earth)."""
+    """Calculate westward drift from the orbital period and body rotation rate."""
     return degrees_from_radians(multiply(body_angular_velocity)(orbital_period))
 
 
@@ -85,21 +113,6 @@ def earth_ground_track_positions(
 def orbits_per_day(orbital_period, day_duration: Second = SECONDS_PER_DAY) -> float:
     """Calculates the number of orbits completed in a day based on the orbital period."""
     return day_duration / orbital_period
-
-
-def second_intervals_for_orbits(
-    start: Second,
-    total_duration: Second,
-    number_of_intervals: int,
-    step: Second | None = None,
-) -> list[Second]:
-    """Generates a list of time intervals in seconds for a given number of orbits based on the orbital period and a specified interval."""
-    return [
-        Second(Scalar(second))
-        for second in interval_points(
-            float(start), float(total_duration + start), number_of_intervals, step
-        )
-    ]
 
 
 def earth_start_of_orbit_coordinates(
@@ -162,4 +175,4 @@ def general_orbital_characteristics(tle: str) -> str:
     )
     orbital_period = orbital_period_from_tle(tle)
 
-    return f"Drift: { westward_drift_from_angular_velocity_and_period   (orbital_period):.2f}° | Direction: {"Prograde" if direction == OrbitalDirection.PROGRADE else "Retrograde"} | Epoch (JD): {parse_julian_date(tle)} | Orbital period: {orbital_period:.0f}s"
+    return f"Drift: { westward_drift_from_angular_velocity_and_period(orbital_period):.2f}° | Direction: {"Prograde" if direction == OrbitalDirection.PROGRADE else "Retrograde"} | Epoch (JD): {parse_julian_date(tle)} | Orbital period: {orbital_period:.0f}s"

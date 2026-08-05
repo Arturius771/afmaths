@@ -16,8 +16,10 @@ from afmaths.physics.space.astronomy.time_functions import (
     julian_date_from_full_Date,
     minutes_from_seconds,
 )
-from afmaths.physics.space.celestial_mechanics import (
+from afmaths.physics.space.celestial_mechanics.celestial_mechanics import (
     EARTH_MU,
+)
+from afmaths.physics.space.celestial_mechanics.orbital_elements import (
     state_vector_at_time,
 )
 from afmaths.physics.space.engineering.astrodynamics.ground_track import (

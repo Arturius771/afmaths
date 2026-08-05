@@ -22,6 +22,11 @@ import plotly.graph_objects as go
 from afmaths.constants import MOON_ELEMENTS, SATELLITE_EXAMPLE_ELEMENTS
 from afmaths.geometry.geometry import calculate_distance
 from afmaths.physics.kinematics import position_displacement
+from afmaths.physics.space.celestial_mechanics.orbital_elements import (
+    eccentric_anomaly_at_time,
+    true_anomaly_from_eccentric_anomaly,
+)
+from afmaths.physics.space.celestial_mechanics.time import orbital_period
 from afmaths.physics.space.engineering.astrodynamics.orbital_directions import (
     anti_normal,
     anti_radial,
@@ -30,11 +35,8 @@ from afmaths.physics.space.engineering.astrodynamics.orbital_directions import (
     radial,
     retrograde,
 )
-from afmaths.physics.space.celestial_mechanics import (
-    eccentric_anomaly_at_time,
+from afmaths.physics.space.celestial_mechanics.celestial_mechanics import (
     gravitational_parameter,
-    orbital_period,
-    true_anomaly_from_eccentric_anomaly,
     vis_viva,
 )
 from afmaths.physics.space.engineering.thermal_subsystem import EXAMPLE_ELEMENTS

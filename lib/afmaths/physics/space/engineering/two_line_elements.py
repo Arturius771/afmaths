@@ -27,14 +27,17 @@ from afmaths.physics.space.astronomy.time_functions import (
     julian_date_from_full_Date,
     time_from_day_fraction,
 )
-from afmaths.physics.space.celestial_mechanics import (
+
+from afmaths.physics.space.celestial_mechanics.orbital_elements import (
     eccentric_anomaly_solved,
     newtons_method_eccentric_anomaly,
-    orbital_period,
-    orbital_period_from_mean_motion,
     semi_major_axis_from_period,
     state_vector_from_orbital_elements,
     true_anomaly_from_eccentric_anomaly,
+)
+from afmaths.physics.space.celestial_mechanics.time import (
+    orbital_period,
+    orbital_period_from_mean_motion,
 )
 from afmaths.physics.space.type_conversion_helpers import (
     radians_from_string,

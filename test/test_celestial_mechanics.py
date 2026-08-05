@@ -4,18 +4,13 @@ import unittest
 from afmaths.afmath_types import AngularMomentum, Force, Mass, OrbitalDirection
 from afmaths.constants import EARTH_MU, SUN_MU
 from afmaths.operation import add, multiply, multiply, subtract
-from afmaths.physics.space.celestial_mechanics import (
+from afmaths.physics.space.celestial_mechanics.celestial_mechanics import (
     apoapsis_radius,
     distance_between_positions,
-    eccentric_anomaly_solved,
-    newtons_method_eccentric_anomaly,
     orbit_gravitational_force,
     orbital_direction_from_inclination,
     periapsis_radius,
-    state_vector_at_time,
-    orbital_elements_from_state_vectors,
     swept_area_of_ellipse,
-    rate_of_change_true_anomaly,
     vis_viva,
 )
 from astronomy_types import (
@@ -45,6 +40,13 @@ from astronomy_types import (
     VelocityVector,
 )
 
+from afmaths.physics.space.celestial_mechanics.orbital_elements import (
+    eccentric_anomaly_solved,
+    newtons_method_eccentric_anomaly,
+    orbital_elements_from_state_vectors,
+    state_vector_at_time,
+)
+from afmaths.physics.space.celestial_mechanics.time import rate_of_change_true_anomaly
 from afmaths.physics.space.type_conversion_helpers import radians_from_degrees
 
 

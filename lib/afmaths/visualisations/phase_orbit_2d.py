@@ -5,15 +5,17 @@ import math
 import plotly.graph_objects as go
 
 from afmaths.constants import EARTH_MU, EARTH_RADIUS, EARTH_RADIUS
+from afmaths.physics.space.celestial_mechanics.orbital_elements import (
+    eccentric_anomaly_from_true_anomaly,
+)
+from afmaths.physics.space.celestial_mechanics.time import orbital_period
 from afmaths.physics.space.engineering.astrodynamics.phase_orbit import (
     phase_apoapsis,
     phase_orbit,
     phase_periapsis,
 )
-from afmaths.physics.space.celestial_mechanics import (
+from afmaths.physics.space.celestial_mechanics.celestial_mechanics import (
     apoapsis_radius,
-    eccentric_anomaly_from_true_anomaly,
-    orbital_period,
     periapsis_radius,
 )
 from afmaths.afmath_types import DeltaV

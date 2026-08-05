@@ -12,21 +12,25 @@ from afmaths.physics.space.astronomy.time_functions import (
     pretty_print_full_date,
     seconds_from_julian_date_delta,
 )
-from afmaths.physics.space.celestial_mechanics import (
-    apoapsis_true_anomaly,
-    current_orbital_elapsed_period_from_epoch,
-    time_to_true_anomaly,
-    orbital_elements_from_state_vectors,
+from afmaths.physics.space.celestial_mechanics.celestial_mechanics import (
     orbital_radius_from_position_vector,
-    periapsis_true_anomaly,
-    state_vector_at_time,
     vis_viva,
 )
+from afmaths.physics.space.celestial_mechanics.orbital_elements import (
+    apoapsis_true_anomaly,
+    orbital_elements_from_state_vectors,
+    periapsis_true_anomaly,
+    state_vector_at_time,
+)
+from afmaths.physics.space.celestial_mechanics.time import (
+    current_orbital_elapsed_period_from_epoch,
+    time_to_true_anomaly,
+)
+from afmaths.physics.space.celestial_mechanics.utils import second_intervals_for_orbits
 from afmaths.physics.space.engineering.astrodynamics.ground_track import (
     earth_geographic_coordinate_from_itrf,
     earth_start_of_orbit_coordinates,
     general_orbital_characteristics,
-    second_intervals_for_orbits,
 )
 from afmaths.physics.space.engineering.two_line_elements import (
     orbital_elements_from_tle,

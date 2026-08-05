@@ -15,6 +15,15 @@ from astronomy_types import (
 from afmaths.constants import (
     EARTH_MU,
 )
+from afmaths.physics.space.celestial_mechanics.orbital_elements import (
+    eccentric_anomaly_from_true_anomaly,
+    eccentricity_from_apsides,
+    semi_major_axis_from_period,
+)
+from afmaths.physics.space.celestial_mechanics.time import (
+    orbital_period,
+    time_since_periapsis_mean_anomaly,
+)
 from afmaths.physics.space.engineering.astrodynamics.maneuvers import delta_v
 from afmaths.afmath_types import OrbitalDirection, DeltaV
 
@@ -23,15 +32,10 @@ from afmaths.operation import (
     subtract,
 )
 
-from afmaths.physics.space.celestial_mechanics import (
+from afmaths.physics.space.celestial_mechanics.celestial_mechanics import (
     apoapsis_radius,
-    eccentric_anomaly_from_true_anomaly,
-    eccentricity_from_apsides,
     kepler_equation,
-    orbital_period,
     periapsis_radius,
-    semi_major_axis_from_period,
-    time_since_periapsis_mean_anomaly,
     vis_viva,
 )
 

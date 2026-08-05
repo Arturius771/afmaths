@@ -12,7 +12,7 @@ from afmaths.physics.space.engineering.astrodynamics.maneuvers import (
     transfer_eccentricity,
     transfer_semi_major_axis,
 )
-from afmaths.physics.space.celestial_mechanics import (
+from afmaths.physics.space.celestial_mechanics.celestial_mechanics import (
     orbit_altitude,
     orbit_radius,
     periapsis_radius,

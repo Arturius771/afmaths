@@ -19,7 +19,7 @@ from astronomy_types import (
 )
 
 from afmaths.constants import EARTH_MU, EARTH_RADIUS
-from afmaths.physics.space.celestial_mechanics import (
+from afmaths.physics.space.celestial_mechanics.celestial_mechanics import (
     orbit_altitude,
     orbit_radius,
     periapsis_radius,
@@ -31,6 +31,7 @@ from afmaths.physics.space.engineering.astrodynamics.hohmann_transfer import (
 INITIAL_ALTITUDE_M = Distance(Scalar(10_000_000))
 MAX_ALTITUDE_M = INITIAL_ALTITUDE_M * 500
 ALTITUDE_INTERVAL_M = INITIAL_ALTITUDE_M / 2
+
 
 def build_hohmann_tradeoff_figure() -> go.Figure:
     initial_orbit = OrbitalElements(

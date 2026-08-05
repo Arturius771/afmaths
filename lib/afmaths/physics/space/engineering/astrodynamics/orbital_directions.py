@@ -6,7 +6,7 @@ from astronomy_types import (
     VelocityVector,
 )
 from afmaths.afmath_types import OrbitalDirection
-from afmaths.physics.space.celestial_mechanics import (
+from afmaths.physics.space.celestial_mechanics.celestial_mechanics import (
     angular_momentum,
     nadir_vector,
     zenith_vector,

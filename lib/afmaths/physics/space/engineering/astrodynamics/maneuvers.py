@@ -30,15 +30,17 @@ from afmaths.operation import (
     square_root,
     subtract,
 )
+from afmaths.physics.space.celestial_mechanics.orbital_elements import (
+    eccentricity_from_apsides,
+    orbital_elements_from_state_vectors,
+)
+from afmaths.physics.space.celestial_mechanics.time import orbital_period
 from afmaths.physics.space.type_conversion_helpers import (
     make_radians,
     vector3d_from_position,
     vector3d_from_velocity,
 )
-from afmaths.physics.space.celestial_mechanics import (
-    eccentricity_from_apsides,
-    orbital_elements_from_state_vectors,
-    orbital_period,
+from afmaths.physics.space.celestial_mechanics.celestial_mechanics import (
     periapsis_radius,
     periapsis_velocity,
     radial_velocity,
@@ -125,13 +127,6 @@ def angle_above_orbital_plane(
     value = max(-1.0, min(1.0, value))
 
     return Radians(Scalar(math.asin(value)))
-
-
-def angular_velocity_from_sidereal_period(
-    sidereal_period: Second = Second(Scalar(86164.09)),
-) -> Radians:
-    """Calculates the angular velocity of a body given its sidereal period."""
-    return divide_by(sidereal_period)(DOUBLE(math.pi))
 
 
 # region Maneuvers
