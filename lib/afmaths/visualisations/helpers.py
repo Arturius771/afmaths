@@ -20,13 +20,14 @@ from astronomy_types import (
     Vector3D,
 )
 
+
 from afmaths.geometry.geometry import circle_bounding_box
 from afmaths.operation import interval_points
 from afmaths.physics.space.type_conversion_helpers import make_vector3d
 from pathlib import Path
 
-BACKGROUND_IMAGE = Path(__file__).with_name("Earth-hires.jpg")
 METRES_PER_KILOMETRE = 1_000.0
+EARTH_IMAGE_PATH = Path(__file__).with_name("Earth-hires.jpg")
 
 
 @dataclass(frozen=True)
@@ -500,7 +501,7 @@ def image_file_to_data_uri(image_path: str | Path) -> str:
 
 def with_data_background_image(
     fig: go.Figure | None = None,
-    image_source: str | Path = BACKGROUND_IMAGE,
+    image_source: str | Path = EARTH_IMAGE_PATH,
     x_min: float = -180,
     x_max: float = 180,
     y_min: float = -90,

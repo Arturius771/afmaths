@@ -22,7 +22,7 @@ from afmaths.physics.space.celestial_mechanics.orbital_elements import (
 )
 from afmaths.physics.space.celestial_mechanics.time import (
     orbital_period,
-    time_since_periapsis_mean_anomaly,
+    time_since_periapsis_from_mean_anomaly,
 )
 from afmaths.physics.space.engineering.astrodynamics.maneuvers import delta_v
 from afmaths.afmath_types import DeltaV
@@ -46,7 +46,7 @@ def phase_angle_time(
     mu: GravitationalParameter,
 ) -> Second:
     """Calculates the time delta to reach a target true anomaly from the current position in the orbit."""
-    return time_since_periapsis_mean_anomaly(
+    return time_since_periapsis_from_mean_anomaly(
         original_orbit.semi_major_axis,
         mu,
         kepler_equation(E_phase_orbit, original_orbit.eccentricity),

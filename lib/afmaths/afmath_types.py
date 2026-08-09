@@ -1,6 +1,14 @@
+from dataclasses import dataclass
 from enum import Enum
 from typing import NewType
-from astronomy_types import Scalar, Vector2D, Vector3D, Velocity
+from astronomy_types import (
+    Distance,
+    GeographicCoordinates,
+    Scalar,
+    Vector2D,
+    Vector3D,
+    Velocity,
+)
 
 Mass = NewType("Mass", float)
 Pressure = NewType("Pressure", float)
@@ -25,3 +33,10 @@ class OrbitalDirection(Enum):
     ANTIRADIAL = "antiradial"
     NORMAL = "normal"
     ANTINORMAL = "antinormal"
+
+
+@dataclass(frozen=True)
+class GroundStation:
+    coordinates: GeographicCoordinates
+    name: str
+    range: Distance

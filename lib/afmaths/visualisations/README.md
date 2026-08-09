@@ -546,6 +546,21 @@ python lib/afmaths/visualisations/visualisation_launcher.py ground_track \
   --true-anomaly 0
 ```
 
+Interesting polar orbit:
+
+```bash
+python lib/afmaths/visualisations/visualisation_launcher.py control_room \
+  --source elements \
+  --inclination 89 \
+  --right-ascension-of-ascending-node 0 \
+  --argument-of-periapsis 110 \
+  --semi-major-axis 42000000 \
+  --eccentricity 0.001 \
+  --true-anomaly 3.14 \
+  --orbits 1 \
+  --current-orbits 1
+```
+
 ---
 
 ## Visualisation name reference
@@ -567,3 +582,7 @@ python lib/afmaths/visualisations/visualisation_launcher.py ground_track \
 | `solar_system_3d`      | `solar_system`                            |
 | `two_body_2d`          | `two_body`                                |
 | `velocity_time`        | —                                         |
+
+```
+
+```

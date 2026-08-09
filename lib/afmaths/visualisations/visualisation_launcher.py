@@ -5,7 +5,8 @@ from collections.abc import Callable
 
 import plotly.graph_objects as go
 
-from afmaths.constants import EXAMPLE_ELEMENTS, ISS_NORAD_ID
+from afmaths.afmath_types import GroundStation
+from afmaths.constants import EXAMPLE_ELEMENTS, ISS_NORAD_ID, KILCUMMIN_GROUND_STATION
 from afmaths.physics.space.celestial_mechanics.orbital_elements import (
     orbital_elements_from_degrees,
 )
@@ -42,12 +43,6 @@ from phase_orbit_2d import build_default_phase_orbit_2d_perifocal_figure
 from solar_system_3d import build_solar_system_3d_figure
 from two_body_visualiser_2d import build_default_two_body_visualiser_2d_figure
 from velocity_time import build_velocity_time_figure
-
-
-DEFAULT_GROUND_STATION = GeographicCoordinates(
-    Degrees(Scalar(53)),
-    Degrees(Scalar(-6)),
-)
 
 
 def normalise_name(name: str) -> str:
@@ -97,7 +92,7 @@ def orbital_figure_builder(
     name: str,
     orbits: list[Orbit],
     total_orbits: float,
-    ground_station: GeographicCoordinates = DEFAULT_GROUND_STATION,
+    ground_station: GroundStation = KILCUMMIN_GROUND_STATION,
 ) -> go.Figure:
     if not orbits:
         raise ValueError("At least one orbit is required.")
@@ -115,8 +110,6 @@ def orbital_figure_builder(
         return visualisation_2d_ground_track_current_position(
             orbit=selected_orbit,
             ground_station=ground_station,
-            ground_station_name="Dublin, Ireland",
-            ground_station_longitude_range=Degrees(Scalar(5)),
             orbit_count=total_orbits,
         )
 
@@ -308,9 +301,7 @@ def main() -> None:
     args = parse_args()
 
     elements = (
-        custom_elements_from_args(args)
-        if args.source is OrbitSource.ELEMENTS
-        else None
+        custom_elements_from_args(args) if args.source is OrbitSource.ELEMENTS else None
     )
 
     launch_visualisation(

@@ -98,7 +98,7 @@ def rate_of_change_true_anomaly(
     return Rate(Scalar(multiply(divide_by(SQUARE(r))(1))(square_root(multiply(p)(mu)))))
 
 
-def time_since_periapsis_mean_anomaly(
+def time_since_periapsis_from_mean_anomaly(
     a: SemiMajorAxis, mu: GravitationalParameter, mean_anomaly: MeanAnomaly
 ) -> Second:
     """Calculates the time delta for a given mean anomaly."""

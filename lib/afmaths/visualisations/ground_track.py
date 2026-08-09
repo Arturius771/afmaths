@@ -4,6 +4,7 @@ from pathlib import Path
 
 import plotly.graph_objects as go
 
+from afmaths.afmath_types import GroundStation
 from afmaths.constants import EARTH_MU
 from afmaths.physics.space.astronomy.time_functions import (
     epoch_offset,
@@ -38,16 +39,20 @@ from afmaths.visualisations.helpers import (
 )
 from astronomy_types import (
     Coordinate2D,
-    Degrees,
-    Distance,
     GeographicCoordinates,
     OrbitalElements,
     Scalar,
     Second,
 )
 
-from orbit_source import Orbit, orbit_at_current_epoch, orbit_from_elements, orbit_from_tle
+from orbit_source import (
+    Orbit,
+    orbit_at_current_epoch,
+    orbit_from_elements,
+    orbit_from_tle,
+)
 
+EARTH_IMAGE_PATH = Path(__file__).with_name("Earth-hires.jpg")
 
 
 def _orbital_characteristics_title(orbit: Orbit) -> str:
@@ -55,6 +60,7 @@ def _orbital_characteristics_title(orbit: Orbit) -> str:
         return ""
 
     return f"<br>{general_orbital_characteristics(orbit.tle)}"
+
 
 def _geographic_coordinates(
     orbit: Orbit,
@@ -91,7 +97,7 @@ def visualisation_2d_ground_track(
     orbit: Orbit,
     orbit_count: float = 3,
     show_orbit_markers: bool = False,
-    background_image_path: Path = Path(__file__).with_name("Earth-hires.jpg"),
+    background_image_path: Path = EARTH_IMAGE_PATH,
     time_interval: Second | None = None,
     lines: bool = False,
     number_of_points: int = 2000,
@@ -192,10 +198,8 @@ def visualisation_2d_ground_track(
 
 def visualisation_2d_ground_track_current_position(
     orbit: Orbit,
-    ground_station: GeographicCoordinates,
-    ground_station_longitude_range: Degrees = Degrees(Scalar(5)),
-    ground_station_name: str | None = None,
-    background_image_path: Path = Path(__file__).with_name("Earth-hires.jpg"),
+    ground_station: GroundStation,
+    background_image_path: Path = EARTH_IMAGE_PATH,
     lines: bool = False,
     number_of_points: int = 2000,
     orbit_count: float = 1,
@@ -256,8 +260,8 @@ def visualisation_2d_ground_track_current_position(
     )
 
     ground_station_coordinate = Coordinate2D(
-        Scalar(ground_station.longitude),
-        Scalar(ground_station.latitude),
+        Scalar(ground_station.coordinates.longitude),
+        Scalar(ground_station.coordinates.latitude),
     )
 
     return with_data_background_image(
@@ -266,14 +270,8 @@ def visualisation_2d_ground_track_current_position(
                 go.Figure()
                 .add_trace(
                     go.Scatter(
-                        x=[
-                            float(coordinate.longitude)
-                            for coordinate in coordinates
-                        ],
-                        y=[
-                            float(coordinate.latitude)
-                            for coordinate in coordinates
-                        ],
+                        x=[float(coordinate.longitude) for coordinate in coordinates],
+                        y=[float(coordinate.latitude) for coordinate in coordinates],
                         mode="markers+lines" if lines else "markers",
                         name=f"{current_orbit.name} ground track",
                         marker={"color": "black"},
@@ -291,9 +289,9 @@ def visualisation_2d_ground_track_current_position(
                 ),
                 [
                     PlotNode(
-                        name=f"Ground Station: {ground_station_name or 'Unnamed'}",
+                        name=f"Ground Station: {ground_station.name or 'Unnamed'}",
                         coordinate=ground_station_coordinate,
-                        text=f"Ground Station: {ground_station_name or 'Unnamed'}",
+                        text=f"Ground Station: {ground_station.name or 'Unnamed'}",
                         size=5,
                         symbol="circle",
                         colour="Blue",
@@ -324,15 +322,12 @@ def visualisation_2d_ground_track_current_position(
                         marker_only=True,
                     ),
                     PlotNode(
-                        name=(
-                            "Position: "
-                            f"{pretty_print_full_date(
+                        name=("Position: " f"{pretty_print_full_date(
                                 greenwich_full_Date_from_julian_date(
                                     current_orbit.epoch
                                 ),
                                 show_timesystem=True,
-                            )}"
-                        ),
+                            )}"),
                         coordinate=Coordinate2D(
                             Scalar(current_position.longitude),
                             Scalar(current_position.latitude),
@@ -357,7 +352,7 @@ def visualisation_2d_ground_track_current_position(
                 ],
             ),
             ground_station_coordinate,
-            Distance(Scalar(ground_station_longitude_range)),
+            ground_station.range,
             fill_colour=None,
         ),
         image_source=background_image_path,
@@ -371,14 +366,11 @@ def visualisation_2d_ground_track_current_position(
     )
 
 
-# Backwards-compatible wrappers.
-
-
 def visualisation_2d_ground_track_tle_propagation(
     tle: str,
     orbit_count: float = 3,
     show_orbit_markers: bool = False,
-    background_image_path: Path = Path(__file__).with_name("Earth-hires.jpg"),
+    background_image_path: Path = EARTH_IMAGE_PATH,
     time_interval: Second | None = None,
     lines: bool = False,
     number_of_points: int = 2000,
@@ -396,10 +388,8 @@ def visualisation_2d_ground_track_tle_propagation(
 
 def visualisation_2d_ground_track_current_position_propogation(
     tle: str,
-    ground_station: GeographicCoordinates,
-    ground_station_longitude_range: Degrees = Degrees(Scalar(5)),
-    ground_station_name: str | None = None,
-    background_image_path: Path = Path(__file__).with_name("Earth-hires.jpg"),
+    ground_station: GroundStation,
+    background_image_path: Path = EARTH_IMAGE_PATH,
     lines: bool = False,
     number_of_points: int = 2000,
     orbit_count: float = 1,
@@ -407,8 +397,6 @@ def visualisation_2d_ground_track_current_position_propogation(
     return visualisation_2d_ground_track_current_position(
         orbit_from_tle(tle),
         ground_station=ground_station,
-        ground_station_longitude_range=ground_station_longitude_range,
-        ground_station_name=ground_station_name,
         background_image_path=background_image_path,
         lines=lines,
         number_of_points=number_of_points,
@@ -418,10 +406,8 @@ def visualisation_2d_ground_track_current_position_propogation(
 
 def visualisation_2d_ground_track_orbital_elements_propogation(
     elements: OrbitalElements,
-    ground_station: GeographicCoordinates,
-    ground_station_longitude_range: Degrees = Degrees(Scalar(5)),
-    ground_station_name: str | None = None,
-    background_image_path: Path = Path(__file__).with_name("Earth-hires.jpg"),
+    ground_station: GroundStation,
+    background_image_path: Path = EARTH_IMAGE_PATH,
     lines: bool = False,
     number_of_points: int = 2000,
     orbit_count: float = 1,
@@ -429,8 +415,6 @@ def visualisation_2d_ground_track_orbital_elements_propogation(
     return visualisation_2d_ground_track_current_position(
         orbit_from_elements(elements),
         ground_station=ground_station,
-        ground_station_longitude_range=ground_station_longitude_range,
-        ground_station_name=ground_station_name,
         background_image_path=background_image_path,
         lines=lines,
         number_of_points=number_of_points,

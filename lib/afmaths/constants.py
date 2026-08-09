@@ -1,4 +1,5 @@
 import math
+from pathlib import Path
 from typing import Generic, NewType
 
 from astronomy_types import (
@@ -7,8 +8,10 @@ from astronomy_types import (
     Anomaly,
     ArgumentOfPeriapsis,
     Coordinate3D,
+    Degrees,
     Eccentricity,
     Enum,
+    GeographicCoordinates,
     GravitationalParameter,
     Distance,
     Hour,
@@ -27,6 +30,7 @@ from astronomy_types import (
     Velocity,
 )
 
+from afmaths.afmath_types import GroundStation
 from afmaths.operation import exponentiate, multiply, negate
 
 EARTH_MU_KM_CUBED = GravitationalParameter(Scalar(398_600.4418))  # km^3 / s^2
@@ -98,3 +102,11 @@ SECONDS_PER_MINUTE = Second(Scalar(60))
 SECONDS_PER_HOUR = Second(Scalar(3600))
 MEAN_SOLAR_DAY = Second(Scalar(86400))
 SIDEREAL_DAY = Second(Scalar(86164.0905))
+KILCUMMIN_GROUND_STATION = GroundStation(
+    GeographicCoordinates(
+        Degrees(Scalar(52.0893239)),
+        Degrees(Scalar(-9.4662089)),
+    ),
+    "Kilcummin, Ireland",
+    Distance(Scalar(5)),
+)

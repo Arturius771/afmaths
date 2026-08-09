@@ -2,6 +2,7 @@ import math
 from astronomy_types import (
     Distance,
     Epoch,
+    FullDate,
     GeographicCoordinates,
     JulianDate,
     Minute,
@@ -51,7 +52,7 @@ from afmaths.physics.space.transformations import (
     geographic_coordinates_from_itrf,
 )
 from afmaths.physics.space.type_conversion_helpers import degrees_from_radians
-from afmaths.afmath_types import OrbitalDirection
+from afmaths.afmath_types import GroundStation, OrbitalDirection
 
 
 def max_latitude(i: Inclination) -> Latitude:
@@ -176,3 +177,32 @@ def general_orbital_characteristics(tle: str) -> str:
     orbital_period = orbital_period_from_tle(tle)
 
     return f"Drift: { westward_drift_from_angular_velocity_and_period(orbital_period):.2f}° | Direction: {"Prograde" if direction == OrbitalDirection.PROGRADE else "Retrograde"} | Epoch (JD): {parse_julian_date(tle)} | Orbital period: {orbital_period:.0f}s"
+
+
+# def time_of_pass(ground_station: GroundStation, orbital_elements: OrbitalElements, epoch: Epoch) -> FullDate:
+
+
+def ground_track_passes_station(
+    ground_station: GroundStation,
+    ground_track: list[GeographicCoordinates],
+    margin: Degrees = Degrees(Scalar(5)),
+) -> bool:
+    """
+    Determines if a ground track passes within a certain margin of a ground station.
+
+    Args:
+        ground_station (GroundStation): The geographic coordinates of the ground station.
+        ground_track (list[GeographicCoordinates]): A list of geographic coordinates representing the ground track.
+        margin (Degrees): The margin in degrees to consider for proximity.
+
+    Returns:
+        bool: True if the ground track passes within the margin of the ground station, False otherwise.
+    """
+    for point in ground_track:
+        lat_diff = abs(point.latitude - ground_station.coordinates.latitude)
+        lon_diff = abs(point.longitude - ground_station.coordinates.longitude)
+
+        if lat_diff <= margin and lon_diff <= margin:
+            return True
+
+    return False

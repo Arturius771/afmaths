@@ -4,6 +4,8 @@ from pathlib import Path
 
 from astronomy_types import Degrees, GeographicCoordinates, Scalar
 
+from afmaths.afmath_types import GroundStation
+from afmaths.constants import KILCUMMIN_GROUND_STATION
 from dashboard import show_visualisation_dashboard
 from eci_orbit_3d import visualisation_3d_satellite_earth
 from ground_track import (
@@ -18,12 +20,7 @@ def build_control_room_figures(
     orbits: list[Orbit],
     total_orbits: float,
     total_current_orbits: float,
-    ground_station: GeographicCoordinates = GeographicCoordinates(
-        Degrees(Scalar(53)),
-        Degrees(Scalar(-6)),
-    ),
-    ground_station_name: str = "Dublin, Ireland",
-    ground_station_longitude_range: Degrees = Degrees(Scalar(5)),
+    ground_station: GroundStation = KILCUMMIN_GROUND_STATION,
 ) -> list:
     """Build the four independent figures used by the control-room dashboard."""
     if not orbits:
@@ -44,8 +41,6 @@ def build_control_room_figures(
         visualisation_2d_ground_track_current_position(
             orbit=selected_orbit,
             ground_station=ground_station,
-            ground_station_name=ground_station_name,
-            ground_station_longitude_range=ground_station_longitude_range,
             orbit_count=total_current_orbits,
         ),
         visualisation_3d_satellite_earth(orbits),
@@ -71,8 +66,7 @@ def launch_control_room(
     return show_visualisation_dashboard(
         figures,
         title=(
-            f"AFMaths Control Room - {orbits[0].name} "
-            f"({orbits[0].source.value})"
+            f"AFMaths Control Room - {orbits[0].name} " f"({orbits[0].source.value})"
         ),
         columns=1,
         output_path=output_path,
