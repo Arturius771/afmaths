@@ -2,24 +2,21 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from afmaths.physics.space.external.space_track_api import (
-    get_tle_from_norad_id,
-    refresh_tle_cache,
-)
-from astronomy_types import Degrees, GeographicCoordinates, Scalar, Second
+from astronomy_types import Degrees, GeographicCoordinates, Scalar
 
 from dashboard import show_visualisation_dashboard
 from eci_orbit_3d import visualisation_3d_satellite_earth
 from ground_track import (
-    visualisation_2d_ground_track_current_position_propogation,
-    visualisation_2d_ground_track_tle_propagation,
+    visualisation_2d_ground_track,
+    visualisation_2d_ground_track_current_position,
 )
 from itrf_orbit_3d import visualisation_3d_itrf
+from orbit_source import Orbit
 
 
 def build_control_room_figures(
-    norad_ids: list[int],
-    total_tle_orbits: float,
+    orbits: list[Orbit],
+    total_orbits: float,
     total_current_orbits: float,
     ground_station: GeographicCoordinates = GeographicCoordinates(
         Degrees(Scalar(53)),
@@ -29,46 +26,54 @@ def build_control_room_figures(
     ground_station_longitude_range: Degrees = Degrees(Scalar(5)),
 ) -> list:
     """Build the four independent figures used by the control-room dashboard."""
-    if not norad_ids:
-        raise ValueError("At least one NORAD ID is required.")
+    if not orbits:
+        raise ValueError("At least one orbit is required.")
 
-    refresh_tle_cache()
-    tles = [get_tle_from_norad_id(norad_id) for norad_id in norad_ids]
-    selected_tle = tles[0]
+    selected_orbit = orbits[0]
 
     return [
-        visualisation_2d_ground_track_tle_propagation(
-            tle=selected_tle,
-            orbit_count=total_tle_orbits,
+        visualisation_2d_ground_track(
+            orbit=selected_orbit,
+            orbit_count=total_orbits,
             show_orbit_markers=True,
         ),
-        visualisation_3d_itrf(tles, total_tle_orbits),
-        visualisation_2d_ground_track_current_position_propogation(
-            tle=selected_tle,
+        visualisation_3d_itrf(
+            orbits,
+            track_for_orbits=total_orbits,
+        ),
+        visualisation_2d_ground_track_current_position(
+            orbit=selected_orbit,
             ground_station=ground_station,
             ground_station_name=ground_station_name,
             ground_station_longitude_range=ground_station_longitude_range,
             orbit_count=total_current_orbits,
         ),
-        visualisation_3d_satellite_earth(tles),
+        visualisation_3d_satellite_earth(orbits),
     ]
 
 
 def launch_control_room(
-    norad_ids: list[int],
-    total_tle_orbits: float,
+    orbits: list[Orbit],
+    total_orbits: float,
     total_current_orbits: float,
     output_path: Path | None = None,
 ) -> Path:
-    """Open the four control-room figures in one 2x2 browser dashboard."""
+    """Open the four control-room figures in one browser dashboard."""
+    if not orbits:
+        raise ValueError("At least one orbit is required.")
+
     figures = build_control_room_figures(
-        norad_ids=norad_ids,
-        total_tle_orbits=total_tle_orbits,
+        orbits=orbits,
+        total_orbits=total_orbits,
         total_current_orbits=total_current_orbits,
     )
+
     return show_visualisation_dashboard(
         figures,
-        title=f"AFMaths Control Room - NORAD {norad_ids[0]}",
+        title=(
+            f"AFMaths Control Room - {orbits[0].name} "
+            f"({orbits[0].source.value})"
+        ),
         columns=1,
         output_path=output_path,
     )

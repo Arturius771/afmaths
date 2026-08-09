@@ -25,7 +25,7 @@ from afmaths.physics.space.celestial_mechanics.time import (
     time_since_periapsis_mean_anomaly,
 )
 from afmaths.physics.space.engineering.astrodynamics.maneuvers import delta_v
-from afmaths.afmath_types import OrbitalDirection, DeltaV
+from afmaths.afmath_types import DeltaV
 
 from afmaths.operation import (
     DOUBLE,

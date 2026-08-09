@@ -1,73 +1,64 @@
+from __future__ import annotations
+
 import datetime
 
 import plotly.graph_objects as go
 
-from astronomy_types import Epoch, GravitationalParameter, Scalar, JulianDate, Second
-from afmaths.constants import (
-    BEIDOU_IGSO_6,
-    EARTH_RADIUS,
-    EUTELSAT_EUTE_117_NORAD_ID,
-    GALILEO_7_NORAD_ID,
-    ISS_NORAD_ID,
-    MINUTES_PER_DAY,
-    MOLNIYA_3_50_NORAD_ID,
-)
-from afmaths.physics.space.astronomy.time_functions import (
-    julian_date_from_full_Date,
-    minutes_from_seconds,
-)
-from afmaths.physics.space.celestial_mechanics.celestial_mechanics import (
-    EARTH_MU,
-)
-from afmaths.physics.space.celestial_mechanics.orbital_elements import (
-    state_vector_at_time,
-)
+from afmaths.constants import EARTH_RADIUS
+from afmaths.physics.space.celestial_mechanics.celestial_mechanics import EARTH_MU
+from afmaths.physics.space.celestial_mechanics.orbital_elements import state_vector_at_time
+from afmaths.physics.space.celestial_mechanics.time import orbital_period
 from afmaths.physics.space.engineering.astrodynamics.ground_track import (
     general_orbital_characteristics,
-    orbits_per_day,
 )
-from afmaths.physics.space.engineering.two_line_elements import (
-    orbital_elements_from_tle,
-    orbital_period_from_tle,
-    parse_full_date,
-    parse_norad_id,
-)
-from afmaths.physics.space.external.space_track_api import get_tle_from_norad_id
-
+from afmaths.physics.space.external.horizons_api import HorizonsCommandTarget
 from afmaths.physics.space.transformations import itrf_positions_from_gcrs_position
 from afmaths.visualisations.base import OrbitPlotSettings, build_3d_itrf_orbit_figure
-from afmaths.physics.space.external.horizons_api import HorizonsCommandTarget
+from astronomy_types import OrbitalElements, Scalar, Second
+
+from orbit_source import Orbit, orbit_from_elements, orbit_from_tle
 
 DISTANCE_SCALE = 1000
 BODY_RADIUS_SCALE = 1.0
 ORBIT_POINTS = 50
 
 
-def visualisation_3d_itrf(tles: list[str], track_for_orbits: float = 3) -> go.Figure:
+
+def _orbital_characteristics_title(orbit: Orbit) -> str:
+    if orbit.tle is None:
+        return ""
+
+    return f"<br>{general_orbital_characteristics(orbit.tle)}"
+
+def visualisation_3d_itrf(
+    orbits: list[Orbit],
+    track_for_orbits: float = 3,
+) -> go.Figure:
+    if not orbits:
+        raise ValueError("At least one orbit is required.")
 
     itrf_positions = []
 
-    for tle in tles:
-        track_for = (
-            minutes_from_seconds(orbital_period_from_tle(tle)) * track_for_orbits
+    for orbit in orbits:
+        track_for_seconds = (
+            orbital_period(orbit.elements.semi_major_axis) * track_for_orbits
         )
-
-        orbital_elements = orbital_elements_from_tle(tle)
 
         gcrs_positions = [
             state_vector_at_time(
-                orbital_elements,
-                Second(Scalar(minute * 60)),
+                orbit.elements,
+                Second(Scalar(second)),
                 EARTH_MU,
             ).position
-            for minute in range(int(track_for))
+            for second in range(0, int(track_for_seconds), 60)
         ]
 
-        epoch = Epoch(
-            JulianDate(Scalar(float(julian_date_from_full_Date(parse_full_date(tle)))))
+        itrf_positions.append(
+            itrf_positions_from_gcrs_position(
+                gcrs_positions,
+                orbit.epoch,
+            )
         )
-
-        itrf_positions.append(itrf_positions_from_gcrs_position(gcrs_positions, epoch))
 
     settings = OrbitPlotSettings(
         centre=HorizonsCommandTarget.EARTH,
@@ -83,11 +74,39 @@ def visualisation_3d_itrf(tles: list[str], track_for_orbits: float = 3) -> go.Fi
         settings=settings,
         itrf_positions=itrf_positions,
         title=(
-            f"Satellite {parse_norad_id(tles[0])} TLE ground track | Orbits: {track_for_orbits}"
-            f"<br>{general_orbital_characteristics(tles[0])}"
+            f"{orbits[0].name} ITRF orbit | "
+            f"Source: {orbits[0].source.value} | "
+            f"Orbits: {track_for_orbits}"
+            f"{_orbital_characteristics_title(orbits[0])}"
         ),
         central_body_name="Earth",
         central_body_radius=EARTH_RADIUS,
         central_body_radius_scale=BODY_RADIUS_SCALE,
-        orbit_name=[f"{parse_norad_id(tles[i])}" for i in range(len(tles))],
+        orbit_name=[orbit.name for orbit in orbits],
+    )
+
+
+# Backwards-compatible wrappers.
+
+
+def visualisation_3d_itrf_from_tles(
+    tles: list[str],
+    track_for_orbits: float = 3,
+) -> go.Figure:
+    return visualisation_3d_itrf(
+        [orbit_from_tle(tle) for tle in tles],
+        track_for_orbits=track_for_orbits,
+    )
+
+
+def visualisation_3d_itrf_orbital_elements(
+    elements: list[OrbitalElements],
+    track_for_orbits: float = 3,
+) -> go.Figure:
+    return visualisation_3d_itrf(
+        [
+            orbit_from_elements(element, name=f"Satellite {index + 1}")
+            for index, element in enumerate(elements)
+        ],
+        track_for_orbits=track_for_orbits,
     )

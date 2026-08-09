@@ -59,6 +59,7 @@ from afmaths.operation import (
 )
 from astronomy_types import (
     Acceleration,
+    Anomaly,
     Coordinate2D,
     Coordinate3D,
     EccentricAnomaly,
@@ -99,6 +100,25 @@ from afmaths.physics.space.celestial_mechanics.celestial_mechanics import (
     mean_motion,
     orbit_equation,
 )
+
+
+def orbital_elements_from_degrees(orbital_elements: OrbitalElements) -> OrbitalElements:
+    return OrbitalElements(
+        Inclination(Radians(Scalar(math.radians(orbital_elements.inclination)))),
+        RightAscension(
+            Radians(
+                Scalar(math.radians(orbital_elements.right_ascension_of_ascending_node))
+            )
+        ),
+        ArgumentOfPeriapsis(
+            Radians(Scalar(math.radians(orbital_elements.argument_of_periapsis)))
+        ),
+        orbital_elements.semi_major_axis,
+        orbital_elements.eccentricity,
+        TrueAnomaly(
+            Anomaly(Radians(Scalar(math.radians(orbital_elements.true_anomaly))))
+        ),
+    )
 
 
 def orbital_elements_from_state_vectors(

@@ -49,7 +49,7 @@ EXAMPLE_ELEMENTS = OrbitalElements(
     Inclination(Radians(Scalar(math.radians(1.145)))),
     RightAscension(Radians(Scalar(3.024483909022929))),
     ArgumentOfPeriapsis(Radians(Scalar(1.5))),
-    SemiMajorAxis(Distance(Scalar(384448))),
+    SemiMajorAxis(Distance(Scalar(384448000))),
     Eccentricity(Ratio(Scalar(0.549006))),
     TrueAnomaly(Anomaly(Radians(Scalar(4.1)))),
 )
