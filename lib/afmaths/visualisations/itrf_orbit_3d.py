@@ -6,29 +6,22 @@ import plotly.graph_objects as go
 
 from afmaths.constants import EARTH_RADIUS
 from afmaths.physics.space.celestial_mechanics.celestial_mechanics import EARTH_MU
-from afmaths.physics.space.celestial_mechanics.orbital_elements import state_vector_at_time
-from afmaths.physics.space.celestial_mechanics.time import orbital_period
-from afmaths.physics.space.engineering.astrodynamics.ground_track import (
-    general_orbital_characteristics,
+from afmaths.physics.space.celestial_mechanics.orbital_elements import (
+    state_vector_at_time,
 )
+from afmaths.physics.space.celestial_mechanics.time import orbital_period
 from afmaths.physics.space.external.horizons_api import HorizonsCommandTarget
 from afmaths.physics.space.transformations import itrf_positions_from_gcrs_position
 from afmaths.visualisations.base import OrbitPlotSettings, build_3d_itrf_orbit_figure
 from astronomy_types import OrbitalElements, Scalar, Second
 
+from helpers import orbital_characteristics_title
 from orbit_source import Orbit, orbit_from_elements, orbit_from_tle
 
 DISTANCE_SCALE = 1000
 BODY_RADIUS_SCALE = 1.0
 ORBIT_POINTS = 50
 
-
-
-def _orbital_characteristics_title(orbit: Orbit) -> str:
-    if orbit.tle is None:
-        return ""
-
-    return f"<br>{general_orbital_characteristics(orbit.tle)}"
 
 def visualisation_3d_itrf(
     orbits: list[Orbit],
@@ -77,7 +70,7 @@ def visualisation_3d_itrf(
             f"{orbits[0].name} ITRF orbit | "
             f"Source: {orbits[0].source.value} | "
             f"Orbits: {track_for_orbits}"
-            f"{_orbital_characteristics_title(orbits[0])}"
+            f"{orbital_characteristics_title(orbits[0])}"
         ),
         central_body_name="Earth",
         central_body_radius=EARTH_RADIUS,

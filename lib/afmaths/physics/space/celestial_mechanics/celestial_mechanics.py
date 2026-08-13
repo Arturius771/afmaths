@@ -417,11 +417,13 @@ def apoapsis_radius(a: SemiMajorAxis, e: Eccentricity) -> Distance:
 
 
 def mean_angular_rate(a: SemiMajorAxis, mu: GravitationalParameter) -> Rate:
+    """Calculates the mean angular rate of an orbit from the semi major axis and gravitational parameter."""
     # From MSE SFM Exercise 1
     return Rate(Scalar(square_root(divide_by(CUBE(a))(mu))))
 
 
 def angular_momentum(state_vectors: StateVector) -> AngularMomentum:
+    """Calculates the angular momentum vector of an orbiting object from its position and velocity vectors."""
     # From MSE SFM Exercise 2
     return AngularMomentum(
         vector_cross_multiplication_3d(state_vectors.position, state_vectors.velocity)

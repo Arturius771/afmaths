@@ -41,6 +41,12 @@ from afmaths.physics.space.celestial_mechanics.orbital_elements import (
     state_vector_at_time,
 )
 from afmaths.physics.space.celestial_mechanics.time import orbital_period
+from afmaths.physics.space.engineering.astrodynamics.utils import (
+    general_orbital_characteristics_from_elements,
+)
+from afmaths.physics.space.engineering.astrodynamics.westward_drift import (
+    westward_drift_from_angular_velocity_and_period,
+)
 from afmaths.physics.space.engineering.two_line_elements import (
     orbital_elements_from_tle,
     orbital_period_from_tle,
@@ -85,14 +91,6 @@ def westward_drift_from_mean_motion(
     )
 
     return Degrees(Scalar(multiply(360)(divide_by(n)(rotations_per_reference_period))))
-
-
-def westward_drift_from_angular_velocity_and_period(
-    orbital_period: Second,
-    body_angular_velocity: Radians = EARTH_ANGULAR_VELOCITY,
-) -> Degrees:
-    """Calculate westward drift from the orbital period and body rotation rate."""
-    return degrees_from_radians(multiply(body_angular_velocity)(orbital_period))
 
 
 def earth_geographic_coordinate_from_itrf(
@@ -170,15 +168,6 @@ def ground_station_cardinal_points(
     return [north, east, south, west]
 
 
-def general_orbital_characteristics(tle: str) -> str:
-    direction = orbital_direction_from_inclination(
-        orbital_elements_from_tle(tle).inclination
-    )
-    orbital_period = orbital_period_from_tle(tle)
-
-    return f"Drift: { westward_drift_from_angular_velocity_and_period(orbital_period):.2f}° | Direction: {"Prograde" if direction == OrbitalDirection.PROGRADE else "Retrograde"} | Epoch (JD): {parse_julian_date(tle)} | Orbital period: {orbital_period:.0f}s"
-
-
 # def time_of_pass(ground_station: GroundStation, orbital_elements: OrbitalElements, epoch: Epoch) -> FullDate:
 
 
@@ -206,3 +195,10 @@ def ground_track_passes_station(
             return True
 
     return False
+
+
+def general_orbital_characteristics_from_tle(tle: str) -> str:
+    """Extracts general orbital characteristics from a TLE string and returns them as a formatted string."""
+    elements = orbital_elements_from_tle(tle)
+
+    return f"Epoch (JD): {parse_julian_date(tle)} | {general_orbital_characteristics_from_elements(elements)}"

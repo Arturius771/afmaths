@@ -114,6 +114,15 @@ class AstrodynamicsTestMethods(unittest.TestCase):
             places=10,
         )
 
+        result = hohmann_transfer_parameters(
+            Distance(Scalar(300_000)), Distance(Scalar(35_786_000))
+        )
+        self.assertAlmostEqual(
+            result[0][0],
+            3892.5565137899894,
+            places=7,
+        )
+
     def test_radial(self):
         self.assertEqual(
             radial(

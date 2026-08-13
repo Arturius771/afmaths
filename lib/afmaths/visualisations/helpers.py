@@ -23,8 +23,16 @@ from astronomy_types import (
 
 from afmaths.geometry.geometry import circle_bounding_box
 from afmaths.operation import interval_points
+from afmaths.physics.space.engineering.astrodynamics.ground_track import (
+    general_orbital_characteristics_from_tle,
+)
+from afmaths.physics.space.engineering.astrodynamics.utils import (
+    general_orbital_characteristics_from_elements,
+)
 from afmaths.physics.space.type_conversion_helpers import make_vector3d
 from pathlib import Path
+
+from afmaths.visualisations.orbit_source import Orbit
 
 METRES_PER_KILOMETRE = 1_000.0
 EARTH_IMAGE_PATH = Path(__file__).with_name("Earth-hires.jpg")
@@ -642,3 +650,10 @@ def synthetic_iss_like_itrf_positions(
         )
 
     return positions
+
+
+def orbital_characteristics_title(orbit: Orbit) -> str:
+    if orbit.tle:
+        return f"<br>{general_orbital_characteristics_from_tle(orbit.tle)}"
+
+    return f"<br>{general_orbital_characteristics_from_elements(orbit.elements)}"

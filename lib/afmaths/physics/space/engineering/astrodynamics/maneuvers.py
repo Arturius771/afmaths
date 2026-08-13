@@ -187,12 +187,12 @@ def decrease_semi_major_axis_at_apoapsis(
     )
 
 
-def inclination_change_at_node(
+def inclination_change(
     velocity_at_node: Velocity,
     current_inclination: Inclination,
     target_inclination: Inclination,
 ) -> DeltaV:
-    """Calculates the delta-v required to change the inclination of an orbit at a node (ascending or descending)."""
+    """Calculate the delta-v required for a pure inclination change."""
     difference = abs(subtract(target_inclination)(current_inclination))
     return DeltaV(
         Velocity(Scalar(multiply(DOUBLE(velocity_at_node))(math.sin(HALF(difference)))))

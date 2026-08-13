@@ -696,6 +696,7 @@ def semi_latus_rectum_from_angular_momentum(
     angular_momentum: AngularMomentum,
     mu: GravitationalParameter,
 ) -> SemiLatusRectum:
+    """Calculates the semi latus rectum of an orbit from the angular momentum vector and gravitational parameter."""
     return divide_by(mu)(SQUARE(angular_momentum_magnitude(angular_momentum)))
 
 
@@ -705,7 +706,10 @@ def semi_latus_rectum_from_angular_momentum(
 def mean_anomaly_at_time(
     M: MeanAnomaly, time_offset: Second, n: MeanMotion
 ) -> MeanAnomaly:
-    """Calculates the mean anomaly at a given time offset from the current mean motion and mean anomaly"""
+    """Calculates the mean anomaly at a given time offset from the current mean motion and mean anomaly.
+
+    Mean anomaly is a measure of time in an orbit, representing the fraction of an orbital period that has elapsed since the last periapsis passage, expressed in radians. It increases linearly with time, making it a convenient parameter for predicting the position of an orbiting body at any given time.
+    """
     return add(M)(multiply(n)(time_offset))
 
 

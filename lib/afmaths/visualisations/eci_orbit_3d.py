@@ -5,9 +5,6 @@ import datetime
 import plotly.graph_objects as go
 
 from afmaths.constants import EARTH_MU, EARTH_RADIUS
-from afmaths.physics.space.engineering.astrodynamics.ground_track import (
-    general_orbital_characteristics,
-)
 from afmaths.physics.space.external.horizons_api import HorizonsCommandTarget
 from afmaths.visualisations.base import (
     BodyPlotConfig,
@@ -16,6 +13,7 @@ from afmaths.visualisations.base import (
 )
 from astronomy_types import Distance, Scalar
 
+from helpers import orbital_characteristics_title
 from orbit_source import Orbit, orbit_at_current_epoch, orbit_from_tle
 
 DISTANCE_SCALE = 1000
@@ -24,13 +22,6 @@ ORBIT_POINTS = 100
 
 SATELLITE_DISPLAY_RADIUS = Distance(Scalar(200_000))
 
-
-
-def _orbital_characteristics_title(orbit: Orbit) -> str:
-    if orbit.tle is None:
-        return ""
-
-    return f"<br>{general_orbital_characteristics(orbit.tle)}"
 
 def visualisation_3d_satellite_earth(
     orbits: list[Orbit],
@@ -54,7 +45,7 @@ def visualisation_3d_satellite_earth(
         title=(
             f"{current_orbits[0].name} orbit | "
             f"Source: {current_orbits[0].source.value}"
-            f"{_orbital_characteristics_title(current_orbits[0])}"
+            f"{orbital_characteristics_title(current_orbits[0])}"
         ),
         central_body_name="Earth",
         central_body_radius=EARTH_RADIUS,
@@ -77,6 +68,4 @@ def visualisation_3d_satellite_earth(
 def visualisation_3d_satellite_earth_from_tles(
     tles: list[str],
 ) -> go.Figure:
-    return visualisation_3d_satellite_earth(
-        [orbit_from_tle(tle) for tle in tles]
-    )
+    return visualisation_3d_satellite_earth([orbit_from_tle(tle) for tle in tles])

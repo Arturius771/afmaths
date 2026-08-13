@@ -20,6 +20,7 @@ from astronomy_types import (
     Year,
 )
 
+from afmaths.afmath_types import OrbitalDirection
 from afmaths.constants import EARTH_MU
 from afmaths.operation import divide_by
 from afmaths.physics.space.astronomy.time_functions import (
@@ -28,6 +29,9 @@ from afmaths.physics.space.astronomy.time_functions import (
     time_from_day_fraction,
 )
 
+from afmaths.physics.space.celestial_mechanics.celestial_mechanics import (
+    orbital_direction_from_inclination,
+)
 from afmaths.physics.space.celestial_mechanics.orbital_elements import (
     eccentric_anomaly_solved,
     newtons_method_eccentric_anomaly,

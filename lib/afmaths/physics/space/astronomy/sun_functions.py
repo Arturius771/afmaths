@@ -12,6 +12,7 @@ from afmaths.physics.space.astronomy.time_functions import (
     universal_time_from_local_civil,
 )
 from astronomy_types import (
+    Anomaly,
     Date,
     Day,
     Degrees,
@@ -21,6 +22,7 @@ from astronomy_types import (
     FullDate,
     Latitude,
     Longitude,
+    MeanAnomaly,
     Month,
     Radians,
     Ratio,
@@ -34,11 +36,21 @@ def sun_longitude(
     daylight_savings_correction: int,
     timezone_correction: int,
 ) -> Longitude:
-    def sun_mean_anomaly_2010(degrees: Degrees) -> float:
+    def sun_mean_anomaly_2010(degrees: Degrees) -> MeanAnomaly:
         ecliptic_longitude = 279.557208
         ecliptic_longitude_of_perigee = 283.112438
 
-        return degrees + ecliptic_longitude - ecliptic_longitude_of_perigee
+        return MeanAnomaly(
+            Anomaly(
+                Radians(
+                    Scalar(
+                        math.radians(
+                            degrees + ecliptic_longitude - ecliptic_longitude_of_perigee
+                        )
+                    )
+                )
+            )
+        )
 
     def sun_true_anomaly_2010(mean_anomaly: Degrees) -> float:
         eccentricity = Eccentricity(Ratio(Scalar(0.016705)))
@@ -74,7 +86,7 @@ def sun_longitude(
 
     mean_longitude_degrees = Degrees(Scalar(360 * days_since_epoch / 365.242191))
 
-    mean_anomaly = sun_mean_anomaly_2010(mean_longitude_degrees)
+    mean_anomaly = math.degrees(sun_mean_anomaly_2010(mean_longitude_degrees))
     mean_anomaly_corrected = Degrees(Scalar(mean_anomaly % 360))
 
     true_anomaly = sun_true_anomaly_2010(mean_anomaly_corrected)

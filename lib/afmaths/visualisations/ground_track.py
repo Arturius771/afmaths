@@ -28,13 +28,13 @@ from afmaths.physics.space.celestial_mechanics.utils import second_intervals_for
 from afmaths.physics.space.engineering.astrodynamics.ground_track import (
     earth_geographic_coordinate_from_itrf,
     earth_start_of_orbit_coordinates,
-    general_orbital_characteristics,
 )
 from afmaths.physics.space.transformations import itrf_position_from_gcrs_position
 from afmaths.visualisations.helpers import (
     PlotNode,
     add_plot_nodes,
     figure_circle,
+    orbital_characteristics_title,
     with_data_background_image,
 )
 from astronomy_types import (
@@ -53,13 +53,6 @@ from orbit_source import (
 )
 
 EARTH_IMAGE_PATH = Path(__file__).with_name("Earth-hires.jpg")
-
-
-def _orbital_characteristics_title(orbit: Orbit) -> str:
-    if orbit.tle is None:
-        return ""
-
-    return f"<br>{general_orbital_characteristics(orbit.tle)}"
 
 
 def _geographic_coordinates(
@@ -129,7 +122,7 @@ def visualisation_2d_ground_track(
             title=(
                 f"{orbit.name} ground track | "
                 f"Source: {orbit.source.value} | Orbits: {orbit_count}"
-                f"{_orbital_characteristics_title(orbit)}"
+                f"{orbital_characteristics_title(orbit)}"
             ),
             xaxis_title="Longitude [deg]",
             yaxis_title="Latitude [deg]",
@@ -282,7 +275,7 @@ def visualisation_2d_ground_track_current_position(
                         f"{current_orbit.name} current ground track | "
                         f"Source: {current_orbit.source.value} | "
                         f"Orbits: {orbit_count}"
-                        f"{_orbital_characteristics_title(current_orbit)}"
+                        f"{orbital_characteristics_title(current_orbit)}"
                     ),
                     xaxis_title="Longitude [deg]",
                     yaxis_title="Latitude [deg]",
