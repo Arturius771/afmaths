@@ -1,11 +1,13 @@
 from dataclasses import replace
 
 from astronomy_types import (
+    Anomaly,
     Distance,
     EccentricAnomaly,
     Eccentricity,
     GravitationalParameter,
     OrbitalElements,
+    Radians,
     Ratio,
     Scalar,
     Second,
@@ -22,7 +24,7 @@ from afmaths.physics.space.celestial_mechanics.orbital_elements import (
 )
 from afmaths.physics.space.celestial_mechanics.time import (
     orbital_period,
-    time_since_periapsis_from_mean_anomaly,
+    time_to_eccentric_anomaly,
 )
 from afmaths.physics.space.engineering.astrodynamics.maneuvers import delta_v
 from afmaths.afmath_types import DeltaV
@@ -34,23 +36,9 @@ from afmaths.operation import (
 
 from afmaths.physics.space.celestial_mechanics.celestial_mechanics import (
     apoapsis_radius,
-    kepler_equation,
     periapsis_radius,
     vis_viva,
 )
-
-
-def phase_angle_time(
-    E_phase_orbit: EccentricAnomaly,
-    original_orbit: OrbitalElements,
-    mu: GravitationalParameter,
-) -> Second:
-    """Calculates the time delta to reach a target true anomaly from the current position in the orbit."""
-    return time_since_periapsis_from_mean_anomaly(
-        original_orbit.semi_major_axis,
-        mu,
-        kepler_equation(E_phase_orbit, original_orbit.eccentricity),
-    )
 
 
 def phase_period(original_period: Second, phase_angle_time: Second) -> Second:
@@ -63,18 +51,20 @@ def phase_period(original_period: Second, phase_angle_time: Second) -> Second:
     return subtract(phase_angle_time)(original_period)
 
 
-def phase_semi_major_axis(
+def phase_orbit_semi_major_axis(
     original_orbit: OrbitalElements,
-    true_anomaly_delta: TrueAnomaly,
+    target_true_anomaly: TrueAnomaly,
     mu: GravitationalParameter,
 ) -> SemiMajorAxis:
     """Returns the semi-major axis of the phase orbit."""
     return semi_major_axis_from_period(
         phase_period(
             orbital_period(original_orbit.semi_major_axis, mu),
-            phase_angle_time(
+            time_to_eccentric_anomaly(
                 eccentric_anomaly_from_true_anomaly(
-                    true_anomaly_delta,
+                    phase_true_anomaly_delta(
+                        original_orbit.true_anomaly, target_true_anomaly
+                    ),
                     original_orbit.eccentricity,
                 ),
                 original_orbit,
@@ -85,7 +75,7 @@ def phase_semi_major_axis(
     )
 
 
-def phase_apsides(
+def phase_orbit_apsides(
     phase_semi_major_axis: SemiMajorAxis,
     original_orbit: OrbitalElements,
 ) -> tuple[Distance, Distance]:
@@ -112,38 +102,38 @@ def phase_apsides(
     return periapsis, apoapsis
 
 
-def phase_periapsis(
+def phase_orbit_periapsis(
     phase_semi_major_axis: SemiMajorAxis,
     original_orbit: OrbitalElements,
 ) -> Distance:
     """Returns the periapsis of the phase orbit."""
-    periapsis, _ = phase_apsides(phase_semi_major_axis, original_orbit)
+    periapsis, _ = phase_orbit_apsides(phase_semi_major_axis, original_orbit)
     return periapsis
 
 
-def phase_apoapsis(
+def phase_orbit_apoapsis(
     phase_semi_major_axis: SemiMajorAxis,
     original_orbit: OrbitalElements,
 ) -> Distance:
     """Returns the apoapsis of the phase orbit."""
-    _, apoapsis = phase_apsides(phase_semi_major_axis, original_orbit)
+    _, apoapsis = phase_orbit_apsides(phase_semi_major_axis, original_orbit)
     return apoapsis
 
 
-def phase_eccentricity(
+def phase_orbit_eccentricity(
     phase_semi_major_axis: SemiMajorAxis,
     original_orbit: OrbitalElements,
 ) -> Eccentricity:
     """Returns the eccentricity of the phase orbit."""
 
-    periapsis, apoapsis = phase_apsides(phase_semi_major_axis, original_orbit)
+    periapsis, apoapsis = phase_orbit_apsides(phase_semi_major_axis, original_orbit)
 
     return Eccentricity(
         Ratio(Scalar(abs(eccentricity_from_apsides(periapsis, apoapsis))))
     )
 
 
-def phase_poi_radius(
+def phase_orbit_poi_radius(
     phase_semi_major_axis: SemiMajorAxis,
     original_orbit: OrbitalElements,
 ) -> Distance:
@@ -160,13 +150,13 @@ def phase_poi_radius(
     )
 
 
-def phase_delta_v(
+def phase_orbit_delta_v(
     phase_semi_major_axis: SemiMajorAxis,
     original_orbit: OrbitalElements,
     mu: GravitationalParameter,
 ) -> DeltaV:
     """Returns the Point of Impulse (POI) DeltaV required to transfer from the original orbit to the phase orbit."""
-    poi = phase_poi_radius(phase_semi_major_axis, original_orbit)
+    poi = phase_orbit_poi_radius(phase_semi_major_axis, original_orbit)
 
     original_velocity = vis_viva(
         mu,
@@ -183,17 +173,31 @@ def phase_delta_v(
     return delta_v(original_velocity, phase_velocity)
 
 
-def phase_orbit(
+def phase_true_anomaly_delta(
+    initial_true_anomaly: TrueAnomaly,
+    desired_true_anomaly: TrueAnomaly,
+) -> TrueAnomaly:
+    """
+    Return the signed phase true-anomaly delta.
+    """
+    delta = desired_true_anomaly - initial_true_anomaly
+    if delta < Radians(Scalar(0.0)):
+        delta -= Radians(Scalar(2 * 3.141592653589793))
+
+    return TrueAnomaly(Anomaly(Radians(Scalar(delta))))
+
+
+def phase_orbit_parameters(
     original_orbit: OrbitalElements,
-    true_anomaly_delta: TrueAnomaly,
+    target_true_anomaly: TrueAnomaly,
     mu: GravitationalParameter = EARTH_MU,
 ) -> tuple[DeltaV, DeltaV, OrbitalElements]:
     """Returns the Point of Impulse (POI) DeltaV, total DeltaV, and phase orbital elements."""
 
-    p_a = phase_semi_major_axis(original_orbit, true_anomaly_delta, mu)
+    p_a = phase_orbit_semi_major_axis(original_orbit, target_true_anomaly, mu)
 
     # This is the delta v to get from one orbit to the other, so half of the total required.
-    poi_delta_v = phase_delta_v(p_a, original_orbit, mu)
+    poi_delta_v = phase_orbit_delta_v(p_a, original_orbit, mu)
 
     return (
         poi_delta_v,  # DeltaV to move orbit
@@ -201,6 +205,6 @@ def phase_orbit(
         replace(
             original_orbit,
             semi_major_axis=p_a,
-            eccentricity=phase_eccentricity(p_a, original_orbit),
+            eccentricity=phase_orbit_eccentricity(p_a, original_orbit),
         ),
     )

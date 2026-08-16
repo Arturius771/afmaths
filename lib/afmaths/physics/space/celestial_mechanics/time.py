@@ -2,6 +2,8 @@ import math
 
 from astronomy_types import (
     Distance,
+    EccentricAnomaly,
+    Eccentricity,
     GravitationalParameter,
     MeanAnomaly,
     MeanMotion,
@@ -50,6 +52,19 @@ def current_orbital_elapsed_period_from_epoch(
 ) -> Second:
     """Calculates the current orbital period elapsed from the epoch time and the orbital period."""
     return Second(Scalar(epoch_elapsed_seconds % orbital_period))
+
+
+def time_to_eccentric_anomaly(
+    target_E: EccentricAnomaly,
+    original_orbit: OrbitalElements,
+    mu: GravitationalParameter = EARTH_MU,
+) -> Second:
+    """Calculates the time delta to reach a target true anomaly from the current position in the orbit."""
+    return time_since_periapsis_from_mean_anomaly(
+        original_orbit.semi_major_axis,
+        mu,
+        kepler_equation(target_E, original_orbit.eccentricity),
+    )
 
 
 def time_to_true_anomaly(
@@ -106,4 +121,16 @@ def time_since_periapsis_from_mean_anomaly(
         Scalar(
             multiply(orbital_period(a, mu))(ratio(float(mean_anomaly))(DOUBLE(math.pi)))
         )
+    )
+
+
+def time_since_periapsis_from_true_anomaly(
+    a: SemiMajorAxis,
+    mu: GravitationalParameter,
+    true_anomaly: TrueAnomaly,
+    e: Eccentricity,
+) -> Second:
+    """Calculates the time delta for a given true anomaly."""
+    return time_since_periapsis_from_mean_anomaly(
+        a, mu, kepler_equation(eccentric_anomaly_from_true_anomaly(true_anomaly, e), e)
     )

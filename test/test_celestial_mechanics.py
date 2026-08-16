@@ -2,7 +2,7 @@ import math
 import unittest
 
 from afmaths.afmath_types import AngularMomentum, Force, Mass, OrbitalDirection
-from afmaths.constants import EARTH_MU, SUN_MU
+from afmaths.constants import EARTH_MU, EXAMPLE_ELEMENTS, SUN_MU
 from afmaths.operation import add, multiply, multiply, subtract
 from afmaths.physics.space.celestial_mechanics.celestial_mechanics import (
     apoapsis_radius,
@@ -41,12 +41,17 @@ from astronomy_types import (
 )
 
 from afmaths.physics.space.celestial_mechanics.orbital_elements import (
+    eccentric_anomaly_from_true_anomaly,
     eccentric_anomaly_solved,
     newtons_method_eccentric_anomaly,
     orbital_elements_from_state_vectors,
     state_vector_at_time,
 )
-from afmaths.physics.space.celestial_mechanics.time import rate_of_change_true_anomaly
+from afmaths.physics.space.celestial_mechanics.time import (
+    rate_of_change_true_anomaly,
+    time_to_eccentric_anomaly,
+    time_to_true_anomaly,
+)
 from afmaths.physics.space.type_conversion_helpers import radians_from_degrees
 
 
@@ -358,6 +363,33 @@ class CelestialMechanicsTestMethods(unittest.TestCase):
                 MeanAnomaly(Anomaly(Radians(Scalar(5.5)))),
             )[0],
             4.70006079291257,
+        )
+
+    def test_time_to_true_anomaly(self):
+        self.assertAlmostEqual(
+            time_to_true_anomaly(
+                EXAMPLE_ELEMENTS, TrueAnomaly(Anomaly(Radians(Scalar(4.2))))
+            ),
+            Second(Scalar(44103.88217238126)),
+            places=7,
+        )
+
+        self.assertTrue(
+            time_to_true_anomaly(EXAMPLE_ELEMENTS, EXAMPLE_ELEMENTS.true_anomaly)
+            == Second(Scalar(0))
+        )
+
+        self.assertTrue(
+            time_to_true_anomaly(
+                EXAMPLE_ELEMENTS, TrueAnomaly(Anomaly(Radians(Scalar(5.0))))
+            ),
+            time_to_eccentric_anomaly(
+                eccentric_anomaly_from_true_anomaly(
+                    TrueAnomaly(Anomaly(Radians(Scalar(5.0)))),
+                    EXAMPLE_ELEMENTS.eccentricity,
+                ),
+                EXAMPLE_ELEMENTS,
+            ),
         )
 
 

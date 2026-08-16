@@ -16,4 +16,4 @@ def general_orbital_characteristics_from_elements(elements: OrbitalElements) -> 
     direction = orbital_direction_from_inclination(elements.inclination)
     period = orbital_period(elements.semi_major_axis, EARTH_MU)
 
-    return f"Drift: { westward_drift_from_angular_velocity_and_period(period):.2f}° | {"Prograde" if direction == OrbitalDirection.PROGRADE else "Retrograde"} | Period: {period:.0f}s | a: {elements.semi_major_axis:.0f}m | e: {elements.eccentricity:.6f} | i: {elements.inclination:.2f}° | raan(Ω): {elements.right_ascension_of_ascending_node:.2f}° | aop(ω): {elements.argument_of_periapsis:.2f}° | ta(ν): {elements.true_anomaly:.2f}°"
+    return f"Drift: { westward_drift_from_angular_velocity_and_period(period):.2f}° | {"Prograde" if direction == OrbitalDirection.PROGRADE else "Retrograde"} | Period: {period:.0f}s<br>a: {elements.semi_major_axis:.0f}m | e: {elements.eccentricity:.6f} | i: {elements.inclination:.2f}° | raan(Ω): {elements.right_ascension_of_ascending_node:.2f}° | aop(ω): {elements.argument_of_periapsis:.2f}° | ta(ν): {elements.true_anomaly:.2f}°"

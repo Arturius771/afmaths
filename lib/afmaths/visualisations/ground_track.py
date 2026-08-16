@@ -328,7 +328,6 @@ def visualisation_2d_ground_track_current_position(
                         text=(
                             f"Lon: {current_position.longitude:.1f}, "
                             f"Lat: {current_position.latitude:.1f} "
-                            f"t=0s "
                             f"v={vis_viva(
                                 EARTH_MU,
                                 current_radius,

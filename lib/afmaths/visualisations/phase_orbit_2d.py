@@ -10,9 +10,9 @@ from afmaths.physics.space.celestial_mechanics.orbital_elements import (
 )
 from afmaths.physics.space.celestial_mechanics.time import orbital_period
 from afmaths.physics.space.engineering.astrodynamics.phase_orbit import (
-    phase_apoapsis,
-    phase_orbit,
-    phase_periapsis,
+    phase_orbit_apoapsis,
+    phase_orbit_parameters,
+    phase_orbit_periapsis,
 )
 from afmaths.physics.space.celestial_mechanics.celestial_mechanics import (
     apoapsis_radius,
@@ -75,32 +75,6 @@ def forward_true_anomaly_delta_rad(
         initial = 1 rad, desired = 5 rad -> 4 rad
     """
     return normalise_angle_rad(desired_true_anomaly - initial_true_anomaly)
-
-
-def phase_true_anomaly_delta(
-    initial_true_anomaly: TrueAnomaly,
-    desired_true_anomaly: TrueAnomaly,
-) -> TrueAnomaly:
-    """
-    Return the signed phase true-anomaly delta.
-
-    If the forward separation is <= 3.14 rad, the target is treated as ahead.
-    The phase orbit should have a shorter period, so the delta is positive.
-
-    If the forward separation is > 3.14 rad, the target is treated as behind.
-    The phase orbit should have a longer period, so the delta is negative.
-    """
-    forward_delta = forward_true_anomaly_delta_rad(
-        initial_true_anomaly,
-        desired_true_anomaly,
-    )
-
-    if forward_delta <= AHEAD_BEHIND_CUTOFF_RAD:
-        signed_delta = forward_delta
-    else:
-        signed_delta = -(2 * math.pi - forward_delta)
-
-    return TrueAnomaly(Anomaly(Radians(Scalar(signed_delta))))
 
 
 def phase_direction_label(
@@ -315,14 +289,14 @@ def build_phase_orbit_2d_perifocal_figure(
     """
     primary_focus_plot_coordinate = plot_origin()
 
-    signed_phase_delta = phase_true_anomaly_delta(
-        initial_true_anomaly,
-        desired_true_anomaly,
-    )
+    # signed_phase_delta = phase_true_anomaly_delta(
+    #     initial_true_anomaly,
+    #     desired_true_anomaly,
+    # )
 
-    delta_v, _, phase_orbit_elements = phase_orbit(
+    delta_v, _, phase_orbit_elements = phase_orbit_parameters(
         original_orbit,
-        signed_phase_delta,
+        desired_true_anomaly,
         gravitational_parameter,
     )
     phase_orbit_elements = align_phase_poi_to_initial_true_anomaly(
@@ -425,7 +399,7 @@ def build_phase_orbit_2d_perifocal_figure(
                     initial_true_anomaly,
                     desired_true_anomaly,
                 ):.3f} rad<br>"
-                f"Signed phase Δta = {signed_phase_delta:.3f} rad "
+                # f"Signed phase Δta = {signed_phase_delta:.3f} rad "
                 f"({phase_direction_label(
                         initial_true_anomaly,
                         desired_true_anomaly,
@@ -433,11 +407,11 @@ def build_phase_orbit_2d_perifocal_figure(
                 }), cutoff = {AHEAD_BEHIND_CUTOFF_RAD:.2f} rad<br>"
                 f"Original period = {orbital_period( original_orbit.semi_major_axis, gravitational_parameter,):.2f} s, "
                 f"phase period = {calculated_phase_period:.2f} s<br>"
-                f"Phase periapsis = {phase_periapsis(
+                f"Phase periapsis = {phase_orbit_periapsis(
                     phase_orbit_elements.semi_major_axis,
                     original_orbit,
                 ):.2f} m, "
-                f"phase apoapsis = {phase_apoapsis(
+                f"phase apoapsis = {phase_orbit_apoapsis(
                     phase_orbit_elements.semi_major_axis,
                     original_orbit,
                 ):.2f} m, "

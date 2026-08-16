@@ -2,10 +2,7 @@ import math
 from astronomy_types import (
     Distance,
     Epoch,
-    FullDate,
     GeographicCoordinates,
-    JulianDate,
-    Minute,
     OrbitalElements,
     PositionVector,
     Radians,
@@ -24,9 +21,7 @@ from afmaths.constants import (
     SECONDS_PER_DAY,
 )
 from afmaths.operation import (
-    DOUBLE,
     divide_by,
-    interval_points,
     multiply,
     negate,
 )
@@ -35,7 +30,6 @@ from afmaths.physics.space.astronomy.time_functions import (
 )
 from afmaths.physics.space.celestial_mechanics.celestial_mechanics import (
     angular_velocity_from_period,
-    orbital_direction_from_inclination,
 )
 from afmaths.physics.space.celestial_mechanics.orbital_elements import (
     state_vector_at_time,
@@ -44,12 +38,8 @@ from afmaths.physics.space.celestial_mechanics.time import orbital_period
 from afmaths.physics.space.engineering.astrodynamics.utils import (
     general_orbital_characteristics_from_elements,
 )
-from afmaths.physics.space.engineering.astrodynamics.westward_drift import (
-    westward_drift_from_angular_velocity_and_period,
-)
 from afmaths.physics.space.engineering.two_line_elements import (
     orbital_elements_from_tle,
-    orbital_period_from_tle,
     parse_julian_date,
 )
 from afmaths.physics.space.transformations import (
@@ -57,8 +47,7 @@ from afmaths.physics.space.transformations import (
     itrf_positions_from_gcrs_position,
     geographic_coordinates_from_itrf,
 )
-from afmaths.physics.space.type_conversion_helpers import degrees_from_radians
-from afmaths.afmath_types import GroundStation, OrbitalDirection
+from afmaths.afmath_types import GroundStation
 
 
 def max_latitude(i: Inclination) -> Latitude:
@@ -67,30 +56,6 @@ def max_latitude(i: Inclination) -> Latitude:
 
 def min_latitude(i: Inclination) -> Latitude:
     return Degrees(Scalar(negate(math.degrees(i))))
-
-
-def body_rotations_per_reference_period(
-    body_angular_velocity: Radians = EARTH_ANGULAR_VELOCITY,
-    reference_period: Second = MEAN_SOLAR_DAY,
-) -> Scalar:
-    """Calculate the body's number of rotations during a reference period."""
-    reference_angular_velocity = angular_velocity_from_period(reference_period)
-
-    return Scalar(divide_by(reference_angular_velocity)(body_angular_velocity))
-
-
-def westward_drift_from_mean_motion(
-    n: MeanMotion,
-    body_angular_velocity: Radians = EARTH_ANGULAR_VELOCITY,
-    reference_period: Second = MEAN_SOLAR_DAY,
-) -> Degrees:
-    """Calculate westward drift per orbit from reference-period mean motion."""
-    rotations_per_reference_period = body_rotations_per_reference_period(
-        body_angular_velocity=body_angular_velocity,
-        reference_period=reference_period,
-    )
-
-    return Degrees(Scalar(multiply(360)(divide_by(n)(rotations_per_reference_period))))
 
 
 def earth_geographic_coordinate_from_itrf(
