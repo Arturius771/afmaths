@@ -295,6 +295,18 @@ class AstrodynamicsTestMethods(unittest.TestCase):
             )
         )
 
+        self.assertTrue(
+            hohmann_is_efficient(
+                Distance(Scalar(16378137)), Distance(Scalar(16378137 * 11.97))
+            )
+        )
+
+        self.assertFalse(
+            hohmann_is_efficient(
+                Distance(Scalar(16378137)), Distance(Scalar(16378137 * 11.99))
+            )
+        )
+
         self.assertFalse(
             hohmann_is_efficient(
                 Distance(Scalar(16378137)), Distance(Scalar(256378137))
