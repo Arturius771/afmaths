@@ -22,6 +22,7 @@ from afmaths.physics.space.engineering.astrodynamics.orbital_directions import (
 from afmaths.afmath_types import OrbitalDirection, DeltaV
 from afmaths.operation import (
     add,
+    ratio,
 )
 from afmaths.physics.space.celestial_mechanics.celestial_mechanics import (
     apoapsis_radius,
@@ -114,3 +115,16 @@ def hohmann_transfer_parameters(
     )
 
     return (delta_v, direction, period)
+
+
+def hohmann_is_efficient(
+    initial_altitude: Distance,
+    target_altitude: Distance,
+) -> bool:
+    """Determines if a Hohmann transfer is efficient based on the initial and target altitudes."""
+
+    r = ratio(target_altitude)(initial_altitude)
+
+    if r > 11.98:
+        return False
+    return True

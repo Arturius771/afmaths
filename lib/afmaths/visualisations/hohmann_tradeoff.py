@@ -67,7 +67,7 @@ def build_hohmann_tradeoff_figure() -> go.Figure:
             EARTH_RADIUS,
         )
 
-        deltav, direction, transfer_time = hohmann_transfer_parameters(
+        deltav, _, transfer_time = hohmann_transfer_parameters(
             INITIAL_ALTITUDE_M,
             orbit_altitude(target_radius_m, EARTH_RADIUS),
             mu=EARTH_MU,

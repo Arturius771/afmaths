@@ -1,4 +1,3 @@
-import math
 import unittest
 
 from afmaths.constants import EXAMPLE_ELEMENTS, MEAN_SOLAR_DAY, SIDEREAL_DAY
@@ -21,16 +20,11 @@ from afmaths.physics.space.engineering.astrodynamics.orbital_directions import (
 )
 from astronomy_types import (
     Anomaly,
-    Degrees,
     Distance,
-    Inclination,
-    MeanMotion,
     Position,
     PositionVector,
     Radians,
-    Rate,
     Scalar,
-    Second,
     SemiMajorAxis,
     StateVector,
     TrueAnomaly,
@@ -40,6 +34,7 @@ from astronomy_types import (
 )
 
 from afmaths.physics.space.engineering.astrodynamics.hohmann_transfer import (
+    hohmann_is_efficient,
     hohmann_transfer_parameters,
 )
 from afmaths.afmath_types import OrbitalDirection
@@ -291,6 +286,19 @@ class AstrodynamicsTestMethods(unittest.TestCase):
         self.assertEqual(
             phase_orbit.true_anomaly,
             EXAMPLE_ELEMENTS.true_anomaly,
+        )
+
+    def test_hohmann_is_efficient(self):
+        self.assertTrue(
+            hohmann_is_efficient(
+                Distance(Scalar(16378137)), Distance(Scalar(16378137 * 2))
+            )
+        )
+
+        self.assertFalse(
+            hohmann_is_efficient(
+                Distance(Scalar(16378137)), Distance(Scalar(256378137))
+            )
         )
 
 
