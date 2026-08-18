@@ -143,18 +143,14 @@ def orbit_at_current_epoch(
     orbit: Orbit,
     gravitational_parameter: GravitationalParameter = EARTH_MU,
 ) -> Orbit:
-    elapsed = seconds_from_julian_date_delta(julian_date_delta(orbit.epoch))
-
-    current_state = state_vector_at_time(
-        orbit.elements,
-        elapsed,
-        gravitational_parameter,
-    )
-
     return replace(
         orbit,
         elements=orbital_elements_from_state_vectors(
-            current_state,
+            state_vector_at_time(
+                orbit.elements,
+                seconds_from_julian_date_delta(julian_date_delta(orbit.epoch)),
+                gravitational_parameter,
+            ),
             mu=gravitational_parameter,
         ),
         epoch=Epoch(julian_date_now()),
@@ -207,9 +203,7 @@ def resolve_orbits(
 
         case OrbitSource.ELEMENTS:
             if elements is None:
-                raise ValueError(
-                    "Orbital elements are required for --source elements."
-                )
+                raise ValueError("Orbital elements are required for --source elements.")
 
             return [orbit_from_elements(elements)]
 

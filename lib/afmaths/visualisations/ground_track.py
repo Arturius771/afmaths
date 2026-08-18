@@ -22,6 +22,7 @@ from afmaths.physics.space.celestial_mechanics.orbital_elements import (
 )
 from afmaths.physics.space.celestial_mechanics.time import (
     orbital_period,
+    time_since_periapsis_from_true_anomaly,
     time_to_true_anomaly,
 )
 from afmaths.physics.space.celestial_mechanics.utils import second_intervals_for_orbits
@@ -334,7 +335,8 @@ def visualisation_2d_ground_track_current_position(
                                 current_orbit.elements.semi_major_axis,
                             ):.2f}m/s "
                             f"r={current_radius:.2f}m "
-                            f"T={period:.2f}s"
+                            f"t={time_since_periapsis_from_true_anomaly(current_orbit.elements.semi_major_axis, EARTH_MU, current_orbit.elements.true_anomaly, current_orbit.elements.eccentricity):.2f}s "
+                            f"θ={current_orbit.elements.true_anomaly:.2f}"
                         ),
                         size=20,
                         symbol="diamond",

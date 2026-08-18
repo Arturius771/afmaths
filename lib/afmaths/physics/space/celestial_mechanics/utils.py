@@ -7,11 +7,8 @@ from afmaths.physics.space.celestial_mechanics.orbital_elements import (
 from afmaths.physics.space.celestial_mechanics.celestial_mechanics import EARTH_MU
 
 from astronomy_types import (
-    Distance,
-    EccentricAnomaly,
     GravitationalParameter,
     OrbitalElements,
-    Ratio,
     Scalar,
     Second,
     PositionVector,
@@ -23,6 +20,7 @@ def generate_all_orbit_positions(
     resolution: int = 50,
     gravitational_parameter: GravitationalParameter = EARTH_MU,
 ) -> list[PositionVector]:
+    """Generates a list of position vectors for a given set of orbital elements at specified resolution."""
     if resolution < 5:
         raise ValueError("Resolution must be greater than 5.")
     position_list = []

@@ -62,7 +62,7 @@ def build_keplerian_elements_2d_figure(
         f"i={math.degrees(elements.inclination):.2f}°, "
         f"Ω={math.degrees(elements.right_ascension_of_ascending_node):.2f}°, "
         f"ω={math.degrees(elements.argument_of_periapsis):.2f}°, "
-        f"ν={math.degrees(elements.true_anomaly):.2f}°"
+        f"θ={math.degrees(elements.true_anomaly):.2f}°"
     )
 
     fig = figure_layout(

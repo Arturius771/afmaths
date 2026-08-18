@@ -113,7 +113,7 @@ def true_anomaly_plot_node(
             orbital_elements,
             E,
         ),
-        text=(f"{label}<br>" f"ν = {true_anomaly_value:.3f} rad"),
+        text=(f"{label}<br>" f"θ = {true_anomaly_value:.3f} rad"),
         colour=colour,
         symbol=symbol,
     )

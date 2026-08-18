@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import math
 import os
 import time
 from pathlib import Path
@@ -24,14 +23,18 @@ SPACE_TRACK_QUERY_URL = build_url(
     "query",
 )
 
+# Newest GP TLE for each active object with an epoch within the last
+# 10 days and a catalogue number representable by the TLE/Alpha-5 format.
 GP_UPDATES_URL = build_url(
     SPACE_TRACK_QUERY_URL,
     "class",
     "gp",
+    "NORAD_CAT_ID",
+    "%3C340000",
     "decay_date",
     "null-val",
-    "CREATION_DATE",
-    "%3Enow-0.042",
+    "epoch",
+    "%3Enow-10",
     "format",
     "tle",
 )
@@ -43,6 +46,7 @@ LAST_REFRESH_FILE = Path(__file__).with_name("last_tle_cache_refresh.txt")
 
 MINIMUM_GP_REQUEST_INTERVAL_SECONDS = SECONDS_PER_HOUR
 MINIMUM_REFRESH_INTERVAL_SECONDS = SECONDS_PER_HOUR * 2
+
 # Alpha-5 omits I and O.
 ALPHA_5_PREFIXES = "ABCDEFGHJKLMNPQRSTUVWXYZ"
 
@@ -68,20 +72,21 @@ def load_secrets() -> dict[str, str]:
 
 def norad_id_from_tle_field(field: str) -> int:
     """
-    Parse a five-character NORAD catalogue field.
+    Parse a NORAD catalogue field.
 
     Examples:
         "25544" -> 25544
+        "602" -> 602
         "A0000" -> 100000
         "J0000" -> 180000
     """
     field = field.strip()
 
-    if len(field) != 5:
-        raise ValueError(f"Invalid NORAD catalogue field: {field!r}")
-
     if field.isdigit():
         return int(field)
+
+    if len(field) != 5:
+        raise ValueError(f"Invalid NORAD catalogue field: {field!r}")
 
     prefix = field[0]
     suffix = field[1:]
@@ -95,10 +100,35 @@ def norad_id_from_tle_field(field: str) -> int:
 
 
 def norad_id_from_tle_line(line: str) -> int:
-    if not line.startswith(("1 ", "2 ")):
+    """
+    Extract the NORAD catalogue number from a TLE line.
+
+    The catalogue number is parsed from whitespace-separated fields rather
+    than relying on a fixed character slice, since Space-Track may return
+    unpadded numeric catalogue numbers.
+    """
+    fields = line.split()
+
+    if len(fields) < 2:
+        raise ValueError(f"Invalid TLE data line: {line!r}")
+
+    if line.startswith("1 "):
+        catalogue_and_classification = fields[1]
+
+        if len(catalogue_and_classification) < 2:
+            raise ValueError(f"Invalid TLE line 1: {line!r}")
+
+        # TLE line 1 stores the classification immediately after the
+        # catalogue number, e.g. "25544U" or "A0000U".
+        catalogue_field = catalogue_and_classification[:-1]
+
+    elif line.startswith("2 "):
+        catalogue_field = fields[1]
+
+    else:
         raise ValueError(f"Not a TLE data line: {line!r}")
 
-    return norad_id_from_tle_field(line[2:7])
+    return norad_id_from_tle_field(catalogue_field)
 
 
 def parse_tles(tle_text: str) -> dict[int, str]:
@@ -127,9 +157,7 @@ def parse_tles(tle_text: str) -> dict[int, str]:
         line_2 = lines[index + 1]
 
         if not line_2.startswith("2 "):
-            raise ValueError(
-                f"Expected TLE line 2 after {line_1!r}, " f"found {line_2!r}"
-            )
+            raise ValueError(f"Expected TLE line 2 after {line_1!r}, found {line_2!r}")
 
         line_1_norad_id = norad_id_from_tle_line(line_1)
         line_2_norad_id = norad_id_from_tle_line(line_2)
@@ -201,20 +229,16 @@ def last_refresh_time() -> float | None:
     return timestamp_from_file(LAST_REFRESH_FILE)
 
 
-def ensure_gp_request_is_allowed(now: float) -> None:
+def gp_request_is_allowed(now: float) -> bool:
+    """
+    Return whether another Space-Track GP request may be made.
+    """
     last_request = last_gp_request_time()
 
     if last_request is None:
-        return
+        return True
 
-    elapsed = now - last_request
-    remaining = MINIMUM_GP_REQUEST_INTERVAL_SECONDS - elapsed
-
-    if remaining > 0:
-        raise RuntimeError(
-            "The Space-Track gp endpoint was already requested recently. "
-            f"Try again in {math.ceil(remaining / 60)} minute(s)."
-        )
+    return now - last_request >= MINIMUM_GP_REQUEST_INTERVAL_SECONDS
 
 
 def refresh_is_due(now: float) -> bool:
@@ -258,10 +282,12 @@ def authenticated_session() -> requests.Session:
 
 def refresh_tle_cache() -> int:
     """
-    Fetch recently published TLEs and merge them into the local cache.
+    Fetch current GP TLEs and merge them into the local cache.
 
-    If the cache was refreshed within the configured minimum refresh interval,
-    no request is made and zero is returned.
+    If the cache does not need refreshing, or another Space-Track GP request
+    is not yet permitted, no request is made and zero is returned.
+
+    The existing cache therefore remains usable between refreshes.
     """
     ensure_tle_cache_exists()
 
@@ -270,11 +296,13 @@ def refresh_tle_cache() -> int:
     if not refresh_is_due(request_time):
         return 0
 
-    ensure_gp_request_is_allowed(request_time)
+    if not gp_request_is_allowed(request_time):
+        return 0
 
     with authenticated_session() as session:
         # Record the request before sending it. This prevents an immediate
-        # retry from violating the API limit if a later operation fails.
+        # retry from violating the API limit if the request, response parsing,
+        # or cache update later fails.
         record_gp_request_time(request_time)
 
         response = send_request(
@@ -304,8 +332,7 @@ def get_tle_from_norad_id(norad_id: int) -> str:
     """
     Return a TLE from the local cache.
 
-    This preserves the existing public function and performs no network
-    request.
+    This function performs no network request.
     """
     cached_tles = load_tle_cache()
 
@@ -318,4 +345,4 @@ def get_tle_from_norad_id(norad_id: int) -> str:
 if __name__ == "__main__":
     updated_count = refresh_tle_cache()
 
-    print(f"Merged {updated_count} updated TLE(s) into " f"{TLE_CACHE_FILE}")
+    print(f"Merged {updated_count} updated TLE(s) into {TLE_CACHE_FILE}")

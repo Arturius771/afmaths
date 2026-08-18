@@ -257,6 +257,7 @@ def position_vector_at_time(
     time_offset: Second = Second(Scalar(0)),
     mu: GravitationalParameter = EARTH_MU,
 ) -> PositionVector:
+    """Calculates the position vector of an orbit from the orbital elements at a given time offset from the current position in the orbit."""
     return state_vector_at_time(orbital_elements, time_offset, mu).position
 
 
@@ -265,6 +266,7 @@ def velocity_vector_at_time(
     time_offset_s: Second = Second(Scalar(0)),
     gravitational_parameter: GravitationalParameter = EARTH_MU,
 ) -> VelocityVector:
+    """Calculates the velocity vector of an orbit from the orbital elements at a given time offset from the current position in the orbit."""
     return state_vector_at_time(
         orbital_elements, time_offset_s, gravitational_parameter
     ).velocity

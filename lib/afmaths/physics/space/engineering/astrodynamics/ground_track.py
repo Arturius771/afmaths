@@ -5,31 +5,21 @@ from astronomy_types import (
     GeographicCoordinates,
     OrbitalElements,
     PositionVector,
-    Radians,
     Scalar,
     Second,
     Inclination,
     Latitude,
     Degrees,
-    MeanMotion,
 )
 
 from afmaths.constants import (
-    EARTH_ANGULAR_VELOCITY,
-    MEAN_SOLAR_DAY,
-    MINUTES_PER_DAY,
     SECONDS_PER_DAY,
 )
 from afmaths.operation import (
-    divide_by,
-    multiply,
     negate,
 )
 from afmaths.physics.space.astronomy.time_functions import (
     epoch_offset,
-)
-from afmaths.physics.space.celestial_mechanics.celestial_mechanics import (
-    angular_velocity_from_period,
 )
 from afmaths.physics.space.celestial_mechanics.orbital_elements import (
     state_vector_at_time,
@@ -51,10 +41,12 @@ from afmaths.afmath_types import GroundStation
 
 
 def max_latitude(i: Inclination) -> Latitude:
+    """In degrees"""
     return Degrees(Scalar(math.degrees(i)))
 
 
 def min_latitude(i: Inclination) -> Latitude:
+    """In degrees"""
     return Degrees(Scalar(negate(math.degrees(i))))
 
 
@@ -98,14 +90,15 @@ def earth_start_of_orbit_coordinates(
     for orbit_index in range(number_of_orbits):
         elapsed_time = Second(Scalar(orbit_index * float(period)))
 
-        gcrs_position = state_vector_at_time(
+        # GCRS because the elements are derived from the GCRS frame.
+        gcrs_intertial_position = state_vector_at_time(
             orbital_elements,
             elapsed_time,
         ).position
 
         itrf_position = itrf_position_from_gcrs_position(
             epoch_offset(epoch, elapsed_time),
-            gcrs_position,
+            gcrs_intertial_position,
         )
 
         coordinates.append(earth_geographic_coordinate_from_itrf(itrf_position))
