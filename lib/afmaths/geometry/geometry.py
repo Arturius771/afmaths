@@ -60,7 +60,16 @@ def euclidian_distance(a: Coordinate2D, b: Coordinate2D) -> Distance:
 def euclidian_heading(a: Coordinate2D, b: Coordinate2D) -> Degrees:
     """Calculates the heading from point a to point b in degrees."""
     return Degrees(
-        Scalar((180 / math.pi * math.atan2(b.x - a.x, b.y - a.y) + 360) % 360)
+        Scalar(
+            (
+                add(
+                    multiply(divide_by(math.pi)(180))(
+                        math.atan2(subtract(a.x)(b.x), subtract(a.y)(b.y))
+                    )
+                )(360)
+            )
+            % 360
+        )
     )
 
 
@@ -149,6 +158,7 @@ def semi_minor_axis_from_vertex_distances(
     nearest_vertex_distance: Distance,
     farthest_vertex_distance: Distance,
 ) -> SemiMinorAxis:
+    """Calculates the semi-minor axis of an ellipse given the distances from the center to the nearest and farthest vertices."""
     return SemiMinorAxis(
         geometric_mean_distance(nearest_vertex_distance, farthest_vertex_distance)
     )
@@ -325,7 +335,7 @@ def area_of_sphere(radius: Distance) -> Area:
 #    /     | a
 #  /       |
 # _________|
-# .    b
+#     b
 
 
 def pythagoras_theorem(a: float):

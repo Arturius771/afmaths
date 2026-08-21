@@ -238,6 +238,11 @@ class GeometryTestMethods(unittest.TestCase):
             36.86989764584402,
         )
 
+        self.assertAlmostEqual(
+            float(angle_of_alpha_from_a_b(143, 123)),
+            49.299862820192075,
+        )
+
     def test_angle_of_beta_from_a_c(self):
         self.assertAlmostEqual(
             float(angle_of_beta_from_a_c(3, 5)),
