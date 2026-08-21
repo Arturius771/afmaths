@@ -1,8 +1,27 @@
 import unittest
 
-from afmaths.geometry.geometry import area_of_sphere, calculate_distance, calculate_foci
+from afmaths.geometry.geometry import (
+    angle_of_alpha,
+    angle_of_alpha_from_a_b,
+    angle_of_alpha_from_a_c,
+    angle_of_alpha_from_b_c,
+    angle_of_beta,
+    angle_of_beta_from_a_b,
+    angle_of_beta_from_a_c,
+    angle_of_beta_from_b_c,
+    area_of_sphere,
+    calculate_distance,
+    calculate_foci,
+    euclidian_distance,
+    euclidian_heading,
+    length_of_a_side_of_right_triangle,
+    length_of_b_side_of_right_triangle,
+    pythagoras_theorem,
+    signed_rotation_offset,
+)
 from astronomy_types import (
     Coordinate2D,
+    Degrees,
     Distance,
     Eccentricity,
     Ratio,
@@ -52,6 +71,189 @@ class GeometryTestMethods(unittest.TestCase):
         self.assertEqual(
             area_of_sphere(Distance(Scalar(1737.5))),
             37936694.78750525,
+        )
+
+    def test_euclidian_distance(self):
+        self.assertEqual(
+            euclidian_distance(
+                Coordinate2D(0, 0),
+                Coordinate2D(3, 4),
+            ),
+            Distance(Scalar(5)),
+        )
+
+        self.assertEqual(
+            euclidian_distance(
+                Coordinate2D(1, 1),
+                Coordinate2D(4, 5),
+            ),
+            calculate_distance(
+                Coordinate2D(1, 1),
+                Coordinate2D(4, 5),
+            ),
+        )
+
+    def test_euclidian_heading(self):
+        self.assertEqual(
+            euclidian_heading(
+                Coordinate2D(0, 0),
+                Coordinate2D(1, 1),
+            ),
+            Degrees(Scalar(45)),
+        )
+
+        self.assertEqual(
+            euclidian_heading(
+                Coordinate2D(-10000, 0),
+                Coordinate2D(1000, 0),
+            ),
+            Degrees(Scalar(90)),
+        )
+
+        self.assertEqual(
+            euclidian_heading(
+                Coordinate2D(0, 0),
+                Coordinate2D(-1, 1),
+            ),
+            Degrees(Scalar(315)),
+        )
+
+        self.assertEqual(
+            euclidian_heading(
+                Coordinate2D(0, 0),
+                Coordinate2D(-1, -1),
+            ),
+            Degrees(Scalar(225)),
+        )
+
+        self.assertEqual(
+            euclidian_heading(
+                Coordinate2D(0, 0),
+                Coordinate2D(1, -1),
+            ),
+            Degrees(Scalar(135)),
+        )
+
+        self.assertEqual(
+            euclidian_heading(
+                Coordinate2D(-45, 12),
+                Coordinate2D(-55, -5),
+            ),
+            Degrees(Scalar(210.46554491945986)),
+        )
+
+    def test_signed_rotation_offset(self):
+        self.assertEqual(
+            signed_rotation_offset(
+                Degrees(Scalar(0)),
+                euclidian_heading(
+                    Coordinate2D(0, 0),
+                    Coordinate2D(1, 1),
+                ),
+            ),
+            Degrees(Scalar(45)),
+        )
+
+        self.assertEqual(
+            signed_rotation_offset(
+                Degrees(Scalar(190)),
+                euclidian_heading(
+                    Coordinate2D(0, 0),
+                    Coordinate2D(10, 0),
+                ),
+            ),
+            Degrees(Scalar(-100)),
+        )
+
+    def test_pythagoras_theorem(self):
+        self.assertEqual(
+            pythagoras_theorem(3)(4),
+            5,
+        )
+
+        self.assertEqual(
+            pythagoras_theorem(5)(12),
+            13,
+        )
+
+    def test_length_of_a_side_of_right_triangle(self):
+        self.assertEqual(
+            length_of_a_side_of_right_triangle(4, 5),
+            3,
+        )
+
+        self.assertEqual(
+            length_of_a_side_of_right_triangle(12, 13),
+            5,
+        )
+
+    def test_length_of_b_side_of_right_triangle(self):
+        self.assertEqual(
+            length_of_b_side_of_right_triangle(3, 5),
+            4,
+        )
+
+        self.assertEqual(
+            length_of_b_side_of_right_triangle(5, 13),
+            12,
+        )
+
+    def test_angle_of_alpha(self):
+        self.assertEqual(
+            angle_of_alpha(Degrees(Scalar(30))),
+            Degrees(Scalar(60)),
+        )
+
+        self.assertEqual(
+            angle_of_alpha(Degrees(Scalar(45))),
+            Degrees(Scalar(45)),
+        )
+
+    def test_angle_of_beta(self):
+        self.assertEqual(
+            angle_of_beta(Degrees(Scalar(60))),
+            Degrees(Scalar(30)),
+        )
+
+        self.assertEqual(
+            angle_of_beta(Degrees(Scalar(45))),
+            Degrees(Scalar(45)),
+        )
+
+    def test_angle_of_alpha_from_a_c(self):
+        self.assertAlmostEqual(
+            float(angle_of_alpha_from_a_c(3, 5)),
+            36.86989764584402,
+        )
+
+    def test_angle_of_alpha_from_b_c(self):
+        self.assertAlmostEqual(
+            float(angle_of_alpha_from_b_c(4, 5)),
+            36.86989764584402,
+        )
+
+    def test_angle_of_alpha_from_a_b(self):
+        self.assertAlmostEqual(
+            float(angle_of_alpha_from_a_b(3, 4)),
+            36.86989764584402,
+        )
+
+    def test_angle_of_beta_from_a_c(self):
+        self.assertAlmostEqual(
+            float(angle_of_beta_from_a_c(3, 5)),
+            53.13010235415598,
+        )
+
+    def test_angle_of_beta_from_b_c(self):
+        self.assertAlmostEqual(
+            float(angle_of_beta_from_b_c(4, 5)),
+            53.13010235415598,
+        )
+
+    def test_angle_of_beta_from_a_b(self):
+        self.assertAlmostEqual(
+            float(angle_of_beta_from_a_b(3, 4)),
+            53.13010235415598,
         )
 
 

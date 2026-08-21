@@ -1,6 +1,7 @@
 from astronomy_types import (
     Coordinate2D,
     Coordinate3D,
+    Degrees,
     Distance,
     Eccentricity,
     Radians,
@@ -41,10 +42,6 @@ from afmaths.physics.space.type_conversion_helpers import (
 )
 
 
-def pythagoras_theorem(a):
-    return lambda b: square_root(add(SQUARE(a))(SQUARE(b)))
-
-
 def euclid(m: int, n: int) -> int:
     """Given two positive integers, m and n, find their greatest common divisor which is the largest positive integer that divides both evenly."""
     remainder = m % n
@@ -54,9 +51,25 @@ def euclid(m: int, n: int) -> int:
 
 
 def euclidian_distance(a: Coordinate2D, b: Coordinate2D) -> Distance:
+    """Calculates the Euclidean distance between two points in 2D space (Euclidian)."""
     return Distance(
         Scalar(square_root(add(SQUARE(subtract(b.x)(a.x)))(SQUARE(subtract(b.y)(a.y)))))
     )
+
+
+def euclidian_heading(a: Coordinate2D, b: Coordinate2D) -> Degrees:
+    """Calculates the heading from point a to point b in degrees."""
+    return Degrees(
+        Scalar((180 / math.pi * math.atan2(b.x - a.x, b.y - a.y) + 360) % 360)
+    )
+
+
+def signed_rotation_offset(
+    current_heading: Degrees, target_heading: Degrees
+) -> Degrees:
+    """Calculate how much to turn from the current heading to the target heading, in degrees. Positive values indicate a clockwise turn, negative values indicate a counter-clockwise turn."""
+    offset = (target_heading - current_heading + 180) % 360 - 180
+    return Degrees(Scalar(offset))
 
 
 def sieve_of_eratosthenes(n: int) -> list[int]:
@@ -72,64 +85,6 @@ def sieve_of_eratosthenes(n: int) -> list[int]:
                 numbers[multiple] = False
 
     return primes
-
-
-# def tangent(angle_degrees: float) -> float:
-#     """Returns a value in radians"""
-#     return divide_by(cosine(angle_degrees))(sine(angle_degrees))
-
-
-# def arctangent(radians):
-#     return math.degrees(math.atan(radians))
-
-
-# def sine(angle_degrees: float) -> float:
-#     """Returns a value in radians"""
-#     return taylor_series(math.radians(angle_degrees))(math.radians(angle_degrees), 2, 3)
-
-
-# def cosine(angle_degrees: float) -> float:
-#     """Returns a value in radians"""
-#     return taylor_series(math.radians(angle_degrees))(1, 2, 2)
-
-
-# def calculate_semi_minor_axis(
-#     semi_major_axis: SemiMajorAxis, eccentricity: Eccentricity
-# ) -> float:
-#     """
-#     Calculate the semi-minor axis of an ellipse given its semi-major axis and eccentricity.
-
-#     Parameters:
-#     a (float): The semi-major axis of the ellipse.
-#     e (float): The eccentricity of the ellipse (0 <= eccentricity < 1).
-
-#     Returns:
-#     float: The semi-minor axis of the ellipse.
-#     """
-#     if eccentricity < 0 or eccentricity >= 1:
-#         raise ValueError("Eccentricity must be in the range [0, 1).")
-
-#     return semi_major_axis * (1 - eccentricity**2) ** 0.5
-
-
-# def calculate_distance(
-#     coordinates1: Coordinate2D, coordinates2: Coordinate2D
-# ) -> Distance:
-#     """
-#     Calculate the distance between two points in 2D space.
-
-#     Parameters:
-#     x1 (float): The x-coordinate of the first point.
-#     y1 (float): The y-coordinate of the first point.
-#     x2 (float): The x-coordinate of the second point.
-#     y2 (float): The y-coordinate of the second point.
-
-#     Returns:
-#     float: The distance between the two points.
-#     """
-#     return (
-#         (coordinates2.x - coordinates1.x) ** 2 + (coordinates2.y - coordinates1.y) ** 2
-#     ) ** 0.5
 
 
 def normalise_angle(angle: Radians) -> Radians:
@@ -339,6 +294,8 @@ def generate_angles_on_circle(resolution: int) -> list[Radians]:
 
 
 # region Areas
+
+
 def area_rectangle(length: float, height: float) -> Area:
     """Area = length * height"""
     return multiply(length)(height)
@@ -357,6 +314,75 @@ def area_of_quarter_circle(side_length: float, radius: float) -> Area:
 
 def area_of_sphere(radius: Distance) -> Area:
     return multiply(4)(multiply(math.pi)(SQUARE(radius)))
+
+
+# endregion
+
+# region Triangles
+
+#        / |
+#   c  /   |
+#    /     | a
+#  /       |
+# _________|
+# .    b
+
+
+def pythagoras_theorem(a: float):
+    """Given the lengths of two sides of a right triangle, returns a function that calculates the length of the hypotenuse (c).
+
+    a = |, b = _, c = /"""
+    return lambda b: square_root(add(SQUARE(a))(SQUARE(b)))
+
+
+def length_of_a_side_of_right_triangle(b: float, c: float) -> float:
+    """a = |, b = _, c = /"""
+    return square_root(subtract(SQUARE(b))(SQUARE(c)))
+
+
+def length_of_b_side_of_right_triangle(a: float, c: float) -> float:
+    """a = |, b = _, c = /"""
+    return square_root(subtract(SQUARE(a))(SQUARE(c)))
+
+
+def angle_of_alpha(beta: Degrees) -> Degrees:
+    """Alpha is the angle opposite side a."""
+    return Degrees(Scalar(90 - float(beta)))
+
+
+def angle_of_beta(alpha: Degrees) -> Degrees:
+    """Beta is the angle opposite side b."""
+    return Degrees(Scalar(90 - float(alpha)))
+
+
+def angle_of_alpha_from_a_c(a: float, c: float) -> Degrees:
+    """Alpha is the angle opposite side a."""
+    return Degrees(Scalar(math.degrees(math.asin(a / c))))
+
+
+def angle_of_alpha_from_b_c(b: float, c: float) -> Degrees:
+    """Alpha is the angle opposite side a."""
+    return Degrees(Scalar(math.degrees(math.acos(b / c))))
+
+
+def angle_of_alpha_from_a_b(a: float, b: float) -> Degrees:
+    """Alpha is the angle opposite side a."""
+    return Degrees(Scalar(math.degrees(math.atan(a / b))))
+
+
+def angle_of_beta_from_a_c(a: float, c: float) -> Degrees:
+    """Beta is the angle opposite side b."""
+    return Degrees(Scalar(math.degrees(math.acos(a / c))))
+
+
+def angle_of_beta_from_b_c(b: float, c: float) -> Degrees:
+    """Beta is the angle opposite side b."""
+    return Degrees(Scalar(math.degrees(math.asin(b / c))))
+
+
+def angle_of_beta_from_a_b(a: float, b: float) -> Degrees:
+    """Beta is the angle opposite side a."""
+    return Degrees(Scalar(math.degrees(math.atan(b / a))))
 
 
 # endregion
