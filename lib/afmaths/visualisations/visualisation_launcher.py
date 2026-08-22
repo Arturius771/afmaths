@@ -11,10 +11,7 @@ from afmaths.physics.space.celestial_mechanics.orbital_elements import (
     orbital_elements_from_degrees,
 )
 from astronomy_types import (
-    Degrees,
-    GeographicCoordinates,
     OrbitalElements,
-    Scalar,
 )
 
 from collision_detection import build_collision_detection_figure

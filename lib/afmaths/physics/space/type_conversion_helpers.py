@@ -14,6 +14,7 @@ from astronomy_types import (
     Degrees,
     EccentricAnomaly,
     FullDate,
+    GeographicCoordinates,
     Hour,
     Minute,
     Month,
@@ -110,6 +111,26 @@ def degrees_from_dms(dms: DMS) -> Degrees:
     sign = -1 if dms.degrees < 0 else 1
     return Degrees(
         Scalar(sign * (abs(dms.degrees) + dms.minutes / 60 + dms.seconds / 3600))
+    )
+
+
+def radian_geographic_coordinates_from_degrees(
+    coordinates: GeographicCoordinates,
+) -> GeographicCoordinates:
+    """Converts GeographicCoordinates from degrees to radians."""
+    return GeographicCoordinates(
+        x=radians_from_degrees(Degrees(Scalar(coordinates.latitude))),
+        y=radians_from_degrees(Degrees(Scalar(coordinates.longitude))),
+    )
+
+
+def degrees_geographic_coordinates_from_radians(
+    coordinates: GeographicCoordinates,
+) -> GeographicCoordinates:
+    """Converts GeographicCoordinates from radians to degrees."""
+    return GeographicCoordinates(
+        x=degrees_from_radians(Radians(Scalar(coordinates.latitude))),
+        y=degrees_from_radians(Radians(Scalar(coordinates.longitude))),
     )
 
 

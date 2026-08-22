@@ -6,6 +6,9 @@ from afmaths.physics.space.type_conversion_helpers import (
 )
 from afmaths.physics.space.astronomy.coordinate_functions import (
     equatorial_coordinates_from_ecliptic,
+    equatorial_hour_angle_from_equatorial,
+    horizontal_coordinates_from_equatorial,
+    hour_angle,
 )
 from afmaths.physics.space.astronomy.time_functions import (
     julian_date_from_greenwich,
@@ -20,6 +23,9 @@ from astronomy_types import (
     EclipticCoordinates,
     EquatorialCoordinates,
     FullDate,
+    GeographicCoordinates,
+    HorizontalCoordinates,
+    Hour,
     Latitude,
     Longitude,
     MeanAnomaly,
@@ -33,9 +39,11 @@ from astronomy_types import (
 
 def sun_longitude(
     local_date: FullDate,
-    daylight_savings_correction: int,
-    timezone_correction: int,
+    daylight_savings_correction: Hour,
+    timezone_correction: Hour,
 ) -> Longitude:
+    """Calculates the apparent longitude of the Sun for a given local date and time."""
+
     def sun_mean_anomaly_2010(degrees: Degrees) -> MeanAnomaly:
         ecliptic_longitude = 279.557208
         ecliptic_longitude_of_perigee = 283.112438
@@ -97,11 +105,13 @@ def sun_longitude(
     return Radians(radians_from_degrees(longitude_degrees_corrected))
 
 
-def sun_position_approximate(
+def sun_equatorial_coordinates_approximate(
     local_date: FullDate,
-    daylight_savings_correction: int,
-    timezone_correction: int,
+    daylight_savings_correction: Hour,
+    timezone_correction: Hour,
 ) -> EquatorialCoordinates:
+    """Calculates the approximate position of the Sun in equatorial coordinates for a given local date and time."""
+
     greenwich_date = universal_time_from_local_civil(
         local_date,
         daylight_savings_correction,
@@ -120,4 +130,32 @@ def sun_position_approximate(
             longitude,
         ),
         greenwich_date,
+    )
+
+
+def sun_horizontal_coordinates(
+    local_date: FullDate,
+    daylight_savings_correction: Hour,
+    timezone_correction: Hour,
+    geographic_coordinates: GeographicCoordinates,
+) -> HorizontalCoordinates:
+    """Calculate the Sun's local horizontal coordinates."""
+
+    equatorial_coordinates = sun_equatorial_coordinates_approximate(
+        local_date,
+        daylight_savings_correction,
+        timezone_correction,
+    )
+
+    equatorial_hour_angle_coordinates = equatorial_hour_angle_from_equatorial(
+        equatorial_coordinates,
+        local_date,
+        daylight_savings_correction,
+        timezone_correction,
+        geographic_coordinates.longitude,
+    )
+
+    return horizontal_coordinates_from_equatorial(
+        equatorial_hour_angle_coordinates,
+        geographic_coordinates.latitude,
     )

@@ -26,6 +26,7 @@ from astronomy_types import (
     FullDate,
     GalacticCoordinates,
     HorizontalCoordinates,
+    Hour,
     HourAngle,
     Latitude,
     Longitude,
@@ -43,10 +44,14 @@ def hour_angle(
     zone_correction: int,
     longitude: Longitude,
 ) -> HourAngle:
+    """Calculates the Hour Angle from a given Right Ascension, local date and time, daylight savings, timezone correction, and longitude.
+
+    Daylight savings and timezone corrections are in hours, and longitude is in degrees.
+    """
     utc = universal_time_from_local_civil(
         local_date_and_time,
-        daylight_savings,
-        zone_correction,
+        Hour(int(daylight_savings)),
+        Hour(int(zone_correction)),
     )
 
     gst = greenwich_sidereal_time_from_universal(utc)
@@ -61,6 +66,28 @@ def hour_angle(
     return HourAngle(radians_from_degrees(hour_angle_degrees))
 
 
+def equatorial_hour_angle_from_equatorial(
+    equatorial_coordinates: EquatorialCoordinates,
+    local_date_and_time: FullDate,
+    daylight_savings: int,
+    zone_correction: int,
+    longitude: Longitude,
+) -> EquatorialCoordinatesHourAngle:
+    """Calculates the Equatorial Coordinates in Hour Angle form from given Equatorial Coordinates, local date and time, daylight savings, timezone correction, and longitude."""
+    ha = hour_angle(
+        equatorial_coordinates.right_ascension,
+        local_date_and_time,
+        daylight_savings,
+        zone_correction,
+        longitude,
+    )
+
+    return EquatorialCoordinatesHourAngle(
+        Radians(equatorial_coordinates.declination),
+        Radians(ha),
+    )
+
+
 def right_ascension(
     hour_angle: HourAngle,
     full_date: FullDate,
@@ -68,7 +95,10 @@ def right_ascension(
     zone_correction: int,
     longitude: Longitude,
 ) -> RightAscension:
-    utc = universal_time_from_local_civil(full_date, daylight_savings, zone_correction)
+    """Calculates the Right Ascension from a given Hour Angle, local date and time, daylight savings, timezone correction, and longitude."""
+    utc = universal_time_from_local_civil(
+        full_date, Hour(int(daylight_savings)), Hour(int(zone_correction))
+    )
     gst = greenwich_sidereal_time_from_universal(utc)
     local_sidereal_time = local_sidereal_time_from_greenwich_sidereal(gst, longitude)
 
@@ -85,6 +115,7 @@ def horizontal_coordinates_from_equatorial(
     equatorial_coordinates: EquatorialCoordinatesHourAngle,
     latitude: Latitude,
 ) -> HorizontalCoordinates:
+    """Calculates the Horizontal Coordinates from given Equatorial Coordinates and observer's Latitude."""
     declination = float(equatorial_coordinates.declination)
     hour_angle = float(equatorial_coordinates.hour_angle)
     latitude_radians = float(latitude)
@@ -112,6 +143,7 @@ def equatorial_coordinates_from_horizontal(
     horizontal_coordinates: HorizontalCoordinates,
     observer_latitude: Latitude,
 ) -> EquatorialCoordinatesHourAngle:
+    """Calculates the Equatorial Coordinates from given Horizontal Coordinates and observer's Latitude."""
     sin_declination = math.sin(horizontal_coordinates.altitude) * math.sin(
         observer_latitude
     ) + math.cos(horizontal_coordinates.altitude) * math.cos(
@@ -143,6 +175,7 @@ def equatorial_coordinates_from_horizontal(
 
 
 def mean_obliquity_ecliptic(greenwich_date: Date) -> Obliquity:
+    """Calculates the mean obliquity of the ecliptic for a given Greenwich date."""
     julian_date = julian_date_from_greenwich(greenwich_date)
     j2000 = j200_from_julian_Date(julian_date)
 

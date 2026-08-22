@@ -200,7 +200,6 @@ def visualisation_2d_ground_track_current_position(
 ) -> go.Figure:
     current_orbit = orbit_at_current_epoch(orbit)
 
-    period = orbital_period(current_orbit.elements.semi_major_axis)
     coordinates = _geographic_coordinates(
         current_orbit,
         orbit_count,

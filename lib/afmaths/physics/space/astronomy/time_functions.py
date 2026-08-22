@@ -129,6 +129,7 @@ def julian_date_from_greenwich(date: Date) -> JulianDate:
 
 
 def julian_date_from_full_Date(full_date: FullDate) -> JulianDate:
+    """Calculates the Julian Date from a given FullDate."""
     # ISG Lecture no.2
     fd = (
         full_date.time.hour / HOURS_PER_DAY
@@ -193,14 +194,17 @@ def greenwich_date_from_julian(julian_date: JulianDate) -> Date:
 
 
 def j200_from_julian_Date(julian_date: JulianDate) -> Epoch:
+    """Calculates the number of days that have elapsed since the J2000.0 epoch from a given Julian Date."""
     return epoch_from_julian_date(julian_date, negate(2451545.0))
 
 
 def epoch_from_julian_date(julian_date: JulianDate, adjustment: float) -> Epoch:
+    """Calculates the epoch from a given Julian Date and an adjustment value."""
     return Epoch(JulianDate(Scalar(julian_date + adjustment)))
 
 
 def finding_day_of_week(julian_date: JulianDate) -> DaysOfWeek:
+    """Calculates the day of the week for a given Julian Date."""
     julian_day = (float(julian_date) + 1.5) % 7
     day_number = math.floor(julian_day)
 
@@ -221,6 +225,7 @@ def decimal_time_from_hms(
     time: Time,
     twenty_four_hour_clock: bool = True,
 ) -> DecimalTime:
+    """Converts a time value in hours, minutes, and seconds to decimal time."""
     decimal_time = decimal_time_from_time(time)
 
     if twenty_four_hour_clock or decimal_time <= 12:
@@ -230,6 +235,7 @@ def decimal_time_from_hms(
 
 
 def hms_from_decimal(decimal_time: DecimalTime) -> Time:
+    """Converts a decimal time value to hours, minutes, and seconds."""
     hours, minutes, seconds = (
         time_from_decimal_time(decimal_time).hour,
         time_from_decimal_time(decimal_time).minute,
@@ -248,9 +254,12 @@ def hms_from_decimal(decimal_time: DecimalTime) -> Time:
 
 def universal_time_from_local_civil(
     local_time_and_date: FullDate,
-    daylight_savings_correction: int = 0,
-    timezone_offset_correction: int = 0,
+    daylight_savings_correction: Hour = Hour(int(0)),
+    timezone_offset_correction: Hour = Hour(int(0)),
 ) -> FullDate:
+    """Calculates the Universal Time (UT) from a given local civil time and date, considering daylight savings and timezone corrections.
+
+    Daylight savings and timezone corrections are in hours."""
     local_date = local_time_and_date.date
     local_time = local_time_and_date.time
 
@@ -298,9 +307,10 @@ def universal_time_from_local_civil(
 
 def universal_to_local_civil_time(
     universal_time_and_date: FullDate,
-    timezone_offset_correction: int = 0,
-    daylight_savings_correction: int = 0,
+    timezone_offset_correction: Hour = Hour(int(0)),
+    daylight_savings_correction: Hour = Hour(int(0)),
 ) -> FullDate:
+    """Calculates the local civil time from a given Universal Time (UT) and date, considering timezone and daylight savings corrections."""
     greenwich_date = universal_time_and_date.date
     utc = universal_time_and_date.time
 

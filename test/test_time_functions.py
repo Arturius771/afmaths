@@ -233,7 +233,7 @@ class TimeTestMethods(unittest.TestCase):
 
         assert_full_date_equal(
             self,
-            universal_time_from_local_civil(lct, 1, 4),
+            universal_time_from_local_civil(lct, Hour(1), Hour(4)),
             2013,
             6,
             30,
@@ -247,7 +247,7 @@ class TimeTestMethods(unittest.TestCase):
 
         assert_full_date_equal(
             self,
-            universal_to_local_civil_time(utc, 4, 1),
+            universal_to_local_civil_time(utc, Hour(int(4)), Hour(int(1))),
             2013,
             7,
             1,

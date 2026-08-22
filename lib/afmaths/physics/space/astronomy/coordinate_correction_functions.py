@@ -22,6 +22,7 @@ from astronomy_types import (
     EquatorialCoordinates,
     FullDate,
     GeographicCoordinates,
+    Hour,
     Longitude,
     NutationAndObliquity,
     Obliquity,
@@ -233,7 +234,7 @@ def aberration_from_date(
     true_longitude_degrees = Degrees(Scalar(math.degrees(true_longitude)))
 
     sun_longitude_degrees = Degrees(
-        Scalar(math.degrees(float(sun_longitude(ut_date, 0, 0))))
+        Scalar(math.degrees(float(sun_longitude(ut_date, Hour(0), Hour(0)))))
     )
 
     delta_longitude_arcseconds = (
