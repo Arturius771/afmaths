@@ -40,7 +40,7 @@ def visualisation_3d_satellite_earth(
         add_prediction_to_orbit=False,
     )
 
-    return build_3d_orbit_figure(
+    figure = build_3d_orbit_figure(
         settings=settings,
         title=(
             f"{current_orbits[0].name} orbit | "
@@ -60,6 +60,20 @@ def visualisation_3d_satellite_earth(
             for orbit in current_orbits
         ],
     )
+
+    figure.update_traces(
+        colorscale=[
+            [0.0, "blue"],
+            [1.0, "blue"],
+        ],
+        showscale=False,
+        selector={
+            "type": "surface",
+            "name": "Earth",
+        },
+    )
+
+    return figure
 
 
 # Backwards-compatible wrapper.
