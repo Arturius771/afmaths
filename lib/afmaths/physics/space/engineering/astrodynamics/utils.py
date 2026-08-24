@@ -11,7 +11,7 @@ from afmaths.physics.space.engineering.astrodynamics.westward_drift import (
 )
 
 
-def general_orbital_characteristics_from_elements(elements: OrbitalElements) -> str:
+def orbit_description_from_elements(elements: OrbitalElements) -> str:
     """Extracts general orbital characteristics from OrbitalElements and returns them as a formatted string."""
     direction = orbital_direction_from_inclination(elements.inclination)
     period = orbital_period(elements.semi_major_axis, EARTH_MU)

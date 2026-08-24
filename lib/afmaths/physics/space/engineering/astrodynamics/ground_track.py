@@ -25,13 +25,6 @@ from afmaths.physics.space.celestial_mechanics.orbital_elements import (
     state_vector_at_time,
 )
 from afmaths.physics.space.celestial_mechanics.time import orbital_period
-from afmaths.physics.space.engineering.astrodynamics.utils import (
-    general_orbital_characteristics_from_elements,
-)
-from afmaths.physics.space.engineering.two_line_elements import (
-    orbital_elements_from_tle,
-    parse_julian_date,
-)
 from afmaths.physics.space.transformations import (
     itrf_position_from_gcrs_position,
     itrf_positions_from_gcrs_position,
@@ -153,10 +146,3 @@ def ground_track_passes_station(
             return True
 
     return False
-
-
-def general_orbital_characteristics_from_tle(tle: str) -> str:
-    """Extracts general orbital characteristics from a TLE string and returns them as a formatted string."""
-    elements = orbital_elements_from_tle(tle)
-
-    return f"Epoch (JD): {parse_julian_date(tle)} | {general_orbital_characteristics_from_elements(elements)}"

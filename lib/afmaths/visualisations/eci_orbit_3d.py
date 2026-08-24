@@ -5,6 +5,9 @@ import datetime
 import plotly.graph_objects as go
 
 from afmaths.constants import EARTH_MU, EARTH_RADIUS
+from afmaths.physics.space.engineering.astrodynamics.utils import (
+    orbit_description_from_elements,
+)
 from afmaths.physics.space.external.horizons_api import HorizonsCommandTarget
 from afmaths.visualisations.base import (
     BodyPlotConfig,
@@ -12,8 +15,6 @@ from afmaths.visualisations.base import (
     build_3d_orbit_figure,
 )
 from astronomy_types import Distance, Scalar
-
-from helpers import orbital_characteristics_title
 from orbit_source import Orbit, orbit_at_current_epoch, orbit_from_tle
 
 DISTANCE_SCALE = 1000
@@ -45,7 +46,7 @@ def visualisation_3d_satellite_earth(
         title=(
             f"{current_orbits[0].name} orbit | "
             f"Source: {current_orbits[0].source.value}"
-            f"{orbital_characteristics_title(current_orbits[0])}"
+            f"<br>{orbit_description_from_elements(current_orbits[0].elements)}"
         ),
         central_body_name="Earth",
         central_body_radius=EARTH_RADIUS,

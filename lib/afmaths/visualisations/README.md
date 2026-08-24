@@ -552,11 +552,11 @@ Interesting polar orbit:
 python lib/afmaths/visualisations/visualisation_launcher.py control_room \
   --source elements \
   --inclination 89 \
-  --right-ascension-of-ascending-node 0 \
-  --argument-of-periapsis 110 \
-  --semi-major-axis 42000000 \
+  --right-ascension-of-ascending-node 230 \
+  --argument-of-periapsis 0 \
+  --semi-major-axis 42168100 \
   --eccentricity 0.001 \
-  --true-anomaly 3.14 \
+  --true-anomaly 0 \
   --orbits 1 \
   --current-orbits 1
 ```

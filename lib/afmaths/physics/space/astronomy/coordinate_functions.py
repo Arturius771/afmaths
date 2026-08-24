@@ -176,10 +176,7 @@ def equatorial_coordinates_from_horizontal(
 
 def mean_obliquity_ecliptic(greenwich_date: Date) -> Obliquity:
     """Calculates the mean obliquity of the ecliptic for a given Greenwich date."""
-    julian_date = julian_date_from_greenwich(greenwich_date)
-    j2000 = j200_from_julian_Date(julian_date)
-
-    t = float(j2000) / 36525
+    t = float(j200_from_julian_Date(julian_date_from_greenwich(greenwich_date))) / 36525
     de = (t * (46.815 + t * (0.0006 - (t * 0.00181)))) / 3600
 
     obliquity_degrees = Degrees(Scalar(23.439292 - de))

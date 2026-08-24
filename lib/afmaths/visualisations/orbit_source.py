@@ -143,6 +143,7 @@ def orbit_at_current_epoch(
     orbit: Orbit,
     gravitational_parameter: GravitationalParameter = EARTH_MU,
 ) -> Orbit:
+    # FIXME: sometimes we get negative AoP in the elements
     return replace(
         orbit,
         elements=orbital_elements_from_state_vectors(

@@ -13,12 +13,13 @@ from afmaths.physics.space.celestial_mechanics.orbital_elements import (
     state_vector_at_time,
 )
 from afmaths.physics.space.celestial_mechanics.time import orbital_period
+from afmaths.physics.space.engineering.astrodynamics.utils import (
+    orbit_description_from_elements,
+)
 from afmaths.physics.space.external.horizons_api import HorizonsCommandTarget
 from afmaths.physics.space.transformations import itrf_positions_from_gcrs_position
 from afmaths.visualisations.base import OrbitPlotSettings, build_3d_itrf_orbit_figure
 from astronomy_types import OrbitalElements, Scalar, Second
-
-from helpers import orbital_characteristics_title
 from orbit_source import Orbit, orbit_from_elements, orbit_from_tle
 
 from typing import cast
@@ -201,7 +202,7 @@ def visualisation_3d_itrf(
             f"{orbits[0].name} ITRF orbit | "
             f"Source: {orbits[0].source.value} | "
             f"Orbits: {track_for_orbits}"
-            f"{orbital_characteristics_title(orbits[0])}"
+            f"<br>{orbit_description_from_elements(orbits[0].elements)} @ Epoch"
         ),
         central_body_name="Earth",
         central_body_radius=EARTH_RADIUS,

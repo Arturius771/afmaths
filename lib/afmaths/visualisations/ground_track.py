@@ -30,18 +30,19 @@ from afmaths.physics.space.engineering.astrodynamics.ground_track import (
     earth_geographic_coordinate_from_itrf,
     earth_start_of_orbit_coordinates,
 )
+from afmaths.physics.space.engineering.astrodynamics.utils import (
+    orbit_description_from_elements,
+)
 from afmaths.physics.space.transformations import itrf_position_from_gcrs_position
 from afmaths.visualisations.helpers import (
     PlotNode,
     add_plot_nodes,
     figure_circle,
-    orbital_characteristics_title,
     with_data_background_image,
 )
 from astronomy_types import (
     Coordinate2D,
     GeographicCoordinates,
-    OrbitalElements,
     Scalar,
     Second,
 )
@@ -49,8 +50,6 @@ from astronomy_types import (
 from orbit_source import (
     Orbit,
     orbit_at_current_epoch,
-    orbit_from_elements,
-    orbit_from_tle,
 )
 
 EARTH_IMAGE_PATH = Path(__file__).with_name("Earth-hires.jpg")
@@ -123,7 +122,7 @@ def visualisation_2d_ground_track(
             title=(
                 f"{orbit.name} ground track | "
                 f"Source: {orbit.source.value} | Orbits: {orbit_count}"
-                f"{orbital_characteristics_title(orbit)}"
+                f"<br>{orbit_description_from_elements(orbit.elements)} @ Epoch"
             ),
             xaxis_title="Longitude [deg]",
             yaxis_title="Latitude [deg]",
@@ -256,7 +255,6 @@ def visualisation_2d_ground_track_current_position(
         Scalar(ground_station.coordinates.longitude),
         Scalar(ground_station.coordinates.latitude),
     )
-
     return with_data_background_image(
         figure_circle(
             add_plot_nodes(
@@ -275,7 +273,7 @@ def visualisation_2d_ground_track_current_position(
                         f"{current_orbit.name} current ground track | "
                         f"Source: {current_orbit.source.value} | "
                         f"Orbits: {orbit_count}"
-                        f"{orbital_characteristics_title(current_orbit)}"
+                        f"<br>{orbit_description_from_elements(current_orbit.elements)}"
                     ),
                     xaxis_title="Longitude [deg]",
                     yaxis_title="Latitude [deg]",
@@ -356,60 +354,4 @@ def visualisation_2d_ground_track_current_position(
         opacity=0.5,
         set_axis_ranges=True,
         lock_aspect_ratio=False,
-    )
-
-
-def visualisation_2d_ground_track_tle_propagation(
-    tle: str,
-    orbit_count: float = 3,
-    show_orbit_markers: bool = False,
-    background_image_path: Path = EARTH_IMAGE_PATH,
-    time_interval: Second | None = None,
-    lines: bool = False,
-    number_of_points: int = 2000,
-) -> go.Figure:
-    return visualisation_2d_ground_track(
-        orbit_from_tle(tle),
-        orbit_count=orbit_count,
-        show_orbit_markers=show_orbit_markers,
-        background_image_path=background_image_path,
-        time_interval=time_interval,
-        lines=lines,
-        number_of_points=number_of_points,
-    )
-
-
-def visualisation_2d_ground_track_current_position_propogation(
-    tle: str,
-    ground_station: GroundStation,
-    background_image_path: Path = EARTH_IMAGE_PATH,
-    lines: bool = False,
-    number_of_points: int = 2000,
-    orbit_count: float = 1,
-) -> go.Figure:
-    return visualisation_2d_ground_track_current_position(
-        orbit_from_tle(tle),
-        ground_station=ground_station,
-        background_image_path=background_image_path,
-        lines=lines,
-        number_of_points=number_of_points,
-        orbit_count=orbit_count,
-    )
-
-
-def visualisation_2d_ground_track_orbital_elements_propogation(
-    elements: OrbitalElements,
-    ground_station: GroundStation,
-    background_image_path: Path = EARTH_IMAGE_PATH,
-    lines: bool = False,
-    number_of_points: int = 2000,
-    orbit_count: float = 1,
-) -> go.Figure:
-    return visualisation_2d_ground_track_current_position(
-        orbit_from_elements(elements),
-        ground_station=ground_station,
-        background_image_path=background_image_path,
-        lines=lines,
-        number_of_points=number_of_points,
-        orbit_count=orbit_count,
     )
