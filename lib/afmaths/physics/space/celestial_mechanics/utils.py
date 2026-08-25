@@ -3,12 +3,16 @@ from afmaths.geometry.geometry import generate_angles_on_circle
 from afmaths.operation import interval_points
 from afmaths.physics.space.celestial_mechanics.orbital_elements import (
     state_vector_at_time,
+    true_anomaly_from_eccentric_anomaly,
 )
 from afmaths.physics.space.celestial_mechanics.celestial_mechanics import EARTH_MU
 
 from astronomy_types import (
+    Anomaly,
+    EccentricAnomaly,
     GravitationalParameter,
     OrbitalElements,
+    Radians,
     Scalar,
     Second,
     PositionVector,
@@ -24,12 +28,15 @@ def generate_all_orbit_positions(
     if resolution < 5:
         raise ValueError("Resolution must be greater than 5.")
     position_list = []
-    for true_anomaly in generate_angles_on_circle(resolution):
+    for E in generate_angles_on_circle(resolution):
         position_list.append(
             state_vector_at_time(
                 replace(
                     orbital_elements,
-                    true_anomaly=true_anomaly,
+                    true_anomaly=true_anomaly_from_eccentric_anomaly(
+                        EccentricAnomaly(Anomaly(Radians(Scalar(E)))),
+                        orbital_elements.eccentricity,
+                    ),
                 ),
                 mu=gravitational_parameter,
             ).position
