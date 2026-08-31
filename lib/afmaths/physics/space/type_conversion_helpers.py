@@ -134,6 +134,16 @@ def degrees_geographic_coordinates_from_radians(
     )
 
 
+def geographic_coordinates_from_coordinate2d(
+    coordinates: Coordinate2D,
+) -> GeographicCoordinates:
+    """Converts a Coordinate2D to GeographicCoordinates."""
+    return GeographicCoordinates(
+        x=Degrees(Scalar(coordinates.x)),
+        y=Degrees(Scalar(coordinates.y)),
+    )
+
+
 def degrees_from_hms(hms: HMS) -> Degrees:
     return Degrees(Scalar(15 * (hms.hours + hms.minutes / 60 + hms.seconds / 3600)))
 

@@ -186,7 +186,7 @@ def orbit_epoch_of_pass(
     orbital_elements: OrbitalElements,
     epoch: Epoch,
     tolerance: Degrees = Degrees(Scalar(5)),
-    max_orbit_iterations: int = 100,
+    max_orbit_iterations: int = 50,
 ) -> tuple[Epoch, int] | None:
     """
     Calculate the times when a satellite passes over a ground station based on its orbital elements and the ground station's location.

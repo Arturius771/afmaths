@@ -28,6 +28,7 @@ from afmaths.physics.space.celestial_mechanics.time import (
 from afmaths.physics.space.engineering.astrodynamics.ground_track import (
     earth_start_of_orbit_coordinates,
     geographic_coordinates_for_orbit,
+    orbit_epoch_of_pass,
 )
 from afmaths.physics.space.engineering.astrodynamics.utils import (
     orbit_description_from_elements,
@@ -35,6 +36,9 @@ from afmaths.physics.space.engineering.astrodynamics.utils import (
 from afmaths.physics.space.transformations import (
     geographic_coordinates_from_itrf,
     itrf_position_from_gcrf_position,
+)
+from afmaths.physics.space.type_conversion_helpers import (
+    geographic_coordinates_from_coordinate2d,
 )
 from afmaths.visualisations.helpers import (
     PlotNode,
@@ -44,6 +48,7 @@ from afmaths.visualisations.helpers import (
 )
 from astronomy_types import (
     Coordinate2D,
+    Degrees,
     Scalar,
     Second,
 )
@@ -227,6 +232,22 @@ def visualisation_2d_ground_track_current_position(
         Scalar(ground_station.coordinates.longitude),
         Scalar(ground_station.coordinates.latitude),
     )
+
+    orbits_to_pass = orbit_epoch_of_pass(
+        geographic_coordinates_from_coordinate2d(ground_station_coordinate),
+        current_orbit.elements,
+        current_orbit.epoch,
+        tolerance=Degrees(Scalar(1)),
+        max_orbit_iterations=1000,
+    )
+
+    if orbits_to_pass is None:
+        pass_epoch = "N/A"
+        pass_orbits = "N/A"
+    else:
+        pass_epoch = f"{orbits_to_pass[0]:.2f}"
+        pass_orbits = str(orbits_to_pass[1])
+
     return with_data_background_image(
         figure_circle(
             add_plot_nodes(
@@ -254,7 +275,11 @@ def visualisation_2d_ground_track_current_position(
                     PlotNode(
                         name=f"Ground Station: {ground_station.name or 'Unnamed'}",
                         coordinate=ground_station_coordinate,
-                        text=f"Ground Station: {ground_station.name or 'Unnamed'}",
+                        text=(
+                            f"Ground Station: {ground_station.name or 'Unnamed'}, "
+                            f"orbit epoch of pass {pass_epoch} JD "
+                            f"in {pass_orbits} orbits"
+                        ),
                         size=5,
                         symbol="circle",
                         colour="Blue",
