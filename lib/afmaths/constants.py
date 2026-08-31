@@ -65,13 +65,21 @@ SATELLITE_EXAMPLE_ELEMENTS = OrbitalElements(
     Eccentricity(Ratio(Scalar(0.05449006))),
     TrueAnomaly(Anomaly(Radians(Scalar(1)))),
 )
+LEO_ELEMENTS = OrbitalElements(
+    Inclination(Radians(Scalar(math.radians(75)))),
+    RightAscension(Radians(Scalar(1.2))),
+    ArgumentOfPeriapsis(Radians(Scalar(0.5))),
+    SemiMajorAxis(Distance(Scalar(8000000.0))),
+    Eccentricity(Ratio(Scalar(0.05449006))),
+    TrueAnomaly(Anomaly(Radians(Scalar(1)))),
+)
 SPEED_OF_LIGHT_METRES_PER_SECONDS = 299792458
 PLANCK_CONSTANT = multiply(6.62607004)(exponentiate(negate(34))(10))
 GRAVITATIONAL_CONSTANT = multiply(6.67430)(exponentiate(negate(11))(10))  # 6.67430e-11
 STANDARD_GRAVITY = Acceleration(Scalar(9.80665))  # m/s
 STEFAN_BOLTZMANN_CONSTANT = multiply(5.670367)(exponentiate(negate(8))(10))
 UNIT_VECTOR_XY_PLANE = Vector3D[Scalar](Scalar(0), Scalar(0), Scalar(1))
-ITRS_EXAMPLE_POSITION: list[Coordinate3D[Scalar]] = [
+ITRF_EXAMPLE_POSITION: list[Coordinate3D[Scalar]] = [
     Coordinate3D(x=Scalar(6790.0), y=Scalar(0.0), z=Scalar(0.0)),
     Coordinate3D(x=Scalar(0.0), y=Scalar(6790.0), z=Scalar(0.0)),
     Coordinate3D(x=Scalar(-6790.0), y=Scalar(0.0), z=Scalar(0.0)),
@@ -110,3 +118,4 @@ KILCUMMIN_GROUND_STATION = GroundStation(
     "Kilcummin, Ireland",
     Distance(Scalar(5)),
 )
+ASTRONOMICAL_UNIT = Distance(Scalar(149_597_870_700))  # metres

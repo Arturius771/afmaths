@@ -17,7 +17,7 @@ from afmaths.physics.space.engineering.astrodynamics.utils import (
     orbit_description_from_elements,
 )
 from afmaths.physics.space.external.horizons_api import HorizonsCommandTarget
-from afmaths.physics.space.transformations import itrf_positions_from_gcrs_position
+from afmaths.physics.space.transformations import itrf_positions_from_gcrf_position
 from afmaths.visualisations.base import OrbitPlotSettings, build_3d_itrf_orbit_figure
 from astronomy_types import OrbitalElements, Scalar, Second
 from orbit_source import Orbit, orbit_from_elements, orbit_from_tle
@@ -165,7 +165,7 @@ def visualisation_3d_itrf(
             orbital_period(orbit.elements.semi_major_axis) * track_for_orbits
         )
 
-        gcrs_positions = [
+        gcrf_positions = [
             state_vector_at_time(
                 orbit.elements,
                 Second(Scalar(second)),
@@ -179,8 +179,8 @@ def visualisation_3d_itrf(
         ]
 
         itrf_positions.append(
-            itrf_positions_from_gcrs_position(
-                gcrs_positions,
+            itrf_positions_from_gcrf_position(
+                gcrf_positions,
                 orbit.epoch,
             )
         )

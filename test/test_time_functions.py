@@ -41,7 +41,7 @@ from afmaths.physics.space.astronomy.time_functions import (
     universal_time_from_greenwich,
     julian_date_from_greenwich,
     decimal_time_from_hms,
-    j200_from_julian_Date,
+    j2000_from_julian_Date,
     greenwich_date_from_julian,
     universal_time_from_local_civil,
     greenwich_sidereal_time_from_local_sidereal,
@@ -158,7 +158,7 @@ class TimeTestMethods(unittest.TestCase):
 
     def test_julian_date_to_j2000(self):
         self.assertEqual(
-            j200_from_julian_Date(JulianDate(Scalar(2440227.54513888889))),
+            j2000_from_julian_Date(JulianDate(Scalar(2440227.54513888889))),
             -11317.454861111008,
         )
 

@@ -10,7 +10,7 @@ from afmaths.physics.space.type_conversion_helpers import (
 from afmaths.physics.space.astronomy.time_functions import (
     local_sidereal_time_from_greenwich_sidereal,
     julian_date_from_greenwich,
-    j200_from_julian_Date,
+    j2000_from_julian_Date,
     universal_time_from_local_civil,
     greenwich_sidereal_time_from_universal,
 )
@@ -176,7 +176,10 @@ def equatorial_coordinates_from_horizontal(
 
 def mean_obliquity_ecliptic(greenwich_date: Date) -> Obliquity:
     """Calculates the mean obliquity of the ecliptic for a given Greenwich date."""
-    t = float(j200_from_julian_Date(julian_date_from_greenwich(greenwich_date))) / 36525
+    t = (
+        float(j2000_from_julian_Date(julian_date_from_greenwich(greenwich_date)))
+        / 36525
+    )
     de = (t * (46.815 + t * (0.0006 - (t * 0.00181)))) / 3600
 
     obliquity_degrees = Degrees(Scalar(23.439292 - de))

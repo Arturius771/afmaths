@@ -1,7 +1,15 @@
 import unittest
 
-from afmaths.constants import EXAMPLE_ELEMENTS, MEAN_SOLAR_DAY, SIDEREAL_DAY
+from afmaths.constants import (
+    EXAMPLE_ELEMENTS,
+    KILCUMMIN_GROUND_STATION,
+    LEO_ELEMENTS,
+    MEAN_SOLAR_DAY,
+    SATELLITE_EXAMPLE_ELEMENTS,
+    SIDEREAL_DAY,
+)
 from afmaths.operation import divide_by, multiply
+from afmaths.physics.space.astronomy.time_functions import julian_date_from_greenwich
 from afmaths.physics.space.celestial_mechanics.celestial_mechanics import (
     angular_velocity_from_period,
     mean_motion,
@@ -10,6 +18,10 @@ from afmaths.physics.space.celestial_mechanics.time import (
     orbital_period_from_mean_motion,
 )
 from afmaths.physics.space.engineering.astrodynamics import phase_orbit
+from afmaths.physics.space.engineering.astrodynamics.ground_track import (
+    orbit_epoch_of_pass,
+    orbit_epoch_of_pass_full_date,
+)
 from afmaths.physics.space.engineering.astrodynamics.orbital_directions import (
     anti_normal,
     anti_radial,
@@ -20,17 +32,29 @@ from afmaths.physics.space.engineering.astrodynamics.orbital_directions import (
 )
 from astronomy_types import (
     Anomaly,
+    Date,
+    Day,
+    Degrees,
     Distance,
+    Epoch,
+    FullDate,
+    GeographicCoordinates,
+    Hour,
+    Minute,
+    Month,
     Position,
     PositionVector,
     Radians,
     Scalar,
+    Second,
     SemiMajorAxis,
     StateVector,
+    Time,
     TrueAnomaly,
     Vector3D,
     Velocity,
     VelocityVector,
+    Year,
 )
 
 from afmaths.physics.space.engineering.astrodynamics.hohmann_transfer import (
@@ -45,6 +69,8 @@ from afmaths.physics.space.engineering.astrodynamics.westward_drift import (
     westward_drift_from_angular_velocity_and_period,
     westward_drift_from_mean_motion,
 )
+from afmaths.physics.space.type_conversion_helpers import make_date
+from typing import cast
 
 
 class AstrodynamicsTestMethods(unittest.TestCase):
@@ -311,6 +337,143 @@ class AstrodynamicsTestMethods(unittest.TestCase):
             hohmann_is_efficient(
                 Distance(Scalar(16378137)), Distance(Scalar(256378137))
             )
+        )
+
+    def test_orbit_epoch_of_pass(self):
+        result = orbit_epoch_of_pass(
+            orbital_elements=SATELLITE_EXAMPLE_ELEMENTS,
+            epoch=Epoch(
+                julian_date_from_greenwich(
+                    make_date(
+                        year=Year(2026),
+                        month=Month(8),
+                        day=Day(Scalar(29)),
+                    )
+                )
+            ),
+            coords=KILCUMMIN_GROUND_STATION.coordinates,
+        )
+
+        self.assertIsInstance(
+            result,
+            tuple,
+        )
+
+        self.assertAlmostEqual(
+            cast(
+                tuple[Epoch, int],
+                result,
+            )[0],
+            2461307.2633208544,
+        )
+
+        self.assertEqual(
+            cast(
+                tuple[Epoch, int],
+                orbit_epoch_of_pass(
+                    coords=GeographicCoordinates(
+                        y=Degrees(Scalar(52.0)),
+                        x=Degrees(Scalar(-8.0)),
+                    ),
+                    orbital_elements=LEO_ELEMENTS,
+                    epoch=Epoch(
+                        julian_date_from_greenwich(
+                            make_date(
+                                year=Year(2026),
+                                month=Month(8),
+                                day=Day(Scalar(27)),
+                            )
+                        )
+                    ),
+                    tolerance=Degrees(Scalar(5)),
+                    max_orbit_iterations=100,
+                ),
+            )[1],
+            37,
+        )
+
+        self.assertIsNone(
+            orbit_epoch_of_pass(
+                coords=GeographicCoordinates(
+                    y=Degrees(Scalar(52.0)),
+                    x=Degrees(Scalar(-8.0)),
+                ),
+                orbital_elements=LEO_ELEMENTS,
+                epoch=Epoch(
+                    julian_date_from_greenwich(
+                        make_date(
+                            year=Year(2026),
+                            month=Month(8),
+                            day=Day(Scalar(27)),
+                        )
+                    )
+                ),
+                tolerance=Degrees(Scalar(5)),
+                max_orbit_iterations=37,
+            )
+        )
+
+        self.assertIsNone(
+            orbit_epoch_of_pass(
+                orbital_elements=SATELLITE_EXAMPLE_ELEMENTS,
+                epoch=Epoch(
+                    julian_date_from_greenwich(
+                        make_date(
+                            year=Year(2026),
+                            month=Month(8),
+                            day=Day(Scalar(29)),
+                        )
+                    )
+                ),
+                coords=GeographicCoordinates(
+                    Degrees(Scalar(89)),
+                    Degrees(Scalar(0)),
+                ),
+            )
+        )
+
+        self.assertIsNone(
+            orbit_epoch_of_pass_full_date(
+                orbital_elements=SATELLITE_EXAMPLE_ELEMENTS,
+                epoch=Epoch(
+                    julian_date_from_greenwich(
+                        make_date(
+                            year=Year(2026),
+                            month=Month(8),
+                            day=Day(Scalar(29)),
+                        )
+                    )
+                ),
+                coords=GeographicCoordinates(
+                    Degrees(Scalar(89)),
+                    Degrees(Scalar(0)),
+                ),
+            ),
+        )
+
+        self.assertEqual(
+            orbit_epoch_of_pass_full_date(
+                coords=GeographicCoordinates(
+                    y=Degrees(Scalar(52.0)),
+                    x=Degrees(Scalar(-8.0)),
+                ),
+                orbital_elements=LEO_ELEMENTS,
+                epoch=Epoch(
+                    julian_date_from_greenwich(
+                        make_date(
+                            year=Year(2026),
+                            month=Month(8),
+                            day=Day(Scalar(27)),
+                        )
+                    )
+                ),
+                tolerance=Degrees(Scalar(5)),
+                max_orbit_iterations=100,
+            ),
+            FullDate(
+                date=Date(Year(2026), Month(8), Day(Scalar(30.049537249840796))),
+                time=Time(Hour(1), Minute(11), Second(Scalar(20.018386244773865))),
+            ),
         )
 
 

@@ -21,7 +21,7 @@ from afmaths.operation import DOUBLE, add, multiply, negate
 from afmaths.physics.space.astronomy.time_functions import (
     epoch_offset,
     greenwich_mean_sidereal_time_radians_from_julian_date,
-    j200_from_julian_Date,
+    j2000_from_julian_Date,
     seconds_from_minutes,
 )
 from afmaths.physics.space.type_conversion_helpers import make_vector2d, make_vector3d
@@ -43,7 +43,7 @@ def transform_vector_from_perifocal(
 def geographic_coordinates_from_itrf(
     itrf: PositionVector,
 ) -> GeographicCoordinates:
-    """Converts ITRS cartesian coordinates to geographic Lat/Lon (degrees). Useful for ground track plotting."""
+    """Converts ITRF cartesian coordinates to geographic Lat/Lon (degrees). Useful for ground track plotting."""
     return GeographicCoordinates(
         Degrees(
             Scalar(
@@ -57,12 +57,12 @@ def geographic_coordinates_from_itrf(
 
 
 def itrf_position_from_gmst_passive(
-    gmst: Radians, gcrs_position: PositionVector
+    gmst: Radians, gcrf_position: PositionVector
 ) -> PositionVector:
-    """Simplified conversion not taking into account any perturbations or time compatibility. Calculated using the passive rotation of the GCRS frame to the ITRF frame."""
+    """Simplified conversion not taking into account any perturbations or time compatibility. Calculated using the passive rotation of the GCRF frame to the ITRF frame."""
     itrf_position = orthonormal_frame_transform_3d(
         z_axis_passive_rotation(gmst),
-        make_vector3d(gcrs_position.x, gcrs_position.y, gcrs_position.z),
+        make_vector3d(gcrf_position.x, gcrf_position.y, gcrf_position.z),
     )
     return PositionVector(
         Position(itrf_position.x), Position(itrf_position.y), Position(itrf_position.z)
@@ -70,39 +70,40 @@ def itrf_position_from_gmst_passive(
 
 
 def itrf_position_from_gmst(
-    gmst: Radians, gcrs_position: PositionVector
+    gmst: Radians, gcrf_position: PositionVector
 ) -> PositionVector:
-    """Simplified conversion not taking into account any perturbations or time compatibility. Calculated using the active rotation of the GCRS frame to the ITRF frame."""
+    """Simplified conversion not taking into account any perturbations or time compatibility. Calculated using the active rotation of the GCRF frame to the ITRF frame."""
     itrf_position = orthonormal_frame_transform_3d(
         z_axis_active_rotation(gmst),
-        make_vector3d(gcrs_position.x, gcrs_position.y, gcrs_position.z),
+        make_vector3d(gcrf_position.x, gcrf_position.y, gcrf_position.z),
     )
     return PositionVector(
         Position(itrf_position.x), Position(itrf_position.y), Position(itrf_position.z)
     )
 
 
-def itrf_position_from_gcrs_position(
-    jd: JulianDate, gcrs_position: PositionVector
+def itrf_position_from_gcrf_position(
+    jd: JulianDate, gcrf_position: PositionVector
 ) -> PositionVector:
-    """Simplified conversion not taking into account any perturbations or time compatibility. Calculated using the active rotation of the GCRS frame to the ITRF frame."""
-    gmst = greenwich_mean_sidereal_time_radians_from_julian_date(jd)
-    return itrf_position_from_gmst_passive(gmst, gcrs_position)
+    """Simplified conversion not taking into account any perturbations or time compatibility. Calculated using the active rotation of the GCRF frame to the ITRF frame."""
+    return itrf_position_from_gmst_passive(
+        greenwich_mean_sidereal_time_radians_from_julian_date(jd), gcrf_position
+    )
 
 
-def itrf_positions_from_gcrs_position(
-    gcrs_positions: list[PositionVector],
+def itrf_positions_from_gcrf_position(
+    gcrf_positions: list[PositionVector],
     epoch: Epoch,
 ) -> list[PositionVector]:
-    """Converts a list of GCRS positions to ITRF positions, taking into account the epoch offset for each position based on its index in the list."""
+    """Converts a list of GCRF positions to ITRF positions, taking into account the epoch offset for each position based on its index in the list."""
     itrf_positions: list[PositionVector] = []
 
-    for minute, gcrs_position in enumerate(gcrs_positions):
+    for minute, gcrf_position in enumerate(gcrf_positions):
         offset_jd = epoch_offset(
             epoch, Second(Scalar(seconds_from_minutes(Minute(minute))))
         )
         itrf_positions.append(
-            itrf_position_from_gcrs_position(offset_jd, gcrs_position)
+            itrf_position_from_gcrf_position(offset_jd, gcrf_position)
         )
 
     return itrf_positions
@@ -203,8 +204,8 @@ def perifocal_to_reference_frame_matrix(
     """
     Build the transformation matrix from the orbit's perifocal frame (PQW) to the reference frame used by the orbital elements.
 
-    If Ω, i, ω are GCRS-referenced:
-        perifocal → GCRS
+    If Ω, i, ω are GCRF-referenced:
+        perifocal → GCRF
 
     If Ω, i, ω are EME2000-referenced:
         perifocal → EME2000

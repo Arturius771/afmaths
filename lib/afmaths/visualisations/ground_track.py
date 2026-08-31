@@ -8,7 +8,7 @@ from afmaths.afmath_types import GroundStation
 from afmaths.constants import EARTH_MU
 from afmaths.physics.space.astronomy.time_functions import (
     epoch_offset,
-    greenwich_full_Date_from_julian_date,
+    greenwich_full_date_from_julian_date,
     pretty_print_full_date,
 )
 from afmaths.physics.space.celestial_mechanics.celestial_mechanics import (
@@ -25,15 +25,17 @@ from afmaths.physics.space.celestial_mechanics.time import (
     time_since_periapsis_from_true_anomaly,
     time_to_true_anomaly,
 )
-from afmaths.physics.space.celestial_mechanics.utils import second_intervals_for_orbits
 from afmaths.physics.space.engineering.astrodynamics.ground_track import (
-    earth_geographic_coordinate_from_itrf,
     earth_start_of_orbit_coordinates,
+    geographic_coordinates_for_orbit,
 )
 from afmaths.physics.space.engineering.astrodynamics.utils import (
     orbit_description_from_elements,
 )
-from afmaths.physics.space.transformations import itrf_position_from_gcrs_position
+from afmaths.physics.space.transformations import (
+    geographic_coordinates_from_itrf,
+    itrf_position_from_gcrf_position,
+)
 from afmaths.visualisations.helpers import (
     PlotNode,
     add_plot_nodes,
@@ -42,7 +44,6 @@ from afmaths.visualisations.helpers import (
 )
 from astronomy_types import (
     Coordinate2D,
-    GeographicCoordinates,
     Scalar,
     Second,
 )
@@ -55,37 +56,6 @@ from orbit_source import (
 EARTH_IMAGE_PATH = Path(__file__).with_name("Earth-hires.jpg")
 
 
-def _geographic_coordinates(
-    orbit: Orbit,
-    orbit_count: float,
-    number_of_points: int,
-    time_interval: Second | None = None,
-) -> list[GeographicCoordinates]:
-    period = orbital_period(orbit.elements.semi_major_axis)
-    duration = Second(Scalar(period * orbit_count))
-
-    elapsed_times = second_intervals_for_orbits(
-        Second(Scalar(0)),
-        duration,
-        number_of_points,
-        time_interval,
-    )
-
-    return [
-        earth_geographic_coordinate_from_itrf(
-            itrf_position_from_gcrs_position(
-                epoch_offset(orbit.epoch, elapsed_time),
-                state_vector_at_time(
-                    orbit.elements,
-                    elapsed_time,
-                    EARTH_MU,
-                ).position,
-            )
-        )
-        for elapsed_time in elapsed_times
-    ]
-
-
 def visualisation_2d_ground_track(
     orbit: Orbit,
     orbit_count: float = 3,
@@ -95,8 +65,9 @@ def visualisation_2d_ground_track(
     lines: bool = False,
     number_of_points: int = 2000,
 ) -> go.Figure:
-    coordinates = _geographic_coordinates(
-        orbit,
+    coordinates = geographic_coordinates_for_orbit(
+        orbit.elements,
+        orbit.epoch,
         orbit_count,
         number_of_points,
         time_interval,
@@ -140,7 +111,7 @@ def visualisation_2d_ground_track(
         )
 
         marker_epochs = [
-            greenwich_full_Date_from_julian_date(
+            greenwich_full_date_from_julian_date(
                 epoch_offset(
                     orbit.epoch,
                     Second(Scalar(period * orbit_number)),
@@ -199,8 +170,9 @@ def visualisation_2d_ground_track_current_position(
 ) -> go.Figure:
     current_orbit = orbit_at_current_epoch(orbit)
 
-    coordinates = _geographic_coordinates(
-        current_orbit,
+    coordinates = geographic_coordinates_for_orbit(
+        current_orbit.elements,
+        current_orbit.epoch,
         orbit_count,
         number_of_points,
     )
@@ -220,8 +192,8 @@ def visualisation_2d_ground_track_current_position(
         apoapsis_true_anomaly(),
     )
 
-    perigee = earth_geographic_coordinate_from_itrf(
-        itrf_position_from_gcrs_position(
+    perigee = geographic_coordinates_from_itrf(
+        itrf_position_from_gcrf_position(
             epoch_offset(current_orbit.epoch, time_to_perigee),
             state_vector_at_time(
                 current_orbit.elements,
@@ -231,8 +203,8 @@ def visualisation_2d_ground_track_current_position(
         )
     )
 
-    apogee = earth_geographic_coordinate_from_itrf(
-        itrf_position_from_gcrs_position(
+    apogee = geographic_coordinates_from_itrf(
+        itrf_position_from_gcrf_position(
             epoch_offset(current_orbit.epoch, time_to_apogee),
             state_vector_at_time(
                 current_orbit.elements,
@@ -244,8 +216,8 @@ def visualisation_2d_ground_track_current_position(
 
     current_radius = orbital_radius_from_position_vector(current_state.position)
 
-    current_position = earth_geographic_coordinate_from_itrf(
-        itrf_position_from_gcrs_position(
+    current_position = geographic_coordinates_from_itrf(
+        itrf_position_from_gcrf_position(
             current_orbit.epoch,
             current_state.position,
         )
@@ -314,7 +286,7 @@ def visualisation_2d_ground_track_current_position(
                     ),
                     PlotNode(
                         name=("Position: " f"{pretty_print_full_date(
-                                greenwich_full_Date_from_julian_date(
+                                greenwich_full_date_from_julian_date(
                                     current_orbit.epoch
                                 ),
                                 show_timesystem=True,

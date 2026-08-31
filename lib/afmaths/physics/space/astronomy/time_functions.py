@@ -162,7 +162,7 @@ def julian_date_ut1_from_julian_date_utc(
 def julian_centuries_from_julian_date(julian_date: JulianDate) -> Scalar:
     """Calculates the number of Julian centuries that have elapsed since J2000.0. This is also known as T, the time argument."""
     # MSE SFM E03
-    return Scalar(j200_from_julian_Date(julian_date) / 36525.0)
+    return Scalar(j2000_from_julian_Date(julian_date) / 36525.0)
 
 
 def greenwich_date_from_julian(julian_date: JulianDate) -> Date:
@@ -193,7 +193,7 @@ def greenwich_date_from_julian(julian_date: JulianDate) -> Date:
     )
 
 
-def j200_from_julian_Date(julian_date: JulianDate) -> Epoch:
+def j2000_from_julian_Date(julian_date: JulianDate) -> Epoch:
     """Calculates the number of days that have elapsed since the J2000.0 epoch from a given Julian Date."""
     return epoch_from_julian_date(julian_date, negate(2451545.0))
 
@@ -346,7 +346,7 @@ def greenwich_sidereal_time_from_universal(universal_time_and_date: FullDate) ->
     time = universal_time_and_date.time
 
     julian_date = julian_date_from_greenwich(date)
-    s = j200_from_julian_Date(julian_date)
+    s = j2000_from_julian_Date(julian_date)
     t = float(s) / 36525.0
 
     t0 = 6.697374558 + (2400.051336 * t) + (0.000025862 * t**2)
@@ -365,7 +365,7 @@ def universal_time_from_greenwich(
     greenwich_sidereal_time = greenwich_date_and_sidereal_time.time
 
     julian_date = julian_date_from_greenwich(greenwich_date)
-    s = j200_from_julian_Date(julian_date)
+    s = j2000_from_julian_Date(julian_date)
     t = s / 36525.0
 
     t0 = 6.697374558 + (2400.051336 * t) + (0.000025862 * t**2)
@@ -502,7 +502,7 @@ def greenwich_apparent_sidereal_time_from_julian_date(
 
 def greenwich_mean_sidereal_time_radians_from_julian_date(jd: JulianDate) -> Radians:
     """Calculates the Greenwich Mean Sidereal Time (GMST) in radians from a given Julian Date."""
-    j200 = j200_from_julian_Date(jd)
+    j200 = j2000_from_julian_Date(jd)
     jd_centuries = j200 / 36525
     gmstDegrees = add(280.46061837)(
         add(multiply(360.98564736629)(j200))(
@@ -529,7 +529,7 @@ def earth_rotation_angle(jd: JulianDate) -> Radians:
             DOUBLE(
                 multiply(math.pi)(
                     add(0.7790572732640)(
-                        multiply(1.00273781191135448)(j200_from_julian_Date(jd))
+                        multiply(1.00273781191135448)(j2000_from_julian_Date(jd))
                     )
                 )
             )
@@ -580,7 +580,7 @@ def julian_date_delta(
     return JulianDate(Scalar(to_time - epoch))
 
 
-def greenwich_full_Date_from_julian_date(jd: JulianDate) -> FullDate:
+def greenwich_full_date_from_julian_date(jd: JulianDate) -> FullDate:
     date = greenwich_date_from_julian(jd)
     time = time_from_julian_date(jd)
     return FullDate(date, time)
