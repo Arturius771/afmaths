@@ -7,7 +7,7 @@ from pathlib import Path
 import plotly.graph_objects as go
 from PIL import Image
 
-from afmaths.constants import EARTH_RADIUS
+from afmaths.constants import EARTH_RADIUS, TWO_PI
 from afmaths.physics.space.celestial_mechanics.celestial_mechanics import EARTH_MU
 from afmaths.physics.space.celestial_mechanics.orbital_elements import (
     state_vector_at_time,
@@ -88,7 +88,7 @@ def _add_textured_earth(
     earth_radius = float(EARTH_RADIUS) * BODY_RADIUS_SCALE / DISTANCE_SCALE
 
     longitude_values = [
-        -math.pi + (2 * math.pi * longitude_index / (EARTH_TEXTURE_WIDTH - 1))
+        -math.pi + (TWO_PI * longitude_index / (EARTH_TEXTURE_WIDTH - 1))
         for longitude_index in range(EARTH_TEXTURE_WIDTH)
     ]
 

@@ -27,6 +27,7 @@ from afmaths.constants import (
     SECONDS_PER_HOUR,
     SECONDS_PER_MINUTE,
 )
+from afmaths.geometry.geometry import normalise_angle
 from afmaths.operation import (
     CUBE,
     DOUBLE,
@@ -526,14 +527,15 @@ def earth_rotation_angle(jd: JulianDate) -> Radians:
     # ISG lecture no. 2
     return Radians(
         Scalar(
-            DOUBLE(
-                multiply(math.pi)(
-                    add(0.7790572732640)(
-                        multiply(1.00273781191135448)(j2000_from_julian_Date(jd))
+            normalise_angle(
+                DOUBLE(
+                    multiply(math.pi)(
+                        add(0.7790572732640)(
+                            multiply(1.00273781191135448)(j2000_from_julian_Date(jd))
+                        )
                     )
                 )
             )
-            % DOUBLE(math.pi)
         )
     )
 

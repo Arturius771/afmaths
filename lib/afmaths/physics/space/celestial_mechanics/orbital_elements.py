@@ -4,6 +4,7 @@ from typing import Callable
 
 from afmaths.constants import (
     EARTH_MU,
+    TWO_PI,
     UNIT_VECTOR_XY_PLANE,
 )
 from afmaths.geometry.transformations import (
@@ -394,7 +395,7 @@ def oribtal_plane_position_at_true_anomaly(
 def argument_of_periapsis(
     theta: TrueAnomaly, latitude: Latitude
 ) -> ArgumentOfPeriapsis:
-    return subtract(theta)(latitude)
+    return ArgumentOfPeriapsis(normalise_angle(subtract(theta)(latitude)))
 
 
 # region Eccentricity
@@ -472,9 +473,7 @@ def right_ascension_of_ascending_node_from_angular_momentum_vector(
         return RightAscension(make_radians(math.acos(divide_by_vector_magnitude(n.x))))
     else:
         return RightAscension(
-            make_radians(
-                subtract(math.acos(divide_by_vector_magnitude(n.x)))(DOUBLE(math.pi))
-            )
+            make_radians(subtract(math.acos(divide_by_vector_magnitude(n.x)))(TWO_PI))
         )
 
 
@@ -503,7 +502,7 @@ def semi_major_axis_from_period(
     orbital_period: Second, mu: GravitationalParameter = EARTH_MU
 ) -> SemiMajorAxis:
     return exponentiate(divide_by(3)(2))(
-        divide_by(DOUBLE(math.pi))(multiply(square_root(mu))(orbital_period))
+        divide_by(TWO_PI)(multiply(square_root(mu))(orbital_period))
     )
 
 

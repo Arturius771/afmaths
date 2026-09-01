@@ -8,6 +8,7 @@ from afmaths.constants import (
     GRAVITATIONAL_CONSTANT,
     SECONDS_PER_DAY,
     SIDEREAL_DAY,
+    TWO_PI,
     UNIT_VECTOR_XY_PLANE,
 )
 from afmaths.geometry.transformations import (
@@ -458,7 +459,7 @@ def angular_momentum_magnitude_from_apsides(
 
 def angular_velocity_from_period(period: Second = SIDEREAL_DAY) -> Radians:
     """Calculates the angular velocity of a body given a period."""
-    return divide_by(period)(DOUBLE(math.pi))
+    return divide_by(period)(TWO_PI)
 
 
 # endregion

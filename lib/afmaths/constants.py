@@ -31,7 +31,7 @@ from astronomy_types import (
 )
 
 from afmaths.afmath_types import GroundStation
-from afmaths.operation import exponentiate, multiply, negate
+from afmaths.operation import DOUBLE, exponentiate, multiply, negate
 
 EARTH_MU_KM_CUBED = GravitationalParameter(Scalar(398_600.4418))  # km^3 / s^2
 EARTH_MU = GravitationalParameter(Scalar(3.986004418e14))  # m^3 / s^2
@@ -119,3 +119,4 @@ KILCUMMIN_GROUND_STATION = GroundStation(
     Distance(Scalar(5)),
 )
 ASTRONOMICAL_UNIT = Distance(Scalar(149_597_870_700))  # metres
+TWO_PI = DOUBLE(math.pi)

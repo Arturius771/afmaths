@@ -21,6 +21,7 @@ from astronomy_types import (
 )
 
 
+from afmaths.constants import TWO_PI
 from afmaths.geometry.geometry import circle_bounding_box
 from afmaths.operation import interval_points
 from afmaths.physics.space.type_conversion_helpers import make_vector3d
@@ -38,7 +39,7 @@ class PlotPerifocalOrbitLine:
     orbital_elements: OrbitalElements
     colour: str = "grey"
     start_eccentric_anomaly: float = 0.0
-    end_eccentric_anomaly: float = 2 * math.pi
+    end_eccentric_anomaly: float = TWO_PI
     show_secondary_focus: bool = False
 
 
@@ -404,7 +405,7 @@ def plot_sphere_surface(
     centre: PositionVector | None = None,
     resolution: int = 50,
 ) -> Vector3D:
-    u = interval_points(0, 2 * math.pi, resolution)
+    u = interval_points(0, TWO_PI, resolution)
     v = interval_points(0, math.pi, resolution)
 
     centre_x = 0 if centre is None else centre.x

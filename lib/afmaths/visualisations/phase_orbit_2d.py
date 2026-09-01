@@ -5,6 +5,7 @@ import math
 import plotly.graph_objects as go
 
 from afmaths.constants import EARTH_MU, EARTH_RADIUS, EARTH_RADIUS
+from afmaths.geometry.geometry import normalise_angle
 from afmaths.physics.space.celestial_mechanics.orbital_elements import (
     eccentric_anomaly_from_true_anomaly,
 )
@@ -22,7 +23,6 @@ from afmaths.afmath_types import DeltaV
 from afmaths.physics.space.type_conversion_helpers import make_eccentric_anomaly
 from afmaths.visualisations.base import (
     coordinates_for_elements,
-    normalise_angle_rad,
     plotted_radius_for_eccentric_anomaly,
     scale_orbital_elements_for_plot,
 )
@@ -74,7 +74,9 @@ def forward_true_anomaly_delta_rad(
         initial = 1 rad, desired = 2 rad -> 1 rad
         initial = 1 rad, desired = 5 rad -> 4 rad
     """
-    return normalise_angle_rad(desired_true_anomaly - initial_true_anomaly)
+    return normalise_angle(
+        Radians(Scalar(float(desired_true_anomaly) - float(initial_true_anomaly)))
+    )
 
 
 def phase_direction_label(
@@ -138,8 +140,8 @@ def align_phase_poi_to_initial_true_anomaly(
         else math.pi
     )
     poi_direction = original_orbit.argument_of_periapsis + initial_true_anomaly
-    phase_argument_of_periapsis = normalise_angle_rad(
-        poi_direction - phase_poi_true_anomaly
+    phase_argument_of_periapsis = normalise_angle(
+        Radians(Scalar(poi_direction - phase_poi_true_anomaly))
     )
 
     return replace(

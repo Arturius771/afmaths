@@ -7,6 +7,7 @@ from astronomy_types import (
     GeographicCoordinates,
     OrbitalElements,
     PositionVector,
+    Ratio,
     Scalar,
     Second,
     Inclination,
@@ -15,12 +16,15 @@ from astronomy_types import (
     Year,
 )
 
+from afmaths.afmath_types import Percentage
 from afmaths.constants import (
     EARTH_MU,
     SECONDS_PER_DAY,
 )
 from afmaths.operation import (
     negate,
+    normalised_percentage,
+    percentage,
 )
 from afmaths.physics.space.astronomy.time_functions import (
     epoch_offset,
@@ -159,7 +163,7 @@ def ground_track_passes_station(
     coords: GeographicCoordinates,
     ground_track: list[GeographicCoordinates],
     tolerance: Degrees = Degrees(Scalar(5)),
-) -> bool:
+) -> tuple[bool, Ratio]:
     """
     Determines if a ground track passes within a certain margin of a ground station.
 
@@ -171,14 +175,14 @@ def ground_track_passes_station(
     Returns:
         bool: True if the ground track passes within the tolerance of the ground station, False otherwise.
     """
-    for point in ground_track:
+    for index, point in enumerate(ground_track):
         lat_diff = abs(point.latitude - coords.latitude)
         lon_diff = abs(point.longitude - coords.longitude)
 
         if lat_diff <= tolerance and lon_diff <= tolerance:
-            return True
+            return True, normalised_percentage(percentage(index, len(ground_track)))
 
-    return False
+    return False, Ratio(Scalar(-1))
 
 
 def orbit_epoch_of_pass(
@@ -187,7 +191,7 @@ def orbit_epoch_of_pass(
     epoch: Epoch,
     tolerance: Degrees = Degrees(Scalar(5)),
     max_orbit_iterations: int = 50,
-) -> tuple[Epoch, int] | None:
+) -> tuple[Epoch, int, Ratio] | None:
     """
     Calculate the times when a satellite passes over a ground station based on its orbital elements and the ground station's location.
 
@@ -198,7 +202,7 @@ def orbit_epoch_of_pass(
         tolerance (Degrees): The tolerance in degrees for determining a pass.
         max_orbit_iterations (int): The maximum number of orbit iterations to attempt when calculating the pass.
     Returns:
-        tuple[Epoch, int] | None: The epoch representing the time of pass over the ground station and the iteration count, or None if no pass is found.
+        tuple[Epoch, int, Ratio] | None: The epoch representing the time of pass over the ground station, the iteration count, and the orbit percentage as a ratio, or None if no pass is found.
     """
     # Placeholder implementation. Actual implementation would require complex calculations
     # involving orbital mechanics and ground station visibility.
@@ -212,7 +216,8 @@ def orbit_epoch_of_pass(
                 )
             ),
         )
-        if ground_track_passes_station(
+
+        does_pass, orbit_percent = ground_track_passes_station(
             coords,
             geographic_coordinates_for_orbit(
                 orbital_elements,
@@ -221,11 +226,20 @@ def orbit_epoch_of_pass(
                 number_of_points=500,
             ),
             tolerance,
-        ):
+        )
+
+        if does_pass:
+            period = orbital_period(orbital_elements.semi_major_axis)
+
+            pass_elapsed_time = Second(
+                Scalar(iteration * float(period) + float(orbit_percent) * float(period))
+            )
+
             return (
-                epoch_offset_time,
+                epoch_offset(epoch, pass_elapsed_time),
                 iteration,
-            )  # Return the current epoch
+                orbit_percent,
+            )
 
     return None
 
@@ -235,7 +249,7 @@ def orbit_epoch_of_pass_full_date(
     orbital_elements: OrbitalElements,
     epoch: Epoch,
     tolerance: Degrees = Degrees(Scalar(5)),
-    max_orbit_iterations: int = 100,
+    max_orbit_iterations: int = 50,
 ) -> FullDate | None:
     """
     Calculate the full date when a satellite passes over a ground station based on its orbital elements and the ground station's location.

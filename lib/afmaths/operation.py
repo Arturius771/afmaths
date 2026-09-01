@@ -1,6 +1,6 @@
 import math
 from typing import Callable
-from astronomy_types import Coordinate2D, Ratio
+from astronomy_types import Coordinate2D, Ratio, Scalar
 
 from afmaths.afmath_types import Percentage
 
@@ -169,9 +169,19 @@ def product(
     return total
 
 
+def percentage(value: float, max: float) -> Percentage:
+    """Calculates the percentage of a value relative to a maximum."""
+    return percentage_from_ratio(ratio(value)(max))
+
+
 def percentage_from_ratio(ratio: Ratio) -> Percentage:
     """Converts a ratio to a percentage."""
     return multiply(100)(ratio)
+
+
+def normalised_percentage(percentage: Percentage) -> Ratio:
+    """Converts a percentage in [0, 100] to a ratio in [0, 1]."""
+    return Ratio(Scalar(percentage / 100))
 
 
 def sigmoid(input: float, bias: float = 0) -> float:

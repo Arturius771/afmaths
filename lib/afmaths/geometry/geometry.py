@@ -11,6 +11,7 @@ from astronomy_types import (
     SemiMajorAxis,
     SemiMinorAxis,
 )
+from afmaths.constants import TWO_PI
 from afmaths.tensors import (
     vector_magnitude,
     vector_magnitude_3d,
@@ -98,7 +99,7 @@ def sieve_of_eratosthenes(n: int) -> list[int]:
 
 def normalise_angle(angle: Radians) -> Radians:
     """Normalises an angle in radians to the range [0, 2π)."""
-    return make_radians(float(angle) % (2 * math.pi))
+    return make_radians(float(angle) % TWO_PI)
 
 
 def calculate_distance(coord1: Coordinate2D, coord2: Coordinate2D) -> Distance:
@@ -294,7 +295,7 @@ def ellipse_bounding_box(
 
 def generate_angles_on_circle(resolution: int) -> list[Radians]:
     angles = []
-    for val in interval_points(0, DOUBLE(math.pi), resolution):
+    for val in interval_points(0, TWO_PI, resolution):
         angles.append(Radians(Scalar(val)))
 
     return angles

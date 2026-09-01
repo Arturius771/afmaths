@@ -26,7 +26,7 @@ from astronomy_types import (
     VelocityVector,
 )
 from plotly.basedatatypes import BaseTraceType
-from afmaths.constants import EARTH_RADIUS
+from afmaths.constants import EARTH_RADIUS, TWO_PI
 from afmaths.geometry.geometry import semi_minor_axis
 from afmaths.geometry.transformations import translate_ellipse
 from afmaths.physics.space.celestial_mechanics.celestial_mechanics import (
@@ -101,12 +101,6 @@ class OrbitPlotSettings:
     @property
     def time_offset_seconds(self) -> Second:
         return Second(Scalar(seconds_from_python_timedelta(self.time_offset)))
-
-
-# Subject: angle normalisation.
-# Generic radian normalisation for visualisation logic that compares orbit angles.
-def normalise_angle_rad(angle: float) -> float:
-    return angle % (2 * math.pi)
 
 
 # Subject: plot-unit adapter for orbital elements.
@@ -355,7 +349,7 @@ def orbit_plot_coordinates(
         plot_coordinate_for_true_anomaly(
             primary_focus_plot_coordinate,
             elements,
-            make_true_anomaly(2 * math.pi * index / resolution),
+            make_true_anomaly(TWO_PI * index / resolution),
         )
         for index in range(resolution + 1)
     ]
@@ -460,7 +454,7 @@ def transfer_arc_angles(
     end = float(arrival_eccentric_anomaly)
 
     if end <= start:
-        return start, end + 2 * math.pi
+        return start, end + TWO_PI
 
     return start, end
 

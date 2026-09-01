@@ -29,6 +29,7 @@ from afmaths.physics.space.engineering.astrodynamics.ground_track import (
     earth_start_of_orbit_coordinates,
     geographic_coordinates_for_orbit,
     orbit_epoch_of_pass,
+    orbit_epoch_of_pass_full_date,
 )
 from afmaths.physics.space.engineering.astrodynamics.utils import (
     orbit_description_from_elements,
@@ -233,20 +234,18 @@ def visualisation_2d_ground_track_current_position(
         Scalar(ground_station.coordinates.latitude),
     )
 
-    orbits_to_pass = orbit_epoch_of_pass(
+    predicted_pass = orbit_epoch_of_pass_full_date(
         geographic_coordinates_from_coordinate2d(ground_station_coordinate),
         current_orbit.elements,
         current_orbit.epoch,
         tolerance=Degrees(Scalar(1)),
-        max_orbit_iterations=1000,
+        max_orbit_iterations=50,
     )
 
-    if orbits_to_pass is None:
-        pass_epoch = "N/A"
-        pass_orbits = "N/A"
+    if predicted_pass is None:
+        pass_date = "N/A"
     else:
-        pass_epoch = f"{orbits_to_pass[0]:.2f}"
-        pass_orbits = str(orbits_to_pass[1])
+        pass_date = pretty_print_full_date(predicted_pass)
 
     return with_data_background_image(
         figure_circle(
@@ -276,9 +275,7 @@ def visualisation_2d_ground_track_current_position(
                         name=f"Ground Station: {ground_station.name or 'Unnamed'}",
                         coordinate=ground_station_coordinate,
                         text=(
-                            f"Ground Station: {ground_station.name or 'Unnamed'}, "
-                            f"orbit epoch of pass {pass_epoch} JD "
-                            f"in {pass_orbits} orbits"
+                            f"Ground Station: {ground_station.name or 'Unnamed'} | Predicted pass: {pass_date}"
                         ),
                         size=5,
                         symbol="circle",

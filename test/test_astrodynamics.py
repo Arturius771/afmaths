@@ -45,6 +45,7 @@ from astronomy_types import (
     Position,
     PositionVector,
     Radians,
+    Ratio,
     Scalar,
     Second,
     SemiMajorAxis,
@@ -361,10 +362,10 @@ class AstrodynamicsTestMethods(unittest.TestCase):
 
         self.assertAlmostEqual(
             cast(
-                tuple[Epoch, int],
+                tuple[Epoch, int, Ratio],
                 result,
             )[0],
-            2461307.2633208544,
+            2461310.14881279,
         )
 
         self.assertEqual(
@@ -471,8 +472,8 @@ class AstrodynamicsTestMethods(unittest.TestCase):
                 max_orbit_iterations=100,
             ),
             FullDate(
-                date=Date(Year(2026), Month(8), Day(Scalar(30.049537249840796))),
-                time=Time(Hour(1), Minute(11), Second(Scalar(20.018386244773865))),
+                date=Date(Year(2026), Month(8), Day(Scalar(30.111517033539712))),
+                time=Time(Hour(2), Minute(40), Second(Scalar(35.07169783115387))),
             ),
         )
 
