@@ -2,7 +2,7 @@ from dataclasses import replace
 import math
 
 from afmaths.operation import negate, subtract
-from afmaths.physics.space.celestial_mechanics.orbital_elements import (
+from afmaths.physics.space.celestial_mechanics.state_vector import (
     perifocal_position_vector,
 )
 from astronomy_types import (

@@ -14,6 +14,7 @@ from ground_track import (
 )
 from itrf_orbit_3d import visualisation_3d_itrf
 from orbit_source import Orbit
+from state_vectors import build_position_vector_figure, build_velocity_vector_figure
 
 
 def build_control_room_figures(
@@ -38,12 +39,14 @@ def build_control_room_figures(
             orbits,
             track_for_orbits=total_orbits,
         ),
+        visualisation_3d_satellite_earth(orbits),
+        build_position_vector_figure(selected_orbit.elements, int(total_orbits)),
+        build_velocity_vector_figure(selected_orbit.elements, int(total_orbits)),
         visualisation_2d_ground_track_current_position(
             orbit=selected_orbit,
             ground_station=ground_station,
             orbit_count=total_current_orbits,
         ),
-        visualisation_3d_satellite_earth(orbits),
     ]
 
 

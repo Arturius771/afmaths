@@ -5,6 +5,7 @@ from astronomy_types import (
     Epoch,
     FullDate,
     GeographicCoordinates,
+    GravitationalParameter,
     OrbitalElements,
     PositionVector,
     Ratio,
@@ -29,12 +30,19 @@ from afmaths.operation import (
 from afmaths.physics.space.astronomy.time_functions import (
     epoch_offset,
     greenwich_full_date_from_julian_date,
-    julian_date_from_greenwich,
 )
 from afmaths.physics.space.celestial_mechanics.orbital_elements import (
-    state_vector_at_time,
+    apoapsis_true_anomaly,
+    periapsis_true_anomaly,
 )
-from afmaths.physics.space.celestial_mechanics.time import orbital_period
+
+from afmaths.physics.space.celestial_mechanics.state_vector import (
+    position_vector_at_time,
+)
+from afmaths.physics.space.celestial_mechanics.time import (
+    orbital_period,
+    time_to_true_anomaly,
+)
 from afmaths.physics.space.celestial_mechanics.utils import second_intervals_for_orbits
 from afmaths.physics.space.transformations import (
     itrf_position_from_gcrf_position,
@@ -90,11 +98,11 @@ def geographic_coordinates_for_orbit(
         geographic_coordinates_from_itrf(
             itrf_position_from_gcrf_position(
                 epoch_offset(epoch, elapsed_time),
-                state_vector_at_time(
+                position_vector_at_time(
                     orbit,
                     elapsed_time,
                     EARTH_MU,
-                ).position,
+                ),
             )
         )
         for elapsed_time in elapsed_times
@@ -121,10 +129,10 @@ def earth_start_of_orbit_coordinates(
         elapsed_time = Second(Scalar(orbit_index * float(period)))
 
         # GCRF because the elements are derived from the GCRF frame.
-        gcrf_intertial_position = state_vector_at_time(
+        gcrf_intertial_position = position_vector_at_time(
             orbital_elements,
             elapsed_time,
-        ).position
+        )
 
         itrf_position = itrf_position_from_gcrf_position(
             epoch_offset(epoch, elapsed_time),
@@ -261,3 +269,46 @@ def orbit_epoch_of_pass_full_date(
         return greenwich_full_date_from_julian_date(result[0])
 
     return None
+
+
+def perigee_coordinates(
+    epoch: Epoch,
+    orbit: OrbitalElements,
+    mu: GravitationalParameter = EARTH_MU,
+) -> GeographicCoordinates:
+    """
+    Calculate the geographic coordinates of the perigee of a satellite's orbit.
+    """
+    time_to_perigee = time_to_true_anomaly(
+        orbit,
+        periapsis_true_anomaly(),
+    )
+
+    return geographic_coordinates_from_itrf(
+        itrf_position_from_gcrf_position(
+            epoch_offset(epoch, time_to_perigee),
+            position_vector_at_time(orbit, time_to_perigee, mu),
+        )
+    )
+
+
+def apogee_coordinates(
+    epoch: Epoch,
+    orbit: OrbitalElements,
+    mu: GravitationalParameter = EARTH_MU,
+) -> GeographicCoordinates:
+    """
+    Calculate the geographic coordinates of the apogee of a satellite's orbit.
+    """
+
+    time_to_apogee = time_to_true_anomaly(
+        orbit,
+        apoapsis_true_anomaly(),
+    )
+
+    return geographic_coordinates_from_itrf(
+        itrf_position_from_gcrf_position(
+            epoch_offset(epoch, time_to_apogee),
+            position_vector_at_time(orbit, time_to_apogee, mu),
+        )
+    )

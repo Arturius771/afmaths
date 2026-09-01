@@ -9,8 +9,8 @@ from PIL import Image
 
 from afmaths.constants import EARTH_RADIUS, TWO_PI
 from afmaths.physics.space.celestial_mechanics.celestial_mechanics import EARTH_MU
-from afmaths.physics.space.celestial_mechanics.orbital_elements import (
-    state_vector_at_time,
+from afmaths.physics.space.celestial_mechanics.state_vector import (
+    position_vector_at_time,
 )
 from afmaths.physics.space.celestial_mechanics.time import orbital_period
 from afmaths.physics.space.engineering.astrodynamics.utils import (
@@ -166,11 +166,11 @@ def visualisation_3d_itrf(
         )
 
         gcrf_positions = [
-            state_vector_at_time(
+            position_vector_at_time(
                 orbit.elements,
                 Second(Scalar(second)),
                 EARTH_MU,
-            ).position
+            )
             for second in range(
                 0,
                 int(track_for_seconds),

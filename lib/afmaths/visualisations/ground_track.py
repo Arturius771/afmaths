@@ -15,21 +15,18 @@ from afmaths.physics.space.celestial_mechanics.celestial_mechanics import (
     orbital_radius_from_position_vector,
     vis_viva,
 )
-from afmaths.physics.space.celestial_mechanics.orbital_elements import (
-    apoapsis_true_anomaly,
-    periapsis_true_anomaly,
-    state_vector_at_time,
-)
+
+from afmaths.physics.space.celestial_mechanics.state_vector import state_vector_at_time
 from afmaths.physics.space.celestial_mechanics.time import (
     orbital_period,
     time_since_periapsis_from_true_anomaly,
-    time_to_true_anomaly,
 )
 from afmaths.physics.space.engineering.astrodynamics.ground_track import (
+    apogee_coordinates,
     earth_start_of_orbit_coordinates,
     geographic_coordinates_for_orbit,
-    orbit_epoch_of_pass,
     orbit_epoch_of_pass_full_date,
+    perigee_coordinates,
 )
 from afmaths.physics.space.engineering.astrodynamics.utils import (
     orbit_description_from_elements,
@@ -189,35 +186,16 @@ def visualisation_2d_ground_track_current_position(
         EARTH_MU,
     )
 
-    time_to_perigee = time_to_true_anomaly(
+    perigee = perigee_coordinates(
+        current_orbit.epoch,
         current_orbit.elements,
-        periapsis_true_anomaly(),
-    )
-    time_to_apogee = time_to_true_anomaly(
-        current_orbit.elements,
-        apoapsis_true_anomaly(),
+        EARTH_MU,
     )
 
-    perigee = geographic_coordinates_from_itrf(
-        itrf_position_from_gcrf_position(
-            epoch_offset(current_orbit.epoch, time_to_perigee),
-            state_vector_at_time(
-                current_orbit.elements,
-                time_to_perigee,
-                EARTH_MU,
-            ).position,
-        )
-    )
-
-    apogee = geographic_coordinates_from_itrf(
-        itrf_position_from_gcrf_position(
-            epoch_offset(current_orbit.epoch, time_to_apogee),
-            state_vector_at_time(
-                current_orbit.elements,
-                time_to_apogee,
-                EARTH_MU,
-            ).position,
-        )
+    apogee = apogee_coordinates(
+        current_orbit.epoch,
+        current_orbit.elements,
+        EARTH_MU,
     )
 
     current_radius = orbital_radius_from_position_vector(current_state.position)

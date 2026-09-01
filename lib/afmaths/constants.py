@@ -33,14 +33,64 @@ from astronomy_types import (
 from afmaths.afmath_types import GroundStation
 from afmaths.operation import DOUBLE, exponentiate, multiply, negate
 
+ITRF_EXAMPLE_POSITION: list[Coordinate3D[Scalar]] = [
+    Coordinate3D(x=Scalar(6790.0), y=Scalar(0.0), z=Scalar(0.0)),
+    Coordinate3D(x=Scalar(0.0), y=Scalar(6790.0), z=Scalar(0.0)),
+    Coordinate3D(x=Scalar(-6790.0), y=Scalar(0.0), z=Scalar(0.0)),
+    Coordinate3D(x=Scalar(0.0), y=Scalar(-6790.0), z=Scalar(0.0)),
+    Coordinate3D(x=Scalar(4153.518707), y=Scalar(732.377413), z=Scalar(5321.278575)),
+    Coordinate3D(x=Scalar(1091.593504), y=Scalar(-4073.882417), z=Scalar(5321.278575)),
+    Coordinate3D(
+        x=Scalar(-3230.864009), y=Scalar(-2711.016798), z=Scalar(-5321.278575)
+    ),
+    Coordinate3D(x=Scalar(2982.288913), y=Scalar(2982.288913), z=Scalar(-5321.278575)),
+]
+ISS_TLE_EXAMPLE = (
+    "1 25544U 98067A   26191.34711344  .00005681  00000-0  11131-3 0  9996"
+    "2 25544  51.6302 185.4700 0006688 278.6359  81.3872 15.48968037575346"
+)
+KILCUMMIN_GROUND_STATION = GroundStation(
+    GeographicCoordinates(
+        Degrees(Scalar(52.0893239)),
+        Degrees(Scalar(-9.4662089)),
+    ),
+    "Kilcummin, Ireland",
+    Distance(Scalar(5)),
+)
+
+# region Maths
+
+UNIT_VECTOR_XY_PLANE = Vector3D[Scalar](Scalar(0), Scalar(0), Scalar(1))
+TWO_PI = DOUBLE(math.pi)
+
+# region Astrophysics
+SPEED_OF_LIGHT_METRES_PER_SECONDS = 299792458
+PLANCK_CONSTANT = multiply(6.62607004)(exponentiate(negate(34))(10))
+GRAVITATIONAL_CONSTANT = multiply(6.67430)(exponentiate(negate(11))(10))  # 6.67430e-11
+STANDARD_GRAVITY = Acceleration(Scalar(9.80665))  # m/s
+STEFAN_BOLTZMANN_CONSTANT = multiply(5.670367)(exponentiate(negate(8))(10))
+SECONDS_PER_DAY = Second(Scalar(86400))
+MINUTES_PER_DAY = Minute(1440)
+HOURS_PER_DAY = Hour(24)
+SECONDS_PER_MINUTE = Second(Scalar(60))
+SECONDS_PER_HOUR = Second(Scalar(3600))
+MEAN_SOLAR_DAY = Second(Scalar(86400))
+SIDEREAL_DAY = Second(Scalar(86164.0905))
+ASTRONOMICAL_UNIT = Distance(Scalar(149_597_870_700))  # metres
 EARTH_MU_KM_CUBED = GravitationalParameter(Scalar(398_600.4418))  # km^3 / s^2
 EARTH_MU = GravitationalParameter(Scalar(3.986004418e14))  # m^3 / s^2
+KERBIN_MU = GravitationalParameter(
+    Scalar(3.5316000e12)
+)  # m^3 / s^2  3.5316000×10^12 m³/s²
 SUN_MU = GravitationalParameter(Scalar(1.32712440018e20))  # m^3 / s^2
 EARTH_RADIUS = Distance(Scalar(6_378_137.0))  # m
 EARTH_RADIUS_KM = Distance(Scalar(6378.0))  # km
 EARTH_ANGULAR_VELOCITY = Radians(
     Scalar((multiply(exponentiate(negate(5))(10))(7.29115)))
 )
+
+# region Orbital Elements
+
 MOON_ELEMENTS = OrbitalElements(
     Inclination(Radians(Scalar(0.08956146531375098))),
     RightAscension(Radians(Scalar(5.765000161307142))),
@@ -73,28 +123,8 @@ LEO_ELEMENTS = OrbitalElements(
     Eccentricity(Ratio(Scalar(0.05449006))),
     TrueAnomaly(Anomaly(Radians(Scalar(1)))),
 )
-SPEED_OF_LIGHT_METRES_PER_SECONDS = 299792458
-PLANCK_CONSTANT = multiply(6.62607004)(exponentiate(negate(34))(10))
-GRAVITATIONAL_CONSTANT = multiply(6.67430)(exponentiate(negate(11))(10))  # 6.67430e-11
-STANDARD_GRAVITY = Acceleration(Scalar(9.80665))  # m/s
-STEFAN_BOLTZMANN_CONSTANT = multiply(5.670367)(exponentiate(negate(8))(10))
-UNIT_VECTOR_XY_PLANE = Vector3D[Scalar](Scalar(0), Scalar(0), Scalar(1))
-ITRF_EXAMPLE_POSITION: list[Coordinate3D[Scalar]] = [
-    Coordinate3D(x=Scalar(6790.0), y=Scalar(0.0), z=Scalar(0.0)),
-    Coordinate3D(x=Scalar(0.0), y=Scalar(6790.0), z=Scalar(0.0)),
-    Coordinate3D(x=Scalar(-6790.0), y=Scalar(0.0), z=Scalar(0.0)),
-    Coordinate3D(x=Scalar(0.0), y=Scalar(-6790.0), z=Scalar(0.0)),
-    Coordinate3D(x=Scalar(4153.518707), y=Scalar(732.377413), z=Scalar(5321.278575)),
-    Coordinate3D(x=Scalar(1091.593504), y=Scalar(-4073.882417), z=Scalar(5321.278575)),
-    Coordinate3D(
-        x=Scalar(-3230.864009), y=Scalar(-2711.016798), z=Scalar(-5321.278575)
-    ),
-    Coordinate3D(x=Scalar(2982.288913), y=Scalar(2982.288913), z=Scalar(-5321.278575)),
-]
-ISS_TLE_EXAMPLE = (
-    "1 25544U 98067A   26191.34711344  .00005681  00000-0  11131-3 0  9996"
-    "2 25544  51.6302 185.4700 0006688 278.6359  81.3872 15.48968037575346"
-)
+
+# region Norad IDs
 ISS_NORAD_ID = 25544
 GALILEO_7_NORAD_ID = 40544
 MOLNIYA_3_50_NORAD_ID = 25847
@@ -103,20 +133,3 @@ BEIDOU_IGSO_6 = 41434
 ARIANE_6_FM1_UPPER = 60235
 TERRA_SAR = 31698
 JAMES_WEBB = 50463
-SECONDS_PER_DAY = Second(Scalar(86400))
-MINUTES_PER_DAY = Minute(1440)
-HOURS_PER_DAY = Hour(24)
-SECONDS_PER_MINUTE = Second(Scalar(60))
-SECONDS_PER_HOUR = Second(Scalar(3600))
-MEAN_SOLAR_DAY = Second(Scalar(86400))
-SIDEREAL_DAY = Second(Scalar(86164.0905))
-KILCUMMIN_GROUND_STATION = GroundStation(
-    GeographicCoordinates(
-        Degrees(Scalar(52.0893239)),
-        Degrees(Scalar(-9.4662089)),
-    ),
-    "Kilcummin, Ireland",
-    Distance(Scalar(5)),
-)
-ASTRONOMICAL_UNIT = Distance(Scalar(149_597_870_700))  # metres
-TWO_PI = DOUBLE(math.pi)

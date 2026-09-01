@@ -45,8 +45,9 @@ from afmaths.physics.space.celestial_mechanics.orbital_elements import (
     eccentric_anomaly_solved,
     newtons_method_eccentric_anomaly,
     orbital_elements_from_state_vectors,
-    state_vector_at_time,
 )
+
+from afmaths.physics.space.celestial_mechanics.state_vector import state_vector_at_time
 from afmaths.physics.space.celestial_mechanics.time import (
     rate_of_change_true_anomaly,
     time_to_eccentric_anomaly,

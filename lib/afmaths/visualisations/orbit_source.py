@@ -13,8 +13,9 @@ from afmaths.physics.space.astronomy.time_functions import (
 )
 from afmaths.physics.space.celestial_mechanics.orbital_elements import (
     orbital_elements_from_state_vectors,
-    state_vector_at_time,
 )
+
+from afmaths.physics.space.celestial_mechanics.state_vector import state_vector_at_time
 from afmaths.physics.space.celestial_mechanics.time import orbital_period
 from afmaths.physics.space.engineering.astrodynamics.ground_track import orbits_per_day
 from afmaths.physics.space.engineering.two_line_elements import (

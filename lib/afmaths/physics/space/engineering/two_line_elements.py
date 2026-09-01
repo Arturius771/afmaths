@@ -36,8 +36,10 @@ from afmaths.physics.space.celestial_mechanics.orbital_elements import (
     eccentric_anomaly_solved,
     newtons_method_eccentric_anomaly,
     semi_major_axis_from_period,
-    state_vector_from_orbital_elements,
     true_anomaly_from_eccentric_anomaly,
+)
+from afmaths.physics.space.celestial_mechanics.state_vector import (
+    state_vector_from_orbital_elements,
 )
 from afmaths.physics.space.celestial_mechanics.time import (
     orbital_period,

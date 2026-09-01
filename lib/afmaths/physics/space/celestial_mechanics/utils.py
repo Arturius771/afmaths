@@ -2,7 +2,6 @@ from dataclasses import replace
 from afmaths.geometry.geometry import generate_angles_on_circle
 from afmaths.operation import interval_points
 from afmaths.physics.space.celestial_mechanics.orbital_elements import (
-    state_vector_at_time,
     true_anomaly_from_eccentric_anomaly,
 )
 from afmaths.physics.space.celestial_mechanics.celestial_mechanics import EARTH_MU
@@ -18,6 +17,10 @@ from astronomy_types import (
     PositionVector,
 )
 
+from afmaths.physics.space.celestial_mechanics.state_vector import (
+    position_vector_at_time,
+)
+
 
 def generate_all_orbit_positions(
     orbital_elements: OrbitalElements,
@@ -30,7 +33,7 @@ def generate_all_orbit_positions(
     position_list = []
     for E in generate_angles_on_circle(resolution):
         position_list.append(
-            state_vector_at_time(
+            position_vector_at_time(
                 replace(
                     orbital_elements,
                     true_anomaly=true_anomaly_from_eccentric_anomaly(
@@ -39,7 +42,7 @@ def generate_all_orbit_positions(
                     ),
                 ),
                 mu=gravitational_parameter,
-            ).position
+            )
         )
     return position_list
 

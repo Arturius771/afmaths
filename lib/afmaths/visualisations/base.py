@@ -36,10 +36,14 @@ from afmaths.physics.space.celestial_mechanics.nodes import (
     perifocal_position_at_ascending_node,
     perifocal_position_at_descending_node,
 )
+
+
 from afmaths.physics.space.celestial_mechanics.orbital_elements import (
     apoapsis_true_anomaly,
     orbital_elements_from_state_vectors,
     periapsis_true_anomaly,
+)
+from afmaths.physics.space.celestial_mechanics.state_vector import (
     perifocal_position_vector,
     state_vector_at_time,
 )
@@ -56,13 +60,6 @@ from afmaths.physics.space.type_conversion_helpers import (
 )
 from afmaths.visualisations.helpers import (
     PlotNode,
-    PlotOrbital2DSettings,
-    add_plot_nodes,
-    figure_layout,
-    figure_orbit_line,
-    plot_origin,
-    plot_max,
-    plot_min,
     scale_position,
     distance_to_scale_distance,
 )
