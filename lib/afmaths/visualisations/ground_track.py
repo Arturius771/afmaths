@@ -213,7 +213,12 @@ def visualisation_2d_ground_track_current_position(
     )
 
     predicted_pass = orbit_epoch_of_pass_full_date(
-        geographic_coordinates_from_coordinate2d(ground_station_coordinate),
+        geographic_coordinates_from_coordinate2d(
+            Coordinate2D(
+                x=Scalar(ground_station.coordinates.latitude),
+                y=Scalar(ground_station.coordinates.longitude),
+            )
+        ),
         current_orbit.elements,
         current_orbit.epoch,
         tolerance=Degrees(Scalar(1)),

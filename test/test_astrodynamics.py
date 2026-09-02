@@ -373,8 +373,7 @@ class AstrodynamicsTestMethods(unittest.TestCase):
                 tuple[Epoch, int],
                 orbit_epoch_of_pass(
                     coords=GeographicCoordinates(
-                        y=Degrees(Scalar(52.0)),
-                        x=Degrees(Scalar(-8.0)),
+                        y=Degrees(Scalar(-8.0)), x=Degrees(Scalar(52.0))
                     ),
                     orbital_elements=LEO_ELEMENTS,
                     epoch=Epoch(
@@ -396,8 +395,8 @@ class AstrodynamicsTestMethods(unittest.TestCase):
         self.assertIsNone(
             orbit_epoch_of_pass(
                 coords=GeographicCoordinates(
-                    y=Degrees(Scalar(52.0)),
-                    x=Degrees(Scalar(-8.0)),
+                    y=Degrees(Scalar(-8.0)),
+                    x=Degrees(Scalar(52.0)),
                 ),
                 orbital_elements=LEO_ELEMENTS,
                 epoch=Epoch(
@@ -427,8 +426,8 @@ class AstrodynamicsTestMethods(unittest.TestCase):
                     )
                 ),
                 coords=GeographicCoordinates(
-                    Degrees(Scalar(89)),
                     Degrees(Scalar(0)),
+                    Degrees(Scalar(89)),
                 ),
             )
         )
@@ -446,8 +445,8 @@ class AstrodynamicsTestMethods(unittest.TestCase):
                     )
                 ),
                 coords=GeographicCoordinates(
-                    Degrees(Scalar(89)),
                     Degrees(Scalar(0)),
+                    Degrees(Scalar(89)),
                 ),
             ),
         )
@@ -455,8 +454,8 @@ class AstrodynamicsTestMethods(unittest.TestCase):
         self.assertEqual(
             orbit_epoch_of_pass_full_date(
                 coords=GeographicCoordinates(
-                    y=Degrees(Scalar(52.0)),
-                    x=Degrees(Scalar(-8.0)),
+                    Degrees(Scalar(52.0)),
+                    Degrees(Scalar(-8.0)),
                 ),
                 orbital_elements=LEO_ELEMENTS,
                 epoch=Epoch(

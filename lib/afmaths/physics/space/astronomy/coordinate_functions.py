@@ -1,5 +1,5 @@
 import math
-
+from astronomy_types import GeographicCoordinates
 from afmaths.constants import HOURS_PER_DAY
 from afmaths.geometry.geometry import normalise_angle
 from afmaths.physics.space.type_conversion_helpers import (
@@ -35,6 +35,15 @@ from astronomy_types import (
     RightAscension,
     Scalar,
 )
+
+
+def make_geographic_coordinates(
+    latitude_deg: float, longitude_deg: float
+) -> GeographicCoordinates:
+    """Creates Geographic Coordinates from given Latitude and Longitude."""
+    return GeographicCoordinates(
+        y=(Degrees(Scalar(latitude_deg))), x=Degrees(Scalar(longitude_deg))
+    )
 
 
 def hour_angle(

@@ -91,8 +91,8 @@ class CoordinateCorrectionTestMethods(unittest.TestCase):
         )
 
         location = GeographicCoordinates(
-            Radians(radians_from_degrees(Degrees(Scalar(30)))),
             Radians(radians_from_degrees(Degrees(Scalar(64)))),
+            Radians(radians_from_degrees(Degrees(Scalar(30)))),
         )
 
         greenwich_date = Date(

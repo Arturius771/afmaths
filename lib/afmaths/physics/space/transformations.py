@@ -43,16 +43,19 @@ def transform_vector_from_perifocal(
 def geographic_coordinates_from_itrf(
     itrf: PositionVector,
 ) -> GeographicCoordinates:
-    """Converts ITRF cartesian coordinates to geographic Lat/Lon (degrees). Useful for ground track plotting."""
+    """Converts ITRF cartesian coordinates to geographic coordinates."""
     return GeographicCoordinates(
-        Degrees(
+        x=Degrees(Scalar(math.degrees(math.atan2(itrf.y, itrf.x)))),
+        y=Degrees(
             Scalar(
                 math.degrees(
-                    math.atan2(itrf.z, vector_magnitude(make_vector2d(itrf.x, itrf.y)))
+                    math.atan2(
+                        itrf.z,
+                        vector_magnitude(make_vector2d(itrf.x, itrf.y)),
+                    )
                 )
             )
         ),
-        Degrees(Scalar(math.degrees(math.atan2(itrf.y, itrf.x)))),
     )
 
 

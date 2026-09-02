@@ -51,8 +51,8 @@ ISS_TLE_EXAMPLE = (
 )
 KILCUMMIN_GROUND_STATION = GroundStation(
     GeographicCoordinates(
-        Degrees(Scalar(52.0893239)),
         Degrees(Scalar(-9.4662089)),
+        Degrees(Scalar(52.0893239)),
     ),
     "Kilcummin, Ireland",
     Distance(Scalar(5)),

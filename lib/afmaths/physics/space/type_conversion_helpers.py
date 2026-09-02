@@ -119,8 +119,8 @@ def radian_geographic_coordinates_from_degrees(
 ) -> GeographicCoordinates:
     """Converts GeographicCoordinates from degrees to radians."""
     return GeographicCoordinates(
-        x=radians_from_degrees(Degrees(Scalar(coordinates.latitude))),
-        y=radians_from_degrees(Degrees(Scalar(coordinates.longitude))),
+        x=radians_from_degrees(Degrees(Scalar(coordinates.longitude))),
+        y=radians_from_degrees(Degrees(Scalar(coordinates.latitude))),
     )
 
 
@@ -129,8 +129,8 @@ def degrees_geographic_coordinates_from_radians(
 ) -> GeographicCoordinates:
     """Converts GeographicCoordinates from radians to degrees."""
     return GeographicCoordinates(
-        x=degrees_from_radians(Radians(Scalar(coordinates.latitude))),
-        y=degrees_from_radians(Radians(Scalar(coordinates.longitude))),
+        x=degrees_from_radians(Radians(Scalar(coordinates.longitude))),
+        y=degrees_from_radians(Radians(Scalar(coordinates.latitude))),
     )
 
 
