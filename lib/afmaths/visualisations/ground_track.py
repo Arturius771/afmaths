@@ -222,7 +222,7 @@ def visualisation_2d_ground_track_current_position(
         current_orbit.elements,
         current_orbit.epoch,
         tolerance=Degrees(Scalar(1)),
-        max_orbit_iterations=50,
+        max_orbit_iterations=1000,
     )
 
     if predicted_pass is None:

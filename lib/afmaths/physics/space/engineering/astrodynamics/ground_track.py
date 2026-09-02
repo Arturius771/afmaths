@@ -193,7 +193,7 @@ def ground_track_passes_station(
     return False, Ratio(Scalar(-1))
 
 
-def orbit_epoch_of_pass(
+def orbit_time_of_pass(
     coords: GeographicCoordinates,
     orbital_elements: OrbitalElements,
     epoch: Epoch,
@@ -262,7 +262,7 @@ def orbit_epoch_of_pass_full_date(
     """
     Calculate the full date when a satellite passes over a ground station based on its orbital elements and the ground station's location.
     """
-    result = orbit_epoch_of_pass(
+    result = orbit_time_of_pass(
         coords, orbital_elements, epoch, tolerance, max_orbit_iterations
     )
     if result is not None:

@@ -19,7 +19,7 @@ from afmaths.physics.space.celestial_mechanics.time import (
 )
 from afmaths.physics.space.engineering.astrodynamics import phase_orbit
 from afmaths.physics.space.engineering.astrodynamics.ground_track import (
-    orbit_epoch_of_pass,
+    orbit_time_of_pass,
     orbit_epoch_of_pass_full_date,
 )
 from afmaths.physics.space.engineering.astrodynamics.orbital_directions import (
@@ -341,7 +341,7 @@ class AstrodynamicsTestMethods(unittest.TestCase):
         )
 
     def test_orbit_epoch_of_pass(self):
-        result = orbit_epoch_of_pass(
+        result = orbit_time_of_pass(
             orbital_elements=SATELLITE_EXAMPLE_ELEMENTS,
             epoch=Epoch(
                 julian_date_from_greenwich(
@@ -371,7 +371,7 @@ class AstrodynamicsTestMethods(unittest.TestCase):
         self.assertEqual(
             cast(
                 tuple[Epoch, int],
-                orbit_epoch_of_pass(
+                orbit_time_of_pass(
                     coords=GeographicCoordinates(
                         y=Degrees(Scalar(-8.0)), x=Degrees(Scalar(52.0))
                     ),
@@ -393,7 +393,7 @@ class AstrodynamicsTestMethods(unittest.TestCase):
         )
 
         self.assertIsNone(
-            orbit_epoch_of_pass(
+            orbit_time_of_pass(
                 coords=GeographicCoordinates(
                     y=Degrees(Scalar(-8.0)),
                     x=Degrees(Scalar(52.0)),
@@ -414,7 +414,7 @@ class AstrodynamicsTestMethods(unittest.TestCase):
         )
 
         self.assertIsNone(
-            orbit_epoch_of_pass(
+            orbit_time_of_pass(
                 orbital_elements=SATELLITE_EXAMPLE_ELEMENTS,
                 epoch=Epoch(
                     julian_date_from_greenwich(
