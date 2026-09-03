@@ -30,23 +30,23 @@ def build_control_room_figures(
     selected_orbit = orbits[0]
 
     return [
-        visualisation_2d_ground_track(
-            orbit=selected_orbit,
-            orbit_count=total_orbits,
-            show_orbit_markers=True,
-        ),
-        visualisation_3d_itrf(
-            orbits,
-            track_for_orbits=total_orbits,
-        ),
-        visualisation_3d_satellite_earth(orbits),
-        build_position_vector_figure(selected_orbit.elements, int(total_orbits)),
-        build_velocity_vector_figure(selected_orbit.elements, int(total_orbits)),
         visualisation_2d_ground_track_current_position(
             orbit=selected_orbit,
             ground_station=ground_station,
             orbit_count=total_current_orbits,
         ),
+        visualisation_3d_satellite_earth(orbits),
+        visualisation_3d_itrf(
+            orbits,
+            track_for_orbits=total_orbits,
+        ),
+        visualisation_2d_ground_track(
+            orbit=selected_orbit,
+            orbit_count=total_orbits,
+            show_orbit_markers=True,
+        ),
+        build_position_vector_figure(selected_orbit.elements, int(total_orbits)),
+        build_velocity_vector_figure(selected_orbit.elements, int(total_orbits)),
     ]
 
 
