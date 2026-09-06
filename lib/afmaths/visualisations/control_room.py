@@ -71,6 +71,6 @@ def launch_control_room(
         title=(
             f"AFMaths Control Room - {orbits[0].name} " f"({orbits[0].source.value})"
         ),
-        columns=1,
+        columns=2,
         output_path=output_path,
     )
