@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from dataclasses import replace
-
 from astronomy_types import (
     Anomaly,
     Coordinate2D,
@@ -39,7 +37,6 @@ from afmaths.physics.space.celestial_mechanics.celestial_mechanics import (
     gravitational_parameter,
     vis_viva,
 )
-from afmaths.physics.space.engineering.thermal_subsystem import EXAMPLE_ELEMENTS
 from afmaths.afmath_types import Mass
 from afmaths.visualisations.base import (
     coordinates_for_elements,
@@ -165,6 +162,7 @@ def add_orbiting_body_2d(
             orbital_elements=plot_elements,
             colour=body_colour,
         ),
+        steps=settings.orbit_points,
     )
 
     figure_circle(
@@ -525,13 +523,14 @@ def build_2d_orbit_visualiser_figure(
 
 
 DISTANCE_SCALE = 17_000.0 * 1000
+DEFAULT_PLOT_SETTINGS = PlotOrbital2DSettings(distance_scale=DISTANCE_SCALE)
 
 
-def build_default_two_body_visualiser_2d_figure() -> go.Figure:
-    settings = PlotOrbital2DSettings(distance_scale=DISTANCE_SCALE)
-
+def build_default_two_body_visualiser_2d_figure(
+    settings: PlotOrbital2DSettings | None = None,
+) -> go.Figure:
     return build_2d_orbit_visualiser_figure(
-        settings=settings,
+        settings=settings or DEFAULT_PLOT_SETTINGS,
         central_body_name="Earth",
         central_body_radius=6_371.0,
         central_body_mass_kg=5.9722e24,

@@ -1,14 +1,21 @@
 import math
 
-from afmaths.constants import EXAMPLE_ELEMENTS
+from afmaths.constants import EXAMPLE_ELEMENTS, TWO_PI
+from afmaths.physics.space.type_conversion_helpers import make_true_anomaly
 from afmaths.visualisations.base import (
-    keplerian_element_plot_nodes,
-    orbit_plot_coordinates,
+    apoapsis_plot_coordinate,
+    ascending_node_plot_coordinate,
+    current_position_plot_coordinate,
+    descending_node_plot_coordinate,
+    periapsis_plot_coordinate,
+    plot_coordinate_for_true_anomaly,
+    scaled_elements,
+    secondary_focus_plot_coordinate,
 )
 from afmaths.visualisations.helpers import (
+    PlotNode,
     PlotOrbital2DSettings,
     add_plot_nodes,
-    distance_to_scale_distance,
     figure_layout,
     figure_orbit_line,
     plot_max,
@@ -16,20 +23,71 @@ from afmaths.visualisations.helpers import (
     plot_origin,
 )
 from astronomy_types import (
-    ArgumentOfPeriapsis,
-    Distance,
-    Eccentricity,
-    Inclination,
+    Coordinate2D,
     OrbitalElements,
-    RightAscension,
-    Scalar,
-    SemiMajorAxis,
-    TrueAnomaly,
 )
 import plotly.graph_objects as go
 
-DISTANCE_SCALE = 12_824.9333333 * 1000
+DISTANCE_SCALE = 50
 ORBIT_RESOLUTION = 720
+DEFAULT_PLOT_SETTINGS = PlotOrbital2DSettings(
+    distance_scale=DISTANCE_SCALE,
+    plot_width=600,
+    plot_height=1000,
+    orbit_points=ORBIT_RESOLUTION,
+)
+
+
+def orbit_plot_coordinates(
+    elements: OrbitalElements,
+    resolution: int,
+    primary_focus_plot_coordinate: Coordinate2D = plot_origin(),
+) -> list[Coordinate2D]:
+    if resolution < 3:
+        raise ValueError("resolution must be at least 3")
+
+    return [
+        plot_coordinate_for_true_anomaly(
+            primary_focus_plot_coordinate,
+            elements,
+            make_true_anomaly(TWO_PI * index / resolution),
+        )
+        for index in range(resolution + 1)
+    ]
+
+
+# Subject: orbital geometry / derived plot markers.
+def keplerian_element_plot_nodes(
+    elements: OrbitalElements,
+    primary_focus_plot_coordinate: Coordinate2D = plot_origin(),
+) -> list[PlotNode]:
+    return [
+        PlotNode("primary focus", primary_focus_plot_coordinate),
+        PlotNode(
+            "secondary focus",
+            secondary_focus_plot_coordinate(primary_focus_plot_coordinate, elements),
+        ),
+        PlotNode(
+            "periapsis",
+            periapsis_plot_coordinate(primary_focus_plot_coordinate, elements),
+        ),
+        PlotNode(
+            "apoapsis",
+            apoapsis_plot_coordinate(primary_focus_plot_coordinate, elements),
+        ),
+        PlotNode(
+            "ascending node",
+            ascending_node_plot_coordinate(primary_focus_plot_coordinate, elements),
+        ),
+        PlotNode(
+            "descending node",
+            descending_node_plot_coordinate(primary_focus_plot_coordinate, elements),
+        ),
+        PlotNode(
+            "true anomaly",
+            current_position_plot_coordinate(primary_focus_plot_coordinate, elements),
+        ),
+    ]
 
 
 # Subject: high-level 2D orbital-plane figure composition.
@@ -38,18 +96,16 @@ ORBIT_RESOLUTION = 720
 def build_keplerian_elements_2d_figure(
     settings: PlotOrbital2DSettings,
     elements: OrbitalElements,
-    orbit_resolution: int = 720,
+    orbit_resolution: int | None = None,
     title_prefix: str = "2D orbital-plane ellipse",
 ) -> go.Figure:
-    primary_focus_plot_coordinate = plot_origin()
+    resolution = orbit_resolution if orbit_resolution is not None else settings.orbit_points
     coordinates = orbit_plot_coordinates(
-        primary_focus_plot_coordinate,
         elements,
-        orbit_resolution,
+        resolution,
     )
 
     nodes = keplerian_element_plot_nodes(
-        primary_focus_plot_coordinate,
         elements,
     )
 
@@ -65,17 +121,15 @@ def build_keplerian_elements_2d_figure(
         f"θ={math.degrees(elements.true_anomaly):.2f}°"
     )
 
-    fig = figure_layout(
-        go.Figure(),
-        settings.plot_width,
-        settings.plot_height,
-        plot_min(settings),
-        plot_max(settings),
-        title=title,
-    )
-
     fig = figure_orbit_line(
-        fig,
+        figure_layout(
+            go.Figure(),
+            settings.plot_width,
+            settings.plot_height,
+            plot_min(settings),
+            plot_max(settings),
+            title=title,
+        ),
         coordinates,
         name="orbit",
         colour="grey",
@@ -104,29 +158,14 @@ def build_keplerian_elements_2d_figure(
     return add_plot_nodes(fig, nodes)
 
 
-def plot_elements_from_example() -> OrbitalElements:
-    return OrbitalElements(
-        Inclination(EXAMPLE_ELEMENTS.inclination),
-        RightAscension(EXAMPLE_ELEMENTS.right_ascension_of_ascending_node),
-        ArgumentOfPeriapsis(EXAMPLE_ELEMENTS.argument_of_periapsis),
-        SemiMajorAxis(
-            distance_to_scale_distance(
-                Distance(Scalar(EXAMPLE_ELEMENTS.semi_major_axis)),
-                DISTANCE_SCALE,
-            )
-        ),
-        Eccentricity(EXAMPLE_ELEMENTS.eccentricity),
-        TrueAnomaly(EXAMPLE_ELEMENTS.true_anomaly),
-    )
-
-
-def build_default_keplers_ellipse_2d_figure():
+def build_default_keplers_ellipse_2d_figure(
+    elements: OrbitalElements = EXAMPLE_ELEMENTS,
+    settings: PlotOrbital2DSettings | None = None,
+    orbit_resolution: int | None = None,
+) -> go.Figure:
+    plot_settings = settings or DEFAULT_PLOT_SETTINGS
     return build_keplerian_elements_2d_figure(
-        settings=PlotOrbital2DSettings(
-            distance_scale=DISTANCE_SCALE * 1000,
-            plot_width=600,
-            plot_height=1000,
-        ),
-        elements=plot_elements_from_example(),
-        orbit_resolution=ORBIT_RESOLUTION,
+        settings=plot_settings,
+        elements=scaled_elements(elements, plot_settings.distance_scale),
+        orbit_resolution=orbit_resolution,
     )

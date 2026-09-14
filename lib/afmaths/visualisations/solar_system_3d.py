@@ -70,12 +70,16 @@ PLANETS = [
 ]
 
 
-def build_solar_system_3d_figure():
+def build_solar_system_3d_figure(
+    *,
+    distance_scale: float = DISTANCE_SCALE,
+    orbit_points: int = ORBIT_POINTS,
+) -> go.Figure:
     settings = OrbitPlotSettings(
         centre=HorizonsCommandTarget.SUN,
         gravitational_parameter=SUN_GRAVITATIONAL_PARAMETER,
-        distance_scale=DISTANCE_SCALE,
-        orbit_points=ORBIT_POINTS,
+        distance_scale=distance_scale,
+        orbit_points=orbit_points,
         start_time=datetime.datetime.now(),
         time_offset=datetime.timedelta(days=124),
         add_prediction_to_orbit=False,

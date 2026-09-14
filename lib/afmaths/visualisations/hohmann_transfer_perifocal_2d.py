@@ -3,9 +3,8 @@ from __future__ import annotations
 import math
 
 import plotly.graph_objects as go
-from afmaths.constants import EARTH_MU, EARTH_RADIUS, EARTH_RADIUS
+from afmaths.constants import EARTH_MU, EARTH_RADIUS
 from afmaths.physics.space.engineering.astrodynamics.hohmann_transfer import (
-    hohmann_transfer_delta_v,
     hohmann_transfer_parameters,
 )
 from afmaths.physics.space.engineering.astrodynamics.maneuvers import (
@@ -39,7 +38,6 @@ from afmaths.visualisations.helpers import (
     plot_origin,
     plot_max,
     plot_min,
-    scale_distance_to_distance,
 )
 from astronomy_types import (
     Anomaly,
@@ -249,6 +247,7 @@ def build_hohmann_transfer_2d_perifocal_figure(
                                 orbital_elements=initial_orbit_for_plot,
                                 colour="grey",
                             ),
+                            steps=settings.orbit_points,
                         ),
                         primary_focus_plot_coordinate,
                         PlotPerifocalOrbitLine(
@@ -259,6 +258,7 @@ def build_hohmann_transfer_2d_perifocal_figure(
                             end_eccentric_anomaly=transfer_arc_end_angle,
                             show_secondary_focus=True,
                         ),
+                        steps=settings.orbit_points,
                     ),
                     primary_focus_plot_coordinate,
                     PlotPerifocalOrbitLine(
@@ -266,6 +266,7 @@ def build_hohmann_transfer_2d_perifocal_figure(
                         orbital_elements=final_orbit_for_plot,
                         colour="grey",
                     ),
+                    steps=settings.orbit_points,
                 ),
                 primary_focus_plot_coordinate,
                 central_body_radius_plot(
@@ -295,18 +296,21 @@ def build_hohmann_transfer_2d_perifocal_figure(
 
 
 DISTANCE_SCALE = 12_824.9333333 * 1000
+DEFAULT_PLOT_SETTINGS = PlotOrbital2DSettings(
+    distance_scale=DISTANCE_SCALE,
+    plot_width=1000,
+    plot_height=1000,
+)
 
 INITIAL_ALTITUDE_M = Distance(Scalar(200_000_000))
 TARGET_ALTITUDE_M = Distance(Scalar(140_000_000))
 
 
-def build_default_hohmann_transfer_2d_perifocal_figure() -> go.Figure:
+def build_default_hohmann_transfer_2d_perifocal_figure(
+    settings: PlotOrbital2DSettings | None = None,
+) -> go.Figure:
     return build_hohmann_transfer_2d_perifocal_figure(
-        settings=PlotOrbital2DSettings(
-            distance_scale=DISTANCE_SCALE,
-            plot_width=1000,
-            plot_height=1000,
-        ),
+        settings=settings or DEFAULT_PLOT_SETTINGS,
         initial_orbit=OrbitalElements(
             Inclination(Radians(Scalar(0))),
             RightAscension(Radians(Scalar(0))),

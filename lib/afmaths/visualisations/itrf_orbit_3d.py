@@ -38,6 +38,9 @@ EARTH_TEXTURE_COLOURS = 256
 def _add_textured_earth(
     figure: go.Figure,
     image_path: Path = EARTH_IMAGE_PATH,
+    *,
+    distance_scale: float = DISTANCE_SCALE,
+    body_radius_scale: float = BODY_RADIUS_SCALE,
 ) -> go.Figure:
     figure.data = tuple(
         trace for trace in figure.data if getattr(trace, "name", None) != "Earth"
@@ -85,7 +88,7 @@ def _add_textured_earth(
             ]
         )
 
-    earth_radius = float(EARTH_RADIUS) * BODY_RADIUS_SCALE / DISTANCE_SCALE
+    earth_radius = float(EARTH_RADIUS) * body_radius_scale / distance_scale
 
     longitude_values = [
         -math.pi + (TWO_PI * longitude_index / (EARTH_TEXTURE_WIDTH - 1))
@@ -154,6 +157,10 @@ def _add_textured_earth(
 def visualisation_3d_itrf(
     orbits: list[Orbit],
     track_for_orbits: float = 3,
+    *,
+    distance_scale: float = DISTANCE_SCALE,
+    body_radius_scale: float = BODY_RADIUS_SCALE,
+    orbit_points: int = ORBIT_POINTS,
 ) -> go.Figure:
     if not orbits:
         raise ValueError("At least one orbit is required.")
@@ -188,8 +195,8 @@ def visualisation_3d_itrf(
     settings = OrbitPlotSettings(
         centre=HorizonsCommandTarget.EARTH,
         gravitational_parameter=EARTH_MU,
-        distance_scale=DISTANCE_SCALE,
-        orbit_points=ORBIT_POINTS,
+        distance_scale=distance_scale,
+        orbit_points=orbit_points,
         start_time=datetime.datetime.now(),
         time_offset=datetime.timedelta(days=1),
         add_prediction_to_orbit=False,
@@ -206,11 +213,15 @@ def visualisation_3d_itrf(
         ),
         central_body_name="Earth",
         central_body_radius=EARTH_RADIUS,
-        central_body_radius_scale=BODY_RADIUS_SCALE,
+        central_body_radius_scale=body_radius_scale,
         orbit_name=[orbit.name for orbit in orbits],
     )
 
-    return _add_textured_earth(figure)
+    return _add_textured_earth(
+        figure,
+        distance_scale=distance_scale,
+        body_radius_scale=body_radius_scale,
+    )
 
 
 # Backwards-compatible wrappers.

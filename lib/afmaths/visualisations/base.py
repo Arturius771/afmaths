@@ -7,7 +7,7 @@ import math
 import plotly.graph_objects as go
 
 from astronomy_types import (
-    Anomaly,
+    ArgumentOfPeriapsis,
     Coordinate2D,
     Distance,
     EccentricAnomaly,
@@ -18,19 +18,18 @@ from astronomy_types import (
     Radians,
     Scalar,
     Second,
-    SemiMajorAxis,
-    StateVector,
     TrueAnomaly,
-    Vector3D,
     Velocity,
     VelocityVector,
 )
 from plotly.basedatatypes import BaseTraceType
 from afmaths.constants import EARTH_RADIUS, TWO_PI
-from afmaths.geometry.geometry import semi_minor_axis
+from afmaths.geometry.geometry import normalise_angle, semi_minor_axis
 from afmaths.geometry.transformations import translate_ellipse
 from afmaths.physics.space.celestial_mechanics.celestial_mechanics import (
     EARTH_MU,
+    apoapsis_radius,
+    periapsis_radius,
 )
 from afmaths.physics.space.celestial_mechanics.nodes import (
     perifocal_position_at_ascending_node,
@@ -54,14 +53,14 @@ from afmaths.physics.space.external.horizons_api import (
 )
 from afmaths.physics.space.type_conversion_helpers import (
     make_eccentric_anomaly,
-    make_true_anomaly,
     fulldate_from_python_datetime,
     seconds_from_python_timedelta,
 )
 from afmaths.visualisations.helpers import (
-    PlotNode,
+    add_body_surface,
+    elements_scaled_to_plot,
+    make_3d_orbit_figure,
     scale_position,
-    distance_to_scale_distance,
 )
 
 
@@ -91,6 +90,12 @@ class OrbitPlotSettings:
     )
     add_prediction_to_orbit: bool = True
 
+    def __post_init__(self) -> None:
+        if self.distance_scale <= 0:
+            raise ValueError("distance_scale must be greater than 0.")
+        if self.orbit_points < 2:
+            raise ValueError("orbit_points must be at least 2.")
+
     @property
     def stop_time(self) -> datetime.datetime:
         return self.start_time + self.time_offset
@@ -106,15 +111,12 @@ def scale_orbital_elements_for_plot(
     orbital_elements: OrbitalElements,
     distance_scale: Distance,
 ) -> OrbitalElements:
-    return replace(
-        orbital_elements,
-        semi_major_axis=SemiMajorAxis(
-            distance_to_scale_distance(
-                orbital_elements.semi_major_axis,
-                distance_scale,
-            )
-        ),
-    )
+    return elements_scaled_to_plot(orbital_elements, float(distance_scale))
+
+
+# TODO: Move the general geometry/orbital-mechanics helpers below into the main
+# AFMaths geometry/astrodynamics packages. They live here temporarily so the
+# visualisation modules do not each reimplement scientific logic.
 
 
 # Subject: planar geometry / coordinate transform.
@@ -329,61 +331,6 @@ def current_position_plot_coordinate(
         elements,
         perifocal_position_vector(elements),
     )
-
-
-# Subject: orbital geometry / focus-origin orbit sampling.
-# Generates a 2D orbital-plane line using true anomaly and the same transform as
-# the marker points. This avoids mixing ellipse-centre and focus-origin pipelines.
-def orbit_plot_coordinates(
-    primary_focus_plot_coordinate: Coordinate2D,
-    elements: OrbitalElements,
-    resolution: int,
-) -> list[Coordinate2D]:
-    if resolution < 3:
-        raise ValueError("resolution must be at least 3")
-
-    return [
-        plot_coordinate_for_true_anomaly(
-            primary_focus_plot_coordinate,
-            elements,
-            make_true_anomaly(TWO_PI * index / resolution),
-        )
-        for index in range(resolution + 1)
-    ]
-
-
-# Subject: orbital geometry / derived plot markers.
-def keplerian_element_plot_nodes(
-    primary_focus_plot_coordinate: Coordinate2D,
-    elements: OrbitalElements,
-) -> list[PlotNode]:
-    return [
-        PlotNode("primary focus", primary_focus_plot_coordinate),
-        PlotNode(
-            "secondary focus",
-            secondary_focus_plot_coordinate(primary_focus_plot_coordinate, elements),
-        ),
-        PlotNode(
-            "periapsis",
-            periapsis_plot_coordinate(primary_focus_plot_coordinate, elements),
-        ),
-        PlotNode(
-            "apoapsis",
-            apoapsis_plot_coordinate(primary_focus_plot_coordinate, elements),
-        ),
-        PlotNode(
-            "ascending node",
-            ascending_node_plot_coordinate(primary_focus_plot_coordinate, elements),
-        ),
-        PlotNode(
-            "descending node",
-            descending_node_plot_coordinate(primary_focus_plot_coordinate, elements),
-        ),
-        PlotNode(
-            "current position",
-            current_position_plot_coordinate(primary_focus_plot_coordinate, elements),
-        ),
-    ]
 
 
 # Subject: orbit-plot measurement.
@@ -609,17 +556,6 @@ def build_3d_orbit_figure(
     )
 
 
-import plotly.graph_objects as go
-
-from astronomy_types import PositionVector
-from afmaths.visualisations.base import OrbitPlotSettings
-from afmaths.visualisations.helpers import (
-    add_body_surface,
-    make_3d_orbit_figure,
-    scale_position,
-)
-
-
 # Subject: 3D ITRS orbit trace construction.
 # Scales a sequence of ITRS position vectors and returns a Plotly 3D line trace.
 def add_itrf_orbit_trace(
@@ -655,9 +591,13 @@ def build_3d_itrf_orbit_figure(
     central_body_name: str = "Earth",
     central_body_radius: Distance = EARTH_RADIUS,
     central_body_radius_scale: float = 5.0,
-    orbit_name: list[str] = ["orbit"],
+    orbit_name: list[str] | None = None,
     central_body_opacity: float = 0.7,
 ) -> go.Figure:
+    orbit_names = orbit_name or ["orbit"] * len(itrf_positions)
+    if len(orbit_names) != len(itrf_positions):
+        raise ValueError("orbit_name must contain one name per ITRF position set.")
+
     traces: list[BaseTraceType] = [
         add_body_surface(
             central_body_name,
@@ -671,7 +611,7 @@ def build_3d_itrf_orbit_figure(
     for index, positions in enumerate(itrf_positions):
         traces.append(
             add_itrf_orbit_trace(
-                f"SAT: {orbit_name[index]} ITRS track",
+                f"SAT: {orbit_names[index]} ITRS track",
                 positions,
                 settings.distance_scale,
             )
@@ -682,3 +622,147 @@ def build_3d_itrf_orbit_figure(
         title,
         settings.distance_scale,
     )
+
+
+def scaled_elements(elements: OrbitalElements, scale: float) -> OrbitalElements:
+    """Backwards-compatible wrapper for plot scaling."""
+    return scale_orbital_elements_for_plot(elements, Distance(Scalar(scale)))
+
+
+# TODO: Move these phase-orbit helpers into the main AFMaths astrodynamics
+# package. They are scientific/orbital-mechanics logic, not Plotly logic.
+AHEAD_BEHIND_CUTOFF_RAD = math.pi
+
+
+def forward_true_anomaly_delta_rad(
+    initial_true_anomaly: TrueAnomaly,
+    desired_true_anomaly: TrueAnomaly,
+) -> float:
+    """Return the forward prograde true-anomaly separation in radians."""
+    return normalise_angle(
+        Radians(Scalar(float(desired_true_anomaly) - float(initial_true_anomaly)))
+    )
+
+
+def phase_direction_label(
+    initial_true_anomaly: TrueAnomaly,
+    desired_true_anomaly: TrueAnomaly,
+) -> str:
+    return (
+        "ahead"
+        if forward_true_anomaly_delta_rad(initial_true_anomaly, desired_true_anomaly)
+        <= AHEAD_BEHIND_CUTOFF_RAD
+        else "behind"
+    )
+
+
+def phase_is_higher_than_original(
+    phase_orbit_elements: OrbitalElements,
+    original_orbit: OrbitalElements,
+) -> bool:
+    return phase_orbit_elements.semi_major_axis > original_orbit.semi_major_axis
+
+
+def align_phase_poi_to_initial_true_anomaly(
+    phase_orbit_elements: OrbitalElements,
+    original_orbit: OrbitalElements,
+    initial_true_anomaly: TrueAnomaly,
+) -> OrbitalElements:
+    """Rotate the phase orbit so its shared apsis is at the selected POI."""
+    phase_poi_true_anomaly = (
+        0.0
+        if phase_is_higher_than_original(phase_orbit_elements, original_orbit)
+        else math.pi
+    )
+    poi_direction = original_orbit.argument_of_periapsis + initial_true_anomaly
+    phase_argument_of_periapsis = normalise_angle(
+        Radians(Scalar(poi_direction - phase_poi_true_anomaly))
+    )
+
+    return replace(
+        phase_orbit_elements,
+        argument_of_periapsis=ArgumentOfPeriapsis(
+            Radians(Scalar(phase_argument_of_periapsis))
+        ),
+    )
+
+
+def expected_shared_apsis_radius(
+    phase_orbit_elements: OrbitalElements,
+    original_orbit: OrbitalElements,
+) -> Distance:
+    """Return the original-orbit apsis radius shared with the phase orbit."""
+    radius_function = (
+        periapsis_radius
+        if phase_is_higher_than_original(phase_orbit_elements, original_orbit)
+        else apoapsis_radius
+    )
+    return radius_function(
+        original_orbit.semi_major_axis,
+        original_orbit.eccentricity,
+    )
+
+
+# TODO: Move this deterministic orbit fixture to the main AFMaths test/physics
+# support package if it remains useful outside visualisation tests.
+def synthetic_iss_like_itrf_positions(
+    samples: int = 360,
+    orbits: float = 2.0,
+    radius_metres: float = 6_790_000.0,
+    inclination_degrees: float = 51.6,
+    orbital_period_seconds: float = 92.68 * 60.0,
+    initial_longitude_degrees: float = 0.0,
+) -> list[PositionVector]:
+    """Generate deterministic, approximate ISS-like Earth-fixed positions."""
+    if samples < 1:
+        raise ValueError("samples must be at least 1.")
+
+    def wrap_degrees(longitude: float) -> float:
+        return ((longitude + 180.0) % 360.0) - 180.0
+
+    def itrf_position_from_longitude_latitude(
+        longitude_degrees: float,
+        latitude_degrees: float,
+    ) -> PositionVector:
+        longitude = math.radians(longitude_degrees)
+        latitude = math.radians(latitude_degrees)
+        return PositionVector(
+            x=Position(
+                Scalar(radius_metres * math.cos(latitude) * math.cos(longitude))
+            ),
+            y=Position(
+                Scalar(radius_metres * math.cos(latitude) * math.sin(longitude))
+            ),
+            z=Position(Scalar(radius_metres * math.sin(latitude))),
+        )
+
+    inclination = math.radians(inclination_degrees)
+    duration_seconds = orbits * orbital_period_seconds
+    earth_rotation_rate_degrees_per_second = 360.0 / 86164.0905
+    positions: list[PositionVector] = []
+
+    for index in range(samples):
+        time_seconds = duration_seconds * index / max(samples - 1, 1)
+        argument_of_latitude = TWO_PI * time_seconds / orbital_period_seconds
+        latitude_degrees = math.degrees(
+            math.asin(math.sin(inclination) * math.sin(argument_of_latitude))
+        )
+        inertial_longitude_degrees = math.degrees(
+            math.atan2(
+                math.cos(inclination) * math.sin(argument_of_latitude),
+                math.cos(argument_of_latitude),
+            )
+        )
+        longitude_degrees = wrap_degrees(
+            initial_longitude_degrees
+            + inertial_longitude_degrees
+            - earth_rotation_rate_degrees_per_second * time_seconds
+        )
+        positions.append(
+            itrf_position_from_longitude_latitude(
+                longitude_degrees,
+                latitude_degrees,
+            )
+        )
+
+    return positions

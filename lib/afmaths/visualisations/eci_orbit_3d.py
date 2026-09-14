@@ -26,6 +26,11 @@ SATELLITE_DISPLAY_RADIUS = Distance(Scalar(200_000))
 
 def visualisation_3d_satellite_earth(
     orbits: list[Orbit],
+    *,
+    distance_scale: float = DISTANCE_SCALE,
+    body_radius_scale: float = BODY_RADIUS_SCALE,
+    orbit_points: int = ORBIT_POINTS,
+    satellite_display_radius: Distance = SATELLITE_DISPLAY_RADIUS,
 ) -> go.Figure:
     if not orbits:
         raise ValueError("At least one orbit is required.")
@@ -35,8 +40,8 @@ def visualisation_3d_satellite_earth(
     settings = OrbitPlotSettings(
         centre=HorizonsCommandTarget.EARTH,
         gravitational_parameter=EARTH_MU,
-        distance_scale=DISTANCE_SCALE,
-        orbit_points=ORBIT_POINTS,
+        distance_scale=distance_scale,
+        orbit_points=orbit_points,
         start_time=datetime.datetime.now(),
         add_prediction_to_orbit=False,
     )
@@ -50,13 +55,13 @@ def visualisation_3d_satellite_earth(
         ),
         central_body_name="Earth",
         central_body_radius=EARTH_RADIUS,
-        central_body_radius_scale=BODY_RADIUS_SCALE,
+        central_body_radius_scale=body_radius_scale,
         orbiting_bodies=[
             BodyPlotConfig(
                 name=orbit.name,
                 target_object=orbit.elements,
-                radius=SATELLITE_DISPLAY_RADIUS,
-                radius_scale=BODY_RADIUS_SCALE,
+                radius=satellite_display_radius,
+                radius_scale=body_radius_scale,
             )
             for orbit in current_orbits
         ],

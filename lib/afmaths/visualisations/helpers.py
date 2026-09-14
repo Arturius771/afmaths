@@ -1,7 +1,10 @@
 from __future__ import annotations
 
+import base64
 from dataclasses import dataclass, replace
 import math
+import mimetypes
+from pathlib import Path
 
 import plotly.graph_objects as go
 
@@ -11,7 +14,6 @@ from astronomy_types import (
     Distance,
     EccentricAnomaly,
     OrbitalElements,
-    Position,
     PositionVector,
     Radians,
     Scalar,
@@ -25,9 +27,6 @@ from afmaths.constants import TWO_PI
 from afmaths.geometry.geometry import circle_bounding_box
 from afmaths.operation import interval_points
 from afmaths.physics.space.type_conversion_helpers import make_vector3d
-from pathlib import Path
-
-from afmaths.visualisations.orbit_source import Orbit
 
 METRES_PER_KILOMETRE = 1_000.0
 EARTH_IMAGE_PATH = Path(__file__).with_name("Earth-hires.jpg")
@@ -64,6 +63,56 @@ class PlotOrbital2DSettings:
     plot_max_x: float = 35
     plot_max_y: float = 35
     slider_steps: int = 51
+    orbit_points: int = 200
+
+    def __post_init__(self) -> None:
+        if self.distance_scale <= 0:
+            raise ValueError("distance_scale must be greater than 0.")
+        if self.plot_width <= 0 or self.plot_height <= 0:
+            raise ValueError("plot dimensions must be greater than 0.")
+        if self.plot_min_x >= self.plot_max_x or self.plot_min_y >= self.plot_max_y:
+            raise ValueError("plot minimums must be smaller than plot maximums.")
+        if self.slider_steps < 2:
+            raise ValueError("slider_steps must be at least 2.")
+        if self.orbit_points < 2:
+            raise ValueError("orbit_points must be at least 2.")
+
+
+def defined_kwargs(**kwargs):
+    """Return only explicitly supplied keyword arguments."""
+    return {name: value for name, value in kwargs.items() if value is not None}
+
+
+def with_plot_settings_overrides(
+    settings: PlotOrbital2DSettings,
+    *,
+    distance_scale: float | None = None,
+    plot_width: int | None = None,
+    plot_height: int | None = None,
+    plot_min_x: float | None = None,
+    plot_min_y: float | None = None,
+    plot_max_x: float | None = None,
+    plot_max_y: float | None = None,
+    slider_steps: int | None = None,
+    orbit_points: int | None = None,
+) -> PlotOrbital2DSettings:
+    """Apply only explicitly supplied command-line plot overrides."""
+    overrides = {
+        name: value
+        for name, value in {
+            "distance_scale": distance_scale,
+            "plot_width": plot_width,
+            "plot_height": plot_height,
+            "plot_min_x": plot_min_x,
+            "plot_min_y": plot_min_y,
+            "plot_max_x": plot_max_x,
+            "plot_max_y": plot_max_y,
+            "slider_steps": slider_steps,
+            "orbit_points": orbit_points,
+        }.items()
+        if value is not None
+    }
+    return replace(settings, **overrides)
 
 
 # Subject: unit/scale conversion.
@@ -479,13 +528,6 @@ def make_3d_orbit_figure(
     return fig
 
 
-import base64
-import mimetypes
-from pathlib import Path
-
-import plotly.graph_objects as go
-
-
 def image_file_to_data_uri(image_path: str | Path) -> str:
     image_path = Path(image_path).expanduser().resolve()
 
@@ -564,11 +606,8 @@ def with_data_background_image(
     return fig
 
 
-import math
-
-from astronomy_types import Coordinate3D, Scalar
-
-
+# Backwards-compatible import location. The implementation lives in base.py
+# because it is scientific/test-support logic rather than Plotly composition.
 def synthetic_iss_like_itrf_positions(
     samples: int = 360,
     orbits: float = 2.0,
@@ -577,71 +616,15 @@ def synthetic_iss_like_itrf_positions(
     orbital_period_seconds: float = 92.68 * 60.0,
     initial_longitude_degrees: float = 0.0,
 ) -> list[PositionVector]:
-    """
-    Generate synthetic ISS-like ITRS positions for ground-track testing.
+    from afmaths.visualisations.base import (
+        synthetic_iss_like_itrf_positions as _synthetic_iss_like_itrf_positions,
+    )
 
-    This is not precise orbital propagation. It is a deterministic visual/test
-    fixture with:
-    - circular orbit
-    - fixed inclination
-    - spherical Earth
-    - Earth rotating underneath the orbital plane
-
-    Returns Earth-fixed Cartesian coordinates in metres.
-    """
-
-    def wrap_degrees(longitude: float) -> float:
-        return ((longitude + 180.0) % 360.0) - 180.0
-
-    def itrf_position_from_longitude_latitude(
-        longitude_degrees: float,
-        latitude_degrees: float,
-    ) -> PositionVector:
-        longitude = math.radians(longitude_degrees)
-        latitude = math.radians(latitude_degrees)
-
-        return PositionVector(
-            x=Position(
-                Scalar(radius_metres * math.cos(latitude) * math.cos(longitude))
-            ),
-            y=Position(
-                Scalar(radius_metres * math.cos(latitude) * math.sin(longitude))
-            ),
-            z=Position(Scalar(radius_metres * math.sin(latitude))),
-        )
-
-    inclination = math.radians(inclination_degrees)
-    duration_seconds = orbits * orbital_period_seconds
-    earth_rotation_rate_degrees_per_second = 360.0 / 86164.0905
-
-    positions: list[PositionVector] = []
-
-    for index in range(samples):
-        time_seconds = duration_seconds * index / max(samples - 1, 1)
-        argument_of_latitude = 2.0 * math.pi * time_seconds / orbital_period_seconds
-
-        latitude_degrees = math.degrees(
-            math.asin(math.sin(inclination) * math.sin(argument_of_latitude))
-        )
-
-        inertial_longitude_degrees = math.degrees(
-            math.atan2(
-                math.cos(inclination) * math.sin(argument_of_latitude),
-                math.cos(argument_of_latitude),
-            )
-        )
-
-        longitude_degrees = wrap_degrees(
-            initial_longitude_degrees
-            + inertial_longitude_degrees
-            - earth_rotation_rate_degrees_per_second * time_seconds
-        )
-
-        positions.append(
-            itrf_position_from_longitude_latitude(
-                longitude_degrees,
-                latitude_degrees,
-            )
-        )
-
-    return positions
+    return _synthetic_iss_like_itrf_positions(
+        samples=samples,
+        orbits=orbits,
+        radius_metres=radius_metres,
+        inclination_degrees=inclination_degrees,
+        orbital_period_seconds=orbital_period_seconds,
+        initial_longitude_degrees=initial_longitude_degrees,
+    )

@@ -57,6 +57,14 @@ from orbit_source import (
 )
 
 EARTH_IMAGE_PATH = Path(__file__).with_name("Earth-hires.jpg")
+GROUND_TRACK_POINTS = 2000
+
+
+def _validate_ground_track_settings(orbit_count: float, number_of_points: int) -> None:
+    if orbit_count <= 0:
+        raise ValueError("orbit_count must be greater than 0.")
+    if number_of_points < 2:
+        raise ValueError("number_of_points must be at least 2.")
 
 
 def visualisation_2d_ground_track(
@@ -66,8 +74,9 @@ def visualisation_2d_ground_track(
     background_image_path: Path = EARTH_IMAGE_PATH,
     time_interval: Second | None = None,
     lines: bool = False,
-    number_of_points: int = 2000,
+    number_of_points: int = GROUND_TRACK_POINTS,
 ) -> go.Figure:
+    _validate_ground_track_settings(orbit_count, number_of_points)
     coordinates = geographic_coordinates_for_orbit(
         orbit.elements,
         orbit.epoch,
@@ -168,9 +177,10 @@ def visualisation_2d_ground_track_current_position(
     ground_station: GroundStation,
     background_image_path: Path = EARTH_IMAGE_PATH,
     lines: bool = False,
-    number_of_points: int = 2000,
+    number_of_points: int = GROUND_TRACK_POINTS,
     orbit_count: float = 1,
 ) -> go.Figure:
+    _validate_ground_track_settings(orbit_count, number_of_points)
     current_orbit = orbit_at_current_epoch(orbit)
 
     coordinates = geographic_coordinates_for_orbit(

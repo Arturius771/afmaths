@@ -187,7 +187,7 @@ The legacy names `ground_track_tle` and `ground_track_custom` are retained as al
 
 ### `current_ground_track`
 
-Displays the propagated ground track starting from the orbit's current position. The current implementation also displays the configured Dublin ground station, apogee, perigee, and current position.
+Displays the propagated ground track starting from the orbit's current position. The current implementation also displays the configured ground station, apogee, perigee, and current position.
 
 ```bash
 python lib/afmaths/visualisations/visualisation_launcher.py current_ground_track \
@@ -459,6 +459,44 @@ The launcher supports the following options:
 | `--eccentricity E`                        | Orbital eccentricity                                           |
 | `--true-anomaly DEG`                      | True anomaly in degrees                                        |
 
+### Plot settings
+
+Plot settings can be overridden from the same launcher. Flags only affect visualisations that support the corresponding setting; otherwise the existing visualisation default is retained.
+
+| Option | Description |
+| --- | --- |
+| `--distance-scale VALUE` | Physical distance represented by one plot unit where supported |
+| `--plot-width PX` | 2D plot width |
+| `--plot-height PX` | 2D plot height |
+| `--plot-min-x VALUE` | 2D plot minimum X value |
+| `--plot-min-y VALUE` | 2D plot minimum Y value |
+| `--plot-max-x VALUE` | 2D plot maximum X value |
+| `--plot-max-y VALUE` | 2D plot maximum Y value |
+| `--slider-steps N` | Slider resolution for interactive 2D plots |
+| `--plot-points N` | Sampling resolution for orbit and ground-track plots |
+| `--lines` / `--no-lines` | Enable or disable lines between ground-track samples |
+| `--show-orbit-markers` / `--no-show-orbit-markers` | Enable or disable ground-track orbit markers |
+| `--dashboard-columns N` | Number of control-room dashboard columns |
+| `--output-path PATH` | Write the control-room dashboard to a specific HTML path |
+
+For example:
+
+```bash
+python lib/afmaths/visualisations/visualisation_launcher.py kepler \
+  --distance-scale 75 \
+  --plot-width 900 \
+  --plot-height 700 \
+  --plot-points 1000
+```
+
+```bash
+python lib/afmaths/visualisations/visualisation_launcher.py control_room \
+  --norad-id 25544 \
+  --plot-points 1000 \
+  --dashboard-columns 3 \
+  --output-path control-room.html
+```
+
 Run:
 
 ```bash
@@ -582,7 +620,3 @@ python lib/afmaths/visualisations/visualisation_launcher.py control_room \
 | `solar_system_3d`      | `solar_system`                            |
 | `two_body_2d`          | `two_body`                                |
 | `velocity_time`        | —                                         |
-
-```
-
-```

@@ -1,28 +1,24 @@
 from __future__ import annotations
 
-from dataclasses import replace
 import math
 import plotly.graph_objects as go
 
-from afmaths.constants import EARTH_MU, EARTH_RADIUS, EARTH_RADIUS
-from afmaths.geometry.geometry import normalise_angle
-from afmaths.physics.space.celestial_mechanics.orbital_elements import (
-    eccentric_anomaly_from_true_anomaly,
-)
+from afmaths.constants import EARTH_MU, EARTH_RADIUS
 from afmaths.physics.space.celestial_mechanics.time import orbital_period
 from afmaths.physics.space.engineering.astrodynamics.phase_orbit import (
     phase_orbit_apoapsis,
     phase_orbit_parameters,
     phase_orbit_periapsis,
 )
-from afmaths.physics.space.celestial_mechanics.celestial_mechanics import (
-    apoapsis_radius,
-    periapsis_radius,
-)
 from afmaths.afmath_types import DeltaV
 from afmaths.physics.space.type_conversion_helpers import make_eccentric_anomaly
 from afmaths.visualisations.base import (
+    align_phase_poi_to_initial_true_anomaly,
     coordinates_for_elements,
+    expected_shared_apsis_radius,
+    forward_true_anomaly_delta_rad,
+    phase_direction_label,
+    phase_is_higher_than_original,
     plotted_radius_for_eccentric_anomaly,
     scale_orbital_elements_for_plot,
 )
@@ -59,123 +55,6 @@ from astronomy_types import (
     SemiMajorAxis,
     TrueAnomaly,
 )
-
-AHEAD_BEHIND_CUTOFF_RAD = math.pi
-
-
-def forward_true_anomaly_delta_rad(
-    initial_true_anomaly: TrueAnomaly,
-    desired_true_anomaly: TrueAnomaly,
-) -> float:
-    """
-    Return the forward prograde true-anomaly separation in radians.
-
-    Example:
-        initial = 1 rad, desired = 2 rad -> 1 rad
-        initial = 1 rad, desired = 5 rad -> 4 rad
-    """
-    return normalise_angle(
-        Radians(Scalar(float(desired_true_anomaly) - float(initial_true_anomaly)))
-    )
-
-
-def phase_direction_label(
-    initial_true_anomaly: TrueAnomaly,
-    desired_true_anomaly: TrueAnomaly,
-) -> str:
-    forward_delta = forward_true_anomaly_delta_rad(
-        initial_true_anomaly,
-        desired_true_anomaly,
-    )
-
-    if forward_delta <= AHEAD_BEHIND_CUTOFF_RAD:
-        return "ahead"
-
-    return "behind"
-
-
-def true_anomaly_plot_node(
-    name: str,
-    label: str,
-    primary_focus_plot_coordinate: Coordinate2D,
-    orbital_elements: OrbitalElements,
-    true_anomaly_value: TrueAnomaly,
-    colour: str,
-    symbol: str,
-) -> PlotNode:
-    E = eccentric_anomaly_from_true_anomaly(
-        true_anomaly_value,
-        orbital_elements.eccentricity,
-    )
-
-    return PlotNode(
-        name=name,
-        coordinate=coordinates_for_elements(
-            primary_focus_plot_coordinate,
-            orbital_elements,
-            E,
-        ),
-        text=(f"{label}<br>" f"θ = {true_anomaly_value:.3f} rad"),
-        colour=colour,
-        symbol=symbol,
-    )
-
-
-def phase_is_higher_than_original(
-    phase_orbit_elements: OrbitalElements,
-    original_orbit: OrbitalElements,
-) -> bool:
-    return phase_orbit_elements.semi_major_axis > original_orbit.semi_major_axis
-
-
-def align_phase_poi_to_initial_true_anomaly(
-    phase_orbit_elements: OrbitalElements,
-    original_orbit: OrbitalElements,
-    initial_true_anomaly: TrueAnomaly,
-) -> OrbitalElements:
-    """Rotate the phase orbit so its burn/return apsis is at the selected POI."""
-    phase_poi_true_anomaly = (
-        0.0
-        if phase_is_higher_than_original(phase_orbit_elements, original_orbit)
-        else math.pi
-    )
-    poi_direction = original_orbit.argument_of_periapsis + initial_true_anomaly
-    phase_argument_of_periapsis = normalise_angle(
-        Radians(Scalar(poi_direction - phase_poi_true_anomaly))
-    )
-
-    return replace(
-        phase_orbit_elements,
-        argument_of_periapsis=ArgumentOfPeriapsis(
-            Radians(Scalar(phase_argument_of_periapsis))
-        ),
-    )
-
-
-def expected_shared_apsis_radius(
-    phase_orbit_elements: OrbitalElements,
-    original_orbit: OrbitalElements,
-) -> Distance:
-    """
-    Return the original-orbit apsis radius that should be shared with the phase orbit.
-
-    Higher phase orbit:
-        phase periapsis = original periapsis
-
-    Lower phase orbit:
-        phase apoapsis = original apoapsis
-    """
-    if phase_is_higher_than_original(phase_orbit_elements, original_orbit):
-        return periapsis_radius(
-            original_orbit.semi_major_axis,
-            original_orbit.eccentricity,
-        )
-
-    return apoapsis_radius(
-        original_orbit.semi_major_axis,
-        original_orbit.eccentricity,
-    )
-
 
 def phase_poi_label(
     phase_orbit_elements: OrbitalElements,
@@ -370,6 +249,7 @@ def build_phase_orbit_2d_perifocal_figure(
                             orbital_elements=original_orbit_for_plot,
                             colour="grey",
                         ),
+                        steps=settings.orbit_points,
                     ),
                     primary_focus_plot_coordinate,
                     PlotPerifocalOrbitLine(
@@ -378,6 +258,7 @@ def build_phase_orbit_2d_perifocal_figure(
                         colour="orange",
                         show_secondary_focus=True,
                     ),
+                    steps=settings.orbit_points,
                 ),
                 primary_focus_plot_coordinate,
                 central_body_radius_plot(
@@ -426,10 +307,17 @@ def build_phase_orbit_2d_perifocal_figure(
 
 
 DISTANCE_SCALE = 12_824.9333333 * 1000
+DEFAULT_PLOT_SETTINGS = PlotOrbital2DSettings(
+    distance_scale=DISTANCE_SCALE,
+    plot_width=1000,
+    plot_height=1000,
+)
 INITIAL_ALTITUDE_M = Distance(Scalar(200_000_000))
 
 
-def build_default_phase_orbit_2d_perifocal_figure() -> go.Figure:
+def build_default_phase_orbit_2d_perifocal_figure(
+    settings: PlotOrbital2DSettings | None = None,
+) -> go.Figure:
     original_orbit = OrbitalElements(
         Inclination(Radians(Scalar(0))),
         RightAscension(Radians(Scalar(0))),
@@ -440,11 +328,7 @@ def build_default_phase_orbit_2d_perifocal_figure() -> go.Figure:
     )
 
     return build_phase_orbit_2d_perifocal_figure(
-        settings=PlotOrbital2DSettings(
-            distance_scale=DISTANCE_SCALE,
-            plot_width=1000,
-            plot_height=1000,
-        ),
+        settings=settings or DEFAULT_PLOT_SETTINGS,
         original_orbit=original_orbit,
         initial_true_anomaly=TrueAnomaly(Anomaly(Radians(Scalar(0.5)))),
         desired_true_anomaly=TrueAnomaly(Anomaly(Radians(Scalar(1.0)))),

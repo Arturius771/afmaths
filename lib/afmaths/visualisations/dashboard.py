@@ -29,6 +29,9 @@ def write_visualisation_dashboard(
             delete=False,
         ) as temporary_file:
             output_path = Path(temporary_file.name)
+    else:
+        output_path = output_path.expanduser()
+        output_path.parent.mkdir(parents=True, exist_ok=True)
 
     panels: list[str] = []
     for index, figure in enumerate(figures):
