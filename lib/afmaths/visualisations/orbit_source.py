@@ -90,7 +90,7 @@ def parse_horizons_target(value: str) -> HorizonsCommandTarget:
 
 def orbit_from_tle(tle: str) -> Orbit:
     return Orbit(
-        name=f"NORAD {parse_norad_id(tle)}",
+        name=f"{parse_norad_id(tle)}",
         elements=orbital_elements_from_tle(tle),
         epoch=Epoch(parse_julian_date(tle)),
         source=OrbitSource.TLE,
