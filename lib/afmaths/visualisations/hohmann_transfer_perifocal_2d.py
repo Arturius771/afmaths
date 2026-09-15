@@ -314,7 +314,7 @@ def build_default_hohmann_transfer_2d_perifocal_figure(
         initial_orbit=OrbitalElements(
             Inclination(Radians(Scalar(0))),
             RightAscension(Radians(Scalar(0))),
-            ArgumentOfPeriapsis(Radians(Scalar(math.radians(10)))),
+            ArgumentOfPeriapsis(Radians(Scalar(math.pi / 18))),
             SemiMajorAxis(orbit_radius(INITIAL_ALTITUDE_M, EARTH_RADIUS)),
             Eccentricity(Ratio(Scalar(0.0))),
             TrueAnomaly(Anomaly(Radians(Scalar(0)))),

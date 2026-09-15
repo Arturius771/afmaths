@@ -37,7 +37,7 @@ def build_hohmann_tradeoff_figure() -> go.Figure:
     initial_orbit = OrbitalElements(
         Inclination(Radians(Scalar(0))),
         RightAscension(Radians(Scalar(0))),
-        ArgumentOfPeriapsis(Radians(Scalar(math.radians(10)))),
+        ArgumentOfPeriapsis(Radians(Scalar(math.pi / 18))),
         SemiMajorAxis(
             orbit_radius(
                 INITIAL_ALTITUDE_M,

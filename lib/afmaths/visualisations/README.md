@@ -49,7 +49,7 @@ python lib/afmaths/visualisations/visualisation_launcher.py ground_track \
 ```bash
 python lib/afmaths/visualisations/visualisation_launcher.py ground_track \
   --source elements \
-  --inclination 51.6 \
+  --inclination 0.900590 \
   --semi-major-axis 6778000 \
   --eccentricity 0.001
 ```
@@ -65,6 +65,8 @@ The source abstraction is used by:
 - `satellite_earth_3d`
 
 The remaining visualisations use their own fixed or specialised inputs.
+
+Orbital-element angles are expressed in radians throughout the visualisation package and CLI.
 
 ---
 
@@ -126,9 +128,9 @@ Custom elements can also be supplied:
 ```bash
 python lib/afmaths/visualisations/visualisation_launcher.py control_room \
   --source elements \
-  --inclination 51.6 \
-  --right-ascension-of-ascending-node 30 \
-  --argument-of-periapsis 45 \
+  --inclination 0.900590 \
+  --right-ascension-of-ascending-node 0.523599 \
+  --argument-of-periapsis 0.785398 \
   --semi-major-axis 6778000 \
   --eccentricity 0.001 \
   --true-anomaly 0 \
@@ -165,9 +167,9 @@ Custom orbital elements:
 ```bash
 python lib/afmaths/visualisations/visualisation_launcher.py ground_track \
   --source elements \
-  --inclination 51.6 \
-  --right-ascension-of-ascending-node 30 \
-  --argument-of-periapsis 45 \
+  --inclination 0.900590 \
+  --right-ascension-of-ascending-node 0.523599 \
+  --argument-of-periapsis 0.785398 \
   --semi-major-axis 6778000 \
   --eccentricity 0.001 \
   --true-anomaly 0
@@ -200,7 +202,7 @@ It can use the same alternative sources:
 ```bash
 python lib/afmaths/visualisations/visualisation_launcher.py current_ground_track \
   --source elements \
-  --inclination 51.6 \
+  --inclination 0.900590 \
   --semi-major-axis 6778000
 ```
 
@@ -246,7 +248,7 @@ Custom orbital elements:
 ```bash
 python lib/afmaths/visualisations/visualisation_launcher.py itrf \
   --source elements \
-  --inclination 51.6 \
+  --inclination 0.900590 \
   --semi-major-axis 6778000
 ```
 
@@ -452,12 +454,12 @@ The launcher supports the following options:
 | `--orbits N`                              | Number of orbits to propagate                                  |
 | `--tle-orbits N`                          | Backwards-compatible alias for `--orbits`                      |
 | `--current-orbits N`                      | Number of current-position orbits used by the control room     |
-| `--inclination DEG`                       | Orbital inclination in degrees                                 |
-| `--right-ascension-of-ascending-node DEG` | RAAN in degrees                                                |
-| `--argument-of-periapsis DEG`             | Argument of periapsis in degrees                               |
-| `--semi-major-axis VALUE`                 | Semi-major axis, using the units expected by `OrbitalElements` |
+| `--inclination RAD`                       | Orbital inclination in radians                                 |
+| `--right-ascension-of-ascending-node RAD` | RAAN in radians                                                |
+| `--argument-of-periapsis RAD`             | Argument of periapsis in radians                               |
+| `--semi-major-axis M`                     | Semi-major axis in metres                                      |
 | `--eccentricity E`                        | Orbital eccentricity                                           |
-| `--true-anomaly DEG`                      | True anomaly in degrees                                        |
+| `--true-anomaly RAD`                      | True anomaly in radians                                        |
 
 ### Plot settings
 
@@ -465,7 +467,7 @@ Plot settings can be overridden from the same launcher. Flags only affect visual
 
 | Option | Description |
 | --- | --- |
-| `--distance-scale VALUE` | Physical distance represented by one plot unit where supported |
+| `--distance-scale M` | Physical distance in metres represented by one plot unit where supported |
 | `--plot-width PX` | 2D plot width |
 | `--plot-height PX` | 2D plot height |
 | `--plot-min-x VALUE` | 2D plot minimum X value |
@@ -520,7 +522,7 @@ For example, to override only inclination and semi-major axis:
 ```bash
 python lib/afmaths/visualisations/visualisation_launcher.py ground_track \
   --source elements \
-  --inclination 70 \
+  --inclination 1.221730 \
   --semi-major-axis 7000000
 ```
 
@@ -576,7 +578,7 @@ Visualise a custom circular orbit:
 ```bash
 python lib/afmaths/visualisations/visualisation_launcher.py ground_track \
   --source elements \
-  --inclination 45 \
+  --inclination 0.785398 \
   --right-ascension-of-ascending-node 0 \
   --argument-of-periapsis 0 \
   --semi-major-axis 7000000 \
@@ -589,8 +591,8 @@ Interesting polar orbit:
 ```bash
 python lib/afmaths/visualisations/visualisation_launcher.py control_room \
   --source elements \
-  --inclination 89 \
-  --right-ascension-of-ascending-node 230 \
+  --inclination 1.553343 \
+  --right-ascension-of-ascending-node 4.014257 \
   --argument-of-periapsis 0 \
   --semi-major-axis 42168100 \
   --eccentricity 0.001 \

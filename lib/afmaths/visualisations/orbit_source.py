@@ -161,10 +161,13 @@ def orbit_at_current_epoch(
 def default_orbit_count(orbit: Orbit) -> int:
     return max(
         1,
-        round(
-            orbits_per_day(
-                orbital_period(orbit.elements.semi_major_axis),
-            )
+        min(
+            round(
+                orbits_per_day(
+                    orbital_period(orbit.elements.semi_major_axis),
+                )
+            ),
+            100,
         ),
     )
 

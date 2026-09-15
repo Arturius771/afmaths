@@ -709,7 +709,7 @@ def synthetic_iss_like_itrf_positions(
     samples: int = 360,
     orbits: float = 2.0,
     radius_metres: float = 6_790_000.0,
-    inclination_degrees: float = 51.6,
+    inclination_radians: float = 0.9005898940290741,
     orbital_period_seconds: float = 92.68 * 60.0,
     initial_longitude_degrees: float = 0.0,
 ) -> list[PositionVector]:
@@ -736,7 +736,7 @@ def synthetic_iss_like_itrf_positions(
             z=Position(Scalar(radius_metres * math.sin(latitude))),
         )
 
-    inclination = math.radians(inclination_degrees)
+    inclination = inclination_radians
     duration_seconds = orbits * orbital_period_seconds
     earth_rotation_rate_degrees_per_second = 360.0 / 86164.0905
     positions: list[PositionVector] = []

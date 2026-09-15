@@ -2,21 +2,35 @@ from __future__ import annotations
 
 import argparse
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 
 import plotly.graph_objects as go
 
-from afmaths.constants import EXAMPLE_ELEMENTS, ISS_NORAD_ID, KILCUMMIN_GROUND_STATION
-from afmaths.physics.space.celestial_mechanics.orbital_elements import (
-    orbital_elements_from_degrees,
+from afmaths.constants import (
+    EXAMPLE_ELEMENTS,
+    ISS_NORAD_ID,
+    KILCUMMIN_GROUND_STATION,
 )
 from afmaths.visualisations.helpers import (
     PlotOrbital2DSettings,
     defined_kwargs,
     with_plot_settings_overrides,
 )
-from astronomy_types import OrbitalElements
+from astronomy_types import (
+    Anomaly,
+    ArgumentOfPeriapsis,
+    Distance,
+    Eccentricity,
+    Inclination,
+    OrbitalElements,
+    Radians,
+    Ratio,
+    RightAscension,
+    Scalar,
+    SemiMajorAxis,
+    TrueAnomaly,
+)
 
 from collision_detection import build_collision_detection_figure
 from control_room import launch_control_room
@@ -32,10 +46,6 @@ from hohmann_transfer_perifocal_2d import (
     build_default_hohmann_transfer_2d_perifocal_figure,
 )
 from itrf_orbit_3d import visualisation_3d_itrf
-from keplers_ellipse_2d import (
-    DEFAULT_PLOT_SETTINGS as KEPLER_PLOT_SETTINGS,
-    build_default_keplers_ellipse_2d_figure,
-)
 from moon_earth_3d import build_moon_earth_3d_figure
 from newton_iteration import build_newton_iteration_figure
 from orbit_source import (
@@ -45,15 +55,16 @@ from orbit_source import (
     parse_orbit_source,
     resolve_orbits,
 )
+from orbit_visualiser_2d import (
+    DEFAULT_PLOT_SETTINGS as ORBIT_2D_PLOT_SETTINGS,
+    build_default_orbit_visualiser_2d_figure,
+    satellite_orbiting_body,
+)
 from phase_orbit_2d import (
     DEFAULT_PLOT_SETTINGS as PHASE_PLOT_SETTINGS,
     build_default_phase_orbit_2d_perifocal_figure,
 )
 from solar_system_3d import build_solar_system_3d_figure
-from two_body_visualiser_2d import (
-    DEFAULT_PLOT_SETTINGS as TWO_BODY_PLOT_SETTINGS,
-    build_default_two_body_visualiser_2d_figure,
-)
 from velocity_time import build_velocity_time_figure
 
 
@@ -70,20 +81,25 @@ class PlotOptions:
     plot_points: int | None = None
     lines: bool | None = None
     show_orbit_markers: bool | None = None
-    dashboard_columns: int = 2
+    dashboard_columns: int = 1
     output_path: Path | None = None
 
     def __post_init__(self) -> None:
         if self.distance_scale is not None and self.distance_scale <= 0:
             raise ValueError("distance_scale must be greater than 0.")
+
         if self.plot_width is not None and self.plot_width <= 0:
             raise ValueError("plot_width must be greater than 0.")
+
         if self.plot_height is not None and self.plot_height <= 0:
             raise ValueError("plot_height must be greater than 0.")
+
         if self.slider_steps is not None and self.slider_steps < 2:
             raise ValueError("slider_steps must be at least 2.")
+
         if self.plot_points is not None and self.plot_points < 2:
             raise ValueError("plot_points must be at least 2.")
+
         if self.dashboard_columns < 1:
             raise ValueError("dashboard_columns must be at least 1.")
 
@@ -110,11 +126,10 @@ ORBIT_VISUALISATIONS = {
 
 CONFIGURABLE_VISUALISATIONS = {
     "hohmann_transfer_2d",
-    "keplers_ellipse_2d",
     "moon_earth_3d",
+    "orbit_2d",
     "phase_orbit_2d",
     "solar_system_3d",
-    "two_body_2d",
 }
 
 
@@ -125,10 +140,14 @@ ALIASES = {
     "ground_track_tle": "ground_track",
     "ground_track_custom": "ground_track",
     "ground_track_current": "current_ground_track",
-    "kepler": "keplers_ellipse_2d",
+    # Merged Kepler/two-body visualisation.
+    "kepler": "orbit_2d",
+    "keplers_ellipse_2d": "orbit_2d",
+    "two_body": "orbit_2d",
+    "two_body_2d": "orbit_2d",
+    "orbit": "orbit_2d",
     "solar_system": "solar_system_3d",
     "moon_earth": "moon_earth_3d",
-    "two_body": "two_body_2d",
     "hohmann_transfer": "hohmann_transfer_2d",
     "phase_orbit": "phase_orbit_2d",
     "itrf_custom": "itrf_orbit_3d",
@@ -153,6 +172,34 @@ def _plot_2d_settings(
     )
 
 
+def resolve_optional_orbits(
+    source: OrbitSource,
+    norad_ids: list[int] | None,
+    horizons_targets: list[str] | None,
+    elements: OrbitalElements | None,
+) -> list[Orbit]:
+    """
+    Resolve explicitly supplied orbit data.
+
+    Unlike the main orbital visualisations, an orbit_2d invocation with no
+    supplied orbit data should remain the default Earth-Moon system rather
+    than implicitly adding the ISS.
+    """
+    has_explicit_orbit = (
+        elements is not None or bool(norad_ids) or bool(horizons_targets)
+    )
+
+    if not has_explicit_orbit:
+        return []
+
+    return resolve_orbits(
+        source=source,
+        norad_ids=norad_ids,
+        horizons_targets=horizons_targets,
+        elements=elements,
+    )
+
+
 def orbital_figure_builder(
     name: str,
     orbits: list[Orbit],
@@ -163,7 +210,11 @@ def orbital_figure_builder(
         raise ValueError("At least one orbit is required.")
 
     selected_orbit = orbits[0]
-    ground_track_points = options.plot_points or GROUND_TRACK_POINTS
+
+    ground_track_points = (
+        options.plot_points if options.plot_points is not None else GROUND_TRACK_POINTS
+    )
+
     lines = options.lines if options.lines is not None else False
 
     if name == "ground_track":
@@ -210,25 +261,45 @@ def orbital_figure_builder(
     raise ValueError(f"Unknown orbital visualisation: {name}")
 
 
-def configurable_figure_builder(name: str, options: PlotOptions) -> go.Figure:
+def configurable_figure_builder(
+    name: str,
+    options: PlotOptions,
+    *,
+    orbits: list[Orbit] | None = None,
+    total_orbits: float | None = None,
+) -> go.Figure:
     if name == "hohmann_transfer_2d":
         return build_default_hohmann_transfer_2d_perifocal_figure(
-            settings=_plot_2d_settings(HOHMANN_PLOT_SETTINGS, options)
+            settings=_plot_2d_settings(
+                HOHMANN_PLOT_SETTINGS,
+                options,
+            )
         )
 
-    if name == "keplers_ellipse_2d":
-        return build_default_keplers_ellipse_2d_figure(
-            settings=_plot_2d_settings(KEPLER_PLOT_SETTINGS, options)
+    if name == "orbit_2d":
+        satellites = [
+            satellite_orbiting_body(
+                name=orbit.name,
+                elements=orbit.elements,
+            )
+            for orbit in (orbits or [])
+        ]
+
+        return build_default_orbit_visualiser_2d_figure(
+            satellites=satellites,
+            settings=_plot_2d_settings(
+                ORBIT_2D_PLOT_SETTINGS,
+                options,
+            ),
+            propagation_orbits=(total_orbits if total_orbits is not None else 1.0),
         )
 
     if name == "phase_orbit_2d":
         return build_default_phase_orbit_2d_perifocal_figure(
-            settings=_plot_2d_settings(PHASE_PLOT_SETTINGS, options)
-        )
-
-    if name == "two_body_2d":
-        return build_default_two_body_visualiser_2d_figure(
-            settings=_plot_2d_settings(TWO_BODY_PLOT_SETTINGS, options)
+            settings=_plot_2d_settings(
+                PHASE_PLOT_SETTINGS,
+                options,
+            )
         )
 
     if name == "moon_earth_3d":
@@ -261,10 +332,17 @@ def launch_visualisation(
     plot_options: PlotOptions | None = None,
 ) -> None:
     """Launch one named visualisation or the multi-plot control room."""
-    resolved_name = ALIASES.get(normalise_name(name), normalise_name(name))
+    resolved_name = ALIASES.get(
+        normalise_name(name),
+        normalise_name(name),
+    )
+
     options = plot_options or PlotOptions()
 
-    if resolved_name in {*ORBIT_VISUALISATIONS, "control_room"}:
+    if resolved_name in {
+        *ORBIT_VISUALISATIONS,
+        "control_room",
+    }:
         if source is OrbitSource.TLE and not norad_ids:
             norad_ids = [ISS_NORAD_ID]
 
@@ -275,13 +353,15 @@ def launch_visualisation(
             elements=elements,
         )
 
+        if not orbits:
+            raise ValueError("At least one orbit is required.")
+
         orbit_count = (
             total_orbits if total_orbits is not None else default_orbit_count(orbits[0])
         )
+
         current_orbit_count = (
-            total_current_orbits
-            if total_current_orbits is not None
-            else orbit_count
+            total_current_orbits if total_current_orbits is not None else orbit_count
         )
 
         if orbit_count <= 0 or current_orbit_count <= 0:
@@ -296,7 +376,7 @@ def launch_visualisation(
                 columns=options.dashboard_columns,
                 distance_scale=options.distance_scale,
                 plot_points=options.plot_points,
-                lines=options.lines if options.lines is not None else False,
+                lines=(options.lines if options.lines is not None else False),
                 show_orbit_markers=(
                     options.show_orbit_markers
                     if options.show_orbit_markers is not None
@@ -311,10 +391,28 @@ def launch_visualisation(
             orbit_count,
             options,
         ).show()
+
         return
 
     if resolved_name in CONFIGURABLE_VISUALISATIONS:
-        configurable_figure_builder(resolved_name, options).show()
+        resolved_orbits = (
+            resolve_optional_orbits(
+                source=source,
+                norad_ids=norad_ids,
+                horizons_targets=horizons_targets,
+                elements=elements,
+            )
+            if resolved_name == "orbit_2d"
+            else []
+        )
+
+        configurable_figure_builder(
+            resolved_name,
+            options,
+            orbits=resolved_orbits,
+            total_orbits=total_orbits,
+        ).show()
+
         return
 
     try:
@@ -328,6 +426,7 @@ def launch_visualisation(
                 *STATIC_VISUALISATIONS,
             ]
         )
+
         raise ValueError(
             f"Unknown visualisation '{name}'. "
             f"Available names: {', '.join(available)}"
@@ -338,19 +437,21 @@ def launch_visualisation(
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Launch an AFMaths Plotly visualisation by name."
+        description=("Launch an AFMaths Plotly visualisation by name.")
     )
 
     parser.add_argument(
         "name",
         help='Visualisation name, for example "ground track".',
     )
+
     parser.add_argument(
         "--source",
         type=parse_orbit_source,
         default=OrbitSource.TLE,
         help="Orbital data source: tle, horizon, or elements.",
     )
+
     parser.add_argument(
         "--norad-id",
         dest="norad_ids",
@@ -358,6 +459,7 @@ def parse_args() -> argparse.Namespace:
         nargs="+",
         help="One or more NORAD IDs for --source tle.",
     )
+
     parser.add_argument(
         "--target",
         dest="horizons_targets",
@@ -367,14 +469,16 @@ def parse_args() -> argparse.Namespace:
             "for example MOON or MARS."
         ),
     )
+
     parser.add_argument(
         "--orbits",
         "--tle-orbits",
         dest="orbits",
         type=float,
         default=None,
-        help="Number of orbits to propagate.",
+        help="Number of reference-body orbits to propagate.",
     )
+
     parser.add_argument(
         "--current-orbits",
         type=float,
@@ -384,122 +488,172 @@ def parse_args() -> argparse.Namespace:
             "Defaults to --orbits."
         ),
     )
+
     parser.add_argument(
         "--inclination",
         type=float,
-        help="Orbital inclination in degrees.",
+        help="Orbital inclination in radians.",
     )
+
     parser.add_argument(
         "--right-ascension-of-ascending-node",
         type=float,
-        help="Right ascension of the ascending node in degrees.",
+        help=("Right ascension of the ascending node in radians."),
     )
+
     parser.add_argument(
         "--argument-of-periapsis",
         type=float,
-        help="Argument of periapsis in degrees.",
+        help="Argument of periapsis in radians.",
     )
+
     parser.add_argument(
         "--semi-major-axis",
         type=float,
-        help="Semi-major axis.",
+        help="Semi-major axis in metres.",
     )
+
     parser.add_argument(
         "--eccentricity",
         type=float,
         help="Orbital eccentricity (unitless).",
     )
+
     parser.add_argument(
         "--true-anomaly",
         type=float,
-        help="True anomaly in degrees.",
+        help="True anomaly in radians.",
     )
 
     plot_group = parser.add_argument_group("plot settings")
+
     plot_group.add_argument(
         "--distance-scale",
         type=float,
-        help="Physical distance represented by one plot unit where supported.",
+        help=("Physical distance represented by one plot unit " "where supported."),
     )
-    plot_group.add_argument("--plot-width", type=int, help="2D plot width in pixels.")
-    plot_group.add_argument("--plot-height", type=int, help="2D plot height in pixels.")
-    plot_group.add_argument("--plot-min-x", type=float, help="2D plot minimum X value.")
-    plot_group.add_argument("--plot-min-y", type=float, help="2D plot minimum Y value.")
-    plot_group.add_argument("--plot-max-x", type=float, help="2D plot maximum X value.")
-    plot_group.add_argument("--plot-max-y", type=float, help="2D plot maximum Y value.")
+
+    plot_group.add_argument(
+        "--plot-width",
+        type=int,
+        help="2D plot width in pixels.",
+    )
+
+    plot_group.add_argument(
+        "--plot-height",
+        type=int,
+        help="2D plot height in pixels.",
+    )
+
+    plot_group.add_argument(
+        "--plot-min-x",
+        type=float,
+        help="2D plot minimum X value.",
+    )
+
+    plot_group.add_argument(
+        "--plot-min-y",
+        type=float,
+        help="2D plot minimum Y value.",
+    )
+
+    plot_group.add_argument(
+        "--plot-max-x",
+        type=float,
+        help="2D plot maximum X value.",
+    )
+
+    plot_group.add_argument(
+        "--plot-max-y",
+        type=float,
+        help="2D plot maximum Y value.",
+    )
+
     plot_group.add_argument(
         "--slider-steps",
         type=int,
-        help="Number of slider steps for interactive 2D plots.",
+        help=("Number of slider steps for interactive 2D plots."),
     )
+
     plot_group.add_argument(
         "--plot-points",
         type=int,
-        help="Sampling resolution for orbit/ground-track plots.",
+        help=("Sampling resolution for orbit/ground-track plots."),
     )
+
     plot_group.add_argument(
         "--lines",
         action=argparse.BooleanOptionalAction,
         default=None,
         help="Draw lines between ground-track samples.",
     )
+
     plot_group.add_argument(
         "--show-orbit-markers",
         action=argparse.BooleanOptionalAction,
         default=None,
-        help="Show per-orbit markers on the ground-track plot.",
+        help=("Show per-orbit markers on the ground-track plot."),
     )
+
     plot_group.add_argument(
         "--dashboard-columns",
         type=int,
-        default=2,
-        help="Number of columns in the control-room dashboard.",
+        default=1,
+        help=("Number of columns in the control-room dashboard."),
     )
+
     plot_group.add_argument(
         "--output-path",
         type=Path,
-        help="Optional control-room dashboard HTML output path.",
+        help=("Optional control-room dashboard HTML output path."),
     )
 
     return parser.parse_args()
 
 
-def _value_or_default[T](value: T | None, default: T) -> T:
-    return value if value is not None else default
-
-
-def custom_elements_from_args(args: argparse.Namespace) -> OrbitalElements:
-    elements_in_degrees = OrbitalElements(
-        inclination=_value_or_default(
-            args.inclination,
-            EXAMPLE_ELEMENTS.inclination,
-        ),
-        right_ascension_of_ascending_node=_value_or_default(
-            args.right_ascension_of_ascending_node,
-            EXAMPLE_ELEMENTS.right_ascension_of_ascending_node,
-        ),
-        argument_of_periapsis=_value_or_default(
-            args.argument_of_periapsis,
-            EXAMPLE_ELEMENTS.argument_of_periapsis,
-        ),
-        semi_major_axis=_value_or_default(
-            args.semi_major_axis,
-            EXAMPLE_ELEMENTS.semi_major_axis,
-        ),
-        eccentricity=_value_or_default(
-            args.eccentricity,
-            EXAMPLE_ELEMENTS.eccentricity,
-        ),
-        true_anomaly=_value_or_default(
-            args.true_anomaly,
-            EXAMPLE_ELEMENTS.true_anomaly,
+def custom_elements_from_args(
+    args: argparse.Namespace,
+) -> OrbitalElements:
+    return replace(
+        EXAMPLE_ELEMENTS,
+        **defined_kwargs(
+            inclination=(
+                Inclination(Radians(Scalar(args.inclination)))
+                if args.inclination is not None
+                else None
+            ),
+            right_ascension_of_ascending_node=(
+                RightAscension(Radians(Scalar(args.right_ascension_of_ascending_node)))
+                if (args.right_ascension_of_ascending_node is not None)
+                else None
+            ),
+            argument_of_periapsis=(
+                ArgumentOfPeriapsis(Radians(Scalar(args.argument_of_periapsis)))
+                if args.argument_of_periapsis is not None
+                else None
+            ),
+            semi_major_axis=(
+                SemiMajorAxis(Distance(Scalar(args.semi_major_axis)))
+                if args.semi_major_axis is not None
+                else None
+            ),
+            eccentricity=(
+                Eccentricity(Ratio(Scalar(args.eccentricity)))
+                if args.eccentricity is not None
+                else None
+            ),
+            true_anomaly=(
+                TrueAnomaly(Anomaly(Radians(Scalar(args.true_anomaly))))
+                if args.true_anomaly is not None
+                else None
+            ),
         ),
     )
 
-    return orbital_elements_from_degrees(elements_in_degrees)
 
-
-def plot_options_from_args(args: argparse.Namespace) -> PlotOptions:
+def plot_options_from_args(
+    args: argparse.Namespace,
+) -> PlotOptions:
     return PlotOptions(
         distance_scale=args.distance_scale,
         plot_width=args.plot_width,
@@ -521,9 +675,7 @@ def main() -> None:
     args = parse_args()
 
     elements = (
-        custom_elements_from_args(args)
-        if args.source is OrbitSource.ELEMENTS
-        else None
+        custom_elements_from_args(args) if args.source is OrbitSource.ELEMENTS else None
     )
 
     launch_visualisation(

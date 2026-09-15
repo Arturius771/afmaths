@@ -117,7 +117,7 @@ def with_plot_settings_overrides(
 
 # Subject: unit/scale conversion.
 # Converts plot units back to the SI physical distance used by the astrodynamics
-# layer. One plot unit represents ``distance_scale`` kilometres.
+# layer. One plot unit represents ``distance_scale`` metres.
 def scale_distance_to_distance(
     distance: Distance,
     distance_scale: float,
@@ -128,7 +128,7 @@ def scale_distance_to_distance(
 
 # Subject: unit/scale conversion.
 # Converts an SI physical distance in metres to plot units. Plot configuration
-# remains expressed in kilometres per plot unit for readable axes.
+# remains expressed in metres per plot unit.
 def distance_to_scale_distance(
     distance: Distance,
     distance_scale: float,
@@ -139,7 +139,7 @@ def distance_to_scale_distance(
 
 # Subject: visualisation scale conversion for 3D vectors.
 # Converts SI metre position components into plot units where each unit represents
-# ``distance_scale`` kilometres. This is render-time scaling only.
+# ``distance_scale`` metres. This is render-time scaling only.
 def scale_position(position: PositionVector, distance_scale: float) -> Vector3D:
     return make_vector3d(
         distance_to_scale_distance(Distance(position.x), distance_scale),
@@ -612,7 +612,7 @@ def synthetic_iss_like_itrf_positions(
     samples: int = 360,
     orbits: float = 2.0,
     radius_metres: float = 6_790_000.0,
-    inclination_degrees: float = 51.6,
+    inclination_radians: float = 0.9005898940290741,
     orbital_period_seconds: float = 92.68 * 60.0,
     initial_longitude_degrees: float = 0.0,
 ) -> list[PositionVector]:
@@ -624,7 +624,7 @@ def synthetic_iss_like_itrf_positions(
         samples=samples,
         orbits=orbits,
         radius_metres=radius_metres,
-        inclination_degrees=inclination_degrees,
+        inclination_radians=inclination_radians,
         orbital_period_seconds=orbital_period_seconds,
         initial_longitude_degrees=initial_longitude_degrees,
     )

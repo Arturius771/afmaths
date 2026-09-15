@@ -13,7 +13,7 @@ import plotly.io as pio
 def write_visualisation_dashboard(
     figures: Sequence[go.Figure],
     title: str = "AFMaths Visualisations",
-    columns: int = 2,
+    columns: int = 1,
     output_path: Path | None = None,
 ) -> Path:
     """Write independent Plotly figures into one responsive HTML dashboard."""
@@ -34,14 +34,26 @@ def write_visualisation_dashboard(
         output_path.parent.mkdir(parents=True, exist_ok=True)
 
     panels: list[str] = []
+
     for index, figure in enumerate(figures):
+        dashboard_figure = go.Figure(figure)
+
+        dashboard_figure.update_layout(
+            width=None,
+            height=None,
+            autosize=True,
+        )
+
         panels.append(
             '<section class="plot-panel">'
             + pio.to_html(
-                figure,
+                dashboard_figure,
                 full_html=False,
                 include_plotlyjs=True if index == 0 else False,
-                config={"responsive": True, "displaylogo": False},
+                config={
+                    "responsive": True,
+                    "displaylogo": False,
+                },
                 default_width="100%",
                 default_height="100%",
             )
@@ -70,7 +82,7 @@ def write_visualisation_dashboard(
     }}
     .plot-panel {{
       min-width: 0;
-      height: min(620px, 72vh);
+      height: min(800px, 85vh);
       overflow: hidden;
       background: white;
       border: 1px solid #d8dde5;
@@ -109,7 +121,7 @@ def write_visualisation_dashboard(
 def show_visualisation_dashboard(
     figures: Sequence[go.Figure],
     title: str = "AFMaths Visualisations",
-    columns: int = 2,
+    columns: int = 1,
     output_path: Path | None = None,
 ) -> Path:
     """Write a dashboard and open it in the default browser."""
