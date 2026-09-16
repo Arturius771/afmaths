@@ -3,9 +3,6 @@ import math
 from astronomy_types import Degrees, Radians, Distance, Scalar
 from afmaths.constants import ASTRONOMICAL_UNIT
 from afmaths.operation import HALF, divide_by
-from afmaths.physics.space.astronomy.utils import (
-    metres_from_astronomical_unit,
-)
 
 
 def distance_from_stellar_parallax(
