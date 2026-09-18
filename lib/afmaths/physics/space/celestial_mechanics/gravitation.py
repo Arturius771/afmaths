@@ -7,7 +7,12 @@ from astronomy_types import (
 )
 from astronomy_types import Distance, Scalar, Acceleration
 from afmaths.afmath_types import Mass
-from afmaths.constants import ASTRONOMICAL_UNIT, GRAVITATIONAL_CONSTANT, SUN_MASS
+from afmaths.constants import (
+    ASTRONOMICAL_UNIT,
+    EARTH_MASS,
+    GRAVITATIONAL_CONSTANT,
+    SUN_MASS,
+)
 from afmaths.afmath_types import Mass
 from afmaths.numerical_analysis import root_solver
 from afmaths.operation import (
@@ -117,6 +122,9 @@ def gravitational_acceleration_at_radius(
 ) -> Acceleration:
     """Calculates the gravitational acceleration at a given radius from the central body."""
     return divide_by(SQUARE(radius))(mu)
+
+
+# region Lagrange points functions
 
 
 def lagrange_points(m1: Mass, m2: Mass, r: Distance) -> list[Coordinate2D]:
@@ -318,13 +326,16 @@ def lagrange_5_3d(m1: Mass, m2: Mass, r: Distance) -> Coordinate3D:
     return Coordinate3D(0, 0, 0)
 
 
+# region Sphere of Influence functions
+
+
 def planetary_sphere_of_influence_approximation(
     mean_distance: Distance = ASTRONOMICAL_UNIT,
     planet_mass: Mass = Mass(Scalar(5.972e24)),
     star_mass: Mass = SUN_MASS,
 ) -> Distance:
     """
-    Calculate the sphere of influence of a planet around a star using the patched conics approximation.
+    Calculate the approximate sphere of influence of a planet around a star using the patched conics approximation.
 
     Parameters
     ----------
@@ -342,3 +353,29 @@ def planetary_sphere_of_influence_approximation(
     """
     # Using the formula for the sphere of influence: r_SOI = a * (m/M)^(2/5)
     return mean_distance * (planet_mass / star_mass) ** (2 / 5)
+
+
+def hill_sphere_approximation(
+    mean_distance: Distance = ASTRONOMICAL_UNIT,
+    planet_mass: Mass = EARTH_MASS,
+    star_mass: Mass = SUN_MASS,
+) -> Distance:
+    """
+    Calculate the Hill sphere of a planet around a star.
+
+    Parameters
+    ----------
+    mean_distance : Distance
+        The mean distance between the planet and the star (default is the astronomical unit).
+    planet_mass : Mass
+        The mass of the planet (default is the mass of the Earth).
+    star_mass : Mass
+        The mass of the star (default is the mass of the Sun).
+
+    Returns
+    -------
+    Distance
+        The radius of the planet's Hill sphere.
+    """
+    # Using the formula for the Hill sphere: r_Hill = a * (m/(3*M))^(1/3)
+    return mean_distance * (planet_mass / (3 * star_mass)) ** (1 / 3)
