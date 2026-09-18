@@ -326,6 +326,26 @@ def lagrange_5_3d(m1: Mass, m2: Mass, r: Distance) -> Coordinate3D:
     return Coordinate3D(0, 0, 0)
 
 
+def is_trojan_capable(mass1: Mass, mass2: Mass) -> bool:
+    """
+    Determine if a two-body system is capable of having Trojan asteroids.
+
+    Parameters:
+    - mass1: Mass of the first body (typically the primary, e.g., a star).
+    - mass2: Mass of the second body (typically the secondary, e.g., a planet).
+
+    Returns:
+    - True if the system can have Trojan asteroids, False otherwise.
+
+    See:
+    - https://www.youtube.com/watch?v=_DYZF-piKKU
+    """
+    # A system is generally considered capable of having Trojans if the mass ratio is below a certain threshold.
+    # For the Sun-Jupiter system, this threshold is approximately 0.0385.
+
+    return mass_parameter(mass1, mass2) < 0.04
+
+
 # region Sphere of Influence functions
 
 
