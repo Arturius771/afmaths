@@ -17,7 +17,7 @@ from afmaths.geometry.transformations import (
     orthonormal_frame_transform_3d,
     transformation_matrix_from_basis_vectors,
 )
-from afmaths.operation import DOUBLE, add, multiply, negate
+from afmaths.operation import negate
 from afmaths.physics.space.astronomy.time_functions import (
     epoch_offset,
     greenwich_mean_sidereal_time_radians_from_julian_date,
@@ -62,7 +62,11 @@ def geographic_coordinates_from_itrf(
 def itrf_position_from_gmst_passive(
     gmst: Radians, gcrf_position: PositionVector
 ) -> PositionVector:
-    """Simplified conversion not taking into account any perturbations or time compatibility. Calculated using the passive rotation of the GCRF frame to the ITRF frame."""
+    """
+    Converts a position vector from the GCRF frame to the ITRF frame using the provided Greenwich Mean Sidereal Time (GMST).
+
+    Simplified conversion not taking into account any perturbations or time compatibility. Calculated using the passive rotation of the GCRF frame to the ITRF frame.
+    """
     itrf_position = orthonormal_frame_transform_3d(
         z_axis_passive_rotation(gmst),
         make_vector3d(gcrf_position.x, gcrf_position.y, gcrf_position.z),
@@ -75,7 +79,10 @@ def itrf_position_from_gmst_passive(
 def itrf_position_from_gmst(
     gmst: Radians, gcrf_position: PositionVector
 ) -> PositionVector:
-    """Simplified conversion not taking into account any perturbations or time compatibility. Calculated using the active rotation of the GCRF frame to the ITRF frame."""
+    """Converts a position vector from the GCRF frame to the ITRF frame using the provided Greenwich Mean Sidereal Time (GMST).
+
+    Simplified conversion not taking into account any perturbations or time compatibility. Calculated using the active rotation of the GCRF frame to the ITRF frame.
+    """
     itrf_position = orthonormal_frame_transform_3d(
         z_axis_active_rotation(gmst),
         make_vector3d(gcrf_position.x, gcrf_position.y, gcrf_position.z),

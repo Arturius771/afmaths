@@ -7,6 +7,9 @@ from afmaths.constants import (
     MEAN_SOLAR_DAY,
     SATELLITE_EXAMPLE_ELEMENTS,
     SIDEREAL_DAY,
+    EARTH_MASS,
+    SUN_MASS,
+    ASTRONOMICAL_UNIT,
 )
 from afmaths.operation import divide_by, multiply
 from afmaths.physics.space.astronomy.time_functions import julian_date_from_greenwich
@@ -62,7 +65,7 @@ from afmaths.physics.space.engineering.astrodynamics.hohmann_transfer import (
     hohmann_is_efficient,
     hohmann_transfer_parameters,
 )
-from afmaths.afmath_types import OrbitalDirection
+from afmaths.afmath_types import Mass, OrbitalDirection
 from afmaths.physics.space.engineering.astrodynamics.phase_orbit import (
     phase_orbit_parameters,
 )

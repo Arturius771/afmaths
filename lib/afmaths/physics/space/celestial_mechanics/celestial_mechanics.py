@@ -1,35 +1,23 @@
 from dataclasses import replace
 import math
-from typing import Callable
+
 
 from afmaths.constants import (
     EARTH_MU,
     EARTH_RADIUS,
     GRAVITATIONAL_CONSTANT,
-    SECONDS_PER_DAY,
     SIDEREAL_DAY,
     TWO_PI,
-    UNIT_VECTOR_XY_PLANE,
-)
-from afmaths.geometry.transformations import (
-    ellipse_perimeter_coordinate_from_eccentric_anomaly,
 )
 from afmaths.physics.physics import centripetal_acceleration, centripetal_force
 
-from afmaths.physics.space.transformations import (
-    transform_vector_from_perifocal,
+from afmaths.physics.space.celestial_mechanics.gravitation import (
+    gravitational_acceleration_at_radius,
 )
 from afmaths.physics.space.type_conversion_helpers import (
     coordinate3d_from_vector,
-    make_eccentric_anomaly,
-    coordinate2d_from_vector,
     make_radians,
-    position_from_vector,
-    make_state_vector,
-    make_true_anomaly,
-    velocity_from_vector,
     vector3d_from_position,
-    make_vector2d,
     make_vector3d,
     vector3d_from_velocity,
 )
@@ -37,8 +25,6 @@ from afmaths.tensors import (
     dot_product_3d,
     vector_cross_multiplication_3d,
     vector_magnitude_3d,
-    vector_multiplication_2d,
-    vector_multiplication_3d,
     vector_negate,
     vector_normalise,
     vector_subtract_3d,
@@ -48,12 +34,8 @@ from afmaths.geometry.geometry import (
     calculate_distance_3d,
     eccentricity_factor_minus,
     eccentricity_factor_plus,
-    eccentricity,
-    generate_angles_on_circle,
     normalise_angle,
     semi_latus_rectum,
-    semi_minor_axis,
-    semi_minor_axis_from_semi_latus_rectum,
 )
 from afmaths.operation import (
     CUBE,
@@ -62,18 +44,12 @@ from afmaths.operation import (
     SQUARE,
     add,
     divide_by,
-    exponentiate,
-    interval_points,
     multiply,
-    negate,
-    newtons_raphson_method,
-    ratio,
     square_root,
     subtract,
 )
 from astronomy_types import (
     Acceleration,
-    Coordinate2D,
     Coordinate3D,
     EccentricAnomaly,
     GravitationalParameter,
@@ -88,7 +64,6 @@ from astronomy_types import (
     Inclination,
     ArgumentOfPeriapsis,
     Second,
-    SemiLatusRectum,
     SemiMajorAxis,
     Eccentricity,
     StateVector,
@@ -96,14 +71,12 @@ from astronomy_types import (
     Scalar,
     Vector3D,
     Velocity,
-    VelocityVector,
     Distance,
 )
 
 from afmaths.afmath_types import (
     AngularMomentum,
     Area,
-    DeltaV,
     Force,
     Mass,
     OrbitalDirection,
@@ -181,49 +154,6 @@ def orbital_direction_from_inclination(i: Inclination) -> OrbitalDirection:
 
 
 # region Orbits
-
-
-def gravitational_parameter(
-    mass1: Mass, mass2: Mass = Mass(0)
-) -> GravitationalParameter:
-    """
-    Calculates the graviational parameter (Mu) of two objects in m^3/s^2
-
-    :param mass1: The first bodies mass
-    :type mass1: float
-    :param mass2: The second bodies mass
-    :type mass2: float
-    :return: Mu = G * (mass1 + mass2)
-    :rtype: Mass
-    """
-    return multiply(GRAVITATIONAL_CONSTANT)(add(mass1)(mass2))
-
-
-def univesal_gravitation(
-    mass1: Scalar, mass2: Scalar, distance_metres: Distance
-) -> float:
-    """
-    Calculate the strength of the gravitational "force" between two objects.
-
-    :param mass1: The first object's mass
-    :type mass1: float
-    :param mass2: The second object's mass
-    :type mass2: float
-    :param distance_metres: The distance between the two objects
-    :type distance_metres: float
-    :return: Description
-    :rtype: float
-    """
-    return multiply(GRAVITATIONAL_CONSTANT)(
-        multiply(mass1)(mass2) / SQUARE(distance_metres)
-    )
-
-
-def gravitational_acceleration_at_radius(
-    mu: GravitationalParameter, radius: Distance
-) -> Acceleration:
-    """Calculates the gravitational acceleration at a given radius from the central body."""
-    return divide_by(SQUARE(radius))(mu)
 
 
 def kepler_equation(E: EccentricAnomaly, e: Eccentricity) -> MeanAnomaly:

@@ -13,6 +13,7 @@ from afmaths.physics.space.engineering.astrodynamics.phase_orbit import (
 from afmaths.afmath_types import DeltaV
 from afmaths.physics.space.type_conversion_helpers import make_eccentric_anomaly
 from afmaths.visualisations.base import (
+    AHEAD_BEHIND_CUTOFF_RAD,
     align_phase_poi_to_initial_true_anomaly,
     coordinates_for_elements,
     expected_shared_apsis_radius,
@@ -20,6 +21,7 @@ from afmaths.visualisations.base import (
     phase_direction_label,
     phase_is_higher_than_original,
     plotted_radius_for_eccentric_anomaly,
+    plot_coordinate_for_true_anomaly,
     scale_orbital_elements_for_plot,
 )
 from afmaths.visualisations.helpers import (
@@ -55,6 +57,30 @@ from astronomy_types import (
     SemiMajorAxis,
     TrueAnomaly,
 )
+
+
+def true_anomaly_plot_node(
+    name: str,
+    label: str,
+    primary_focus_plot_coordinate: Coordinate2D,
+    orbital_elements: OrbitalElements,
+    true_anomaly_value: TrueAnomaly,
+    colour: str,
+    symbol: str,
+) -> PlotNode:
+    """Build a labelled marker at a true anomaly on the plotted orbit."""
+    return PlotNode(
+        name=name,
+        coordinate=plot_coordinate_for_true_anomaly(
+            primary_focus_plot_coordinate=primary_focus_plot_coordinate,
+            elements=orbital_elements,
+            true_anomaly_value=true_anomaly_value,
+        ),
+        text=f"{label}<br>ta = {true_anomaly_value:.3f} rad",
+        colour=colour,
+        symbol=symbol,
+    )
+
 
 def phase_poi_label(
     phase_orbit_elements: OrbitalElements,

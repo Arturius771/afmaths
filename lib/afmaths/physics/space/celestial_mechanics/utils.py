@@ -31,13 +31,13 @@ def generate_all_orbit_positions(
     if resolution < 5:
         raise ValueError("Resolution must be greater than 5.")
     position_list = []
-    for E in generate_angles_on_circle(resolution):
+    for eccentric_anomaly in generate_angles_on_circle(resolution):
         position_list.append(
             position_vector_at_time(
                 replace(
                     orbital_elements,
                     true_anomaly=true_anomaly_from_eccentric_anomaly(
-                        EccentricAnomaly(Anomaly(Radians(Scalar(E)))),
+                        EccentricAnomaly(Anomaly(Radians(Scalar(eccentric_anomaly)))),
                         orbital_elements.eccentricity,
                     ),
                 ),

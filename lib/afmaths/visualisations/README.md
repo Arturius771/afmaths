@@ -19,7 +19,7 @@ Names containing underscores can also be written with spaces or hyphens:
 ```bash
 python lib/afmaths/visualisations/visualisation_launcher.py "solar system"
 python lib/afmaths/visualisations/visualisation_launcher.py solar-system
-python lib/afmaths/visualisations/visualisation_launcher.py solar_system_3d
+python lib/afmaths/visualisations/visualisation_launcher.py orbit-3d --centre SUN
 ```
 
 ---
@@ -29,7 +29,9 @@ python lib/afmaths/visualisations/visualisation_launcher.py solar_system_3d
 Orbit-based visualisations use a common orbit model and can be populated from one of three sources:
 
 - `tle` — fetches TLE data from Space-Track using one or more NORAD IDs.
+
 - `horizon` — fetches state vectors from JPL Horizons and converts them to orbital elements.
+
 - `elements` — uses orbital elements supplied directly on the command line.
 
 Select the source with `--source`:
@@ -59,10 +61,12 @@ python lib/afmaths/visualisations/visualisation_launcher.py ground_track \
 The source abstraction is used by:
 
 - `control_room`
+
 - `ground_track`
+
 - `current_ground_track`
-- `itrf_orbit_3d`
-- `satellite_earth_3d`
+
+- `orbit_3d`
 
 The remaining visualisations use their own fixed or specialised inputs.
 
@@ -136,6 +140,15 @@ python lib/afmaths/visualisations/visualisation_launcher.py control_room \
   --true-anomaly 0 \
   --orbits 1 \
   --current-orbits 1
+```
+
+The control room's inertial 3D panel accepts the same system options as `orbit_3d`. `--reference-frame ICRF` or `GCRF` selects that panel's frame, while the separate Earth-fixed panel remains ITRF and satellite-only.
+
+```bash
+python lib/afmaths/visualisations/visualisation_launcher.py control_room \
+  --centre SUN \
+  --body EARTH MARS JUPITER \
+  --reference-frame ICRF
 ```
 
 ---
@@ -214,86 +227,46 @@ ground_track_current
 
 ---
 
-### `itrf_orbit_3d`
+### `orbit_3d`
 
-Displays one or more propagated orbits in the International Terrestrial Reference Frame (ITRF).
+Builds the common 3D orbit view for Horizons bodies, satellites, or both. The default is the Earth-Moon system in GCRF. Each orbiting body's legend entry toggles its orbit, body, and prediction together.
 
-Alias: `itrf`
+`--reference-frame` accepts `ICRF`, `GCRF`, and `ITRF`. ICRF and GCRF currently share the inertial propagation path. ITRF transforms Earth-centred satellite tracks into Earth-fixed coordinates, so it requires a satellite orbit and does not currently support Horizons bodies.
 
-TLE:
+Earth-Moon (default):
 
 ```bash
-python lib/afmaths/visualisations/visualisation_launcher.py itrf \
+python lib/afmaths/visualisations/visualisation_launcher.py orbit_3d
+```
+
+Heliocentric solar system:
+
+```bash
+python lib/afmaths/visualisations/visualisation_launcher.py orbit_3d \
+  --centre SUN \
+  --reference-frame ICRF
+```
+
+Select only specific Horizons bodies:
+
+```bash
+python lib/afmaths/visualisations/visualisation_launcher.py orbit_3d \
+  --centre SUN \
+  --body EARTH MARS JUPITER
+```
+
+Satellite-only Earth-fixed view:
+
+```bash
+python lib/afmaths/visualisations/visualisation_launcher.py orbit_3d \
   --source tle \
-  --norad-id 25544
-```
-
-Multiple satellites can be displayed:
-
-```bash
-python lib/afmaths/visualisations/visualisation_launcher.py itrf \
-  --norad-id 25544 20580
-```
-
-Horizons:
-
-```bash
-python lib/afmaths/visualisations/visualisation_launcher.py itrf \
-  --source horizon \
-  --target MOON
-```
-
-Custom orbital elements:
-
-```bash
-python lib/afmaths/visualisations/visualisation_launcher.py itrf \
-  --source elements \
-  --inclination 0.900590 \
-  --semi-major-axis 6778000
-```
-
-Control the propagation duration with:
-
-```bash
-python lib/afmaths/visualisations/visualisation_launcher.py itrf \
-  --norad-id 25544 \
+  --norad-id 25544 20580 \
+  --reference-frame ITRF \
+  --no-system-bodies \
   --orbits 5
 ```
 
-The legacy name `itrf_custom` is retained as an alias for `itrf_orbit_3d`.
-
----
-
-### `satellite_earth_3d`
-
-Displays one or more orbits around a 3D Earth.
-
-Alias: `satellite_earth`
-
-TLE:
-
-```bash
-python lib/afmaths/visualisations/visualisation_launcher.py satellite_earth \
-  --source tle \
-  --norad-id 25544
-```
-
-Multiple satellites can be supplied:
-
-```bash
-python lib/afmaths/visualisations/visualisation_launcher.py satellite_earth \
-  --norad-id 25544 20580
-```
-
-Horizons:
-
-```bash
-python lib/afmaths/visualisations/visualisation_launcher.py satellite_earth \
-  --source horizon \
-  --target MOON
-```
-
-Custom orbital elements are also supported through `--source elements`.
+The legacy names `moon_earth_3d`, `moon_earth`, `solar_system_3d`, `solar_system`, `satellite_earth_3d`, `satellite_earth`, `itrf_orbit_3d`, `itrf`, and `itrf_custom` remain aliases for `orbit_3d`.
 
 ---
 
@@ -395,40 +368,6 @@ python lib/afmaths/visualisations/visualisation_launcher.py hohmann_tradeoff
 
 ---
 
-## Celestial visualisations
-
-### `solar_system_3d`
-
-Displays the 3D Solar System visualisation.
-
-```bash
-python lib/afmaths/visualisations/visualisation_launcher.py solar_system_3d
-```
-
-Alias:
-
-```bash
-python lib/afmaths/visualisations/visualisation_launcher.py solar_system
-```
-
----
-
-### `moon_earth_3d`
-
-Displays the 3D Earth–Moon visualisation.
-
-```bash
-python lib/afmaths/visualisations/visualisation_launcher.py moon_earth_3d
-```
-
-Alias:
-
-```bash
-python lib/afmaths/visualisations/visualisation_launcher.py moon_earth
-```
-
----
-
 ## Collision detection
 
 ### `collision_detection`
@@ -446,39 +385,75 @@ python lib/afmaths/visualisations/visualisation_launcher.py collision_detection
 The launcher supports the following options:
 
 | Option                                    | Description                                                    |
+
 | ----------------------------------------- | -------------------------------------------------------------- |
+
 | `name`                                    | Name or alias of the visualisation to launch                   |
+
 | `--source {tle,horizon,elements}`         | Orbit data source for source-backed visualisations             |
+
 | `--norad-id ID [ID ...]`                  | One or more NORAD catalogue IDs for `--source tle`             |
+
 | `--target TARGET [TARGET ...]`            | One or more JPL Horizons targets for `--source horizon`        |
+
 | `--orbits N`                              | Number of orbits to propagate                                  |
+
 | `--tle-orbits N`                          | Backwards-compatible alias for `--orbits`                      |
+
 | `--current-orbits N`                      | Number of current-position orbits used by the control room     |
+
 | `--inclination RAD`                       | Orbital inclination in radians                                 |
+
 | `--right-ascension-of-ascending-node RAD` | RAAN in radians                                                |
+
 | `--argument-of-periapsis RAD`             | Argument of periapsis in radians                               |
+
 | `--semi-major-axis M`                     | Semi-major axis in metres                                      |
+
 | `--eccentricity E`                        | Orbital eccentricity                                           |
+
 | `--true-anomaly RAD`                      | True anomaly in radians                                        |
+
+| `--reference-frame {ICRF,GCRF,ITRF}`       | Reference frame used by `orbit_3d`                             |
+
+| `--centre {EARTH,SUN}`                     | Central body used by `orbit_3d`                                |
+
+| `--body TARGET [TARGET ...]`               | Horizons bodies displayed by `orbit_3d`                        |
+
+| `--system-bodies` / `--no-system-bodies`   | Include or omit default Moon/planet bodies in `orbit_3d`       |
 
 ### Plot settings
 
 Plot settings can be overridden from the same launcher. Flags only affect visualisations that support the corresponding setting; otherwise the existing visualisation default is retained.
 
 | Option | Description |
+
 | --- | --- |
+
 | `--distance-scale M` | Physical distance in metres represented by one plot unit where supported |
+
 | `--plot-width PX` | 2D plot width |
+
 | `--plot-height PX` | 2D plot height |
+
 | `--plot-min-x VALUE` | 2D plot minimum X value |
+
 | `--plot-min-y VALUE` | 2D plot minimum Y value |
+
 | `--plot-max-x VALUE` | 2D plot maximum X value |
+
 | `--plot-max-y VALUE` | 2D plot maximum Y value |
+
 | `--slider-steps N` | Slider resolution for interactive 2D plots |
+
 | `--plot-points N` | Sampling resolution for orbit and ground-track plots |
+
 | `--lines` / `--no-lines` | Enable or disable lines between ground-track samples |
+
 | `--show-orbit-markers` / `--no-show-orbit-markers` | Enable or disable ground-track orbit markers |
+
 | `--dashboard-columns N` | Number of control-room dashboard columns |
+
 | `--output-path PATH` | Write the control-room dashboard to a specific HTML path |
 
 For example:
@@ -554,8 +529,10 @@ python lib/afmaths/visualisations/visualisation_launcher.py ground_track \
 Display multiple satellites in ITRF:
 
 ```bash
-python lib/afmaths/visualisations/visualisation_launcher.py itrf \
-  --norad-id 25544 20580
+python lib/afmaths/visualisations/visualisation_launcher.py orbit_3d \
+  --norad-id 25544 20580 \
+  --reference-frame ITRF \
+  --no-system-bodies
 ```
 
 Display a Horizons target:
@@ -606,19 +583,29 @@ python lib/afmaths/visualisations/visualisation_launcher.py control_room \
 ## Visualisation name reference
 
 | Visualisation          | Alias                                     |
+
 | ---------------------- | ----------------------------------------- |
+
 | `control_room`         | `controlroom`                             |
-| `itrf_orbit_3d`        | `itrf`, `itrf_custom`                     |
-| `satellite_earth_3d`   | `satellite_earth`                         |
+
+| `orbit_3d`              | `moon_earth`, `moon_earth_3d`, `solar_system`, `solar_system_3d`, `satellite_earth`, `satellite_earth_3d`, `itrf`, `itrf_orbit_3d`, `itrf_custom` |
+
 | `ground_track`         | `ground_track_tle`, `ground_track_custom` |
+
 | `current_ground_track` | `ground_track_current`                    |
+
 | `collision_detection`  | —                                         |
+
 | `hohmann_tradeoff`     | —                                         |
+
 | `hohmann_transfer_2d`  | `hohmann_transfer`                        |
+
 | `keplers_ellipse_2d`   | `kepler`                                  |
-| `moon_earth_3d`        | `moon_earth`                              |
+
 | `newton_iteration`     | —                                         |
+
 | `phase_orbit_2d`       | `phase_orbit`                             |
-| `solar_system_3d`      | `solar_system`                            |
+
 | `two_body_2d`          | `two_body`                                |
+
 | `velocity_time`        | —                                         |

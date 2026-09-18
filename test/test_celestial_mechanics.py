@@ -2,7 +2,15 @@ import math
 import unittest
 
 from afmaths.afmath_types import AngularMomentum, Force, Mass, OrbitalDirection
-from afmaths.constants import EARTH_MU, EXAMPLE_ELEMENTS, SUN_MU
+from afmaths.constants import (
+    ASTRONOMICAL_UNIT,
+    EARTH_MASS,
+    EARTH_MU,
+    EXAMPLE_ELEMENTS,
+    SUN_MASS,
+    SUN_MU,
+)
+from afmaths.numerical_analysis import root_solver
 from afmaths.operation import add, multiply, multiply, subtract
 from afmaths.physics.space.celestial_mechanics.celestial_mechanics import (
     apoapsis_radius,
@@ -40,6 +48,11 @@ from astronomy_types import (
     VelocityVector,
 )
 
+from afmaths.physics.space.celestial_mechanics.gravitation import (
+    lagrange_points,
+    planetary_sphere_of_influence_approximation,
+    solve_for_equilibrium,
+)
 from afmaths.physics.space.celestial_mechanics.orbital_elements import (
     eccentric_anomaly_from_true_anomaly,
     eccentric_anomaly_solved,
@@ -392,6 +405,93 @@ class CelestialMechanicsTestMethods(unittest.TestCase):
                 EXAMPLE_ELEMENTS,
             ),
         )
+
+    def test_planetary_sphere_of_influence_approximation(self):
+
+        soi = planetary_sphere_of_influence_approximation(
+            mean_distance=ASTRONOMICAL_UNIT,
+            planet_mass=EARTH_MASS,
+            star_mass=SUN_MASS,
+        )
+        self.assertIsNotNone(soi)
+        self.assertAlmostEqual(soi, 924_625_176.0377866, 5)
+
+        # Mercury
+        self.assertAlmostEqual(
+            planetary_sphere_of_influence_approximation(
+                mean_distance=Distance(Scalar(ASTRONOMICAL_UNIT * 0.387)),
+                planet_mass=Mass(3.301e23),
+                star_mass=SUN_MASS,
+            ),
+            112_379_467.40321627,
+            5,
+        )
+
+        # Neptune
+        self.assertAlmostEqual(
+            planetary_sphere_of_influence_approximation(
+                mean_distance=Distance(Scalar(ASTRONOMICAL_UNIT * 30.05708)),
+                planet_mass=Mass(1.024e26),
+                star_mass=SUN_MASS,
+            ),
+            86_613_295_806.5268,
+            5,
+        )
+
+    def test_root_solver(self):
+        solution, history = root_solver(
+            iteration_function=lambda x: 0.5 * (x + 2 / x),
+            initial_guess=1.0,
+            difference_function=lambda next_x, x: next_x - x,
+        )
+
+        self.assertAlmostEqual(solution, math.sqrt(2), places=6)
+
+        self.assertEqual(history[0], (0, 1.0, None))
+        self.assertTrue(len(history) > 1)
+
+    def test_solve_for_equilibrium(self):
+        mu = GravitationalParameter(Scalar(0.5))
+
+        self.assertAlmostEqual(
+            solve_for_equilibrium(mu, initial_guess=0.0),
+            0.0,
+            places=6,
+        )
+
+        self.assertAlmostEqual(
+            solve_for_equilibrium(mu, initial_guess=1.0),
+            1.19840614455492,
+            places=6,
+        )
+
+        self.assertAlmostEqual(
+            solve_for_equilibrium(mu, initial_guess=-1.0),
+            -1.19840614455492,
+            places=6,
+        )
+
+    def test_lagrange_points_equal_mass_bodies(self):
+        m1 = Mass(Scalar(1))
+        m2 = Mass(Scalar(1))
+        r = Distance(Scalar(10))
+
+        l1, l2, l3, l4, l5 = lagrange_points(m1, m2, r)
+
+        self.assertAlmostEqual(l1.x, 0.0, places=6)
+        self.assertAlmostEqual(l1.y, 0.0, places=6)
+
+        self.assertAlmostEqual(l2.x, 11.9840614455492, places=6)
+        self.assertAlmostEqual(l2.y, 0.0, places=6)
+
+        self.assertAlmostEqual(l3.x, -11.9840614455492, places=6)
+        self.assertAlmostEqual(l3.y, 0.0, places=6)
+
+        self.assertAlmostEqual(l4.x, 0.0, places=6)
+        self.assertAlmostEqual(l4.y, 8.660254037844386, places=6)
+
+        self.assertAlmostEqual(l5.x, 0.0, places=6)
+        self.assertAlmostEqual(l5.y, -8.660254037844386, places=6)
 
 
 if __name__ == "__main__":

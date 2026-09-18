@@ -10,6 +10,7 @@ from afmaths.constants import (
 from afmaths.geometry.transformations import (
     ellipse_perimeter_coordinate_from_eccentric_anomaly,
 )
+from afmaths.numerical_analysis import root_solver
 from afmaths.physics.space.type_conversion_helpers import (
     make_eccentric_anomaly,
     coordinate2d_from_vector,
@@ -476,34 +477,15 @@ def eccentric_anomaly_solved(
 ) -> tuple[EccentricAnomaly, list]:
     """Solves for Eccentric Anomaly by repeatedly applying the iteration_function until the delta between the guess and the next guess is basically 0."""
 
-    history = []  # TODO: make this more structured
+    E, history = root_solver(
+        iteration_function=lambda E_i: iteration_function(E_i, e, M),
+        initial_guess=EccentricAnomaly(M),
+        difference_function=lambda E_next, E_i: float(E_next - E_i),
+        tolerance=tolerance,
+        max_iterations=max_iterations,
+    )
 
-    E_i = EccentricAnomaly(M)
-    delta_E = float(
-        "inf"
-    )  # When this delta is 0 or close to it, we have arrived at the answer
-
-    iteration = 0
-    history.append((iteration, E_i, math.degrees(E_i), None))
-
-    while iteration < max_iterations and abs(delta_E) > tolerance:
-        # Find the next guess for E
-        E_next = iteration_function(E_i, e, M)
-
-        # Calculate the delta between the first and next guess
-        delta_E = E_next - E_i
-
-        # Track iterations
-        iteration += 1
-
-        # Update history
-        history.append((iteration, E_next, math.degrees(E_next), delta_E))
-
-        # Set the next guess
-        E_i = E_next
-
-    # Return an answer once the loop is broken
-    return make_eccentric_anomaly(E_i), history
+    return make_eccentric_anomaly(E), history
 
 
 def eccentric_anomaly_at_time(

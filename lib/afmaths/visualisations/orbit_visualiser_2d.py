@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass
 from itertools import cycle
 
@@ -10,6 +11,7 @@ from astronomy_types import (
     Coordinate3D,
     Distance,
     OrbitalElements,
+    Radians,
     Scalar,
     Second,
     SemiMajorAxis,
@@ -18,11 +20,13 @@ from astronomy_types import (
 
 from afmaths.afmath_types import Mass
 from afmaths.constants import MOON_ELEMENTS
-from afmaths.geometry.geometry import calculate_distance
+from afmaths.geometry.geometry import calculate_distance, generate_angles_on_circle
 from afmaths.physics.kinematics import position_displacement
 from afmaths.physics.space.celestial_mechanics.celestial_mechanics import (
-    gravitational_parameter,
     vis_viva,
+)
+from afmaths.physics.space.celestial_mechanics.gravitation import (
+    gravitational_parameter,
 )
 from afmaths.physics.space.celestial_mechanics.orbital_elements import (
     eccentric_anomaly_at_time,
@@ -273,6 +277,22 @@ def add_kepler_geometry_traces(
             },
             visible="legendonly",
         )
+    )
+
+    ellipse_centre = Coordinate2D(
+        Scalar((float(periapsis.x) + float(apoapsis.x)) / 2),
+        Scalar((float(periapsis.y) + float(apoapsis.y)) / 2),
+    )
+
+    add_auxiliary_circle(
+        fig,
+        ellipse_centre,
+        float(plot_elements.semi_major_axis),
+        periapsis,
+        apoapsis,
+        generate_angles_on_circle(100),
+        name=body_name,
+        colour=colour,
     )
 
     fig.add_trace(
@@ -703,6 +723,59 @@ def build_orbital_system_2d_figure(
     return fig
 
 
+def add_auxiliary_circle(
+    fig: go.Figure,
+    ellipse_centre: Coordinate2D,
+    semi_major_axis: float,
+    periapsis: Coordinate2D,
+    apoapsis: Coordinate2D,
+    eccentric_anomalies: list[Radians],
+    *,
+    name: str,
+    colour: str,
+) -> None:
+    """Add the auxiliary circle centred on the orbital ellipse centre.
+
+    Eccentric anomaly is measured on this circle from the periapsis direction.
+    The periapsis/apoapsis coordinates keep the circle aligned with an orbit
+    whose argument of periapsis rotates it in the plot plane.
+    """
+    major_axis_direction_x = (float(periapsis.x) - float(apoapsis.x)) / (
+        2 * semi_major_axis
+    )
+    major_axis_direction_y = (float(periapsis.y) - float(apoapsis.y)) / (
+        2 * semi_major_axis
+    )
+
+    fig.add_trace(
+        go.Scatter(
+            x=[
+                float(ellipse_centre.x)
+                + semi_major_axis
+                * (
+                    math.cos(float(eccentric_anomaly)) * major_axis_direction_x
+                    - math.sin(float(eccentric_anomaly)) * major_axis_direction_y
+                )
+                for eccentric_anomaly in eccentric_anomalies
+            ],
+            y=[
+                float(ellipse_centre.y)
+                + semi_major_axis
+                * (
+                    math.cos(float(eccentric_anomaly)) * major_axis_direction_y
+                    + math.sin(float(eccentric_anomaly)) * major_axis_direction_x
+                )
+                for eccentric_anomaly in eccentric_anomalies
+            ],
+            mode="lines",
+            name=f"{name} auxiliary circle",
+            legendgroup=f"{name}-kepler",
+            line={"color": colour, "dash": "dash"},
+            visible="legendonly",
+        )
+    )
+
+
 def build_default_orbit_visualiser_2d_figure(
     satellites: list[OrbitingBody2D] | None = None,
     settings: PlotOrbital2DSettings | None = None,
@@ -712,11 +785,11 @@ def build_default_orbit_visualiser_2d_figure(
 
     # TODO: Add default celestial bodies like the Moon here.
     bodies = [
-        # moon_orbiting_body(),
+        moon_orbiting_body(),
         *satellite_bodies,
     ]
 
-    title = "Earth-Moon orbital system"
+    title = "Earth-Moon-Satellite orbital system (@ epoch)"
 
     if satellite_bodies:
         satellite_names = ", ".join(satellite.name for satellite in satellite_bodies)

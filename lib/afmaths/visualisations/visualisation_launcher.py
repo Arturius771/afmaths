@@ -7,6 +7,7 @@ from pathlib import Path
 
 import plotly.graph_objects as go
 
+from afmaths.afmath_types import Mass
 from afmaths.constants import (
     EXAMPLE_ELEMENTS,
     ISS_NORAD_ID,
@@ -34,7 +35,6 @@ from astronomy_types import (
 
 from collision_detection import build_collision_detection_figure
 from control_room import launch_control_room
-from eci_orbit_3d import visualisation_3d_satellite_earth
 from ground_track import (
     GROUND_TRACK_POINTS,
     visualisation_2d_ground_track,
@@ -45,8 +45,7 @@ from hohmann_transfer_perifocal_2d import (
     DEFAULT_PLOT_SETTINGS as HOHMANN_PLOT_SETTINGS,
     build_default_hohmann_transfer_2d_perifocal_figure,
 )
-from itrf_orbit_3d import visualisation_3d_itrf
-from moon_earth_3d import build_moon_earth_3d_figure
+from lagrange_points_2d import build_lagrange_points_figure
 from newton_iteration import build_newton_iteration_figure
 from orbit_source import (
     Orbit,
@@ -64,7 +63,12 @@ from phase_orbit_2d import (
     DEFAULT_PLOT_SETTINGS as PHASE_PLOT_SETTINGS,
     build_default_phase_orbit_2d_perifocal_figure,
 )
-from solar_system_3d import build_solar_system_3d_figure
+from orbit_system_3d import (
+    DEFAULT_SOLAR_SYSTEM_BODIES,
+    ReferenceFrame,
+    build_3d_orbit_system_figure,
+)
+from afmaths.physics.space.external.horizons_api import HorizonsCommandTarget
 from velocity_time import build_velocity_time_figure
 
 
@@ -83,6 +87,10 @@ class PlotOptions:
     show_orbit_markers: bool | None = None
     dashboard_columns: int = 1
     output_path: Path | None = None
+    reference_frame: ReferenceFrame = "GCRF"
+    central_body: HorizonsCommandTarget = HorizonsCommandTarget.EARTH
+    horizons_bodies: list[HorizonsCommandTarget] | None = None
+    include_default_system_bodies: bool = True
 
     def __post_init__(self) -> None:
         if self.distance_scale is not None and self.distance_scale <= 0:
@@ -108,6 +116,19 @@ def normalise_name(name: str) -> str:
     return "_".join(name.strip().lower().replace("-", " ").split())
 
 
+def parse_horizons_target(
+    value: str | HorizonsCommandTarget,
+) -> HorizonsCommandTarget:
+    """Resolve a CLI target name without re-parsing an enum default."""
+    if isinstance(value, HorizonsCommandTarget):
+        return value
+
+    try:
+        return HorizonsCommandTarget[value.upper()]
+    except KeyError as error:
+        raise argparse.ArgumentTypeError(f"Unknown Horizons target: {value}") from error
+
+
 STATIC_VISUALISATIONS: dict[str, Callable[[], go.Figure]] = {
     "collision_detection": build_collision_detection_figure,
     "hohmann_tradeoff": build_hohmann_tradeoff_figure,
@@ -119,24 +140,22 @@ STATIC_VISUALISATIONS: dict[str, Callable[[], go.Figure]] = {
 ORBIT_VISUALISATIONS = {
     "ground_track",
     "current_ground_track",
-    "itrf_orbit_3d",
-    "satellite_earth_3d",
 }
 
 
 CONFIGURABLE_VISUALISATIONS = {
     "hohmann_transfer_2d",
-    "moon_earth_3d",
+    "lagrange_points",
+    "orbit_3d",
     "orbit_2d",
     "phase_orbit_2d",
-    "solar_system_3d",
 }
 
 
 ALIASES = {
     "controlroom": "control_room",
-    "itrf": "itrf_orbit_3d",
-    "satellite_earth": "satellite_earth_3d",
+    "itrf": "orbit_3d",
+    "satellite_earth": "orbit_3d",
     "ground_track_tle": "ground_track",
     "ground_track_custom": "ground_track",
     "ground_track_current": "current_ground_track",
@@ -146,11 +165,17 @@ ALIASES = {
     "two_body": "orbit_2d",
     "two_body_2d": "orbit_2d",
     "orbit": "orbit_2d",
-    "solar_system": "solar_system_3d",
-    "moon_earth": "moon_earth_3d",
+    "solar_system": "orbit_3d",
+    "solar_system_3d": "orbit_3d",
+    "moon_earth": "orbit_3d",
+    "moon_earth_3d": "orbit_3d",
+    "satellite_earth_3d": "orbit_3d",
+    "itrf_orbit_3d": "orbit_3d",
     "hohmann_transfer": "hohmann_transfer_2d",
     "phase_orbit": "phase_orbit_2d",
-    "itrf_custom": "itrf_orbit_3d",
+    "itrf_custom": "orbit_3d",
+    "lagrange": "lagrange_points",
+    "lagrange_points_2d": "lagrange_points",
 }
 
 
@@ -239,25 +264,6 @@ def orbital_figure_builder(
             lines=lines,
         )
 
-    if name == "itrf_orbit_3d":
-        return visualisation_3d_itrf(
-            orbits,
-            track_for_orbits=total_orbits,
-            **defined_kwargs(
-                distance_scale=options.distance_scale,
-                orbit_points=options.plot_points,
-            ),
-        )
-
-    if name == "satellite_earth_3d":
-        return visualisation_3d_satellite_earth(
-            orbits,
-            **defined_kwargs(
-                distance_scale=options.distance_scale,
-                orbit_points=options.plot_points,
-            ),
-        )
-
     raise ValueError(f"Unknown orbital visualisation: {name}")
 
 
@@ -267,6 +273,9 @@ def configurable_figure_builder(
     *,
     orbits: list[Orbit] | None = None,
     total_orbits: float | None = None,
+    mass_1: Mass | None = None,
+    mass_2: Mass | None = None,
+    distance: Distance | None = None,
 ) -> go.Figure:
     if name == "hohmann_transfer_2d":
         return build_default_hohmann_transfer_2d_perifocal_figure(
@@ -294,6 +303,19 @@ def configurable_figure_builder(
             propagation_orbits=(total_orbits if total_orbits is not None else 1.0),
         )
 
+    if name == "lagrange_points":
+        if mass_1 is None or mass_2 is None or distance is None:
+            raise ValueError(
+                "lagrange_points requires --mass-1, --mass-2, and --distance."
+            )
+
+        return build_lagrange_points_figure(
+            mass_1=mass_1,
+            mass_2=mass_2,
+            distance=distance,
+            plot_width=options.plot_width,
+            plot_height=options.plot_height,
+        )
     if name == "phase_orbit_2d":
         return build_default_phase_orbit_2d_perifocal_figure(
             settings=_plot_2d_settings(
@@ -302,20 +324,30 @@ def configurable_figure_builder(
             )
         )
 
-    if name == "moon_earth_3d":
-        return build_moon_earth_3d_figure(
-            **defined_kwargs(
-                distance_scale=options.distance_scale,
-                orbit_points=options.plot_points,
+    if name == "orbit_3d":
+        default_bodies = (
+            []
+            if options.reference_frame == "ITRF"
+            else (
+                DEFAULT_SOLAR_SYSTEM_BODIES
+                if options.central_body is HorizonsCommandTarget.SUN
+                else [HorizonsCommandTarget.MOON]
             )
         )
-
-    if name == "solar_system_3d":
-        return build_solar_system_3d_figure(
+        return build_3d_orbit_system_figure(
+            central_body=options.central_body,
+            horizons_bodies=(
+                options.horizons_bodies
+                if options.horizons_bodies is not None
+                else (default_bodies if options.include_default_system_bodies else [])
+            ),
+            satellite_orbits=orbits or [],
+            reference_frame=options.reference_frame,
+            track_for_orbits=(total_orbits if total_orbits is not None else 3.0),
             **defined_kwargs(
                 distance_scale=options.distance_scale,
                 orbit_points=options.plot_points,
-            )
+            ),
         )
 
     raise ValueError(f"Unknown configurable visualisation: {name}")
@@ -330,19 +362,62 @@ def launch_visualisation(
     total_orbits: float | None = None,
     total_current_orbits: float | None = None,
     plot_options: PlotOptions | None = None,
+    mass_1: Mass | None = None,
+    mass_2: Mass | None = None,
+    distance: Distance | None = None,
 ) -> None:
     """Launch one named visualisation or the multi-plot control room."""
-    resolved_name = ALIASES.get(
-        normalise_name(name),
-        normalise_name(name),
-    )
+    requested_name = normalise_name(name)
+    resolved_name = ALIASES.get(requested_name, requested_name)
 
     options = plot_options or PlotOptions()
 
-    if resolved_name in {
-        *ORBIT_VISUALISATIONS,
-        "control_room",
+    # Preserve the old specialised commands while routing all three through the
+    # generic builder. The canonical orbit_3d command remains composable: it
+    # combines its default system bodies with explicitly supplied satellites.
+    if requested_name in {"solar_system", "solar_system_3d"}:
+        options = replace(
+            options,
+            central_body=HorizonsCommandTarget.SUN,
+            horizons_bodies=(options.horizons_bodies or DEFAULT_SOLAR_SYSTEM_BODIES),
+        )
+    elif requested_name in {"moon_earth", "moon_earth_3d"}:
+        options = replace(
+            options,
+            central_body=HorizonsCommandTarget.EARTH,
+            horizons_bodies=(options.horizons_bodies or [HorizonsCommandTarget.MOON]),
+        )
+    elif requested_name in {
+        "satellite_earth",
+        "satellite_earth_3d",
+        "itrf",
+        "itrf_orbit_3d",
+        "itrf_custom",
     }:
+        options = replace(
+            options,
+            central_body=HorizonsCommandTarget.EARTH,
+            horizons_bodies=[],
+            reference_frame=("ITRF" if requested_name.startswith("itrf") else "GCRF"),
+        )
+
+    requires_default_satellite = requested_name in {
+        "satellite_earth",
+        "satellite_earth_3d",
+        "itrf",
+        "itrf_orbit_3d",
+        "itrf_custom",
+    }
+
+    if (
+        resolved_name
+        in {
+            *ORBIT_VISUALISATIONS,
+            "control_room",
+        }
+        or requires_default_satellite
+    ):
+
         if source is OrbitSource.TLE and not norad_ids:
             norad_ids = [ISS_NORAD_ID]
 
@@ -368,6 +443,12 @@ def launch_visualisation(
             raise ValueError("Orbit counts must be greater than 0.")
 
         if resolved_name == "control_room":
+            if options.reference_frame == "ITRF":
+                raise ValueError(
+                    "The control room already includes an ITRF panel. "
+                    "Choose ICRF or GCRF for its inertial panel."
+                )
+
             launch_control_room(
                 orbits=orbits,
                 total_orbits=orbit_count,
@@ -382,15 +463,27 @@ def launch_visualisation(
                     if options.show_orbit_markers is not None
                     else True
                 ),
+                central_body=options.central_body,
+                horizons_bodies=options.horizons_bodies,
+                include_default_system_bodies=options.include_default_system_bodies,
+                inertial_reference_frame=options.reference_frame,
             )
             return
 
-        orbital_figure_builder(
-            resolved_name,
-            orbits,
-            orbit_count,
-            options,
-        ).show()
+        if requires_default_satellite:
+            configurable_figure_builder(
+                "orbit_3d",
+                options,
+                orbits=orbits,
+                total_orbits=orbit_count,
+            ).show()
+        else:
+            orbital_figure_builder(
+                resolved_name,
+                orbits,
+                orbit_count,
+                options,
+            ).show()
 
         return
 
@@ -402,7 +495,7 @@ def launch_visualisation(
                 horizons_targets=horizons_targets,
                 elements=elements,
             )
-            if resolved_name == "orbit_2d"
+            if resolved_name in {"orbit_2d", "orbit_3d"}
             else []
         )
 
@@ -411,6 +504,9 @@ def launch_visualisation(
             options,
             orbits=resolved_orbits,
             total_orbits=total_orbits,
+            mass_1=mass_1,
+            mass_2=mass_2,
+            distance=distance,
         ).show()
 
         return
@@ -443,6 +539,62 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "name",
         help='Visualisation name, for example "ground track".',
+    )
+
+    lagrange_group = parser.add_argument_group("Lagrange point system")
+
+    lagrange_group.add_argument(
+        "--mass-1",
+        type=float,
+        help="Mass of the primary body in kilograms.",
+    )
+
+    lagrange_group.add_argument(
+        "--mass-2",
+        type=float,
+        help="Mass of the secondary body in kilograms.",
+    )
+
+    lagrange_group.add_argument(
+        "--distance",
+        type=float,
+        help="Distance between the two bodies in metres.",
+    )
+
+    parser.add_argument(
+        "--reference-frame",
+        choices=["ICRF", "GCRF", "ITRF"],
+        default="GCRF",
+        help="3D orbit reference frame.",
+    )
+
+    parser.add_argument(
+        "--centre",
+        type=parse_horizons_target,
+        default=HorizonsCommandTarget.EARTH,
+        choices=[HorizonsCommandTarget.EARTH, HorizonsCommandTarget.SUN],
+        help="Central body for orbit_3d: EARTH or SUN.",
+    )
+
+    parser.add_argument(
+        "--body",
+        dest="horizons_bodies",
+        type=parse_horizons_target,
+        nargs="+",
+        help=(
+            "Horizons bodies to display in orbit_3d, for example MOON or "
+            "MERCURY VENUS EARTH MARS. Omit to use the centre's default set."
+        ),
+    )
+
+    parser.add_argument(
+        "--system-bodies",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help=(
+            "Include the default Moon or planet set when --body is omitted. "
+            "Use --no-system-bodies for a satellite-only plot."
+        ),
     )
 
     parser.add_argument(
@@ -668,6 +820,10 @@ def plot_options_from_args(
         show_orbit_markers=args.show_orbit_markers,
         dashboard_columns=args.dashboard_columns,
         output_path=args.output_path,
+        reference_frame=args.reference_frame,
+        central_body=args.centre,
+        horizons_bodies=args.horizons_bodies,
+        include_default_system_bodies=args.system_bodies,
     )
 
 
@@ -687,6 +843,11 @@ def main() -> None:
         total_orbits=args.orbits,
         total_current_orbits=args.current_orbits,
         plot_options=plot_options_from_args(args),
+        mass_1=(Mass(Scalar(args.mass_1)) if args.mass_1 is not None else None),
+        mass_2=(Mass(Scalar(args.mass_2)) if args.mass_2 is not None else None),
+        distance=(
+            Distance(Scalar(args.distance)) if args.distance is not None else None
+        ),
     )
 
 

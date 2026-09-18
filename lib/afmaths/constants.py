@@ -30,7 +30,7 @@ from astronomy_types import (
     Velocity,
 )
 
-from afmaths.afmath_types import GroundStation
+from afmaths.afmath_types import GroundStation, Mass
 from afmaths.operation import DOUBLE, exponentiate, multiply, negate
 
 ITRF_EXAMPLE_POSITION: list[Coordinate3D[Scalar]] = [
@@ -77,17 +77,28 @@ SECONDS_PER_HOUR = Second(Scalar(3600))
 MEAN_SOLAR_DAY = Second(Scalar(86400))
 SIDEREAL_DAY = Second(Scalar(86164.0905))
 ASTRONOMICAL_UNIT = Distance(Scalar(149_597_870_700))  # metres
-EARTH_MU_KM_CUBED = GravitationalParameter(Scalar(398_600.4418))  # km^3 / s^2
-EARTH_MU = GravitationalParameter(Scalar(3.986004418e14))  # m^3 / s^2
-KERBIN_MU = GravitationalParameter(
-    Scalar(3.5316000e12)
-)  # m^3 / s^2  3.5316000×10^12 m³/s²
-SUN_MU = GravitationalParameter(Scalar(1.32712440018e20))  # m^3 / s^2
 EARTH_RADIUS = Distance(Scalar(6_378_137.0))  # m
 EARTH_RADIUS_KM = Distance(Scalar(6378.0))  # km
 EARTH_ANGULAR_VELOCITY = Radians(
     Scalar((multiply(exponentiate(negate(5))(10))(7.29115)))
 )
+SUN_MASS = Mass(Scalar(1.98847e30))  # kg
+EARTH_MASS = Mass(Scalar(5.972e24))  # kg
+
+# region Gravitational Parameters
+EARTH_MU_KM_CUBED = GravitationalParameter(Scalar(398_600.4418))  # km^3 / s^2
+EARTH_MU = GravitationalParameter(Scalar(3.986004418e14))  # m^3 / s^2
+MERCURY_MU = GravitationalParameter(Scalar(2.2032e13))  # m^3 / s^2
+VENUS_MU = GravitationalParameter(Scalar(1.32712440018e20))  # m^3 / s^2
+MARS_MU = GravitationalParameter(Scalar(4.282837e13))  # m^3 / s^2
+JUPITER_MU = GravitationalParameter(Scalar(1.26686534e17))  # m^3 / s^2
+SATURN_MU = GravitationalParameter(Scalar(3.7931187e16))  # m^3 / s^2
+URANUS_MU = GravitationalParameter(Scalar(5.793939e15))  # m^3 / s^2
+NEPTUNE_MU = GravitationalParameter(Scalar(6.836529e15))  # m^3 / s^2
+KERBIN_MU = GravitationalParameter(
+    Scalar(3.5316000e12)
+)  # m^3 / s^2  3.5316000×10^12 m³/s²
+SUN_MU = GravitationalParameter(Scalar(1.32712440018e20))  # m^3 / s^2
 
 # region Orbital Elements
 

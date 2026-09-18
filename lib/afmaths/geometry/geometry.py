@@ -294,10 +294,17 @@ def ellipse_bounding_box(
 
 
 def generate_angles_on_circle(resolution: int) -> list[Radians]:
+    """Generate a list of angles evenly spaced around a circle.
+
+    Parameters:
+    resolution (int): The number of angles to generate.
+
+    Returns:
+    list[Radians]: A list of angles in radians.
+    """
     angles = []
     for val in interval_points(0, TWO_PI, resolution):
         angles.append(Radians(Scalar(val)))
-
     return angles
 
 
@@ -331,11 +338,11 @@ def area_of_sphere(radius: Distance) -> Area:
 
 # region Triangles
 
-#        / |
+#        /B|
 #   c  /   |
 #    /     | a
 #  /       |
-# _________|
+# _A______C|
 #     b
 
 
