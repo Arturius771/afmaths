@@ -58,6 +58,19 @@ def euclidian_distance(a: Coordinate2D, b: Coordinate2D) -> Distance:
     )
 
 
+def euclidian_distance_3d(a: Coordinate3D, b: Coordinate3D) -> Distance:
+    """Calculates the Euclidean distance between two points in 3D space (Euclidian)."""
+    return Distance(
+        Scalar(
+            square_root(
+                add(SQUARE(subtract(b.x)(a.x)))(
+                    add(SQUARE(subtract(b.y)(a.y)))(SQUARE(subtract(b.z)(a.z)))
+                )
+            )
+        )
+    )
+
+
 def euclidian_heading(a: Coordinate2D, b: Coordinate2D) -> Degrees:
     """Calculates the heading from point a to point b in degrees."""
     return Degrees(

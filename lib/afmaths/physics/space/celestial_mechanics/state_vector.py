@@ -18,9 +18,9 @@ from afmaths.physics.space.transformations import (
     transform_vector_from_perifocal,
 )
 from afmaths.physics.space.type_conversion_helpers import (
-    position_from_vector,
+    position_vector_from_vector,
     make_state_vector,
-    velocity_from_vector,
+    velocity_vector_from_vector,
     vector3d_from_position,
     vector3d_from_velocity,
 )
@@ -93,7 +93,7 @@ def perifocal_position_vector(
 ) -> PositionVector:
     """Calculates the position vector in the perifocal coordinate system"""
     # SFM L02: r = p / (1 + e * cos(theta)) * [cos(theta), sin(theta), 0]
-    return position_from_vector(
+    return position_vector_from_vector(
         vector_multiplication_3d(
             perifocal_radial_unit_vector(orbital_elements.true_anomaly),
             orbit_equation(
@@ -129,13 +129,6 @@ def perifocal_position_at_apoapsis(
     )
 
 
-def orbital_plane_position_at_true_anomaly(
-    orbital_elements: OrbitalElements,
-) -> PositionVector:
-    """Calculates the position vector of an orbit at a given true anomaly in the orbital plane reference frame."""
-    return perifocal_position_vector(orbital_elements)
-
-
 def velocity_vector_at_time(
     orbital_elements: OrbitalElements,
     time_offset_s: Second = Second(Scalar(0)),
@@ -155,7 +148,7 @@ def perifocal_velocity_vector(
 ) -> VelocityVector:
     """Calculates the velocity vector in the perifocal coordinate system"""
 
-    return velocity_from_vector(
+    return velocity_vector_from_vector(
         vector_multiplication_3d(
             perifocal_velocity_direction_vector(theta, e),
             Scalar(square_root(divide_by(multiply(a)(subtract(SQUARE(e))(1)))(mu))),
@@ -182,13 +175,13 @@ def state_vector_from_orbital_elements(
     )
 
     return make_state_vector(
-        position_from_vector(
+        position_vector_from_vector(
             transform_vector_from_perifocal(
                 orbital_elements,
                 vector3d_from_position(perifocal_position_gaussian),
             )
         ),
-        velocity_from_vector(
+        velocity_vector_from_vector(
             transform_vector_from_perifocal(
                 orbital_elements,
                 vector3d_from_velocity(perifocal_velocity_gaussian),

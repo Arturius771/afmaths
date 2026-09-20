@@ -20,17 +20,12 @@ from astronomy_types import (
     Year,
 )
 
-from afmaths.afmath_types import OrbitalDirection
 from afmaths.constants import EARTH_MU
 from afmaths.operation import divide_by
 from afmaths.physics.space.astronomy.time_functions import (
     date_from_day_number,
     julian_date_from_full_Date,
     time_from_day_fraction,
-)
-
-from afmaths.physics.space.celestial_mechanics.celestial_mechanics import (
-    orbital_direction_from_inclination,
 )
 from afmaths.physics.space.celestial_mechanics.orbital_elements import (
     eccentric_anomaly_solved,
@@ -95,12 +90,12 @@ COLUMN_2_MEAN_MOTION = 52
 COLUMN_2_REVOLUTION_NUMBER = 63
 
 
-def tle_column_one(tle: str) -> str:
+def tle_line_one(tle: str) -> str:
     """Returns the first line of a TLE, which contains the satellite's catalog number and epoch."""
     return tle[0:69]
 
 
-def tle_column_two(tle: str) -> str:
+def tle_line_two(tle: str) -> str:
     """Returns the second line of a TLE, which contains the orbital elements."""
     return tle[69:].lstrip("\r\n")
 
@@ -118,14 +113,14 @@ def get_tle_element_from_column(
 def parse_norad_id(tle: str) -> str:
     """Returns the NORAD ID of the satellite represented in the TLE."""
     return get_tle_element_from_column(
-        tle_column_one(tle), SATELLITE_CATALOGUE_NUMBER, COLUMN_1_ELSET
+        tle_line_one(tle), SATELLITE_CATALOGUE_NUMBER, COLUMN_1_ELSET
     )
 
 
 def parse_epoch(tle: str) -> str:
     """Epoch of the TLE, in the format YYDDD.DDDDDDDD."""
     return get_tle_element_from_column(
-        tle_column_one(tle), COLUMN_1_EPOCH, COLUMN_1_FIRST_DX_MEAN_MOTION
+        tle_line_one(tle), COLUMN_1_EPOCH, COLUMN_1_FIRST_DX_MEAN_MOTION
     )
 
 
@@ -149,7 +144,7 @@ def parse_inclination(tle: str) -> Inclination:
     return Inclination(
         radians_from_string(
             get_tle_element_from_column(
-                tle_column_two(tle), COLUMN_2_INCLINATION, COLUMN_2_RAAN
+                tle_line_two(tle), COLUMN_2_INCLINATION, COLUMN_2_RAAN
             )
         )
     )
@@ -161,7 +156,7 @@ def parse_right_ascension_ascending_node(tle: str) -> RightAscension:
         Radians(
             radians_from_string(
                 get_tle_element_from_column(
-                    tle_column_two(tle), COLUMN_2_RAAN, COLUMN_2_ECCENTRICITY
+                    tle_line_two(tle), COLUMN_2_RAAN, COLUMN_2_ECCENTRICITY
                 )
             )
         )
@@ -176,7 +171,7 @@ def parse_eccentricity(tle: str) -> Eccentricity:
                 float(
                     "0."
                     + get_tle_element_from_column(
-                        tle_column_two(tle),
+                        tle_line_two(tle),
                         COLUMN_2_ECCENTRICITY,
                         COLUMN_2_ARGUMENT_PERIAPSIS,
                     )
@@ -192,7 +187,7 @@ def parse_argument_of_periapsis(tle: str) -> ArgumentOfPeriapsis:
         Radians(
             radians_from_string(
                 get_tle_element_from_column(
-                    tle_column_two(tle),
+                    tle_line_two(tle),
                     COLUMN_2_ARGUMENT_PERIAPSIS,
                     COLUMN_2_MEAN_ANOMALY,
                 )
@@ -207,7 +202,7 @@ def parse_mean_anomaly(tle: str) -> MeanAnomaly:
         Anomaly(
             radians_from_string(
                 get_tle_element_from_column(
-                    tle_column_two(tle), COLUMN_2_MEAN_ANOMALY, COLUMN_2_MEAN_MOTION
+                    tle_line_two(tle), COLUMN_2_MEAN_ANOMALY, COLUMN_2_MEAN_MOTION
                 )
             )
         )
@@ -221,7 +216,7 @@ def parse_mean_motion_per_day(tle: str) -> MeanMotion:
             Scalar(
                 float(
                     get_tle_element_from_column(
-                        tle_column_two(tle),
+                        tle_line_two(tle),
                         COLUMN_2_MEAN_MOTION,
                         COLUMN_2_REVOLUTION_NUMBER,
                     )

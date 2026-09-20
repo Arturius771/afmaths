@@ -224,11 +224,11 @@ def vector3d_from_velocity(velocity_vector: VelocityVector) -> Vector3D[Scalar]:
     return make_vector3d(velocity_vector.x, velocity_vector.y, velocity_vector.z)
 
 
-def velocity_from_vector(vector: Vector3D) -> VelocityVector:
+def velocity_vector_from_vector(vector: Vector3D) -> VelocityVector:
     return VelocityVector(Velocity(vector.x), Velocity(vector.y), Velocity(vector.z))
 
 
-def position_from_vector(vector: Vector3D) -> PositionVector:
+def position_vector_from_vector(vector: Vector3D) -> PositionVector:
     return PositionVector(Position(vector.x), Position(vector.y), Position(vector.z))
 
 
