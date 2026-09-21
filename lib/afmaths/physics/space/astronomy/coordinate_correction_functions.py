@@ -124,16 +124,20 @@ def rising_and_setting(
     rise_ut = universal_time_from_greenwich(rise_full_date).time
     set_ut = universal_time_from_greenwich(set_full_date).time
 
+    # TODO: remove correction, check in book what this value is.
+    # correction = 0.008333
+    correction = 0
+
     rise_time_adjusted = Time(
         rise_ut.hour,
         rise_ut.minute,
-        Second(Scalar(rise_ut.second + 0.008333)),
+        Second(Scalar(rise_ut.second + correction)),
     )
 
     set_time_adjusted = Time(
         set_ut.hour,
         set_ut.minute,
-        Second(Scalar(set_ut.second + 0.008333)),
+        Second(Scalar(set_ut.second + correction)),
     )
 
     circumpolar = cosine_ha < -1
