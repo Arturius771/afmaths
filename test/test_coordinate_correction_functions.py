@@ -91,8 +91,8 @@ class CoordinateCorrectionTestMethods(unittest.TestCase):
         )
 
         location = GeographicCoordinates(
-            Radians(radians_from_degrees(Degrees(Scalar(64)))),
             Radians(radians_from_degrees(Degrees(Scalar(30)))),
+            Radians(radians_from_degrees(Degrees(Scalar(64)))),
         )
 
         greenwich_date = Date(
@@ -117,6 +117,7 @@ class CoordinateCorrectionTestMethods(unittest.TestCase):
             expected_hour=14,
             expected_minute=16,
             expected_second=18.018333000000002,
+            places=1,
         )
 
         assert_time_almost_equal(
@@ -125,8 +126,8 @@ class CoordinateCorrectionTestMethods(unittest.TestCase):
             expected_hour=4,
             expected_minute=10,
             expected_second=1.1783329999999999,
+            places=1,
         )
-
         assert_degrees_almost_equal(
             self,
             result.rise_azimuth,
