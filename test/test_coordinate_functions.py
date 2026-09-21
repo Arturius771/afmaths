@@ -133,8 +133,8 @@ class CoordinateTestMethods(unittest.TestCase):
 
     def test_equatorial_to_horizon_coordinates(self):
         coordinates = EquatorialCoordinatesHourAngle(
-            Declination(radians_from_dms(DMS(23, 13, 10))),
             HourAngle(radians_from_hms(HMS(5, 51, 44))),
+            Declination(radians_from_dms(DMS(23, 13, 10))),
         )
 
         result = horizontal_coordinates_from_equatorial(
@@ -156,8 +156,8 @@ class CoordinateTestMethods(unittest.TestCase):
 
     def test_horizon_to_equatorial_coordinates(self):
         coordinates = HorizontalCoordinates(
-            Altitude(radians_from_dms(DMS(19, 20, 3.64))),
             Azimuth(radians_from_dms(DMS(283, 16, 15.76))),
+            Altitude(radians_from_dms(DMS(19, 20, 3.64))),
         )
 
         result = equatorial_coordinates_from_horizontal(
@@ -184,8 +184,8 @@ class CoordinateTestMethods(unittest.TestCase):
 
     def test_ecliptic_to_equatorial_coordinates(self):
         coordinates = EclipticCoordinates(
-            radians_from_dms(DMS(4, 52, 31)),
             radians_from_dms(DMS(139, 41, 10)),
+            radians_from_dms(DMS(4, 52, 31)),
         )
 
         result = equatorial_coordinates_from_ecliptic(
@@ -207,8 +207,8 @@ class CoordinateTestMethods(unittest.TestCase):
 
     def test_equatorial_to_ecliptic_coordinates(self):
         coordinates = EquatorialCoordinates(
-            Declination(radians_from_dms(DMS(19, 32, 8.52))),
             RightAscension(radians_from_hms(HMS(9, 34, 53.4))),
+            Declination(radians_from_dms(DMS(19, 32, 8.52))),
         )
 
         result = ecliptic_coordinates_from_equatorial(
@@ -230,8 +230,8 @@ class CoordinateTestMethods(unittest.TestCase):
 
     def test_equatorial_to_galactic_coordinates(self):
         coordinates = EquatorialCoordinates(
-            Declination(radians_from_dms(DMS(10, 3, 11))),
             RightAscension(radians_from_hms(HMS(10, 21, 0))),
+            Declination(radians_from_dms(DMS(10, 3, 11))),
         )
 
         result = galactic_coordinates_from_equatorial(coordinates)
@@ -250,8 +250,8 @@ class CoordinateTestMethods(unittest.TestCase):
 
     def test_galactic_to_equatorial_coordinates(self):
         coordinates = GalacticCoordinates(
-            radians_from_dms(DMS(51, 7, 20.16)),
             radians_from_dms(DMS(232, 14, 52.38)),
+            radians_from_dms(DMS(51, 7, 20.16)),
         )
 
         result = equatorial_coordinates_from_galactic(coordinates)

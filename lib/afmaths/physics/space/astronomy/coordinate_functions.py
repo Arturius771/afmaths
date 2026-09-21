@@ -92,8 +92,8 @@ def equatorial_hour_angle_from_equatorial(
     )
 
     return EquatorialCoordinatesHourAngle(
-        Radians(equatorial_coordinates.declination),
         Radians(ha),
+        Radians(equatorial_coordinates.declination),
     )
 
 
@@ -143,8 +143,8 @@ def horizontal_coordinates_from_equatorial(
     azimuth = normalise_angle(make_radians(math.atan2(y, x)))
 
     return HorizontalCoordinates(
-        Altitude(make_radians(altitude)),
         Azimuth(make_radians(azimuth)),
+        Altitude(make_radians(altitude)),
     )
 
 
@@ -178,8 +178,8 @@ def equatorial_coordinates_from_horizontal(
     hour_angle = normalise_angle(make_radians(math.atan2(y, x)))
 
     return EquatorialCoordinatesHourAngle(
-        Declination(make_radians(declination)),
         HourAngle(make_radians(hour_angle)),
+        Declination(make_radians(declination)),
     )
 
 
@@ -224,8 +224,8 @@ def equatorial_coordinates_from_ecliptic(
     right_ascension = normalise_angle(make_radians(math.atan2(y, x)))
 
     return EquatorialCoordinates(
-        Declination(Radians(declination)),
         RightAscension(Radians(right_ascension)),
+        Declination(Radians(declination)),
     )
 
 
@@ -255,8 +255,8 @@ def ecliptic_coordinates_from_equatorial(
     ecliptic_longitude = normalise_angle(make_radians(math.atan2(y, x)))
 
     return EclipticCoordinates(
-        make_radians(ecliptic_latitude),
         make_radians(ecliptic_longitude),
+        make_radians(ecliptic_latitude),
     )
 
 
@@ -294,8 +294,8 @@ def galactic_coordinates_from_equatorial(
     )
 
     return GalacticCoordinates(
-        make_radians(galactic_latitude),
         make_radians(galactic_longitude),
+        make_radians(galactic_latitude),
     )
 
 
@@ -331,6 +331,6 @@ def equatorial_coordinates_from_galactic(
     )
 
     return EquatorialCoordinates(
-        Declination(make_radians(declination)),
         RightAscension(right_ascension),
+        Declination(make_radians(declination)),
     )

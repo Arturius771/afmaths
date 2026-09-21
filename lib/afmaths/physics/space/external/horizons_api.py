@@ -221,8 +221,8 @@ def try_parse_equatorial_coordinates(
         return None
 
     return EquatorialCoordinates(
-        x=declination,
-        y=right_ascension,
+        x=right_ascension,
+        y=declination,
     )
 
 

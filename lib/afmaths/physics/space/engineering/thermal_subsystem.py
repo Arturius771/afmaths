@@ -5,7 +5,7 @@ from astronomy_types import (
     Scalar,
 )
 
-from afmaths.constants import EXAMPLE_ELEMENTS, STEFAN_BOLTZMANN_CONSTANT
+from afmaths.constants import STEFAN_BOLTZMANN_CONSTANT
 from afmaths.operation import divide_by, exponentiate, multiply, subtract
 from afmaths.physics.electromagnetism import stefan_boltzmann_law
 from afmaths.physics.space.engineering.astrodynamics.maneuvers import (
@@ -41,11 +41,3 @@ def radiator_area(
 
 
 # endregion
-
-if __name__ == "__main__":
-    print(
-        beta_angle(
-            EquatorialCoordinates(Radians(Scalar(12)), Radians(Scalar(12))),
-            EXAMPLE_ELEMENTS,
-        )
-    )

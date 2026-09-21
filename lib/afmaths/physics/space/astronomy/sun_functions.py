@@ -126,8 +126,8 @@ def sun_equatorial_coordinates_approximate(
 
     return equatorial_coordinates_from_ecliptic(
         EclipticCoordinates(
-            make_radians(0),
             longitude,
+            make_radians(0),
         ),
         greenwich_date,
     )

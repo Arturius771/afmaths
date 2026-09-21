@@ -185,8 +185,8 @@ def precession_low_precision(
     new_declination_degrees = Degrees(Scalar(declination_degrees + s2))
 
     return EquatorialCoordinates(
-        Declination(radians_from_degrees(new_declination_degrees)),
         RightAscension(radians_from_degrees(new_right_ascension_degrees)),
+        Declination(radians_from_degrees(new_declination_degrees)),
     )
 
 
@@ -270,6 +270,6 @@ def aberration_from_date(
     )
 
     return EclipticCoordinates(
-        radians_from_degrees(apparent_latitude_degrees),
         radians_from_degrees(apparent_longitude_degrees),
+        radians_from_degrees(apparent_latitude_degrees),
     )
