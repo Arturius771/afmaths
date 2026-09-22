@@ -1,5 +1,4 @@
 import plotly.graph_objects as go
-
 from astronomy_types import OrbitalElements
 
 from afmaths.physics.space.celestial_mechanics.state_vector import (

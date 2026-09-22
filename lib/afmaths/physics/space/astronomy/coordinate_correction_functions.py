@@ -1,17 +1,5 @@
 import math
 
-from afmaths.constants import HOURS_PER_DAY
-from afmaths.physics.space.type_conversion_helpers import (
-    time_from_decimal_time,
-    radians_from_degrees,
-)
-from afmaths.physics.space.astronomy.time_functions import (
-    universal_time_from_greenwich,
-    julian_date_from_greenwich,
-    epoch_from_julian_date,
-    greenwich_sidereal_time_from_local_sidereal,
-)
-from .sun_functions import sun_longitude
 from astronomy_types import (
     Azimuth,
     Date,
@@ -19,21 +7,33 @@ from astronomy_types import (
     Declination,
     Degrees,
     EclipticCoordinates,
+    Epoch,
     EquatorialCoordinates,
     FullDate,
     GeographicCoordinates,
     Hour,
-    Longitude,
     NutationAndObliquity,
     Obliquity,
     RightAscension,
     RisingAndSetting,
     Scalar,
-    Time,
-    Epoch,
-    Latitude,
     Second,
+    Time,
 )
+
+from afmaths.constants import HOURS_PER_DAY
+from afmaths.physics.space.astronomy.time_functions import (
+    epoch_from_julian_date,
+    greenwich_sidereal_time_from_local_sidereal,
+    julian_date_from_greenwich,
+    universal_time_from_greenwich,
+)
+from afmaths.physics.space.type_conversion_helpers import (
+    radians_from_degrees,
+    time_from_decimal_time,
+)
+
+from .sun_functions import sun_longitude
 
 
 def angle_difference(
@@ -262,7 +262,7 @@ def aberration_from_date(
     )
 
     apparent_longitude_degrees = Degrees(
-        Scalar((true_longitude_degrees + delta_longitude_arcseconds / 3600))
+        Scalar(true_longitude_degrees + delta_longitude_arcseconds / 3600)
     )
 
     apparent_latitude_degrees = Degrees(

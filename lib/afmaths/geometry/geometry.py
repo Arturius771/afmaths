@@ -1,3 +1,5 @@
+import math
+
 from astronomy_types import (
     Coordinate2D,
     Coordinate3D,
@@ -11,17 +13,11 @@ from astronomy_types import (
     SemiMajorAxis,
     SemiMinorAxis,
 )
-from afmaths.constants import TWO_PI
-from afmaths.tensors import (
-    vector_magnitude,
-    vector_magnitude_3d,
-    vector_subtract,
-    vector_subtract_3d,
-)
+
 from afmaths.afmath_types import Area
+from afmaths.constants import TWO_PI
 from afmaths.geometry.transformations import translate_coordinate
 from afmaths.operation import (
-    DOUBLE,
     HALF,
     SQUARE,
     add,
@@ -32,14 +28,17 @@ from afmaths.operation import (
     square_root,
     subtract,
 )
-import math
-
 from afmaths.physics.space.type_conversion_helpers import (
     make_radians,
     make_vector2d,
-    make_vector3d,
     vector2d_from_coordinate2d,
     vector3d_from_coordinate3d,
+)
+from afmaths.tensors import (
+    vector_magnitude,
+    vector_magnitude_3d,
+    vector_subtract,
+    vector_subtract_3d,
 )
 
 

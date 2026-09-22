@@ -10,9 +10,9 @@ from astronomy_types import (
     OrbitalElements,
     Rate,
     Scalar,
-    SemiMajorAxis,
-    SemiLatusRectum,
     Second,
+    SemiLatusRectum,
+    SemiMajorAxis,
     TrueAnomaly,
 )
 
@@ -76,24 +76,22 @@ def time_to_true_anomaly(
     # Mean anomaly at the target true anomaly
     M_delta = normalise_angle(
         make_radians(
-            (
-                float(
-                    kepler_equation(
-                        eccentric_anomaly_from_true_anomaly(
-                            target_true_anomaly,
-                            current_position.eccentricity,
-                        ),
+            float(
+                kepler_equation(
+                    eccentric_anomaly_from_true_anomaly(
+                        target_true_anomaly,
                         current_position.eccentricity,
-                    )
+                    ),
+                    current_position.eccentricity,
                 )
-                - float(
-                    kepler_equation(
-                        eccentric_anomaly_from_true_anomaly(
-                            current_position.true_anomaly,
-                            current_position.eccentricity,
-                        ),
+            )
+            - float(
+                kepler_equation(
+                    eccentric_anomaly_from_true_anomaly(
+                        current_position.true_anomaly,
                         current_position.eccentricity,
-                    )
+                    ),
+                    current_position.eccentricity,
                 )
             )
         )

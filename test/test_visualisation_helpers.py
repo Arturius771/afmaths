@@ -1,12 +1,7 @@
 import unittest
 
-import plotly.graph_objects as go
-from astronomy_types import Coordinate2D, Distance, Scalar, Vector3D
-
 from afmaths.visualisations.helpers import (
     PlotOrbital2DSettings,
-    add_plot_node,
-    add_plot_nodes,
     central_body_radius_plot,
     direction_vector_length,
     distance_to_scale_distance,
@@ -17,6 +12,7 @@ from afmaths.visualisations.helpers import (
     scaled_radius,
     vector_line,
 )
+from astronomy_types import Coordinate2D, Distance, Scalar, Vector3D
 
 
 class PlotHelperTests(unittest.TestCase):

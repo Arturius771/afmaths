@@ -6,25 +6,29 @@ from typing import Literal
 from afmaths.afmath_types import GroundStation
 from afmaths.constants import KILCUMMIN_GROUND_STATION
 from afmaths.physics.space.external.horizons_api import HorizonsCommandTarget
-from afmaths.visualisations.helpers import defined_kwargs, with_plot_settings_overrides
-
-from dashboard import show_visualisation_dashboard
-from ground_track import (
+from afmaths.visualisations.dashboard import show_visualisation_dashboard
+from afmaths.visualisations.ground_track import (
     GROUND_TRACK_POINTS,
     visualisation_2d_ground_track,
     visualisation_2d_ground_track_current_position,
 )
-from orbit_source import Orbit
-from orbit_system_3d import (
+from afmaths.visualisations.helpers import defined_kwargs, with_plot_settings_overrides
+from afmaths.visualisations.orbit_source import Orbit
+from afmaths.visualisations.orbit_system_3d import (
     DEFAULT_SOLAR_SYSTEM_BODIES,
     build_3d_orbit_system_figure,
 )
-from orbit_visualiser_2d import (
+from afmaths.visualisations.orbit_visualiser_2d import (
     DEFAULT_PLOT_SETTINGS as ORBIT_2D_PLOT_SETTINGS,
+)
+from afmaths.visualisations.orbit_visualiser_2d import (
     build_default_orbit_visualiser_2d_figure,
     satellite_orbiting_body,
 )
-from state_vectors import build_position_vector_figure, build_velocity_vector_figure
+from afmaths.visualisations.state_vectors import (
+    build_position_vector_figure,
+    build_velocity_vector_figure,
+)
 
 
 def build_control_room_figures(

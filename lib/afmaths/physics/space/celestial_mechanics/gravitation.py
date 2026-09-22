@@ -1,11 +1,13 @@
 from astronomy_types import (
+    Acceleration,
     Coordinate2D,
     Coordinate3D,
     Distance,
     GravitationalParameter,
     Ratio,
+    Scalar,
 )
-from astronomy_types import Distance, Scalar, Acceleration
+
 from afmaths.afmath_types import Mass
 from afmaths.constants import (
     ASTRONOMICAL_UNIT,
@@ -13,7 +15,6 @@ from afmaths.constants import (
     GRAVITATIONAL_CONSTANT,
     SUN_MASS,
 )
-from afmaths.afmath_types import Mass
 from afmaths.numerical_analysis import root_solver
 from afmaths.operation import (
     HALF,

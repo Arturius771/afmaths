@@ -1,5 +1,6 @@
 import math
-from typing import Callable
+from collections.abc import Callable
+
 from astronomy_types import Coordinate2D, Ratio, Scalar
 
 from afmaths.afmath_types import Percentage
@@ -149,7 +150,7 @@ def summation(
     """Function that takes a rule, and then iteratively adds according to that rule."""
     total = 0.0
 
-    for val in range(round(start_index), round(stop_index + 1)):
+    for val in range(start_index, round(stop_index + 1)):
         total = add(sum_rule(val))(total)
 
     return total
@@ -163,7 +164,7 @@ def product(
     """Function that takes a rule, and then iteratively multiplies according to that rule."""
     total = 1.0
 
-    for val in range(round(start_index), round(stop_index + 1)):
+    for val in range(start_index, round(stop_index + 1)):
         total = multiply_by_repeated_addition(product_function(val))(total)
 
     return total

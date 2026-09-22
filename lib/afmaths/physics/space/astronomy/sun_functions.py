@@ -1,19 +1,5 @@
 import math
 
-from afmaths.physics.space.type_conversion_helpers import (
-    make_radians,
-    radians_from_degrees,
-)
-from afmaths.physics.space.astronomy.coordinate_functions import (
-    equatorial_coordinates_from_ecliptic,
-    equatorial_hour_angle_from_equatorial,
-    horizontal_coordinates_from_equatorial,
-    hour_angle,
-)
-from afmaths.physics.space.astronomy.time_functions import (
-    julian_date_from_greenwich,
-    universal_time_from_local_civil,
-)
 from astronomy_types import (
     Anomaly,
     Date,
@@ -26,7 +12,6 @@ from astronomy_types import (
     GeographicCoordinates,
     HorizontalCoordinates,
     Hour,
-    Latitude,
     Longitude,
     MeanAnomaly,
     Month,
@@ -34,6 +19,20 @@ from astronomy_types import (
     Ratio,
     Scalar,
     Year,
+)
+
+from afmaths.physics.space.astronomy.coordinate_functions import (
+    equatorial_coordinates_from_ecliptic,
+    equatorial_hour_angle_from_equatorial,
+    horizontal_coordinates_from_equatorial,
+)
+from afmaths.physics.space.astronomy.time_functions import (
+    julian_date_from_greenwich,
+    universal_time_from_local_civil,
+)
+from afmaths.physics.space.type_conversion_helpers import (
+    make_radians,
+    radians_from_degrees,
 )
 
 

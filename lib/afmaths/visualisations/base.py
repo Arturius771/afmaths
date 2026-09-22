@@ -1,11 +1,10 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, replace
 import datetime
 import math
+from dataclasses import dataclass, replace
 
 import plotly.graph_objects as go
-
 from astronomy_types import (
     ArgumentOfPeriapsis,
     Coordinate2D,
@@ -23,6 +22,7 @@ from astronomy_types import (
     VelocityVector,
 )
 from plotly.basedatatypes import BaseTraceType
+
 from afmaths.constants import EARTH_RADIUS, TWO_PI
 from afmaths.geometry.geometry import normalise_angle, semi_minor_axis
 from afmaths.geometry.transformations import translate_ellipse
@@ -35,8 +35,6 @@ from afmaths.physics.space.celestial_mechanics.nodes import (
     perifocal_position_at_ascending_node,
     perifocal_position_at_descending_node,
 )
-
-
 from afmaths.physics.space.celestial_mechanics.orbital_elements import (
     apoapsis_true_anomaly,
     orbital_elements_from_state_vectors,
@@ -52,8 +50,8 @@ from afmaths.physics.space.external.horizons_api import (
     get_object_state_vectors_from_horizon,
 )
 from afmaths.physics.space.type_conversion_helpers import (
-    make_eccentric_anomaly,
     fulldate_from_python_datetime,
+    make_eccentric_anomaly,
     seconds_from_python_timedelta,
 )
 from afmaths.visualisations.helpers import (

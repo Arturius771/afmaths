@@ -1,23 +1,21 @@
 import math
+
 from astronomy_types import (
-    Day,
+    Degrees,
     Distance,
     Epoch,
     FullDate,
     GeographicCoordinates,
     GravitationalParameter,
+    Inclination,
+    Latitude,
     OrbitalElements,
     PositionVector,
     Ratio,
     Scalar,
     Second,
-    Inclination,
-    Latitude,
-    Degrees,
-    Year,
 )
 
-from afmaths.afmath_types import Percentage
 from afmaths.constants import (
     EARTH_MU,
     SECONDS_PER_DAY,
@@ -35,7 +33,6 @@ from afmaths.physics.space.celestial_mechanics.orbital_elements import (
     apoapsis_true_anomaly,
     periapsis_true_anomaly,
 )
-
 from afmaths.physics.space.celestial_mechanics.state_vector import (
     position_vector_at_time,
 )
@@ -45,11 +42,10 @@ from afmaths.physics.space.celestial_mechanics.time import (
 )
 from afmaths.physics.space.celestial_mechanics.utils import second_intervals_for_orbits
 from afmaths.physics.space.transformations import (
+    geographic_coordinates_from_itrf,
     itrf_position_from_gcrf_position,
     itrf_positions_from_gcrf_position,
-    geographic_coordinates_from_itrf,
 )
-from afmaths.physics.space.type_conversion_helpers import make_date
 
 
 def max_latitude(i: Inclination) -> Latitude:
@@ -170,7 +166,7 @@ def ground_station_cardinal_points(
 def ground_track_passes_station(
     coords: GeographicCoordinates,
     ground_track: list[GeographicCoordinates],
-    tolerance: Degrees = Degrees(Scalar(5)),
+    tolerance: Degrees,
 ) -> tuple[bool, Ratio]:
     """
     Determines if a ground track passes within a certain margin of a ground station.
@@ -183,6 +179,7 @@ def ground_track_passes_station(
     Returns:
         bool: True if the ground track passes within the tolerance of the ground station, False otherwise.
     """
+
     for index, point in enumerate(ground_track):
         lat_diff = abs(point.latitude - coords.latitude)
         lon_diff = abs(point.longitude - coords.longitude)
@@ -197,7 +194,7 @@ def orbit_time_of_pass(
     coords: GeographicCoordinates,
     orbital_elements: OrbitalElements,
     epoch: Epoch,
-    tolerance: Degrees = Degrees(Scalar(5)),
+    tolerance: Degrees,
     max_orbit_iterations: int = 50,
 ) -> tuple[Epoch, int, Ratio] | None:
     """
@@ -256,7 +253,7 @@ def orbit_epoch_of_pass_full_date(
     coords: GeographicCoordinates,
     orbital_elements: OrbitalElements,
     epoch: Epoch,
-    tolerance: Degrees = Degrees(Scalar(5)),
+    tolerance: Degrees,
     max_orbit_iterations: int = 50,
 ) -> FullDate | None:
     """

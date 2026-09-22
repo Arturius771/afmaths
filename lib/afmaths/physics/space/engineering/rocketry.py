@@ -1,19 +1,5 @@
 import math
 
-from afmaths.constants import STANDARD_GRAVITY
-from afmaths.geometry.geometry import Area
-from afmaths.operation import (
-    DOUBLE,
-    HALF,
-    SQUARE,
-    add,
-    divide_by,
-    exponentiate,
-    multiply,
-    negate,
-    subtract,
-    summation,
-)
 from astronomy_types import (
     Acceleration,
     Distance,
@@ -24,23 +10,34 @@ from astronomy_types import (
     Velocity,
 )
 
+from afmaths.afmath_types import DeltaV, Force, Impulse, Mass, Momentum, Pressure
+from afmaths.constants import STANDARD_GRAVITY
+from afmaths.geometry.geometry import Area
+from afmaths.operation import (
+    HALF,
+    SQUARE,
+    add,
+    divide_by,
+    exponentiate,
+    multiply,
+    negate,
+    subtract,
+    summation,
+)
 from afmaths.physics.ballistics import (
     duration_to_max_height,
     height_from_acceleration,
     max_velocity,
 )
-
 from afmaths.physics.kinematics import acceleration_from_velocity
 from afmaths.physics.physics import (
-    impulse_from_force,
-    net_acceleration,
     force,
-    pushing_to_resisting_force_ratio,
+    impulse_from_force,
     momentum,
+    net_acceleration,
+    pushing_to_resisting_force_ratio,
 )
-
 from afmaths.physics.space.engineering.astrodynamics.maneuvers import delta_v
-from afmaths.afmath_types import DeltaV, Force, Impulse, Mass, Momentum, Pressure
 
 
 def delta_v_from_tsiolkovsky(

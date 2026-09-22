@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Literal, cast
 
 import plotly.graph_objects as go
+from astronomy_types import Distance, GravitationalParameter, Scalar, Second
 from PIL import Image
 
 from afmaths.constants import EARTH_MU, EARTH_RADIUS, TWO_PI
@@ -25,8 +26,7 @@ from afmaths.visualisations.base import (
     build_3d_itrf_orbit_figure,
     build_3d_orbit_figure,
 )
-from astronomy_types import Distance, GravitationalParameter, Scalar, Second
-from orbit_source import Orbit, orbit_at_current_epoch
+from afmaths.visualisations.orbit_source import Orbit, orbit_at_current_epoch
 
 ReferenceFrame = Literal["ICRF", "GCRF", "ITRF"]
 

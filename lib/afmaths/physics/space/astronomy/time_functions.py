@@ -1,5 +1,6 @@
 import datetime
 import math
+
 from astronomy_types import (
     Date,
     Day,
@@ -40,10 +41,10 @@ from afmaths.operation import (
     subtract,
 )
 from afmaths.physics.space.type_conversion_helpers import (
+    decimal_time_from_time,
     fulldate_from_python_datetime,
     radians_from_degrees,
     time_from_decimal_time,
-    decimal_time_from_time,
 )
 
 
@@ -255,8 +256,8 @@ def hms_from_decimal(decimal_time: DecimalTime) -> Time:
 
 def universal_time_from_local_civil(
     local_time_and_date: FullDate,
-    daylight_savings_correction: Hour = Hour(int(0)),
-    timezone_offset_correction: Hour = Hour(int(0)),
+    daylight_savings_correction: Hour = Hour(0),
+    timezone_offset_correction: Hour = Hour(0),
 ) -> FullDate:
     """Calculates the Universal Time (UT) from a given local civil time and date, considering daylight savings and timezone corrections.
 
@@ -308,8 +309,8 @@ def universal_time_from_local_civil(
 
 def universal_to_local_civil_time(
     universal_time_and_date: FullDate,
-    timezone_offset_correction: Hour = Hour(int(0)),
-    daylight_savings_correction: Hour = Hour(int(0)),
+    timezone_offset_correction: Hour = Hour(0),
+    daylight_savings_correction: Hour = Hour(0),
 ) -> FullDate:
     """Calculates the local civil time from a given Universal Time (UT) and date, considering timezone and daylight savings corrections."""
     greenwich_date = universal_time_and_date.date
@@ -460,7 +461,7 @@ def date_from_day_number(day_number: int, year: Year) -> Date:
         31,
     ]
     sum = 0
-    for index in range(len((month_days))):
+    for index in range(len(month_days)):
         sum += month_days[index]
         if sum >= day_number:
             month = index + 1
@@ -477,12 +478,10 @@ def greenwich_mean_sidereal_time_seconds_from_julian_date(jd: JulianDate) -> Sec
 
     return Second(
         Scalar(
-            (
-                67310.54841
-                + (876600 * 3600 + 8640184.812866) * T
-                + 0.093104 * T**2
-                - 6.2e-6 * T**3
-            )
+            67310.54841
+            + (876600 * 3600 + 8640184.812866) * T
+            + 0.093104 * T**2
+            - 6.2e-6 * T**3
         )
     )
 

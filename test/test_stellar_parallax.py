@@ -1,16 +1,16 @@
 import unittest
-from astronomy_types import (
-    Distance,
-    Scalar,
-)
 
+from afmaths.physics.space.astronomy.stellar_parallax import (
+    distance_from_stellar_parallax,
+    distance_from_stellar_parallax_full_angular_displacement,
+)
 from afmaths.physics.space.astronomy.utils import (
     degrees_from_arcsecond,
     parsec_from_metres,
 )
-from afmaths.physics.space.astronomy.stellar_parallax import (
-    distance_from_stellar_parallax,
-    distance_from_stellar_parallax_full_angular_displacement,
+from astronomy_types import (
+    Distance,
+    Scalar,
 )
 
 

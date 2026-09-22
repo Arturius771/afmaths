@@ -1,12 +1,12 @@
 import math
 
 from astronomy_types import (
+    Acceleration,
     Coordinate2D,
     Degrees,
     Distance,
     Scalar,
     Second,
-    Acceleration,
     Velocity,
 )
 
@@ -18,19 +18,23 @@ from afmaths.physics.kinematics import displacement, velocity_after_duration
 def height_from_acceleration(
     acceleration: Acceleration,
     duration: Second,
-    initial_height: Distance = Distance(Scalar(0)),
+    initial_height: Distance | None = None,
 ) -> Distance:
     """Calculates the height of an object after a given duration of constant acceleration, starting from an initial height."""
-    return add(displacement(acceleration, duration))(initial_height)
+    return add(displacement(acceleration, duration))(
+        initial_height or Distance(Scalar(0))
+    )
 
 
 def max_velocity(
     acceleration: Acceleration,
     duration: Second,
-    initial_velocity: Velocity = Velocity(Scalar(0)),
+    initial_velocity: Velocity | None = None,
 ) -> Velocity:
     """Calculates the maximum velocity of an object after a given duration of constant acceleration, starting from an initial velocity."""
-    return velocity_after_duration(acceleration, initial_velocity, duration)
+    return velocity_after_duration(
+        acceleration, initial_velocity or Velocity(Scalar(0)), duration
+    )
 
 
 def duration_to_max_height(
@@ -49,10 +53,13 @@ def duration_to_max_height(
 def ballistic_vacuum_initial_velocity(
     target_coordinates: Coordinate2D,
     launch_angle: Degrees,
-    initial_coordinates: Coordinate2D = Coordinate2D(0, 0),
+    initial_coordinates: Coordinate2D | None = None,
     g: Acceleration = STANDARD_GRAVITY,
 ) -> Velocity:
     """Calculates the initial velocity of a projectile given its launch coordinates and launch angle."""
+    if initial_coordinates is None:
+        initial_coordinates = Coordinate2D(0, 0)
+
     actual_target_coordinates = Coordinate2D(
         target_coordinates.x - initial_coordinates.x,
         target_coordinates.y - initial_coordinates.y,
@@ -88,10 +95,13 @@ def ballistic_vacuum_displacement_at_time(
 def ballistic_vacuum_angle_to_target(
     target_coordinates: Coordinate2D,
     initial_velocity: Velocity,
-    initial_coordinates: Coordinate2D = Coordinate2D(0, 0),
+    initial_coordinates: Coordinate2D | None = None,
     g: Acceleration = STANDARD_GRAVITY,
 ) -> tuple[Degrees, Degrees]:
     """Calculates the launch angle required to hit a target at given coordinates with a specified initial velocity."""
+    if initial_coordinates is None:
+        initial_coordinates = Coordinate2D(0, 0)
+
     x = target_coordinates.x - initial_coordinates.x
     y = target_coordinates.y - initial_coordinates.y
     v = initial_velocity
@@ -103,14 +113,17 @@ def ballistic_vacuum_angle_to_target(
     return Degrees(Scalar(math.degrees(angle1))), Degrees(Scalar(math.degrees(angle2)))
 
 
-def basllistic_vacuum_time_to_target(
+def ballistic_vacuum_time_to_target(
     target_coordinates: Coordinate2D,
     initial_velocity: Velocity,
     launch_angle: Degrees,
-    initial_coordinates: Coordinate2D = Coordinate2D(0, 0),
+    initial_coordinates: Coordinate2D | None = None,
     g: Acceleration = STANDARD_GRAVITY,
 ) -> Second:
     """Calculates the time it takes for a projectile to reach a target at given coordinates with a specified initial velocity and launch angle."""
+    if initial_coordinates is None:
+        initial_coordinates = Coordinate2D(0, 0)
+
     x = target_coordinates.x - initial_coordinates.x
     y = target_coordinates.y - initial_coordinates.y
 

@@ -1,20 +1,36 @@
 import math
 import unittest
 
+from afmaths.physics.space.astronomy.coordinate_functions import (
+    ecliptic_coordinates_from_equatorial,
+    equatorial_coordinates_from_ecliptic,
+    equatorial_coordinates_from_galactic,
+    equatorial_coordinates_from_horizontal,
+    galactic_coordinates_from_equatorial,
+    horizontal_coordinates_from_equatorial,
+    hour_angle,
+    mean_obliquity_ecliptic,
+    right_ascension,
+)
+from afmaths.physics.space.type_conversion_helpers import (
+    radians_from_degrees,
+    radians_from_dms,
+    radians_from_hms,
+)
 from astronomy_types import (
+    DMS,
+    HMS,
     Altitude,
     Azimuth,
     Date,
     Day,
     Declination,
     Degrees,
-    DMS,
     EclipticCoordinates,
     EquatorialCoordinates,
     EquatorialCoordinatesHourAngle,
     FullDate,
     GalacticCoordinates,
-    HMS,
     HorizontalCoordinates,
     Hour,
     HourAngle,
@@ -26,23 +42,6 @@ from astronomy_types import (
     Second,
     Time,
     Year,
-)
-
-from afmaths.physics.space.type_conversion_helpers import (
-    radians_from_degrees,
-    radians_from_dms,
-    radians_from_hms,
-)
-from afmaths.physics.space.astronomy.coordinate_functions import (
-    equatorial_coordinates_from_ecliptic,
-    ecliptic_coordinates_from_equatorial,
-    galactic_coordinates_from_equatorial,
-    horizontal_coordinates_from_equatorial,
-    equatorial_coordinates_from_galactic,
-    equatorial_coordinates_from_horizontal,
-    right_ascension,
-    mean_obliquity_ecliptic,
-    hour_angle,
 )
 
 

@@ -1,13 +1,12 @@
 from __future__ import annotations
 
 import base64
-from dataclasses import dataclass, replace
 import math
 import mimetypes
+from dataclasses import dataclass, replace
 from pathlib import Path
 
 import plotly.graph_objects as go
-
 from astronomy_types import (
     Anomaly,
     Coordinate2D,
@@ -21,7 +20,6 @@ from astronomy_types import (
     Vector2D,
     Vector3D,
 )
-
 
 from afmaths.constants import TWO_PI
 from afmaths.geometry.geometry import circle_bounding_box
@@ -572,20 +570,20 @@ def with_data_background_image(
         source = image_file_to_data_uri(image_source)
 
     fig.add_layout_image(
-        dict(
-            source=source,
-            xref="x",
-            yref="y",
-            x=x_min,
-            y=y_max,
-            sizex=x_max - x_min,
-            sizey=y_max - y_min,
-            xanchor="left",
-            yanchor="top",
-            sizing="stretch",
-            opacity=opacity,
-            layer="below",
-        )
+        {
+            "source": source,
+            "xref": "x",
+            "yref": "y",
+            "x": x_min,
+            "y": y_max,
+            "sizex": x_max - x_min,
+            "sizey": y_max - y_min,
+            "xanchor": "left",
+            "yanchor": "top",
+            "sizing": "stretch",
+            "opacity": opacity,
+            "layer": "below",
+        }
     )
 
     if set_axis_ranges:

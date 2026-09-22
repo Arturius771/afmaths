@@ -40,5 +40,3 @@ def build_velocity_time_figure(
     )
 
     return fig
-
-

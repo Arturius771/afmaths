@@ -1,8 +1,9 @@
+from astronomy_types import Distance
+
+from afmaths.afmath_types import Area
 from afmaths.constants import PLANCK_CONSTANT, STEFAN_BOLTZMANN_CONSTANT
 from afmaths.operation import SQUARE, divide_by, exponentiate, multiply
 from afmaths.physics.physics import inverse_square_law
-from afmaths.afmath_types import Area
-from astronomy_types import Distance
 
 
 def flux_density(luminosity: float, distance_metres: Distance) -> float:

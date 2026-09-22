@@ -1,10 +1,33 @@
 from dataclasses import replace
 
+from astronomy_types import (
+    Eccentricity,
+    GravitationalParameter,
+    OrbitalElements,
+    PositionVector,
+    Scalar,
+    Second,
+    SemiMajorAxis,
+    StateVector,
+    TrueAnomaly,
+    VelocityVector,
+)
 
 from afmaths.constants import (
     EARTH_MU,
 )
-
+from afmaths.operation import (
+    SQUARE,
+    divide_by,
+    multiply,
+    square_root,
+    subtract,
+)
+from afmaths.physics.space.celestial_mechanics.celestial_mechanics import (
+    kepler_equation,
+    mean_motion,
+    orbit_equation,
+)
 from afmaths.physics.space.celestial_mechanics.orbital_elements import (
     apoapsis_true_anomaly,
     eccentric_anomaly_from_true_anomaly,
@@ -18,40 +41,14 @@ from afmaths.physics.space.transformations import (
     transform_vector_from_perifocal,
 )
 from afmaths.physics.space.type_conversion_helpers import (
-    position_vector_from_vector,
     make_state_vector,
-    velocity_vector_from_vector,
+    position_vector_from_vector,
     vector3d_from_position,
     vector3d_from_velocity,
+    velocity_vector_from_vector,
 )
 from afmaths.tensors import (
     vector_multiplication_3d,
-)
-from afmaths.operation import (
-    SQUARE,
-    divide_by,
-    multiply,
-    square_root,
-    subtract,
-)
-from astronomy_types import (
-    GravitationalParameter,
-    OrbitalElements,
-    PositionVector,
-    Second,
-    SemiMajorAxis,
-    Eccentricity,
-    StateVector,
-    TrueAnomaly,
-    Scalar,
-    VelocityVector,
-)
-
-
-from afmaths.physics.space.celestial_mechanics.celestial_mechanics import (
-    kepler_equation,
-    mean_motion,
-    orbit_equation,
 )
 
 

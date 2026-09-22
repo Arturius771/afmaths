@@ -1,22 +1,22 @@
 from dataclasses import replace
-from afmaths.geometry.geometry import generate_angles_on_circle
-from afmaths.operation import interval_points
-from afmaths.physics.space.celestial_mechanics.orbital_elements import (
-    true_anomaly_from_eccentric_anomaly,
-)
-from afmaths.physics.space.celestial_mechanics.celestial_mechanics import EARTH_MU
 
 from astronomy_types import (
     Anomaly,
     EccentricAnomaly,
     GravitationalParameter,
     OrbitalElements,
+    PositionVector,
     Radians,
     Scalar,
     Second,
-    PositionVector,
 )
 
+from afmaths.geometry.geometry import generate_angles_on_circle
+from afmaths.operation import interval_points
+from afmaths.physics.space.celestial_mechanics.celestial_mechanics import EARTH_MU
+from afmaths.physics.space.celestial_mechanics.orbital_elements import (
+    true_anomaly_from_eccentric_anomaly,
+)
 from afmaths.physics.space.celestial_mechanics.state_vector import (
     position_vector_at_time,
 )

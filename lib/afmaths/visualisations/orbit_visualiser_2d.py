@@ -5,7 +5,6 @@ from dataclasses import dataclass
 from itertools import cycle
 
 import plotly.graph_objects as go
-
 from astronomy_types import (
     Coordinate2D,
     Coordinate3D,

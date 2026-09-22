@@ -1,11 +1,11 @@
 import unittest
 
 from afmaths.physics.kinematics import (
+    average_acceleration_from_slope_velocity_time,
     detect_collision,
     displacement,
     propagate_vector,
     velocity_after_duration,
-    average_acceleration_from_slope_velocity_time,
     velocity_time_curve_displacement,
     velocity_time_displacement_curve_section,
     velocity_time_displacement_flat,

@@ -1,5 +1,7 @@
 import unittest
+from typing import cast
 
+from afmaths.afmath_types import OrbitalDirection
 from afmaths.constants import (
     EXAMPLE_ELEMENTS,
     KILCUMMIN_GROUND_STATION,
@@ -7,11 +9,7 @@ from afmaths.constants import (
     MEAN_SOLAR_DAY,
     SATELLITE_EXAMPLE_ELEMENTS,
     SIDEREAL_DAY,
-    EARTH_MASS,
-    SUN_MASS,
-    ASTRONOMICAL_UNIT,
 )
-from afmaths.operation import divide_by, multiply
 from afmaths.physics.space.astronomy.time_functions import julian_date_from_greenwich
 from afmaths.physics.space.celestial_mechanics.celestial_mechanics import (
     angular_velocity_from_period,
@@ -20,10 +18,13 @@ from afmaths.physics.space.celestial_mechanics.celestial_mechanics import (
 from afmaths.physics.space.celestial_mechanics.time import (
     orbital_period_from_mean_motion,
 )
-from afmaths.physics.space.engineering.astrodynamics import phase_orbit
 from afmaths.physics.space.engineering.astrodynamics.ground_track import (
-    orbit_time_of_pass,
     orbit_epoch_of_pass_full_date,
+    orbit_time_of_pass,
+)
+from afmaths.physics.space.engineering.astrodynamics.hohmann_transfer import (
+    hohmann_is_efficient,
+    hohmann_transfer_parameters,
 )
 from afmaths.physics.space.engineering.astrodynamics.orbital_directions import (
     anti_normal,
@@ -33,6 +34,14 @@ from afmaths.physics.space.engineering.astrodynamics.orbital_directions import (
     radial,
     retrograde,
 )
+from afmaths.physics.space.engineering.astrodynamics.phase_orbit import (
+    phase_orbit_parameters,
+)
+from afmaths.physics.space.engineering.astrodynamics.westward_drift import (
+    westward_drift_from_angular_velocity_and_period,
+    westward_drift_from_mean_motion,
+)
+from afmaths.physics.space.type_conversion_helpers import make_date
 from astronomy_types import (
     Anomaly,
     Date,
@@ -60,21 +69,6 @@ from astronomy_types import (
     VelocityVector,
     Year,
 )
-
-from afmaths.physics.space.engineering.astrodynamics.hohmann_transfer import (
-    hohmann_is_efficient,
-    hohmann_transfer_parameters,
-)
-from afmaths.afmath_types import Mass, OrbitalDirection
-from afmaths.physics.space.engineering.astrodynamics.phase_orbit import (
-    phase_orbit_parameters,
-)
-from afmaths.physics.space.engineering.astrodynamics.westward_drift import (
-    westward_drift_from_angular_velocity_and_period,
-    westward_drift_from_mean_motion,
-)
-from afmaths.physics.space.type_conversion_helpers import make_date
-from typing import cast
 
 
 class AstrodynamicsTestMethods(unittest.TestCase):
@@ -284,37 +278,37 @@ class AstrodynamicsTestMethods(unittest.TestCase):
 
     def test_phase_orbit_parameters(self):
 
-        delta_v, total_delta_v, phase_orbit = phase_orbit_parameters(
+        delta_v, total_delta_v, ph_orbit = phase_orbit_parameters(
             EXAMPLE_ELEMENTS, EXAMPLE_ELEMENTS.true_anomaly
         )
 
         self.assertAlmostEqual(delta_v, 0.000000000000000, places=7)
         self.assertAlmostEqual(total_delta_v, 0.000000000000000, places=7)
-        self.assertAlmostEqual(phase_orbit.semi_major_axis, 384447999.9999996, places=7)
+        self.assertAlmostEqual(ph_orbit.semi_major_axis, 384447999.9999996, places=7)
 
-        delta_v, total_delta_v, phase_orbit = phase_orbit_parameters(
+        delta_v, total_delta_v, ph_orbit = phase_orbit_parameters(
             EXAMPLE_ELEMENTS, TrueAnomaly(Anomaly(Radians(Scalar(5.0))))
         )
 
         self.assertAlmostEqual(delta_v, 25.62612052468353, places=7)
         self.assertAlmostEqual(total_delta_v, 51.25224104936706, places=7)
-        self.assertAlmostEqual(phase_orbit.semi_major_axis, 374513611.4854905, places=7)
+        self.assertAlmostEqual(ph_orbit.semi_major_axis, 374513611.4854905, places=7)
         self.assertAlmostEqual(
-            phase_orbit.eccentricity,
+            ph_orbit.eccentricity,
             0.590095,
             places=5,
         )
-        self.assertEqual(phase_orbit.inclination, EXAMPLE_ELEMENTS.inclination)
+        self.assertEqual(ph_orbit.inclination, EXAMPLE_ELEMENTS.inclination)
         self.assertEqual(
-            phase_orbit.right_ascension_of_ascending_node,
+            ph_orbit.right_ascension_of_ascending_node,
             EXAMPLE_ELEMENTS.right_ascension_of_ascending_node,
         )
         self.assertEqual(
-            phase_orbit.argument_of_periapsis,
+            ph_orbit.argument_of_periapsis,
             EXAMPLE_ELEMENTS.argument_of_periapsis,
         )
         self.assertEqual(
-            phase_orbit.true_anomaly,
+            ph_orbit.true_anomaly,
             EXAMPLE_ELEMENTS.true_anomaly,
         )
 
@@ -356,6 +350,7 @@ class AstrodynamicsTestMethods(unittest.TestCase):
                 )
             ),
             coords=KILCUMMIN_GROUND_STATION.coordinates,
+            tolerance=Degrees(Scalar(5)),
         )
 
         self.assertIsInstance(
@@ -432,6 +427,7 @@ class AstrodynamicsTestMethods(unittest.TestCase):
                     Degrees(Scalar(0)),
                     Degrees(Scalar(89)),
                 ),
+                tolerance=Degrees(Scalar(5)),
             )
         )
 
@@ -451,6 +447,7 @@ class AstrodynamicsTestMethods(unittest.TestCase):
                     Degrees(Scalar(0)),
                     Degrees(Scalar(89)),
                 ),
+                tolerance=Degrees(Scalar(5)),
             ),
         )
 

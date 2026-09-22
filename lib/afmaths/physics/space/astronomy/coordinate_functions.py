@@ -1,19 +1,5 @@
 import math
-from astronomy_types import GeographicCoordinates
-from afmaths.constants import HOURS_PER_DAY
-from afmaths.geometry.geometry import normalise_angle
-from afmaths.physics.space.type_conversion_helpers import (
-    make_radians,
-    radians_from_degrees,
-    decimal_time_from_time,
-)
-from afmaths.physics.space.astronomy.time_functions import (
-    local_sidereal_time_from_greenwich_sidereal,
-    julian_date_from_greenwich,
-    j2000_from_julian_Date,
-    universal_time_from_local_civil,
-    greenwich_sidereal_time_from_universal,
-)
+
 from astronomy_types import (
     Altitude,
     Azimuth,
@@ -25,6 +11,7 @@ from astronomy_types import (
     EquatorialCoordinatesHourAngle,
     FullDate,
     GalacticCoordinates,
+    GeographicCoordinates,
     HorizontalCoordinates,
     Hour,
     HourAngle,
@@ -34,6 +21,21 @@ from astronomy_types import (
     Radians,
     RightAscension,
     Scalar,
+)
+
+from afmaths.constants import HOURS_PER_DAY
+from afmaths.geometry.geometry import normalise_angle
+from afmaths.physics.space.astronomy.time_functions import (
+    greenwich_sidereal_time_from_universal,
+    j2000_from_julian_Date,
+    julian_date_from_greenwich,
+    local_sidereal_time_from_greenwich_sidereal,
+    universal_time_from_local_civil,
+)
+from afmaths.physics.space.type_conversion_helpers import (
+    decimal_time_from_time,
+    make_radians,
+    radians_from_degrees,
 )
 
 

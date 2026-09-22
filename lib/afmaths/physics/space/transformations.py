@@ -1,4 +1,5 @@
 import math
+
 from astronomy_types import (
     Degrees,
     Epoch,
@@ -13,6 +14,8 @@ from astronomy_types import (
     Second,
     Vector3D,
 )
+
+from afmaths.afmath_types import TransformationMatrix3D
 from afmaths.geometry.transformations import (
     orthonormal_frame_transform_3d,
     transformation_matrix_from_basis_vectors,
@@ -21,12 +24,10 @@ from afmaths.operation import negate
 from afmaths.physics.space.astronomy.time_functions import (
     epoch_offset,
     greenwich_mean_sidereal_time_radians_from_julian_date,
-    j2000_from_julian_Date,
     seconds_from_minutes,
 )
 from afmaths.physics.space.type_conversion_helpers import make_vector2d, make_vector3d
 from afmaths.tensors import vector_magnitude
-from afmaths.afmath_types import TransformationMatrix3D
 
 
 def transform_vector_from_perifocal(

@@ -1,36 +1,32 @@
 import math
 import unittest
 
+from afmaths.constants import KILCUMMIN_GROUND_STATION
+from afmaths.physics.space.astronomy.sun_functions import (
+    sun_equatorial_coordinates_approximate,
+    sun_horizontal_coordinates,
+)
+from afmaths.physics.space.type_conversion_helpers import (
+    decimal_time_from_time,
+    degrees_from_dms,
+    degrees_from_radians,
+    make_date,
+    make_time,
+    radian_geographic_coordinates_from_degrees,
+)
 from astronomy_types import (
     DMS,
     HMS,
     Day,
     Degrees,
     FullDate,
-    GeographicCoordinates,
     Hour,
-    Latitude,
-    Longitude,
     Minute,
     Month,
     Scalar,
     Second,
     Time,
     Year,
-)
-
-from afmaths.constants import KILCUMMIN_GROUND_STATION
-from afmaths.physics.space.type_conversion_helpers import (
-    degrees_from_dms,
-    degrees_from_radians,
-    make_date,
-    make_time,
-    decimal_time_from_time,
-    radian_geographic_coordinates_from_degrees,
-)
-from afmaths.physics.space.astronomy.sun_functions import (
-    sun_horizontal_coordinates,
-    sun_equatorial_coordinates_approximate,
 )
 
 

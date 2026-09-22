@@ -1,19 +1,15 @@
 import math
-from pathlib import Path
-from typing import Generic, NewType
 
 from astronomy_types import (
-    T,
     Acceleration,
     Anomaly,
     ArgumentOfPeriapsis,
     Coordinate3D,
     Degrees,
+    Distance,
     Eccentricity,
-    Enum,
     GeographicCoordinates,
     GravitationalParameter,
-    Distance,
     Hour,
     Inclination,
     Minute,
@@ -25,9 +21,7 @@ from astronomy_types import (
     Second,
     SemiMajorAxis,
     TrueAnomaly,
-    Vector2D,
     Vector3D,
-    Velocity,
 )
 
 from afmaths.afmath_types import GroundStation, Mass
@@ -79,9 +73,7 @@ SIDEREAL_DAY = Second(Scalar(86164.0905))
 ASTRONOMICAL_UNIT = Distance(Scalar(149_597_870_700))  # metres
 EARTH_RADIUS = Distance(Scalar(6_378_137.0))  # m
 EARTH_RADIUS_KM = Distance(Scalar(6378.0))  # km
-EARTH_ANGULAR_VELOCITY = Radians(
-    Scalar((multiply(exponentiate(negate(5))(10))(7.29115)))
-)
+EARTH_ANGULAR_VELOCITY = Radians(Scalar(multiply(exponentiate(negate(5))(10))(7.29115)))
 SUN_MASS = Mass(Scalar(1.98847e30))  # kg
 EARTH_MASS = Mass(Scalar(5.972e24))  # kg
 

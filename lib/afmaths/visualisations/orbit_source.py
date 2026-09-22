@@ -5,6 +5,8 @@ import datetime
 from dataclasses import dataclass, replace
 from enum import StrEnum
 
+from astronomy_types import Epoch, GravitationalParameter, OrbitalElements
+
 from afmaths.constants import EARTH_MU
 from afmaths.physics.space.astronomy.time_functions import (
     julian_date_delta,
@@ -14,7 +16,6 @@ from afmaths.physics.space.astronomy.time_functions import (
 from afmaths.physics.space.celestial_mechanics.orbital_elements import (
     orbital_elements_from_state_vectors,
 )
-
 from afmaths.physics.space.celestial_mechanics.state_vector import state_vector_at_time
 from afmaths.physics.space.celestial_mechanics.time import orbital_period
 from afmaths.physics.space.engineering.astrodynamics.ground_track import orbits_per_day
@@ -32,7 +33,6 @@ from afmaths.physics.space.external.space_track_api import (
     refresh_tle_cache,
 )
 from afmaths.physics.space.type_conversion_helpers import fulldate_from_python_datetime
-from astronomy_types import Epoch, GravitationalParameter, OrbitalElements
 
 
 class OrbitSource(StrEnum):

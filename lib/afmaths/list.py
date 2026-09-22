@@ -1,6 +1,7 @@
 import math
 import statistics
-from afmaths.operation import add, divide_by, subtract, summation
+
+from afmaths.operation import divide_by, subtract, summation
 
 
 def list_sort(number_list: list[float]) -> list[float]:

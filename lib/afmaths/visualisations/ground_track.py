@@ -3,6 +3,12 @@ from __future__ import annotations
 from pathlib import Path
 
 import plotly.graph_objects as go
+from astronomy_types import (
+    Coordinate2D,
+    Degrees,
+    Scalar,
+    Second,
+)
 
 from afmaths.afmath_types import GroundStation
 from afmaths.constants import EARTH_MU
@@ -15,7 +21,6 @@ from afmaths.physics.space.celestial_mechanics.celestial_mechanics import (
     orbital_radius_from_position_vector,
     vis_viva,
 )
-
 from afmaths.physics.space.celestial_mechanics.state_vector import state_vector_at_time
 from afmaths.physics.space.celestial_mechanics.time import (
     orbital_period,
@@ -44,14 +49,7 @@ from afmaths.visualisations.helpers import (
     figure_circle,
     with_data_background_image,
 )
-from astronomy_types import (
-    Coordinate2D,
-    Degrees,
-    Scalar,
-    Second,
-)
-
-from orbit_source import (
+from afmaths.visualisations.orbit_source import (
     Orbit,
     orbit_at_current_epoch,
 )

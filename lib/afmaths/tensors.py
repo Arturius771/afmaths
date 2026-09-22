@@ -1,6 +1,3 @@
-from afmaths.physics.space.type_conversion_helpers import make_vector3d
-from afmaths.afmath_types import TransformationMatrix2D, TransformationMatrix3D
-from .operation import SQUARE, add, divide_by, multiply, negate, square_root, subtract
 from astronomy_types import (
     Position,
     Scalar,
@@ -8,6 +5,10 @@ from astronomy_types import (
     Vector3D,
     Velocity,
 )
+
+from afmaths.physics.space.type_conversion_helpers import make_vector3d
+
+from .operation import SQUARE, add, divide_by, multiply, negate, square_root, subtract
 
 # region Factories
 

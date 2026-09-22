@@ -13,7 +13,6 @@ from afmaths.physics.space.engineering.two_line_elements import (
 from afmaths.physics.space.external.space_track_api import get_tle_from_norad_id
 from afmaths.physics.space.perturbation_models.sgp4 import (
     julian_date_from_jday,
-    sgp4_julian_date,
     sgp4_satrec,
     state_vector_from_satrec,
 )

@@ -5,13 +5,13 @@ from astronomy_types import (
     Scalar,
 )
 
+from afmaths.afmath_types import Area
 from afmaths.constants import STEFAN_BOLTZMANN_CONSTANT
 from afmaths.operation import divide_by, exponentiate, multiply, subtract
 from afmaths.physics.electromagnetism import stefan_boltzmann_law
 from afmaths.physics.space.engineering.astrodynamics.maneuvers import (
     angle_above_orbital_plane,
 )
-from afmaths.afmath_types import Area
 
 
 def beta_angle(sun: EquatorialCoordinates, orbit: OrbitalElements) -> Radians:

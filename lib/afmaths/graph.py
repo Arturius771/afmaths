@@ -1,6 +1,6 @@
-from afmaths.operation import divide_by, multiply, subtract, termial
-
 from astronomy_types import Coordinate2D
+
+from afmaths.operation import divide_by, multiply, subtract, termial
 
 
 def slope_gradiant(point1: Coordinate2D, point2: Coordinate2D) -> float:

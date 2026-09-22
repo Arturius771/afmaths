@@ -3,42 +3,6 @@ from __future__ import annotations
 import math
 
 import plotly.graph_objects as go
-from afmaths.constants import EARTH_MU, EARTH_RADIUS
-from afmaths.physics.space.engineering.astrodynamics.hohmann_transfer import (
-    hohmann_transfer_parameters,
-)
-from afmaths.physics.space.engineering.astrodynamics.maneuvers import (
-    transfer_eccentricity,
-    transfer_semi_major_axis,
-)
-from afmaths.physics.space.celestial_mechanics.celestial_mechanics import (
-    orbit_altitude,
-    orbit_radius,
-    periapsis_radius,
-)
-from afmaths.afmath_types import OrbitalDirection
-from afmaths.physics.space.type_conversion_helpers import make_eccentric_anomaly
-from afmaths.visualisations.base import (
-    coordinates_for_elements,
-    plotted_radius_for_eccentric_anomaly,
-    scale_orbital_elements_for_plot,
-    transfer_arc_angles,
-)
-from afmaths.visualisations.helpers import (
-    PlotOrbital2DSettings,
-    PlotPerifocalOrbitLine,
-    PlotNode,
-    add_perifocal_orbit_line,
-    add_plot_centre,
-    add_plot_node,
-    central_body_radius_plot,
-    distance_to_scale_distance,
-    figure_layout,
-    figure_planetary_body,
-    plot_origin,
-    plot_max,
-    plot_min,
-)
 from astronomy_types import (
     Anomaly,
     ArgumentOfPeriapsis,
@@ -57,6 +21,43 @@ from astronomy_types import (
     SemiMajorAxis,
     TrueAnomaly,
     Velocity,
+)
+
+from afmaths.afmath_types import OrbitalDirection
+from afmaths.constants import EARTH_MU, EARTH_RADIUS
+from afmaths.physics.space.celestial_mechanics.celestial_mechanics import (
+    orbit_altitude,
+    orbit_radius,
+    periapsis_radius,
+)
+from afmaths.physics.space.engineering.astrodynamics.hohmann_transfer import (
+    hohmann_transfer_parameters,
+)
+from afmaths.physics.space.engineering.astrodynamics.maneuvers import (
+    transfer_eccentricity,
+    transfer_semi_major_axis,
+)
+from afmaths.physics.space.type_conversion_helpers import make_eccentric_anomaly
+from afmaths.visualisations.base import (
+    coordinates_for_elements,
+    plotted_radius_for_eccentric_anomaly,
+    scale_orbital_elements_for_plot,
+    transfer_arc_angles,
+)
+from afmaths.visualisations.helpers import (
+    PlotNode,
+    PlotOrbital2DSettings,
+    PlotPerifocalOrbitLine,
+    add_perifocal_orbit_line,
+    add_plot_centre,
+    add_plot_node,
+    central_body_radius_plot,
+    distance_to_scale_distance,
+    figure_layout,
+    figure_planetary_body,
+    plot_max,
+    plot_min,
+    plot_origin,
 )
 
 

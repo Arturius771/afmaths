@@ -1,7 +1,21 @@
 import math
 import unittest
 
+from afmaths.physics.space.astronomy.coordinate_correction_functions import (
+    aberration_from_date,
+    angle_difference,
+    nutation_from_date,
+    precession_low_precision,
+    rising_and_setting,
+)
+from afmaths.physics.space.type_conversion_helpers import (
+    radians_from_degrees,
+    radians_from_dms,
+    radians_from_hms,
+)
 from astronomy_types import (
+    DMS,
+    HMS,
     Date,
     Day,
     Declination,
@@ -11,7 +25,6 @@ from astronomy_types import (
     EquatorialCoordinates,
     FullDate,
     GeographicCoordinates,
-    HMS,
     Hour,
     JulianDate,
     Minute,
@@ -22,20 +35,6 @@ from astronomy_types import (
     Second,
     Time,
     Year,
-    DMS,
-)
-
-from afmaths.physics.space.type_conversion_helpers import (
-    radians_from_degrees,
-    radians_from_dms,
-    radians_from_hms,
-)
-from afmaths.physics.space.astronomy.coordinate_correction_functions import (
-    aberration_from_date,
-    angle_difference,
-    nutation_from_date,
-    precession_low_precision,
-    rising_and_setting,
 )
 
 

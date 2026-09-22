@@ -4,9 +4,21 @@ from astronomy_types import (
     OrbitalElements,
     Second,
 )
+
+from afmaths.afmath_types import DeltaV, OrbitalDirection
 from afmaths.constants import (
     EARTH_MU,
     EARTH_RADIUS,
+)
+from afmaths.operation import (
+    add,
+    ratio,
+)
+from afmaths.physics.space.celestial_mechanics.celestial_mechanics import (
+    apoapsis_radius,
+    orbit_altitude,
+    orbit_radius,
+    periapsis_radius,
 )
 from afmaths.physics.space.engineering.astrodynamics.maneuvers import (
     decrease_semi_major_axis_at_apoapsis,
@@ -18,17 +30,6 @@ from afmaths.physics.space.engineering.astrodynamics.maneuvers import (
 )
 from afmaths.physics.space.engineering.astrodynamics.orbital_directions import (
     burn_direction_at_apsis,
-)
-from afmaths.afmath_types import OrbitalDirection, DeltaV
-from afmaths.operation import (
-    add,
-    ratio,
-)
-from afmaths.physics.space.celestial_mechanics.celestial_mechanics import (
-    apoapsis_radius,
-    orbit_altitude,
-    orbit_radius,
-    periapsis_radius,
 )
 
 
@@ -125,6 +126,4 @@ def hohmann_is_efficient(
 
     r = ratio(target_altitude)(initial_altitude)
 
-    if r > 11.98:
-        return False
-    return True
+    return not r > 11.98

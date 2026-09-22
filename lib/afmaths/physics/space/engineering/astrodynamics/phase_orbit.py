@@ -3,7 +3,6 @@ from dataclasses import replace
 from astronomy_types import (
     Anomaly,
     Distance,
-    EccentricAnomaly,
     Eccentricity,
     GravitationalParameter,
     OrbitalElements,
@@ -14,8 +13,19 @@ from astronomy_types import (
     SemiMajorAxis,
     TrueAnomaly,
 )
+
+from afmaths.afmath_types import DeltaV
 from afmaths.constants import (
     EARTH_MU,
+)
+from afmaths.operation import (
+    DOUBLE,
+    subtract,
+)
+from afmaths.physics.space.celestial_mechanics.celestial_mechanics import (
+    apoapsis_radius,
+    periapsis_radius,
+    vis_viva,
 )
 from afmaths.physics.space.celestial_mechanics.orbital_elements import (
     eccentric_anomaly_from_true_anomaly,
@@ -27,18 +37,6 @@ from afmaths.physics.space.celestial_mechanics.time import (
     time_to_eccentric_anomaly,
 )
 from afmaths.physics.space.engineering.astrodynamics.maneuvers import delta_v
-from afmaths.afmath_types import DeltaV
-
-from afmaths.operation import (
-    DOUBLE,
-    subtract,
-)
-
-from afmaths.physics.space.celestial_mechanics.celestial_mechanics import (
-    apoapsis_radius,
-    periapsis_radius,
-    vis_viva,
-)
 
 
 def phase_period(original_period: Second, phase_angle_time: Second) -> Second:

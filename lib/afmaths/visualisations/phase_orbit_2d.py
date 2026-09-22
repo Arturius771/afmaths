@@ -1,44 +1,8 @@
 from __future__ import annotations
 
 import math
-import plotly.graph_objects as go
 
-from afmaths.constants import EARTH_MU, EARTH_RADIUS
-from afmaths.physics.space.celestial_mechanics.time import orbital_period
-from afmaths.physics.space.engineering.astrodynamics.phase_orbit import (
-    phase_orbit_apoapsis,
-    phase_orbit_parameters,
-    phase_orbit_periapsis,
-)
-from afmaths.afmath_types import DeltaV
-from afmaths.physics.space.type_conversion_helpers import make_eccentric_anomaly
-from afmaths.visualisations.base import (
-    AHEAD_BEHIND_CUTOFF_RAD,
-    align_phase_poi_to_initial_true_anomaly,
-    coordinates_for_elements,
-    expected_shared_apsis_radius,
-    forward_true_anomaly_delta_rad,
-    phase_direction_label,
-    phase_is_higher_than_original,
-    plotted_radius_for_eccentric_anomaly,
-    plot_coordinate_for_true_anomaly,
-    scale_orbital_elements_for_plot,
-)
-from afmaths.visualisations.helpers import (
-    PlotOrbital2DSettings,
-    PlotPerifocalOrbitLine,
-    PlotNode,
-    add_perifocal_orbit_line,
-    add_plot_centre,
-    add_plot_node,
-    central_body_radius_plot,
-    distance_to_scale_distance,
-    figure_layout,
-    figure_planetary_body,
-    plot_origin,
-    plot_max,
-    plot_min,
-)
+import plotly.graph_objects as go
 from astronomy_types import (
     Anomaly,
     ArgumentOfPeriapsis,
@@ -56,6 +20,43 @@ from astronomy_types import (
     Second,
     SemiMajorAxis,
     TrueAnomaly,
+)
+
+from afmaths.afmath_types import DeltaV
+from afmaths.constants import EARTH_MU, EARTH_RADIUS
+from afmaths.physics.space.celestial_mechanics.time import orbital_period
+from afmaths.physics.space.engineering.astrodynamics.phase_orbit import (
+    phase_orbit_apoapsis,
+    phase_orbit_parameters,
+    phase_orbit_periapsis,
+)
+from afmaths.physics.space.type_conversion_helpers import make_eccentric_anomaly
+from afmaths.visualisations.base import (
+    AHEAD_BEHIND_CUTOFF_RAD,
+    align_phase_poi_to_initial_true_anomaly,
+    coordinates_for_elements,
+    expected_shared_apsis_radius,
+    forward_true_anomaly_delta_rad,
+    phase_direction_label,
+    phase_is_higher_than_original,
+    plot_coordinate_for_true_anomaly,
+    plotted_radius_for_eccentric_anomaly,
+    scale_orbital_elements_for_plot,
+)
+from afmaths.visualisations.helpers import (
+    PlotNode,
+    PlotOrbital2DSettings,
+    PlotPerifocalOrbitLine,
+    add_perifocal_orbit_line,
+    add_plot_centre,
+    add_plot_node,
+    central_body_radius_plot,
+    distance_to_scale_distance,
+    figure_layout,
+    figure_planetary_body,
+    plot_max,
+    plot_min,
+    plot_origin,
 )
 
 

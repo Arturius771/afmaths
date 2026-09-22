@@ -1,5 +1,34 @@
 import unittest
 
+from afmaths.constants import SECONDS_PER_DAY
+from afmaths.physics.space.astronomy.time_functions import (
+    date_from_day_number,
+    date_of_easter,
+    day_number_from_date,
+    decimal_time_from_hms,
+    earth_rotation_angle,
+    earth_rotation_angle_from_greenwich_apparent_sidereal_time,
+    finding_day_of_week,
+    greenwich_apparent_sidereal_time_from_julian_date,
+    greenwich_date_from_julian,
+    greenwich_mean_sidereal_time_seconds_from_julian_date,
+    greenwich_sidereal_time_from_local_sidereal,
+    greenwich_sidereal_time_from_universal,
+    hms_from_decimal,
+    j2000_from_julian_Date,
+    julian_centuries_from_julian_date,
+    julian_date_from_full_Date,
+    julian_date_from_greenwich,
+    julian_date_ut1_from_julian_date_utc,
+    local_sidereal_time_from_greenwich_sidereal,
+    time_from_day_fraction,
+    time_from_seconds,
+    universal_time_from_greenwich,
+    universal_time_from_local_civil,
+    universal_to_local_civil_time,
+    year_is_leap,
+)
+from afmaths.physics.space.type_conversion_helpers import radians_from_degrees
 from astronomy_types import (
     Date,
     Day,
@@ -17,37 +46,6 @@ from astronomy_types import (
     Second,
     Time,
     Year,
-)
-
-from afmaths.constants import SECONDS_PER_DAY
-from afmaths.physics.space.type_conversion_helpers import radians_from_degrees
-from afmaths.physics.space.astronomy.time_functions import (
-    date_from_day_number,
-    date_of_easter,
-    day_number_from_date,
-    earth_rotation_angle,
-    earth_rotation_angle_from_greenwich_apparent_sidereal_time,
-    greenwich_apparent_sidereal_time_from_julian_date,
-    greenwich_mean_sidereal_time_seconds_from_julian_date,
-    greenwich_mean_sidereal_time_radians_from_julian_date,
-    hms_from_decimal,
-    finding_day_of_week,
-    julian_centuries_from_julian_date,
-    julian_date_from_full_Date,
-    julian_date_ut1_from_julian_date_utc,
-    time_from_seconds,
-    local_sidereal_time_from_greenwich_sidereal,
-    time_from_day_fraction,
-    universal_time_from_greenwich,
-    julian_date_from_greenwich,
-    decimal_time_from_hms,
-    j2000_from_julian_Date,
-    greenwich_date_from_julian,
-    universal_time_from_local_civil,
-    greenwich_sidereal_time_from_local_sidereal,
-    greenwich_sidereal_time_from_universal,
-    universal_to_local_civil_time,
-    year_is_leap,
 )
 
 
@@ -247,7 +245,7 @@ class TimeTestMethods(unittest.TestCase):
 
         assert_full_date_equal(
             self,
-            universal_to_local_civil_time(utc, Hour(int(4)), Hour(int(1))),
+            universal_to_local_civil_time(utc, Hour(4), Hour(1)),
             2013,
             7,
             1,
@@ -317,57 +315,57 @@ class TimeTestMethods(unittest.TestCase):
     def test_time_from_seconds(self):
         self.assertEqual(
             time_from_seconds(Second(Scalar(SECONDS_PER_DAY))),
-            Time(hour=Hour(int(24)), minute=Minute(int(0)), second=Second(Scalar(0))),
+            Time(hour=Hour(24), minute=Minute(0), second=Second(Scalar(0))),
         )
         self.assertEqual(
             time_from_seconds(Second(Scalar(86399))),
-            Time(hour=Hour(int(23)), minute=Minute(int(59)), second=Second(Scalar(59))),
+            Time(hour=Hour(23), minute=Minute(59), second=Second(Scalar(59))),
         )
         self.assertEqual(
             time_from_seconds(Second(Scalar(1))),
-            Time(hour=Hour(int(0)), minute=Minute(int(0)), second=Second(Scalar(1))),
+            Time(hour=Hour(0), minute=Minute(0), second=Second(Scalar(1))),
         )
         self.assertEqual(
             time_from_seconds(Second(Scalar(61))),
-            Time(hour=Hour(int(0)), minute=Minute(int(1)), second=Second(Scalar(1))),
+            Time(hour=Hour(0), minute=Minute(1), second=Second(Scalar(1))),
         )
         self.assertEqual(
             time_from_seconds(Second(Scalar(3661))),
-            Time(hour=Hour(int(1)), minute=Minute(int(1)), second=Second(Scalar(1))),
+            Time(hour=Hour(1), minute=Minute(1), second=Second(Scalar(1))),
         )
 
     def test_time_from_day_fraction(self):
 
         self.assertEqual(
             time_from_day_fraction(0.10),
-            Time(hour=Hour(int(2)), minute=Minute(int(24)), second=Second(Scalar(0))),
+            Time(hour=Hour(2), minute=Minute(24), second=Second(Scalar(0))),
         )
 
         self.assertEqual(
             time_from_day_fraction(0.99),
-            Time(hour=Hour(int(23)), minute=Minute(int(45)), second=Second(Scalar(36))),
+            Time(hour=Hour(23), minute=Minute(45), second=Second(Scalar(36))),
         )
 
     def test_date_from_day_number(self):
         self.assertEqual(
-            date_from_day_number(1, Year(int(2026))),
-            Date(Year(int(2026)), Month(int(1)), Day(Scalar(1))),
+            date_from_day_number(1, Year(2026)),
+            Date(Year(2026), Month(1), Day(Scalar(1))),
         )
         self.assertEqual(
-            date_from_day_number(365, Year(int(3009))),
-            Date(Year(int(3009)), Month(int(12)), Day(Scalar(31))),
+            date_from_day_number(365, Year(3009)),
+            Date(Year(3009), Month(12), Day(Scalar(31))),
         )
         self.assertEqual(
-            date_from_day_number(60, Year(int(2048))),
-            Date(Year(int(2048)), Month(int(2)), Day(Scalar(29))),
+            date_from_day_number(60, Year(2048)),
+            Date(Year(2048), Month(2), Day(Scalar(29))),
         )
         self.assertEqual(
-            date_from_day_number(366, Year(int(2048))),
-            Date(Year(int(2048)), Month(int(12)), Day(Scalar(31))),
+            date_from_day_number(366, Year(2048)),
+            Date(Year(2048), Month(12), Day(Scalar(31))),
         )
         self.assertEqual(
-            date_from_day_number(60, Year(int(2050))),
-            Date(Year(int(2050)), Month(int(3)), Day(Scalar(1))),
+            date_from_day_number(60, Year(2050)),
+            Date(Year(2050), Month(3), Day(Scalar(1))),
         )
 
     def test_julian_date_ut1_from_julian_date_utc(self):
@@ -393,13 +391,13 @@ class TimeTestMethods(unittest.TestCase):
             julian_date_from_full_Date(
                 FullDate(
                     Date(
-                        Year(int(2026)),
-                        Month(int(7)),
+                        Year(2026),
+                        Month(7),
                         Day(Scalar(10)),
                     ),
                     Time(
-                        hour=Hour(int(0)),
-                        minute=Minute(int(0)),
+                        hour=Hour(0),
+                        minute=Minute(0),
                         second=Second(Scalar(0)),
                     ),
                 )
@@ -410,13 +408,13 @@ class TimeTestMethods(unittest.TestCase):
             julian_date_from_full_Date(
                 FullDate(
                     Date(
-                        Year(int(2026)),
-                        Month(int(7)),
+                        Year(2026),
+                        Month(7),
                         Day(Scalar(8)),
                     ),
                     Time(
-                        hour=Hour(int(13)),
-                        minute=Minute(int(56)),
+                        hour=Hour(13),
+                        minute=Minute(56),
                         second=Second(Scalar(43)),
                     ),
                 )
@@ -427,13 +425,13 @@ class TimeTestMethods(unittest.TestCase):
             julian_date_from_full_Date(
                 FullDate(
                     Date(
-                        Year(int(2026)),
-                        Month(int(5)),
+                        Year(2026),
+                        Month(5),
                         Day(Scalar(21)),
                     ),
                     Time(
-                        hour=Hour(int(9)),
-                        minute=Minute(int(30)),
+                        hour=Hour(9),
+                        minute=Minute(30),
                         second=Second(Scalar(0)),
                     ),
                 )

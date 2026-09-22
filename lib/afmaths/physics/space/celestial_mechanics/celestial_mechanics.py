@@ -1,35 +1,44 @@
-from dataclasses import replace
 import math
 
+from astronomy_types import (
+    Acceleration,
+    ArgumentOfPeriapsis,
+    Coordinate3D,
+    Distance,
+    EccentricAnomaly,
+    Eccentricity,
+    GravitationalParameter,
+    Inclination,
+    Latitude,
+    MeanAnomaly,
+    MeanMotion,
+    OrbitalElements,
+    PositionVector,
+    Radians,
+    Rate,
+    RightAscension,
+    Scalar,
+    Second,
+    SemiMajorAxis,
+    StateVector,
+    TrueAnomaly,
+    Vector3D,
+    Velocity,
+)
 
+from afmaths.afmath_types import (
+    AngularMomentum,
+    Area,
+    Force,
+    Mass,
+    OrbitalDirection,
+)
 from afmaths.constants import (
     EARTH_MU,
     EARTH_RADIUS,
-    GRAVITATIONAL_CONSTANT,
     SIDEREAL_DAY,
     TWO_PI,
 )
-from afmaths.physics.physics import centripetal_acceleration, centripetal_force
-
-from afmaths.physics.space.celestial_mechanics.gravitation import (
-    gravitational_acceleration_at_radius,
-)
-from afmaths.physics.space.type_conversion_helpers import (
-    coordinate3d_from_vector,
-    make_radians,
-    vector3d_from_position,
-    make_vector3d,
-    vector3d_from_velocity,
-)
-from afmaths.tensors import (
-    dot_product_3d,
-    vector_cross_multiplication_3d,
-    vector_magnitude_3d,
-    vector_negate,
-    vector_normalise,
-    vector_subtract_3d,
-)
-
 from afmaths.geometry.geometry import (
     calculate_distance_3d,
     eccentricity_factor_minus,
@@ -48,38 +57,24 @@ from afmaths.operation import (
     square_root,
     subtract,
 )
-from astronomy_types import (
-    Acceleration,
-    Coordinate3D,
-    EccentricAnomaly,
-    GravitationalParameter,
-    Latitude,
-    MeanAnomaly,
-    MeanMotion,
-    OrbitalElements,
-    PositionVector,
-    Radians,
-    Rate,
-    RightAscension,
-    Inclination,
-    ArgumentOfPeriapsis,
-    Second,
-    SemiMajorAxis,
-    Eccentricity,
-    StateVector,
-    TrueAnomaly,
-    Scalar,
-    Vector3D,
-    Velocity,
-    Distance,
+from afmaths.physics.physics import centripetal_acceleration, centripetal_force
+from afmaths.physics.space.celestial_mechanics.gravitation import (
+    gravitational_acceleration_at_radius,
 )
-
-from afmaths.afmath_types import (
-    AngularMomentum,
-    Area,
-    Force,
-    Mass,
-    OrbitalDirection,
+from afmaths.physics.space.type_conversion_helpers import (
+    coordinate3d_from_vector,
+    make_radians,
+    make_vector3d,
+    vector3d_from_position,
+    vector3d_from_velocity,
+)
+from afmaths.tensors import (
+    dot_product_3d,
+    vector_cross_multiplication_3d,
+    vector_magnitude_3d,
+    vector_negate,
+    vector_normalise,
+    vector_subtract_3d,
 )
 
 ## Check if this belongs in geometry.py
@@ -185,7 +180,7 @@ def mean_motion(
 ) -> MeanMotion:
     """Calculates the mean motion of an orbit from the semi major axis in radians per second"""
     # n = np.sqrt(mu / np.power(a, 3))
-    return MeanMotion((mean_angular_rate(a, mu)))
+    return MeanMotion(mean_angular_rate(a, mu))
 
 
 def distance_between_positions(pos1: PositionVector, pos2: PositionVector) -> Distance:

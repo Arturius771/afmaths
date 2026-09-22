@@ -1,10 +1,10 @@
+from astronomy_types import OrbitalElements
+
 from afmaths.afmath_types import OrbitalDirection
 from afmaths.constants import EARTH_MU
 from afmaths.physics.space.celestial_mechanics.celestial_mechanics import (
     orbital_direction_from_inclination,
 )
-from astronomy_types import OrbitalElements
-
 from afmaths.physics.space.celestial_mechanics.time import orbital_period
 from afmaths.physics.space.engineering.astrodynamics.westward_drift import (
     westward_drift_from_angular_velocity_and_period,

@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from enum import Enum
 from typing import Literal, NewType
+
 from astronomy_types import (
     Distance,
     GeographicCoordinates,

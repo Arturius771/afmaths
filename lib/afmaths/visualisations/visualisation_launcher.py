@@ -6,18 +6,6 @@ from dataclasses import dataclass, replace
 from pathlib import Path
 
 import plotly.graph_objects as go
-
-from afmaths.afmath_types import Mass
-from afmaths.constants import (
-    EXAMPLE_ELEMENTS,
-    ISS_NORAD_ID,
-    KILCUMMIN_GROUND_STATION,
-)
-from afmaths.visualisations.helpers import (
-    PlotOrbital2DSettings,
-    defined_kwargs,
-    with_plot_settings_overrides,
-)
 from astronomy_types import (
     Anomaly,
     ArgumentOfPeriapsis,
@@ -33,43 +21,60 @@ from astronomy_types import (
     TrueAnomaly,
 )
 
-from collision_detection import build_collision_detection_figure
-from control_room import launch_control_room
-from ground_track import (
+from afmaths.afmath_types import Mass
+from afmaths.constants import (
+    EXAMPLE_ELEMENTS,
+    ISS_NORAD_ID,
+    KILCUMMIN_GROUND_STATION,
+)
+from afmaths.physics.space.external.horizons_api import HorizonsCommandTarget
+from afmaths.visualisations.collision_detection import build_collision_detection_figure
+from afmaths.visualisations.control_room import launch_control_room
+from afmaths.visualisations.ground_track import (
     GROUND_TRACK_POINTS,
     visualisation_2d_ground_track,
     visualisation_2d_ground_track_current_position,
 )
-from hohmann_tradeoff import build_hohmann_tradeoff_figure
-from hohmann_transfer_perifocal_2d import (
+from afmaths.visualisations.helpers import (
+    PlotOrbital2DSettings,
+    defined_kwargs,
+    with_plot_settings_overrides,
+)
+from afmaths.visualisations.hohmann_tradeoff import build_hohmann_tradeoff_figure
+from afmaths.visualisations.hohmann_transfer_perifocal_2d import (
     DEFAULT_PLOT_SETTINGS as HOHMANN_PLOT_SETTINGS,
+)
+from afmaths.visualisations.hohmann_transfer_perifocal_2d import (
     build_default_hohmann_transfer_2d_perifocal_figure,
 )
-from lagrange_points_2d import build_lagrange_points_figure
-from newton_iteration import build_newton_iteration_figure
-from orbit_source import (
+from afmaths.visualisations.lagrange_points_2d import build_lagrange_points_figure
+from afmaths.visualisations.newton_iteration import build_newton_iteration_figure
+from afmaths.visualisations.orbit_source import (
     Orbit,
     OrbitSource,
     default_orbit_count,
     parse_orbit_source,
     resolve_orbits,
 )
-from orbit_visualiser_2d import (
-    DEFAULT_PLOT_SETTINGS as ORBIT_2D_PLOT_SETTINGS,
-    build_default_orbit_visualiser_2d_figure,
-    satellite_orbiting_body,
-)
-from phase_orbit_2d import (
-    DEFAULT_PLOT_SETTINGS as PHASE_PLOT_SETTINGS,
-    build_default_phase_orbit_2d_perifocal_figure,
-)
-from orbit_system_3d import (
+from afmaths.visualisations.orbit_system_3d import (
     DEFAULT_SOLAR_SYSTEM_BODIES,
     ReferenceFrame,
     build_3d_orbit_system_figure,
 )
-from afmaths.physics.space.external.horizons_api import HorizonsCommandTarget
-from velocity_time import build_velocity_time_figure
+from afmaths.visualisations.orbit_visualiser_2d import (
+    DEFAULT_PLOT_SETTINGS as ORBIT_2D_PLOT_SETTINGS,
+)
+from afmaths.visualisations.orbit_visualiser_2d import (
+    build_default_orbit_visualiser_2d_figure,
+    satellite_orbiting_body,
+)
+from afmaths.visualisations.phase_orbit_2d import (
+    DEFAULT_PLOT_SETTINGS as PHASE_PLOT_SETTINGS,
+)
+from afmaths.visualisations.phase_orbit_2d import (
+    build_default_phase_orbit_2d_perifocal_figure,
+)
+from afmaths.visualisations.velocity_time import build_velocity_time_figure
 
 
 @dataclass(frozen=True)

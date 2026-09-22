@@ -1,10 +1,6 @@
-from dataclasses import replace
 import math
+from dataclasses import replace
 
-from afmaths.operation import negate, subtract
-from afmaths.physics.space.celestial_mechanics.state_vector import (
-    perifocal_position_vector,
-)
 from astronomy_types import (
     ArgumentOfPeriapsis,
     OrbitalElements,
@@ -12,6 +8,10 @@ from astronomy_types import (
     TrueAnomaly,
 )
 
+from afmaths.operation import negate, subtract
+from afmaths.physics.space.celestial_mechanics.state_vector import (
+    perifocal_position_vector,
+)
 from afmaths.physics.space.type_conversion_helpers import make_true_anomaly
 
 

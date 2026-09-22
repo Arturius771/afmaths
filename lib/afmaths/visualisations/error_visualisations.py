@@ -1,5 +1,4 @@
 import plotly.graph_objects as go
-
 from astronomy_types import Scalar, Second
 
 from afmaths.geometry.geometry import euclidian_distance_3d

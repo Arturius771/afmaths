@@ -1,9 +1,11 @@
 import math
+
 from astronomy_types import (
     Distance,
     Eccentricity,
     EquatorialCoordinates,
     GravitationalParameter,
+    Inclination,
     OrbitalElements,
     Radians,
     Ratio,
@@ -12,12 +14,12 @@ from astronomy_types import (
     SemiMajorAxis,
     StateVector,
     Velocity,
-    Inclination,
 )
+
+from afmaths.afmath_types import DeltaV
 from afmaths.constants import (
     EARTH_MU,
 )
-from afmaths.afmath_types import DeltaV
 from afmaths.geometry.geometry import (
     eccentricity_factor_plus,
     semi_major_axis_from_vertex_distances,
@@ -30,6 +32,13 @@ from afmaths.operation import (
     square_root,
     subtract,
 )
+from afmaths.physics.space.celestial_mechanics.celestial_mechanics import (
+    periapsis_radius,
+    periapsis_velocity,
+    radial_velocity,
+    velocity_at_radius,
+    vis_viva,
+)
 from afmaths.physics.space.celestial_mechanics.orbital_elements import (
     eccentricity_from_apsides,
     orbital_elements_from_state_vectors,
@@ -39,13 +48,6 @@ from afmaths.physics.space.type_conversion_helpers import (
     make_radians,
     vector3d_from_position,
     vector3d_from_velocity,
-)
-from afmaths.physics.space.celestial_mechanics.celestial_mechanics import (
-    periapsis_radius,
-    periapsis_velocity,
-    radial_velocity,
-    velocity_at_radius,
-    vis_viva,
 )
 from afmaths.tensors import (
     vector_magnitude_3d,

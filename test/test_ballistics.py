@@ -4,9 +4,9 @@ from afmaths.physics.ballistics import (
     ballistic_vacuum_angle_to_target,
     ballistic_vacuum_displacement_at_time,
     ballistic_vacuum_initial_velocity,
-    basllistic_vacuum_time_to_target,
+    ballistic_vacuum_time_to_target,
 )
-from astronomy_types import Coordinate2D, Degrees, Scalar, Velocity, Second
+from astronomy_types import Coordinate2D, Degrees, Scalar, Second, Velocity
 
 
 class BallisticsTestMethods(unittest.TestCase):
@@ -38,7 +38,7 @@ class BallisticsTestMethods(unittest.TestCase):
         self.assertAlmostEqual(result[1], Degrees(Scalar(45)), places=2)
 
     def test_basllistic_vacuum_time_to_target(self):
-        result = basllistic_vacuum_time_to_target(
+        result = ballistic_vacuum_time_to_target(
             target_coordinates=Coordinate2D(100, 0),
             initial_velocity=Velocity(Scalar(31.315571206669695)),
             launch_angle=Degrees(Scalar(45)),

@@ -1,6 +1,6 @@
 import unittest
 
-from afmaths.constants import ISS_NORAD_ID, ISS_TLE_EXAMPLE
+from afmaths.constants import ISS_TLE_EXAMPLE
 from afmaths.physics.space.engineering.two_line_elements import (
     parse_argument_of_periapsis,
     parse_eccentricity,
@@ -10,7 +10,6 @@ from afmaths.physics.space.engineering.two_line_elements import (
     parse_mean_motion_per_day,
     parse_right_ascension_ascending_node,
 )
-from afmaths.physics.space.external.space_track_api import get_tle_from_norad_id
 from afmaths.physics.space.type_conversion_helpers import degrees_from_radians
 from astronomy_types import (
     Date,
@@ -33,13 +32,13 @@ class TLETestMethods(unittest.TestCase):
             parse_full_date(ISS_TLE_EXAMPLE),
             FullDate(
                 Date(
-                    Year(int(2026)),
-                    Month(int(7)),
+                    Year(2026),
+                    Month(7),
                     Day(Scalar(10)),
                 ),
                 Time(
-                    hour=Hour(int(8)),
-                    minute=Minute(int(19)),
+                    hour=Hour(8),
+                    minute=Minute(19),
                     second=Second(Scalar(50.60121599999911)),
                 ),
             ),

@@ -1,9 +1,8 @@
-from astronomy_types import Coordinate2D
 import plotly.graph_objects as go
+from astronomy_types import Coordinate2D
 
 from afmaths.physics.kinematics import detect_collision, propagate_vector
 from afmaths.physics.space.type_conversion_helpers import make_vector2d
-
 
 OBJECT_A_COORDINATES = Coordinate2D[float](5, 10)
 OBJECT_A_VECTOR = make_vector2d(0, -1)
@@ -47,5 +46,3 @@ def build_collision_detection_figure() -> go.Figure:
     )
 
     return fig
-
-

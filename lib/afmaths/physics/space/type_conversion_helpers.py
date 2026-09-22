@@ -4,7 +4,6 @@ import math
 from astronomy_types import (
     DMS,
     HMS,
-    T,
     Anomaly,
     Coordinate2D,
     Coordinate3D,
@@ -24,6 +23,7 @@ from astronomy_types import (
     Scalar,
     Second,
     StateVector,
+    T,
     Time,
     TrueAnomaly,
     Vector2D,

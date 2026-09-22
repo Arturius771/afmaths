@@ -1,10 +1,11 @@
+from astronomy_types import Ratio
+
 from afmaths.operation import (
     divide_by,
     exponentiate,
-    ratio,
     percentage_from_ratio,
+    ratio,
 )
-from astronomy_types import Ratio
 
 
 def probability_of_outcome_percentage(

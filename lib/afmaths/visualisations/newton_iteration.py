@@ -1,10 +1,9 @@
 import math
 
 import plotly.graph_objects as go
-
-from afmaths.constants import EXAMPLE_ELEMENTS
 from astronomy_types import Anomaly, MeanAnomaly, Radians, Scalar
 
+from afmaths.constants import EXAMPLE_ELEMENTS
 from afmaths.physics.space.celestial_mechanics.orbital_elements import (
     eccentric_anomaly_solved,
     newtons_method_eccentric_anomaly,

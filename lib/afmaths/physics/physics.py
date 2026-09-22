@@ -1,21 +1,5 @@
 import math
-from afmaths.geometry.geometry import area_of_sphere
-from afmaths.afmath_types import (
-    AngularMomentum,
-    Force,
-    Impulse,
-    Mass,
-    Momentum,
-    Torque,
-)
-from afmaths.operation import (
-    HALF,
-    SQUARE,
-    divide_by,
-    multiply,
-    ratio,
-    subtract,
-)
+
 from astronomy_types import (
     Acceleration,
     Distance,
@@ -24,6 +8,24 @@ from astronomy_types import (
     Scalar,
     Second,
     Velocity,
+)
+
+from afmaths.afmath_types import (
+    AngularMomentum,
+    Force,
+    Impulse,
+    Mass,
+    Momentum,
+    Torque,
+)
+from afmaths.geometry.geometry import area_of_sphere
+from afmaths.operation import (
+    HALF,
+    SQUARE,
+    divide_by,
+    multiply,
+    ratio,
+    subtract,
 )
 
 

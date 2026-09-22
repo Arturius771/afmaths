@@ -2,6 +2,7 @@ import math
 
 from afmaths.geometry.geometry import pythagoras_theorem
 
+from .list import list_sum
 from .operation import (
     HALF,
     add,
@@ -11,7 +12,6 @@ from .operation import (
     multiply,
     subtract,
 )
-from .list import list_sum
 
 
 def file_compression_ratio(uncompressed_size: float):

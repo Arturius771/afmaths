@@ -1,8 +1,6 @@
 import math
 
 import plotly.graph_objects as go
-from plotly.subplots import make_subplots
-
 from astronomy_types import (
     Anomaly,
     ArgumentOfPeriapsis,
@@ -17,6 +15,7 @@ from astronomy_types import (
     SemiMajorAxis,
     TrueAnomaly,
 )
+from plotly.subplots import make_subplots
 
 from afmaths.constants import EARTH_MU, EARTH_RADIUS
 from afmaths.physics.space.celestial_mechanics.celestial_mechanics import (

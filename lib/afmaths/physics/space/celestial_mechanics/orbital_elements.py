@@ -1,41 +1,50 @@
-from dataclasses import replace
 import math
-from typing import Callable
+from collections.abc import Callable
 
+from astronomy_types import (
+    Anomaly,
+    ArgumentOfPeriapsis,
+    Coordinate2D,
+    Distance,
+    EccentricAnomaly,
+    Eccentricity,
+    GravitationalParameter,
+    Inclination,
+    Latitude,
+    MeanAnomaly,
+    MeanMotion,
+    OrbitalElements,
+    Radians,
+    RightAscension,
+    Scalar,
+    Second,
+    SemiLatusRectum,
+    SemiMajorAxis,
+    StateVector,
+    TrueAnomaly,
+    Vector3D,
+)
+
+from afmaths.afmath_types import (
+    AngularMomentum,
+)
 from afmaths.constants import (
     EARTH_MU,
     TWO_PI,
     UNIT_VECTOR_XY_PLANE,
 )
-from afmaths.geometry.transformations import (
-    ellipse_perimeter_coordinate_from_eccentric_anomaly,
-)
-from afmaths.numerical_analysis import root_solver
-from afmaths.physics.space.type_conversion_helpers import (
-    make_eccentric_anomaly,
-    coordinate2d_from_vector,
-    make_radians,
-    make_true_anomaly,
-    vector3d_from_position,
-    make_vector2d,
-    make_vector3d,
-    vector3d_from_velocity,
-)
-from afmaths.tensors import (
-    dot_product_3d,
-    vector_cross_multiplication_3d,
-    vector_magnitude_3d,
-    vector_multiplication_2d,
-)
-
 from afmaths.geometry.geometry import (
+    eccentricity,
     eccentricity_factor_minus,
     eccentricity_factor_plus,
-    eccentricity,
     normalise_angle,
     semi_minor_axis,
     semi_minor_axis_from_semi_latus_rectum,
 )
+from afmaths.geometry.transformations import (
+    ellipse_perimeter_coordinate_from_eccentric_anomaly,
+)
+from afmaths.numerical_analysis import root_solver
 from afmaths.operation import (
     DOUBLE,
     SQUARE,
@@ -48,35 +57,6 @@ from afmaths.operation import (
     square_root,
     subtract,
 )
-from astronomy_types import (
-    Anomaly,
-    Coordinate2D,
-    EccentricAnomaly,
-    GravitationalParameter,
-    Latitude,
-    MeanAnomaly,
-    MeanMotion,
-    OrbitalElements,
-    Radians,
-    RightAscension,
-    Inclination,
-    ArgumentOfPeriapsis,
-    Second,
-    SemiLatusRectum,
-    SemiMajorAxis,
-    Eccentricity,
-    StateVector,
-    TrueAnomaly,
-    Scalar,
-    Vector3D,
-    Distance,
-)
-
-from afmaths.afmath_types import (
-    AngularMomentum,
-)
-
-
 from afmaths.physics.space.celestial_mechanics.celestial_mechanics import (
     angular_momentum,
     angular_momentum_magnitude,
@@ -84,6 +64,22 @@ from afmaths.physics.space.celestial_mechanics.celestial_mechanics import (
     kepler_equation,
     mean_motion,
     orbit_equation,
+)
+from afmaths.physics.space.type_conversion_helpers import (
+    coordinate2d_from_vector,
+    make_eccentric_anomaly,
+    make_radians,
+    make_true_anomaly,
+    make_vector2d,
+    make_vector3d,
+    vector3d_from_position,
+    vector3d_from_velocity,
+)
+from afmaths.tensors import (
+    dot_product_3d,
+    vector_cross_multiplication_3d,
+    vector_magnitude_3d,
+    vector_multiplication_2d,
 )
 
 
@@ -448,7 +444,7 @@ def eccentric_anomaly(
         pos_3d,
         vector3d_from_velocity(state.velocity),
     )
-    x = multiply(SQUARE(a))(multiply(n)((subtract(divide_by(a)(radius))(1))))
+    x = multiply(SQUARE(a))(multiply(n)(subtract(divide_by(a)(radius))(1)))
 
     return make_eccentric_anomaly(normalise_angle(make_radians(math.atan2(y, x))))
 

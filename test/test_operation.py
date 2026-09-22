@@ -1,5 +1,5 @@
-from math import factorial
 import unittest
+from math import factorial
 
 from afmaths.operation import (
     absolute,

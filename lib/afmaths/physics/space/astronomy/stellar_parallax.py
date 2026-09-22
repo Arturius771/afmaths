@@ -1,6 +1,7 @@
 import math
 
-from astronomy_types import Degrees, Radians, Distance, Scalar
+from astronomy_types import Degrees, Distance, Scalar
+
 from afmaths.constants import ASTRONOMICAL_UNIT
 from afmaths.operation import HALF, divide_by
 

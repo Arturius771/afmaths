@@ -1,4 +1,5 @@
 from astronomy_types import Degrees, MeanMotion, Radians, Scalar, Second
+
 from afmaths.constants import EARTH_ANGULAR_VELOCITY, MEAN_SOLAR_DAY
 from afmaths.operation import divide_by, multiply
 from afmaths.physics.space.celestial_mechanics.celestial_mechanics import (

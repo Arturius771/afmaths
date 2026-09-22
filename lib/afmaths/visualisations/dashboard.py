@@ -1,10 +1,10 @@
 from __future__ import annotations
 
+import tempfile
+import webbrowser
 from collections.abc import Sequence
 from html import escape
 from pathlib import Path
-import tempfile
-import webbrowser
 
 import plotly.graph_objects as go
 import plotly.io as pio

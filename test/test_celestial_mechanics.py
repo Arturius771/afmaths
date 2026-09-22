@@ -5,13 +5,12 @@ from afmaths.afmath_types import AngularMomentum, Force, Mass, OrbitalDirection
 from afmaths.constants import (
     ASTRONOMICAL_UNIT,
     EARTH_MASS,
-    EARTH_MU,
     EXAMPLE_ELEMENTS,
     SUN_MASS,
     SUN_MU,
 )
 from afmaths.numerical_analysis import root_solver
-from afmaths.operation import add, multiply, multiply, subtract
+from afmaths.operation import add
 from afmaths.physics.space.celestial_mechanics.celestial_mechanics import (
     apoapsis_radius,
     distance_between_positions,
@@ -21,6 +20,24 @@ from afmaths.physics.space.celestial_mechanics.celestial_mechanics import (
     swept_area_of_ellipse,
     vis_viva,
 )
+from afmaths.physics.space.celestial_mechanics.gravitation import (
+    lagrange_points,
+    planetary_sphere_of_influence_approximation,
+    solve_for_equilibrium,
+)
+from afmaths.physics.space.celestial_mechanics.orbital_elements import (
+    eccentric_anomaly_from_true_anomaly,
+    eccentric_anomaly_solved,
+    newtons_method_eccentric_anomaly,
+    orbital_elements_from_state_vectors,
+)
+from afmaths.physics.space.celestial_mechanics.state_vector import state_vector_at_time
+from afmaths.physics.space.celestial_mechanics.time import (
+    rate_of_change_true_anomaly,
+    time_to_eccentric_anomaly,
+    time_to_true_anomaly,
+)
+from afmaths.physics.space.type_conversion_helpers import radians_from_degrees
 from astronomy_types import (
     Anomaly,
     ArgumentOfPeriapsis,
@@ -47,26 +64,6 @@ from astronomy_types import (
     Velocity,
     VelocityVector,
 )
-
-from afmaths.physics.space.celestial_mechanics.gravitation import (
-    lagrange_points,
-    planetary_sphere_of_influence_approximation,
-    solve_for_equilibrium,
-)
-from afmaths.physics.space.celestial_mechanics.orbital_elements import (
-    eccentric_anomaly_from_true_anomaly,
-    eccentric_anomaly_solved,
-    newtons_method_eccentric_anomaly,
-    orbital_elements_from_state_vectors,
-)
-
-from afmaths.physics.space.celestial_mechanics.state_vector import state_vector_at_time
-from afmaths.physics.space.celestial_mechanics.time import (
-    rate_of_change_true_anomaly,
-    time_to_eccentric_anomaly,
-    time_to_true_anomaly,
-)
-from afmaths.physics.space.type_conversion_helpers import radians_from_degrees
 
 
 class CelestialMechanicsTestMethods(unittest.TestCase):
