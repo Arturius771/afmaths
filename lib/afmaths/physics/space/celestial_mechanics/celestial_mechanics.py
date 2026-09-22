@@ -7,6 +7,7 @@ from astronomy_types import (
     Distance,
     EccentricAnomaly,
     Eccentricity,
+    EquatorialCoordinates,
     GravitationalParameter,
     Inclination,
     Latitude,
@@ -191,13 +192,13 @@ def distance_between_positions(pos1: PositionVector, pos2: PositionVector) -> Di
     )
 
 
-# region Latitude
+# region Orbital Plane
 
 
 def argument_of_latitude_from_true_anomaly(
     argument_of_periapsis: ArgumentOfPeriapsis, theta: TrueAnomaly
 ) -> Latitude:
-    """Calculates the argument of latitude from the right ascension of the ascending node and the true anomaly."""
+    """Calculates the argument of latitude from the right ascension of the ascending node and the true anomaly. Latitude is the angle between the orbital plane and the position vector of the satellite."""
     return make_radians(add(argument_of_periapsis)(theta))
 
 
@@ -206,7 +207,7 @@ def argument_of_latitude(
     i: Inclination,
     position: PositionVector,
 ) -> Latitude:
-    """Finds the latitude of the satellite in the orbital plane from the position vector and the right ascension of the ascending node."""
+    """Finds the latitude (the angle between the orbital plane and the position vector of the satellite) of the satellite in the orbital plane from the position vector and the right ascension of the ascending node."""
     # u = np.arctan2(r[2] / np.sin(i), r[0] * np.cos(Omega) + r[1] * np.sin(Omega))
     # if u < 0:
     #     u += 2 * np.pi
@@ -214,6 +215,27 @@ def argument_of_latitude(
     x = add(multiply(position.x)(math.cos(raan)))(multiply(position.y)(math.sin(raan)))
 
     return normalise_angle(make_radians(math.atan2(y, x)))
+
+
+def angle_above_orbital_plane(
+    target_object: EquatorialCoordinates,
+    orbit: OrbitalElements,
+) -> Radians:
+    """Calculates the angle of a target object above or below the orbital plane of a given orbit."""
+    value = math.cos(target_object.declination) * math.sin(
+        orbit.inclination
+    ) * math.sin(
+        orbit.right_ascension_of_ascending_node - target_object.right_ascension
+    ) + math.sin(
+        target_object.declination
+    ) * math.cos(
+        orbit.inclination
+    )
+
+    # Prevent floating point drift errors at values close to +/-1.
+    value = max(-1.0, min(1.0, value))
+
+    return Radians(Scalar(math.asin(value)))
 
 
 # region Velocity

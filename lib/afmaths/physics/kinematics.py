@@ -1,3 +1,5 @@
+import itertools
+
 from astronomy_types import (
     Acceleration,
     Coordinate2D,
@@ -116,7 +118,7 @@ def displacement_velocity_time(sorted_points: list[Coordinate2D]) -> Displacemen
     """Calculates the total displacement of an object given a velocity-time graph with multiple segments. The points must be sorted in order of time."""
     total = 0
 
-    for start, end in zip(sorted_points, sorted_points[1:]):
+    for start, end in itertools.pairwise(sorted_points):
         total += velocity_time_displacement_curve_section(start, end)
 
     return Displacement(Scalar(total))

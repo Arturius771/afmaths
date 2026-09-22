@@ -41,7 +41,7 @@ def decibel_milliwatts_from_watts(power_in_watts: float) -> float:
 
 def decibels(power1: float):
     """Returns a function that calculates the decibels between two powers"""
-    return lambda power2: math.log(power1 / power2, 10)
+    return lambda power2: math.log10(power1 / power2)
 
 
 def momentum(mass: Mass, velocity: Velocity) -> Momentum:

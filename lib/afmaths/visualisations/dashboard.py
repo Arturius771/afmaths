@@ -49,7 +49,7 @@ def write_visualisation_dashboard(
             + pio.to_html(
                 dashboard_figure,
                 full_html=False,
-                include_plotlyjs=True if index == 0 else False,
+                include_plotlyjs=index == 0,
                 config={
                     "responsive": True,
                     "displaylogo": False,

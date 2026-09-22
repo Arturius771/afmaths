@@ -1,11 +1,8 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-import datetime
 from enum import Enum
 from typing import Literal
-
-import requests
 
 from astronomy_types import (
     DMS,
@@ -22,10 +19,6 @@ from astronomy_types import (
     VelocityVector,
 )
 
-
-from afmaths.physics.space.celestial_mechanics.orbital_elements import (
-    orbital_elements_from_state_vectors,
-)
 from afmaths.physics.space.external.http_helpers import (
     build_url,
     prepare_url,
@@ -33,9 +26,8 @@ from afmaths.physics.space.external.http_helpers import (
 )
 from afmaths.physics.space.type_conversion_helpers import (
     radians_from_dms,
-    string_from_fulldate,
     radians_from_hms,
-    fulldate_from_python_datetime,
+    string_from_fulldate,
 )
 
 HORIZONS_API_URL = build_url(
@@ -347,43 +339,3 @@ def get_object_state_vectors_from_horizon(
     result = fetch_horizons_result(query)
     rows = extract_ephemeris_rows(result)
     return parse_state_vector_rows(rows, output_units)
-
-
-if __name__ == "__main__":
-    coordinates = get_object_equatorial_coordinates(
-        target=HorizonsCommandTarget.MARS,
-        start_time=fulldate_from_python_datetime(datetime.datetime.now()),
-        stop_time=fulldate_from_python_datetime(
-            datetime.datetime.now() + datetime.timedelta(days=1)
-        ),
-        step_size="1h",
-    )
-
-    print(coordinates)
-    for coordinate in coordinates:
-        print(coordinate)
-
-    state_vectors = get_object_state_vectors_from_horizon(
-        target=HorizonsCommandTarget.MARS,
-        start_time=fulldate_from_python_datetime(datetime.datetime(2026, 5, 27, 0, 0)),
-        stop_time=fulldate_from_python_datetime(datetime.datetime(2026, 5, 28, 0, 0)),
-        step_size="1h",
-    )
-
-    print(state_vectors)
-
-    for state_vector in state_vectors:
-        print(state_vector)
-
-    coordinates = orbital_elements_from_state_vectors(
-        get_object_state_vectors_from_horizon(
-            target=HorizonsCommandTarget.MOON,
-            start_time=fulldate_from_python_datetime(datetime.datetime.now()),
-            stop_time=fulldate_from_python_datetime(
-                datetime.datetime.now() + datetime.timedelta(days=1)
-            ),
-            step_size="1h",
-        )[0]
-    )
-
-    print(coordinates)

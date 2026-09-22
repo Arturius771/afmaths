@@ -283,11 +283,11 @@ def figure_planetary_body(
                 mode="markers+text",
                 text=[text],
                 textposition="top center",
-                marker=dict(
-                    size=radius + 5,
-                    color=fill_colour,
-                    line=dict(color=line_colour, width=2),
-                ),
+                marker={
+                    "size": radius + 5,
+                    "color": fill_colour,
+                    "line": {"color": line_colour, "width": 2},
+                },
                 hovertext=[text],
                 hoverinfo="text",
             )
@@ -304,7 +304,7 @@ def figure_planetary_body(
         y=coordinates.y - radius - 1,
         text=text,
         showarrow=False,
-        font=dict(color=text_colour),
+        font={"color": text_colour},
     )
 
 
@@ -321,7 +321,7 @@ def figure_orbit_line(
             y=[coordinate.y for coordinate in coordinates],
             mode="lines",
             name=name,
-            line=dict(color=colour),
+            line={"color": colour},
             showlegend=False,
         )
     )
@@ -329,7 +329,7 @@ def figure_orbit_line(
 
 # Subject: Plotly slider composition.
 def figure_slider(figure: go.Figure, slider_steps: list[dict]) -> go.Figure:
-    return figure.update_layout(sliders=[dict(steps=slider_steps)])
+    return figure.update_layout(sliders=[{"steps": slider_steps}])
 
 
 # Subject: Plotly 2D marker/text trace.
@@ -344,12 +344,12 @@ def add_plot_node(fig: go.Figure, node: PlotNode) -> go.Figure:
             name=node.name,
             text=[text],
             textposition="top center",
-            marker=dict(
-                size=node.size,
-                color=node.colour,
-                symbol=node.symbol,
-                line=dict(color=node.colour, width=2),
-            ),
+            marker={
+                "size": node.size,
+                "color": node.colour,
+                "symbol": node.symbol,
+                "line": {"color": node.colour, "width": 2},
+            },
             hovertext=[text],
             hoverinfo="text",
         )
@@ -515,12 +515,12 @@ def make_3d_orbit_figure(
 
     fig.update_layout(
         title=title,
-        scene=dict(
-            xaxis_title=f"X ({distance_scale:,} m units)",
-            yaxis_title=f"Y ({distance_scale:,} m units)",
-            zaxis_title=f"Z ({distance_scale:,} m units)",
-            aspectmode="data",
-        ),
+        scene={
+            "xaxis_title": f"X ({distance_scale:,} m units)",
+            "yaxis_title": f"Y ({distance_scale:,} m units)",
+            "zaxis_title": f"Z ({distance_scale:,} m units)",
+            "aspectmode": "data",
+        },
     )
 
     return fig

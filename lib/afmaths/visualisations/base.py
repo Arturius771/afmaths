@@ -466,7 +466,7 @@ def add_orbiting_body_to_traces(
         orbital_elements = body.target_object
     else:
         print(body.target_object)
-        raise ValueError("Orbital elements ain't right")
+        raise TypeError("Orbital elements ain't right")
 
     model_current_state = state_vector_at_time(
         orbital_elements,

@@ -124,7 +124,6 @@ def ballistic_vacuum_time_to_target(
     if initial_coordinates is None:
         initial_coordinates = Coordinate2D(0, 0)
 
-    x = target_coordinates.x - initial_coordinates.x
     y = target_coordinates.y - initial_coordinates.y
 
     # Calculate the time to reach the target using the quadratic formula

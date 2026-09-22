@@ -352,7 +352,7 @@ def is_trojan_capable(mass1: Mass, mass2: Mass) -> bool:
 
 def planetary_sphere_of_influence_approximation(
     mean_distance: Distance = ASTRONOMICAL_UNIT,
-    planet_mass: Mass = Mass(Scalar(5.972e24)),
+    planet_mass: Mass = EARTH_MASS,
     star_mass: Mass = SUN_MASS,
 ) -> Distance:
     """

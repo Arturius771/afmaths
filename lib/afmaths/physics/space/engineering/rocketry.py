@@ -82,10 +82,12 @@ def total_impulse(thrust: Force, burn_duration: Second) -> Impulse:
 def total_impulse_from_exhaust_velocity(
     effective_exhaust: Velocity, propellant_mass: Mass
 ) -> Impulse:
+    """Calculates the total impulse of a rocket stage given the effective exhaust velocity and propellant mass."""
     return multiply(effective_exhaust)(propellant_mass)
 
 
 def initial_momentum(rocket_mass: Mass, rocket_velocity: Velocity) -> Momentum:
+    """Calculates the initial momentum of a rocket given its mass and velocity."""
     return momentum(rocket_mass, rocket_velocity)
 
 
@@ -95,12 +97,14 @@ def final_momentum(
     initial_velocity: Velocity,
     final_velocity: Velocity,
 ) -> Momentum:
+    """Calculates the final momentum of a rocket given its initial and final masses and velocities."""
     delta_m = subtract(final_rocket)(initial_rocket)
     dv = delta_v(initial_velocity, final_velocity)
     return momentum(subtract(delta_m)(initial_rocket), add(initial_velocity)(dv))
 
 
 def momentum_gain(initial: Momentum, final: Momentum) -> Momentum:
+    """Calculates the gain in momentum of a rocket given its initial and final momenta."""
     return subtract(final)(initial)
 
 
@@ -109,7 +113,8 @@ def specific_impulse(
     mass_flow: Rate,
     gravitational_acceleration: Acceleration = STANDARD_GRAVITY,
 ) -> Second:
-    """I_sp = thrust /"""
+    """Calculates the specific impulse of a rocket given the thrust, mass flow rate, and gravitational acceleration.
+    I_sp = thrust / (mass_flow * gravitational_acceleration)"""
     return divide_by(multiply(mass_flow)(gravitational_acceleration))(thrust)
 
 
@@ -243,12 +248,14 @@ def max_height_after_powered_ascent(
 
 
 def dry_mass(structure_mass: Mass, payload_mass: Mass, motor_mass: Mass) -> Mass:
+    """Calculates the dry mass of a rocket given the structure, payload, and motor masses."""
     return add(add(structure_mass)(motor_mass))(payload_mass)
 
 
 def propellant_mass_from_full_mass(
     full_mass: Mass, delta_v: DeltaV, effective_exhaust_velocity: Velocity
 ) -> Mass:
+    """Calculates the propellant mass required for a given full mass, DeltaV, and effective exhaust velocity."""
     return multiply(full_mass)(
         subtract(
             exponentiate(negate(divide_by(effective_exhaust_velocity)(delta_v)))(math.e)
@@ -259,6 +266,7 @@ def propellant_mass_from_full_mass(
 def propellant_mass_from_dry_mass(
     dry_mass: Mass, delta_v: DeltaV, effective_exhaust_velocity: Velocity
 ) -> Mass:
+    """Calculates the propellant mass required for a given dry mass, DeltaV, and effective exhaust velocity."""
     return multiply(dry_mass)(
         subtract(1)(
             exponentiate(divide_by(effective_exhaust_velocity)(delta_v))(math.e)
@@ -267,20 +275,24 @@ def propellant_mass_from_dry_mass(
 
 
 def full_mass(dry_mass: Mass, propellant_mass: Mass) -> Mass:
+    """Calculates the full mass of a rocket given the dry mass and propellant mass."""
     return add(dry_mass)(propellant_mass)
 
 
 def full_to_dry_mass_ratio(dry_mass: Mass, full_mass: Mass) -> Ratio:
+    """Calculates the ratio of the full mass to the dry mass of a rocket."""
     return divide_by(dry_mass)(full_mass)
 
 
 def payload_to_non_payload_stage_mass_ratio(
     propellant_mass: Mass, structure_mass: Mass, payload_mass: Mass
 ) -> Ratio:
+    """Calculates the ratio of the payload mass to the non-payload stage mass of a rocket."""
     return divide_by(add(structure_mass)(propellant_mass))(payload_mass)
 
 
 def mass_ratio(structural_coefficient: Ratio, payload_mass_ratio: Ratio) -> Ratio:
+    """Calculates the overall mass ratio of a rocket given the structural coefficient and payload mass ratio."""
     add_payload_ratio = add(payload_mass_ratio)
     return divide_by(add_payload_ratio(structural_coefficient))(add_payload_ratio(1))
 
@@ -288,6 +300,7 @@ def mass_ratio(structural_coefficient: Ratio, payload_mass_ratio: Ratio) -> Rati
 def net_rocket_acceleration(
     thrust: Force, mass: Mass, standard_g: Acceleration = STANDARD_GRAVITY
 ) -> Acceleration:
+    """Calculates the net acceleration of a rocket given the thrust, mass, and standard gravitational acceleration."""
     return net_acceleration(thrust, mass, standard_g)
 
 
@@ -297,6 +310,7 @@ def required_mass_ratio(delta_v: DeltaV, effective_exhaust_velocity: Velocity) -
 
 
 def structural_coefficient(structure_mass: Mass, propellant_mass: Mass) -> Ratio:
+    """Calculates the structural coefficient of a rocket given the structure mass and propellant mass."""
     return divide_by(add(structure_mass)(propellant_mass))(structure_mass)
 
 

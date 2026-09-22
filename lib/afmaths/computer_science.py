@@ -15,23 +15,26 @@ from .operation import (
 
 
 def file_compression_ratio(uncompressed_size: float):
+    """Calculates the file compression ratio given the uncompressed size and compressed size."""
     return lambda compressed_size: divide_by(compressed_size)(uncompressed_size)
 
 
 def compressed_file_size(uncompressed_size):
+    """Calculates the compressed file size given the uncompressed size and compression ratio."""
     return lambda compression_ratio: divide_by(compression_ratio)(uncompressed_size)
 
 
 def diagonal_pixel_length(length_in_pixels):
+    """Calculates the diagonal pixel length of a screen given its length and width in pixels."""
     return lambda width_in_pixels: math.floor(
         pythagoras_theorem(length_in_pixels)(width_in_pixels)
     )
 
 
 def travelling_salesman_problem_total_routes(number_of_cities) -> float:
+    """Calculates the total number of possible routes for the travelling salesman problem given the number of cities."""
     ##(n - 1)!/2
-    subtract1 = subtract(1)
-    total_routes = HALF(factorial(subtract1(number_of_cities)))
+    total_routes = HALF(factorial(subtract(1)(number_of_cities)))
 
     return total_routes
 
@@ -39,6 +42,7 @@ def travelling_salesman_problem_total_routes(number_of_cities) -> float:
 def check_drive_clusters(
     sectors_per_cluster, sector_size_bytes, physical_file_size_bytes
 ) -> tuple[int, float]:
+    """Calculates the number of clusters and slack space for a given physical file size, sector size, and sectors per cluster."""
     ## TM255
     if (
         physical_file_size_bytes % (multiply(sectors_per_cluster)(sector_size_bytes))
@@ -71,6 +75,7 @@ def ml_f1_score(precision: float, recall: float) -> float:
 
 
 def ml_precesion(true_positives):
+    """Calculates the precision given the number of true positives and false positives."""
     return lambda false_positives: divide_by(add(true_positives)(false_positives))(
         true_positives
     )
@@ -84,25 +89,25 @@ def ml_recall(true_positives):
 
 
 def ml_false_positive_rate(false_positives):
+    """Calculates the false positive rate given the number of false positives and true negatives."""
     return lambda true_negatives: divide_by(add(false_positives)(true_negatives))(
         false_positives
     )
 
 
 def ml_weighted_inputs(inputs: list[float], weights: list[float]) -> list[float] | None:
-    "Multiply the inputs by the weights - TM358 Block 1"
+    """Multiply the inputs by the weights - TM358 Block 1"""
     weighted_inputs = []
-    loop_count = 0
     if len(inputs) != len(weights):
         return None
-    for x in inputs:
-        weighted_inputs.append(multiply(x)(weights[inputs.index(x, loop_count)]))
-        loop_count += 1
+    for index, x in enumerate(inputs):
+        weighted_inputs.append(multiply(x)(weights[index]))
 
     return weighted_inputs
 
 
 def ml_perceptron(inputs: list[float], weights: list[float], bias: float = 0) -> float:
+    """Implements a simple perceptron model with given inputs, weights, and an optional bias."""
     x = ml_weighted_inputs(inputs, weights)
     if x == None:
         return 0  # TODO: this is dangerous
@@ -110,6 +115,7 @@ def ml_perceptron(inputs: list[float], weights: list[float], bias: float = 0) ->
 
 
 def ml_activation_function(input: float, threshold: float = 0):
+    """Implements a simple threshold activation function for a perceptron."""
     if input > threshold:
         return 1
     else:
@@ -117,13 +123,14 @@ def ml_activation_function(input: float, threshold: float = 0):
 
 
 def ascii_text_from_byte(input: int) -> str:
+    """Converts an 8-bit binary value to its corresponding ASCII character."""
     # https://www.rapidtables.com/convert/number/binary-to-ascii.html
 
     return chr(decimal_from_byte(input))
 
 
 def decimal_from_byte(input: int) -> int:
-    """Takes an 8 bit value and returns its value in decimal form."""
+    """Converts an 8-bit binary value to its decimal representation."""
     value = 0
     tracker = len(str(input)) - 1
 
@@ -136,6 +143,7 @@ def decimal_from_byte(input: int) -> int:
 
 
 def hex_from_byte(input: int) -> str:
+    """Converts an 8-bit binary string to its hexadecimal representation."""
     str_input = str(input)
     length = len(str_input)
 
@@ -154,7 +162,7 @@ def hex_from_byte(input: int) -> str:
 
 
 def hex_from_bit(bit_string: str) -> str:
-    bit_string = bit_string
+    """Converts a binary string to its hexadecimal representation."""
     if bit_string == "0":
         return "0"
     if bit_string == "1":

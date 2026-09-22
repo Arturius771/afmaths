@@ -138,12 +138,12 @@ def build_orbit_comparison_figure(
 
     fig.update_layout(
         title=f"Orbit comparison for NORAD ID {norad_id}",
-        scene=dict(
-            xaxis_title="x (m)",
-            yaxis_title="y (m)",
-            zaxis_title="z (m)",
-            aspectmode="data",
-        ),
+        scene={
+            "xaxis_title": "x (m)",
+            "yaxis_title": "y (m)",
+            "zaxis_title": "z (m)",
+            "aspectmode": "data",
+        },
     )
 
     return fig

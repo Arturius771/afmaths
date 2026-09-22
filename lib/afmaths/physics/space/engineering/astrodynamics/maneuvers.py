@@ -3,7 +3,6 @@ import math
 from astronomy_types import (
     Distance,
     Eccentricity,
-    EquatorialCoordinates,
     GravitationalParameter,
     Inclination,
     OrbitalElements,
@@ -68,6 +67,7 @@ from afmaths.tensors import (
 def flight_path_angle(
     state: StateVector, mu: GravitationalParameter = EARTH_MU
 ) -> Radians:
+    """Calculates the flight path angle from a state vector."""
     elements = orbital_elements_from_state_vectors(state)
 
     return Radians(
@@ -90,6 +90,7 @@ def flight_path_angle(
 
 
 def flight_path_angle_from_elements(elements: OrbitalElements) -> Radians:
+    """Calculates the flight path angle from orbital elements."""
     return Radians(
         Scalar(
             math.atan(
@@ -104,31 +105,10 @@ def flight_path_angle_from_elements(elements: OrbitalElements) -> Radians:
 
 
 def signed_flight_path_angle(state: StateVector) -> Radians:
-    r = vector_magnitude_3d(vector3d_from_position(state.position))
+    """Calculates the signed flight path angle of a state vector."""
     v = vector_magnitude_3d(vector3d_from_velocity(state.velocity))
 
     return make_radians(math.asin(divide_by(v)(radial_velocity(state))))
-
-
-def angle_above_orbital_plane(
-    target_object: EquatorialCoordinates,
-    orbit: OrbitalElements,
-) -> Radians:
-    """Calculates the angle of a target object above or below the orbital plane of a given orbit."""
-    value = math.cos(target_object.declination) * math.sin(
-        orbit.inclination
-    ) * math.sin(
-        orbit.right_ascension_of_ascending_node - target_object.right_ascension
-    ) + math.sin(
-        target_object.declination
-    ) * math.cos(
-        orbit.inclination
-    )
-
-    # Prevent floating point drift errors at values close to +/-1.
-    value = max(-1.0, min(1.0, value))
-
-    return Radians(Scalar(math.asin(value)))
 
 
 # region Maneuvers
