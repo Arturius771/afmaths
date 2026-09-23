@@ -253,6 +253,7 @@ def vis_viva(
 
 
 def radial_velocity(state: StateVector) -> Velocity:
+    """Calculates the radial velocity of an object in orbit from its state vector."""
     position = vector3d_from_position(state.position)
 
     return Velocity(
@@ -266,12 +267,14 @@ def velocity_at_radius(
     r: Distance,
     mu: GravitationalParameter = EARTH_MU,
 ) -> Velocity:
+    """Calculates the velocity of an object at a given radius in a central gravitational field."""
     return Velocity(Scalar(square_root(divide_by(r)(mu))))
 
 
 def periapsis_velocity(
     mu: GravitationalParameter, elements: OrbitalElements
 ) -> Velocity:
+    """Calculates the velocity of an object at periapsis in its orbit."""
     return vis_viva(
         mu,
         periapsis_radius(elements.semi_major_axis, elements.eccentricity),
@@ -282,6 +285,7 @@ def periapsis_velocity(
 def apoapsis_velocity(
     mu: GravitationalParameter, elements: OrbitalElements
 ) -> Velocity:
+    """Calculates the velocity of an object at apoapsis in its orbit."""
     return vis_viva(
         mu,
         apoapsis_radius(elements.semi_major_axis, elements.eccentricity),

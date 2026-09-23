@@ -12,3 +12,7 @@ secrets.txt
 tle_cache.tle
 last_gp_request.txt
 last_tle_cache_refresh.txt
+csharp/Afmaths.Tests/bin/
+csharp/Afmaths.Tests/obj/
+csharp/Afmaths/bin/
+csharp/Afmaths/obj/
