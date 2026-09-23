@@ -19,5 +19,6 @@
       "source.organizeImports.ruff": "explicit"
     }
   },
-  "python-envs.defaultEnvManager": "ms-python.python:system"
+  "python-envs.defaultEnvManager": "ms-python.python:system",
+  "dotnet.defaultSolution": "Afmaths.slnx"
 }
