@@ -41,9 +41,9 @@ from afmaths.constants import (
     TWO_PI,
 )
 from afmaths.geometry.geometry import (
-    calculate_distance_3d,
     eccentricity_factor_minus,
     eccentricity_factor_plus,
+    euclidian_distance_3d,
     normalise_angle,
     semi_latus_rectum,
 )
@@ -186,7 +186,7 @@ def mean_motion(
 
 def distance_between_positions(pos1: PositionVector, pos2: PositionVector) -> Distance:
     """Calculates the distance between two position vectors in 3D space."""
-    return calculate_distance_3d(
+    return euclidian_distance_3d(
         coordinate3d_from_vector(vector3d_from_position(pos1)),
         coordinate3d_from_vector(vector3d_from_position(pos2)),
     )

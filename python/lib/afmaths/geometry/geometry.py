@@ -31,14 +31,6 @@ from afmaths.operation import (
 from afmaths.physics.space.type_conversion_helpers import (
     make_radians,
     make_vector2d,
-    vector2d_from_coordinate2d,
-    vector3d_from_coordinate3d,
-)
-from afmaths.tensors import (
-    vector_magnitude,
-    vector_magnitude_3d,
-    vector_subtract,
-    vector_subtract_3d,
 )
 
 
@@ -52,6 +44,18 @@ def euclid(m: int, n: int) -> int:
 
 def euclidian_distance(a: Coordinate2D, b: Coordinate2D) -> Distance:
     """Calculates the Euclidean distance between two points in 2D space (Euclidian)."""
+    # return Distance(
+    #         Scalar(
+    #             abs(
+    #                 vector_magnitude(
+    #                     vector_subtract(
+    #                         vector2d_from_coordinate2d(coord1),
+    #                         vector2d_from_coordinate2d(coord2),
+    #                     )
+    #                 )
+    #             )
+    #         )
+    #     )
     return Distance(
         Scalar(square_root(add(SQUARE(subtract(b.x)(a.x)))(SQUARE(subtract(b.y)(a.y)))))
     )
@@ -59,6 +63,18 @@ def euclidian_distance(a: Coordinate2D, b: Coordinate2D) -> Distance:
 
 def euclidian_distance_3d(a: Coordinate3D, b: Coordinate3D) -> Distance:
     """Calculates the Euclidean distance between two points in 3D space (Euclidian)."""
+    #     return Distance(
+    #         Scalar(
+    #             abs(
+    #                 vector_magnitude_3d(
+    #                     vector_subtract_3d(
+    #                         vector3d_from_coordinate3d(coord1),
+    #                         vector3d_from_coordinate3d(coord2),
+    #                     )
+    #                 )
+    #             )
+    #         )
+    #     )
     return Distance(
         Scalar(
             square_root(
@@ -112,38 +128,6 @@ def sieve_of_eratosthenes(n: int) -> list[int]:
 def normalise_angle(angle: Radians) -> Radians:
     """Normalises an angle in radians to the range [0, 2π)."""
     return make_radians(float(angle) % TWO_PI)
-
-
-def calculate_distance(coord1: Coordinate2D, coord2: Coordinate2D) -> Distance:
-    """Calculates the distance between two points in 2D space. Derived from the Pythagorean theorem."""
-    return Distance(
-        Scalar(
-            abs(
-                vector_magnitude(
-                    vector_subtract(
-                        vector2d_from_coordinate2d(coord1),
-                        vector2d_from_coordinate2d(coord2),
-                    )
-                )
-            )
-        )
-    )
-
-
-def calculate_distance_3d(coord1: Coordinate3D, coord2: Coordinate3D) -> Distance:
-    """Calculates the distance between two points in 3D space"""
-    return Distance(
-        Scalar(
-            abs(
-                vector_magnitude_3d(
-                    vector_subtract_3d(
-                        vector3d_from_coordinate3d(coord1),
-                        vector3d_from_coordinate3d(coord2),
-                    )
-                )
-            )
-        )
-    )
 
 
 def geometric_mean_distance(x: Distance, y: Distance) -> Distance:

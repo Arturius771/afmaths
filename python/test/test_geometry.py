@@ -10,7 +10,6 @@ from afmaths.geometry.geometry import (
     angle_of_beta_from_a_c,
     angle_of_beta_from_b_c,
     area_of_sphere,
-    calculate_distance,
     calculate_foci,
     euclidian_distance,
     euclidian_heading,
@@ -52,7 +51,7 @@ class GeometryTestMethods(unittest.TestCase):
 
     def test_calculate_distance(self):
         self.assertEqual(
-            calculate_distance(
+            euclidian_distance(
                 Coordinate2D(10, 2),
                 Coordinate2D(20, 2),
             ),
@@ -60,7 +59,7 @@ class GeometryTestMethods(unittest.TestCase):
         )
 
         self.assertEqual(
-            calculate_distance(
+            euclidian_distance(
                 Coordinate2D(10, 256),
                 Coordinate2D(2000, -1256),
             ),
@@ -87,7 +86,7 @@ class GeometryTestMethods(unittest.TestCase):
                 Coordinate2D(1, 1),
                 Coordinate2D(4, 5),
             ),
-            calculate_distance(
+            euclidian_distance(
                 Coordinate2D(1, 1),
                 Coordinate2D(4, 5),
             ),
