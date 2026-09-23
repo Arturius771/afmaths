@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "afmaths"
+version = "0.1.0"
+description = "A suite of mathematical functions"
+readme = "README.md"
+requires-python = ">=3.12"
+
+authors = [
+    { name = "Artur Foden" }
+]
+
+classifiers = [
+    "Programming Language :: Python :: 3"
+]
+
+dependencies = [
+    "astronomy-types>=3.0.1",
+    "requests",
+    "plotly",
+    "pillow",
+    "sgp4",
+]
+
+[tool.setuptools]
+package-dir = {"" = "lib"}
+
+[tool.setuptools.packages.find]
+where = ["lib"]

@@ -1,21 +1,14 @@
 {
-  "python.defaultInterpreterPath": "${workspaceFolder}/venv/bin/python",
-
+  "python.defaultInterpreterPath": "${workspaceFolder}/python/venv/bin/python",
   "python.analysis.extraPaths": [
-    "${workspaceFolder}/lib"
+    "${workspaceFolder}/python/lib",
+    "${workspaceFolder}/python/venv/lib/python3.14/site-packages"
   ],
-
   "python.analysis.typeCheckingMode": "standard",
 
   "python.testing.pytestEnabled": false,
   "python.testing.unittestEnabled": true,
-  "python.testing.unittestArgs": [
-    "-v",
-    "-s",
-    "./tests",
-    "-p",
-    "test*.py"
-  ],
+  "python.testing.unittestArgs": ["-v", "-s", "./tests", "-p", "test*.py"],
 
   "[python]": {
     "editor.defaultFormatter": "ms-python.black-formatter",
@@ -25,5 +18,6 @@
       "source.fixAll.ruff": "explicit",
       "source.organizeImports.ruff": "explicit"
     }
-  }
+  },
+  "python-envs.defaultEnvManager": "ms-python.python:system"
 }
