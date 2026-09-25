@@ -1,63 +1,102 @@
+using System.Numerics;
+
 namespace Afmaths;
 
-public class Scalar(double value) : PhysicalValue(value)
+public class Scalar<T>(T value) : PhysicalValue(Convert.ToDouble(value))
 {
 }
-public abstract class Vector
+
+public abstract class Vector<T>
+    where T : INumber<T>
 {
-    public static Vector3D VectorMultiplication(Vector3D a, double scalar)
+}
+
+public class Vector1D<T>(T x) : Vector<T>
+    where T : INumber<T>
+{
+    public T X { get; } = x;
+}
+
+public class Vector2D<T>(T x, T y) : Vector<T>
+    where T : INumber<T>
+{
+    public T X { get; } = x;
+    public T Y { get; } = y;
+}
+
+public class Vector3D<T>(T x, T y, T z) : Vector<T>
+    where T : INumber<T>
+{
+    public T X { get; } = x;
+    public T Y { get; } = y;
+    public T Z { get; } = z;
+
+    public static Vector3D<T> VectorMultiplication(
+        Vector3D<T> a,
+        T scalar
+    )
     {
-        return new Vector3D(
+        return new Vector3D<T>(
             a.X * scalar,
             a.Y * scalar,
             a.Z * scalar
         );
     }
 
-    public static Vector3D VectorAddition(Vector3D a, Vector3D b)
+    public static Vector3D<T> VectorAddition(
+        Vector3D<T> a,
+        Vector3D<T> b
+    )
     {
-        return new Vector3D(
+        return new Vector3D<T>(
             a.X + b.X,
             a.Y + b.Y,
             a.Z + b.Z
         );
     }
 
-    public static Vector3D VectorSubtraction(Vector3D a, Vector3D b)
+    public static Vector3D<T> VectorSubtraction(
+        Vector3D<T> a,
+        Vector3D<T> b
+    )
     {
-        return new Vector3D(
+        return new Vector3D<T>(
             a.X - b.X,
             a.Y - b.Y,
             a.Z - b.Z
         );
     }
 
-    public static Vector3D VectorCrossProduct(Vector3D a, Vector3D b)
+    public static Vector3D<T> VectorCrossProduct(
+        Vector3D<T> a,
+        Vector3D<T> b
+    )
     {
-        return new Vector3D(
+        return new Vector3D<T>(
             a.Y * b.Z - a.Z * b.Y,
             a.Z * b.X - a.X * b.Z,
             a.X * b.Y - a.Y * b.X
         );
     }
-}
 
-public class Vector1D(double x) : Vector
-{
-    public double X { get; } = x;
-}
+    public static T VectorDotProduct(
+        Vector3D<T> a,
+        Vector3D<T> b
+    )
+    {
+        return a.X * b.X
+            + a.Y * b.Y
+            + a.Z * b.Z;
+    }
 
-public class Vector2D(double x, double y) : Vector
-{
-    public double X { get; } = x;
-    public double Y { get; } = y;
-}
-
-public class Vector3D(double x, double y, double z) : Vector
-{
-    public double X { get; } = x;
-    public double Y { get; } = y;
-    public double Z { get; } = z;
-
-
+    public static Vector3D<T> VectorTranspose(
+        Vector3D<T> a
+    )
+    {
+        return new Vector3D<T>(
+            a.X,
+            a.Y,
+            a.Z
+        );
+    }
 }

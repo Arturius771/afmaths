@@ -4,12 +4,11 @@ namespace Afmaths;
 
 public class CelestialMechanics
 {
-
-    public MeanAnomaly KeplerEquation(EccentricAnomaly eccentric_anomaly, Eccentricity eccentric)
+    public MeanAnomaly KeplerEquation(EccentricAnomaly eccentric_anomaly, Eccentricity eccentricity)
     {
         // M = E - e * np.sin(E)
         return new MeanAnomaly(
-            eccentric_anomaly.Value - eccentric.Value * Math.Sin(eccentric_anomaly.Value)
+            eccentric_anomaly.Value - eccentricity.Value * Math.Sin(eccentric_anomaly.Value)
         );
     }
 
@@ -25,7 +24,15 @@ public class CelestialMechanics
     {
         // r = a * (1 - e^2) / (1 + e * cos(theta))
         return new Distance(
-            a.Value * (1 - e.Value * e.Value) / (1 + e.Value * Math.Cos(theta.Value))
+            a.Value * (1 - Math.Pow(e.Value, 2)) / (1 + e.Value * Math.Cos(theta.Value))
+        );
+    }
+
+    public Rate MeanAngularRate(SemiMajorAxis a, GravitationalParameter mu)
+    {
+        // n = sqrt(mu / a^3)
+        return new Rate(
+            Math.Sqrt(mu.Value / Math.Pow(a.Value, 3))
         );
     }
 }

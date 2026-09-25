@@ -2,20 +2,29 @@ namespace Afmaths;
 
 public class Velocity
 {
-    public Vector Vector { get; }
+    public Vector3D<double> Vector { get; }
 
-    public Velocity(Vector vector)
+    public Velocity(Vector3D<double> vector)
     {
         Vector = vector;
     }
 
-    public Velocity(Scalar magnitude)
+    public Velocity(double x, double y, double z)
     {
-        Vector = new Vector1D(magnitude.Value);
+        Vector = new Vector3D<double>(x, y, z);
+    }
+
+    public Velocity(Scalar<double> magnitude)
+    {
+        Vector = new Vector3D<double>(
+            magnitude.Value,
+            default!,
+            default!
+        );
     }
 
     public Velocity(double magnitude)
-        : this(new Scalar(magnitude))
+        : this(magnitude, default!, default!)
     {
     }
 }
