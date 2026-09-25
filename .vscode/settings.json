@@ -8,17 +8,29 @@
 
   "python.testing.pytestEnabled": false,
   "python.testing.unittestEnabled": true,
-  "python.testing.unittestArgs": ["-v", "-s", "./tests", "-p", "test*.py"],
+  "python.testing.unittestArgs": [
+    "-v",
+    "-s",
+    "./python/test",
+    "-p",
+    "test*.py"
+  ],
 
   "[python]": {
     "editor.defaultFormatter": "ms-python.black-formatter",
     "editor.formatOnSave": true,
-
     "editor.codeActionsOnSave": {
       "source.fixAll.ruff": "explicit",
       "source.organizeImports.ruff": "explicit"
     }
   },
+
   "python-envs.defaultEnvManager": "ms-python.python:system",
-  "dotnet.defaultSolution": "Afmaths.slnx"
+
+  "dotnet.defaultSolution": "csharp/Afmaths.slnx",
+
+  "[csharp]": {
+    "editor.defaultFormatter": "ms-dotnettools.csharp",
+    "editor.formatOnSave": true
+  }
 }

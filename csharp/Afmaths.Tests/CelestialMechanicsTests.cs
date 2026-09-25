@@ -38,7 +38,7 @@ public class CelestialMechanicsTests
             GravitationalParameter.EarthGravitationalParameter.Value / radius.Value
         );
 
-        Assert.Equal(expected, result.Value, 6);
+        Assert.Equal(expected, ((Vector1D)result.Vector).X, 6);
     }
 
     [Fact]
@@ -67,7 +67,7 @@ public class CelestialMechanicsTests
         var inclination = new Inclination(0.5);
         var raan = new RightAscensionAscendingNode(1.0);
         var argumentOfPeriapsis = new ArgumentOfPeriapsis(0.3);
-        var meanAnomaly = new MeanAnomaly(0.2);
+        var trueAnomaly = new TrueAnomaly(0.2);
 
         var elements = new OrbitalElements(
             semiMajorAxis,
@@ -75,7 +75,7 @@ public class CelestialMechanicsTests
             inclination,
             raan,
             argumentOfPeriapsis,
-            meanAnomaly
+            trueAnomaly
         );
 
         Assert.Same(semiMajorAxis, elements.SemiMajorAxis);
@@ -89,14 +89,14 @@ public class CelestialMechanicsTests
             argumentOfPeriapsis,
             elements.ArgumentOfPeriapsis
         );
-        Assert.Same(meanAnomaly, elements.MeanAnomaly);
+        Assert.Same(trueAnomaly, elements.TrueAnomaly);
     }
 
     [Fact]
     public void EarthGravitationalParameter_HasExpectedValue()
     {
         Assert.Equal(
-            3.986004418e14,
+            3.98589196e14,
             GravitationalParameter.EarthGravitationalParameter.Value
         );
     }

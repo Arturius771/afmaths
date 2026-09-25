@@ -1,7 +1,5 @@
 namespace Afmaths;
 
-
-
 public class OrbitalElement(double value) : PhysicalValue(value)
 {
 }
@@ -38,50 +36,40 @@ public class ArgumentOfPeriapsis(double value) : OrbitalElement(value)
 {
 }
 
+
+
 public class OrbitalElements(
-    SemiMajorAxis semi_major_axis,
-    Eccentricity eccentricity,
-    Inclination inclination,
-    RightAscensionAscendingNode right_ascension_of_ascending_node,
-    ArgumentOfPeriapsis argument_of_periapsis,
-    MeanAnomaly mean_anomaly
-)
+        SemiMajorAxis semi_major_axis,
+        Eccentricity eccentricity,
+        Inclination inclination,
+        RightAscensionAscendingNode right_ascension_of_ascending_node,
+        ArgumentOfPeriapsis argument_of_periapsis,
+        TrueAnomaly true_anomaly
+    )
 {
     public SemiMajorAxis SemiMajorAxis { get; } = semi_major_axis;
     public Eccentricity Eccentricity { get; } = eccentricity;
     public Inclination Inclination { get; } = inclination;
     public RightAscensionAscendingNode RightAscensionOfAscendingNode { get; } = right_ascension_of_ascending_node;
     public ArgumentOfPeriapsis ArgumentOfPeriapsis { get; } = argument_of_periapsis;
-    public MeanAnomaly MeanAnomaly { get; } = mean_anomaly;
-}
+    public TrueAnomaly TrueAnomaly { get; } = true_anomaly;
 
 
-
-
-public class CelestialMechanics
-{
-
-    public MeanAnomaly KeplerEquation(EccentricAnomaly eccentric_anomaly, Eccentricity eccentric)
+    public Vector3D PerifocalRadialUnitVector()
     {
-        // M = E - e * np.sin(E)
-        return new MeanAnomaly(
-            eccentric_anomaly.Value - eccentric.Value * Math.Sin(eccentric_anomaly.Value)
+        return new Vector3D(
+            Math.Cos(this.TrueAnomaly.Value),
+            Math.Sin(this.TrueAnomaly.Value),
+            0
         );
     }
 
-    public Velocity VisViva(GravitationalParameter mu, Distance radius, SemiMajorAxis a)
+    public Vector3D PerifocalVelocityDirection()
     {
-        // v = sqrt(mu * (2/r - 1/a))
-        return new Velocity(
-            Math.Sqrt(mu.Value * (2 / radius.Value - 1 / a.Value))
-        );
-    }
-
-    public Distance OrbitEquation(SemiMajorAxis a, Eccentricity e, TrueAnomaly theta)
-    {
-        // r = a * (1 - e^2) / (1 + e * cos(theta))
-        return new Distance(
-            a.Value * (1 - e.Value * e.Value) / (1 + e.Value * Math.Cos(theta.Value))
+        return new Vector3D(
+            -Math.Sin(this.TrueAnomaly.Value),
+            Math.Cos(this.TrueAnomaly.Value),
+            0
         );
     }
 

@@ -12,11 +12,15 @@ public class GravitationalConstant
 public class GravitationalParameter(double value) : PhysicalValue(value)
 {
 
-    public static readonly GravitationalParameter EarthGravitationalParameter =
-    new GravitationalParameter(3.986004418e14);
+    public static readonly GravitationalParameter EarthGravitationalParameter = FromMasses(
+        Mass.EarthMass,
+        Mass.DemoSatelliteMass
+    );
 
-    public static readonly GravitationalParameter SunGravitationalParameter =
-    new GravitationalParameter(3.986004418e14);
+    public static readonly GravitationalParameter SunGravitationalParameter = FromMasses(
+        Mass.SunMass,
+        Mass.EarthMass
+    );
 
     public static GravitationalParameter FromMasses(
         Mass central,
@@ -29,6 +33,4 @@ public class GravitationalParameter(double value) : PhysicalValue(value)
 
         return new GravitationalParameter(value);
     }
-
-
 }
