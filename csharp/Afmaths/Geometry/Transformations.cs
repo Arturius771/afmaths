@@ -22,9 +22,9 @@ public class TransformationMatrix
     )
     {
         return new Vector3D<double>(
-            Vector3D<double>.VectorDotProduct(_row1, vector),
-            Vector3D<double>.VectorDotProduct(_row2, vector),
-            Vector3D<double>.VectorDotProduct(_row3, vector)
+            _row1.VectorDotProduct(vector),
+            _row2.VectorDotProduct(vector),
+            _row3.VectorDotProduct(vector)
         );
     }
 }

@@ -51,3 +51,8 @@ public class Time(double value) : PhysicalValue(value)
 public class Rate(double value) : PhysicalValue(value)
 {
 }
+
+public class AngularMomentum(Vector3D<double> value) : Vector3D<double>(value.X, value.Y, value.Z)
+{
+
+}

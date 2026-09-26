@@ -1,27 +1,33 @@
 namespace Afmaths;
 
 
-public class Position
+public class Position : Vector3D<double>
 {
-    public Vector3D<double> Vector { get; }
-
-    public Position(Vector3D<double> vector)
-    {
-        Vector = vector;
-    }
+    EuclidianDistance euclidianDistance = new();
 
     public Position(double x, double y, double z)
+        : base(x, y, z)
     {
-        Vector = new Vector3D<double>(x, y, z);
-    }
-
-    public Position(Scalar<double> magnitude)
-    {
-        Vector = new Vector3D<double>(magnitude.Value, 0, 0);
     }
 
     public Position(double magnitude)
         : this(magnitude, 0, 0)
     {
+
     }
+
+    public Position(Vector3D<double> vector)
+        : base(vector.X, vector.Y, vector.Z)
+    {
+    }
+
+    public Distance DistanceFrom(Position other)
+    {
+        return euclidianDistance.Between(this.AsDouble, other.AsDouble);
+    }
+}
+
+public class Distance(double value) : PhysicalValue(value)
+{
+
 }

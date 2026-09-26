@@ -35,4 +35,12 @@ public class CelestialMechanics
             Math.Sqrt(mu.Value / Math.Pow(a.Value, 3))
         );
     }
+
+    public Time OrbitalPeriod(SemiMajorAxis a, GravitationalParameter mu)
+    {
+        // T = 2 * pi * sqrt(a^3 / mu)
+        return new Time(
+            2 * Math.PI * Math.Sqrt(Math.Pow(a.Value, 3) / mu.Value)
+        );
+    }
 }

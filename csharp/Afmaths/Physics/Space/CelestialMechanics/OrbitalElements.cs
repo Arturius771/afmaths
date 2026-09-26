@@ -3,6 +3,10 @@ namespace Afmaths;
 public abstract class OrbitalElement(double value) : PhysicalValue(value)
 {
 
+    public Distance AsDistance()
+    {
+        return new Distance(this.Value);
+    }
 }
 
 /// <summary>
@@ -81,16 +85,16 @@ public class Eccentricity(double value) : OrbitalElement(value)
 /// <param name="value">The value of the semi-major axis.</param>
 public class SemiMajorAxis(double value) : OrbitalElement(value)
 {
-    public MeanMotion MeanMotion(GravitationalParameter mu)
+
+    public MeanMotion ToMeanMotion(GravitationalParameter mu)
     {
         return new MeanMotion(new CelestialMechanics().MeanAngularRate(this, mu).Value);
     }
 }
 
 /// <summary>
-/// Inclination is the angle between the orbital plane and the reference plane, usually the equatorial plane of the central body.
+/// Represents the inclination of an orbit, which is the angle between the orbital plane and the reference plane.
 /// </summary>
-/// <param name="value">The value of the inclination.</param>
 public class Inclination(double value) : OrbitalElement(value)
 {
 }
@@ -103,7 +107,18 @@ public class ArgumentOfPeriapsis(double value) : OrbitalElement(value)
 {
 }
 
+public class SemiMinorAxis(double value) : OrbitalElement(value)
+{
+}
 
+public class SemiLatusRectum(double value) : OrbitalElement(value)
+{
+
+    public SemiMinorAxis ToSemiMinorAxis(SemiMajorAxis a)
+    {
+        return new SemiMinorAxis(new EuclidianDistance().GeometricMeanDistance(a.AsDistance(), this.AsDistance()).Value);
+    }
+}
 
 public class OrbitalElements(
         SemiMajorAxis semi_major_axis,
