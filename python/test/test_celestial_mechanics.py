@@ -232,6 +232,59 @@ class CelestialMechanicsTestMethods(unittest.TestCase):
         self.assertAlmostEqual(result.velocity.y, 1_000, places=2)
         self.assertAlmostEqual(result.velocity.z, -100, places=2)
 
+    def test_orbital_elements_state_vector_round_trip(self):
+        expected = OrbitalElements(
+            Inclination(radians_from_degrees(Degrees(Scalar(98.371)))),
+            RightAscension(radians_from_degrees(Degrees(Scalar(120.534)))),
+            ArgumentOfPeriapsis(radians_from_degrees(Degrees(Scalar(10.598)))),
+            SemiMajorAxis(Distance(Scalar(6878100))),
+            Eccentricity(Ratio(Scalar(10e-5))),
+            TrueAnomaly(Anomaly(Radians(Scalar(2.8022276030554347)))),
+        )
+
+        state_vector = state_vector_at_time(
+            expected,
+            Second(Scalar(0)),
+        )
+
+        result = orbital_elements_from_state_vectors(state_vector)
+
+        self.assertAlmostEqual(
+            result.semi_major_axis,
+            expected.semi_major_axis,
+            places=2,
+        )
+
+        self.assertAlmostEqual(
+            result.eccentricity,
+            expected.eccentricity,
+            places=6,
+        )
+
+        self.assertAlmostEqual(
+            result.inclination,
+            expected.inclination,
+            places=6,
+        )
+
+        self.assertAlmostEqual(
+            result.right_ascension_of_ascending_node,
+            expected.right_ascension_of_ascending_node,
+            places=6,
+        )
+
+        self.assertAlmostEqual(
+            result.argument_of_periapsis,
+            expected.argument_of_periapsis,
+            places=6,
+        )
+
+        self.assertAlmostEqual(
+            result.true_anomaly,
+            expected.true_anomaly,
+            places=6,
+        )
+
     def test_orbit_centripetal_force(self):
         self.assertEqual(
             orbit_gravitational_force(

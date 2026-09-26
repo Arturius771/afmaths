@@ -27,7 +27,8 @@ public class Position : Vector3D<double>
     }
 }
 
-public class Distance(double value) : PhysicalValue(value)
+public class Distance(double value) : PhysicalValue<Distance>(value)
 {
 
+    protected override Distance Create(double value) => new(value);
 }

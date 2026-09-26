@@ -171,6 +171,7 @@ def phase_orbit_delta_v(
     return delta_v(original_velocity, phase_velocity)
 
 
+# TODO: rewrite this to compare MeanAnomalies instead of TrueAnomalies - this will make the phase calculation more accurate for elliptical orbits.
 def phase_true_anomaly_delta(
     initial_true_anomaly: TrueAnomaly,
     desired_true_anomaly: TrueAnomaly,
@@ -178,11 +179,9 @@ def phase_true_anomaly_delta(
     """
     Return the signed phase true-anomaly delta.
     """
-    delta = desired_true_anomaly - initial_true_anomaly
-    if delta < Radians(Scalar(0.0)):
-        delta -= Radians(Scalar(2 * 3.141592653589793))
-
-    return TrueAnomaly(Anomaly(Radians(Scalar(delta))))
+    return TrueAnomaly(
+        Anomaly(Radians(Scalar(desired_true_anomaly - initial_true_anomaly)))
+    )
 
 
 def phase_orbit_parameters(

@@ -12,6 +12,13 @@ public class CelestialMechanics
         );
     }
 
+    /// <summary>
+    /// Calculates the orbital velocity of a body at a given distance from the central body using the vis-viva equation.
+    /// </summary>
+    /// <param name="mu">The standard gravitational parameter of the central body.</param>
+    /// <param name="radius">The distance of the orbiting body from the central body.</param>
+    /// <param name="a">The semi-major axis of the orbit.</param>
+    /// <returns>The orbital velocity of the body at the given distance.</returns>
     public Velocity VisViva(GravitationalParameter mu, Distance radius, SemiMajorAxis a)
     {
         // v = sqrt(mu * (2/r - 1/a))
@@ -20,27 +27,18 @@ public class CelestialMechanics
         );
     }
 
+    /// <summary>
+    /// Calculates the distance of a body from the central body at a given true anomaly using the orbit equation.
+    /// </summary>
+    /// <param name="a">The semi-major axis of the orbit.</param>
+    /// <param name="e">The eccentricity of the orbit.</param>
+    /// <param name="theta">The true anomaly of the orbiting body.</param>
+    /// <returns>The distance of the body from the central body at the given true anomaly.</returns>
     public Distance OrbitEquation(SemiMajorAxis a, Eccentricity e, TrueAnomaly theta)
     {
         // r = a * (1 - e^2) / (1 + e * cos(theta))
         return new Distance(
             a.Value * (1 - Math.Pow(e.Value, 2)) / (1 + e.Value * Math.Cos(theta.Value))
-        );
-    }
-
-    public Rate MeanAngularRate(SemiMajorAxis a, GravitationalParameter mu)
-    {
-        // n = sqrt(mu / a^3)
-        return new Rate(
-            Math.Sqrt(mu.Value / Math.Pow(a.Value, 3))
-        );
-    }
-
-    public Time OrbitalPeriod(SemiMajorAxis a, GravitationalParameter mu)
-    {
-        // T = 2 * pi * sqrt(a^3 / mu)
-        return new Time(
-            2 * Math.PI * Math.Sqrt(Math.Pow(a.Value, 3) / mu.Value)
         );
     }
 }

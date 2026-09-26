@@ -9,6 +9,15 @@ public class OrbitalStateVector : StateVector
     {
     }
 
+    public OrbitalStateVector()
+    : base(
+        new Position(0, 0, 0),
+        new Velocity(0, 0, 0)
+    )
+    {
+    }
+
+
     public Position PerifocalPosition(OrbitalElements elements)
     {
         return new Position(
@@ -120,10 +129,9 @@ public class OrbitalStateVector : StateVector
     }
 
     public RightAscensionAscendingNode ToRightAscensionAscendingNode(
-        GravitationalParameter mu
     )
     {
-        AngularMomentum h = SpecificAngularMomentum(mu);
+        AngularMomentum h = SpecificAngularMomentum();
 
         Vector3D<double> n =
             Vector3D<double>.UnitVector().VectorCrossProduct(h);
@@ -142,11 +150,9 @@ public class OrbitalStateVector : StateVector
         );
     }
 
-    public Inclination ToInclination(
-        GravitationalParameter mu
-    )
+    public Inclination ToInclination()
     {
-        AngularMomentum h = SpecificAngularMomentum(mu);
+        AngularMomentum h = SpecificAngularMomentum();
 
         return new Inclination(
             Math.Atan2(
@@ -160,7 +166,6 @@ public class OrbitalStateVector : StateVector
     }
 
     public AngularMomentum SpecificAngularMomentum(
-        GravitationalParameter mu
     )
     {
         return new AngularMomentum(
@@ -174,7 +179,7 @@ public class OrbitalStateVector : StateVector
         GravitationalParameter mu
     )
     {
-        double h = SpecificAngularMomentum(mu)
+        double h = SpecificAngularMomentum()
             .VectorMagnitude();
 
         return new SemiLatusRectum(
@@ -236,7 +241,7 @@ public class OrbitalStateVector : StateVector
 
         return new EccentricAnomaly(
             Math.Atan2(y, x)
-        ).NormalizeRadians<EccentricAnomaly>();
+        ).NormalizeRadians();
     }
 
     public TrueAnomaly ToTrueAnomaly(
@@ -261,7 +266,7 @@ public class OrbitalStateVector : StateVector
 
         return new TrueAnomaly(
             Math.Atan2(y, x)
-        ).NormalizeRadians<TrueAnomaly>();
+        ).NormalizeRadians();
     }
 
     public ArgumentOfPeriapsis ToArgumentOfPeriapsis(
@@ -269,20 +274,19 @@ public class OrbitalStateVector : StateVector
     )
     {
         return new ArgumentOfPeriapsis(
-            ArgumentOfLatitude(mu).Value
+            ArgumentOfLatitude().Value
             - ToTrueAnomaly(mu).Value
-        ).NormalizeRadians<ArgumentOfPeriapsis>();
+        ).NormalizeRadians();
     }
 
     public Latitude ArgumentOfLatitude(
-        GravitationalParameter mu
     )
     {
         Inclination i =
-            ToInclination(mu);
+            ToInclination();
 
         RightAscensionAscendingNode raan =
-            ToRightAscensionAscendingNode(mu);
+            ToRightAscensionAscendingNode();
 
         double y =
             Position.Z
@@ -294,7 +298,7 @@ public class OrbitalStateVector : StateVector
 
         return new Latitude(
             Math.Atan2(y, x)
-        ).NormalizeRadians<Latitude>();
+        ).NormalizeRadians();
     }
 
     public OrbitalElements ToOrbitalElements(
@@ -304,8 +308,8 @@ public class OrbitalStateVector : StateVector
         return new OrbitalElements(
             ToSemiMajorAxis(mu),
             ToEccentricity(mu),
-            ToInclination(mu),
-            ToRightAscensionAscendingNode(mu),
+            ToInclination(),
+            ToRightAscensionAscendingNode(),
             ToArgumentOfPeriapsis(mu),
             ToTrueAnomaly(mu)
         );

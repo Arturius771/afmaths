@@ -2,8 +2,9 @@ using System.Numerics;
 
 namespace Afmaths;
 
-public class Scalar<T>(T value) : PhysicalValue(Convert.ToDouble(value))
+public class Scalar<T>(T value) : PhysicalValue<Scalar<T>>(Convert.ToDouble(value))
 {
+    protected override Scalar<T> Create(double value) => new((T)Convert.ChangeType(value, typeof(T)));
 }
 
 
@@ -43,6 +44,7 @@ public class Vector3D<T>(T x, T y, T z) : Vector<T>
     public T Y { get; } = y;
     public T Z { get; } = z;
 
+    public static Vector3D<T> Zero => new Vector3D<T>(T.Zero, T.Zero, T.Zero);
     public Vector3D<double> AsDouble => new Vector3D<double>(
         Convert.ToDouble(X),
         Convert.ToDouble(Y),
@@ -54,9 +56,9 @@ public class Vector3D<T>(T x, T y, T z) : Vector<T>
     )
     {
         return new Vector3D<T>(
-            this.X * scalar,
-            this.Y * scalar,
-            this.Z * scalar
+            X * scalar,
+            Y * scalar,
+            Z * scalar
         );
     }
 
@@ -89,9 +91,9 @@ public class Vector3D<T>(T x, T y, T z) : Vector<T>
     )
     {
         return new Vector3D<T>(
-            this.Y * b.Z - this.Z * b.Y,
-            this.Z * b.X - this.X * b.Z,
-            this.X * b.Y - this.Y * b.X
+            Y * b.Z - Z * b.Y,
+            Z * b.X - X * b.Z,
+            X * b.Y - Y * b.X
         );
     }
 
@@ -99,9 +101,9 @@ public class Vector3D<T>(T x, T y, T z) : Vector<T>
         Vector3D<T> b
     )
     {
-        return this.X * b.X
-            + this.Y * b.Y
-            + this.Z * b.Z;
+        return X * b.X
+            + Y * b.Y
+            + Z * b.Z;
     }
 
     public static Vector3D<T> VectorTranspose(
@@ -129,7 +131,7 @@ public class Vector3D<T>(T x, T y, T z) : Vector<T>
     public override double VectorMagnitude()
     {
         return Math.Sqrt(
-                Convert.ToDouble(this.X * this.X + this.Y * this.Y + this.Z * this.Z)
+                Convert.ToDouble(X * X + Y * Y + Z * Z)
             );
     }
 

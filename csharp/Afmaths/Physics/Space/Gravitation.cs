@@ -9,7 +9,7 @@ public class GravitationalConstant
         Value = 6.67430e-11;
     }
 }
-public class GravitationalParameter(double value) : PhysicalValue(value)
+public class GravitationalParameter(double value) : PhysicalValue<GravitationalParameter>(value)
 {
 
     public static readonly GravitationalParameter EarthGravitationalParameter = FromMasses(
@@ -33,4 +33,6 @@ public class GravitationalParameter(double value) : PhysicalValue(value)
 
         return new GravitationalParameter(value);
     }
+
+    protected override GravitationalParameter Create(double value) => new(value);
 }

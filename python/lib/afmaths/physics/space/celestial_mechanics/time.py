@@ -59,7 +59,7 @@ def time_to_eccentric_anomaly(
     original_orbit: OrbitalElements,
     mu: GravitationalParameter = EARTH_MU,
 ) -> Second:
-    """Calculates the time delta to reach a target true anomaly from the current position in the orbit."""
+    """Determines the time delta to reach a target eccentric anomaly from the argument of periapsis."""
     return time_since_periapsis_from_mean_anomaly(
         original_orbit.semi_major_axis,
         mu,

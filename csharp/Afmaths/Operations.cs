@@ -48,3 +48,13 @@ class NumericalAnalysis()
         return (x, history);
     }
 }
+
+public class Ratio
+{
+    public double Value { get; }
+
+    public Ratio(double value1, double value2)
+    {
+        this.Value = value1 / value2;
+    }
+}

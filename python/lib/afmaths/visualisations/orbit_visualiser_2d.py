@@ -19,7 +19,7 @@ from astronomy_types import (
 
 from afmaths.afmath_types import Mass
 from afmaths.constants import MOON_ELEMENTS
-from afmaths.geometry.geometry import calculate_distance, generate_angles_on_circle
+from afmaths.geometry.geometry import euclidian_distance, generate_angles_on_circle
 from afmaths.physics.kinematics import position_displacement
 from afmaths.physics.space.celestial_mechanics.celestial_mechanics import (
     vis_viva,
@@ -512,7 +512,7 @@ def generate_orbital_slider_data(
             )
 
             distance_metres = scale_distance_to_distance(
-                calculate_distance(
+                euclidian_distance(
                     Coordinate2D(
                         coordinates.x,
                         coordinates.y,
