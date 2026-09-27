@@ -23,7 +23,7 @@ public class Manoeuvre
             new OrbitalElements(
                 new OrbitalPeriod(
                     OriginalOrbit.Elements.SemiMajorAxis
-                        .OrbitalPeriod(mu).ToTime()
+                        .OrbitalPeriod(mu).ToSecond()
                         .Delta(
                             OriginalOrbit.Elements.SemiMajorAxis
                                 .DurationToReachTargetEccentricAnomaly(

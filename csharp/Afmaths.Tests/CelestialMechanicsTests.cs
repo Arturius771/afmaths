@@ -4,7 +4,7 @@ namespace Afmaths.Tests;
 
 public class CelestialMechanicsTests
 {
-    private readonly CelestialMechanics celestialMechanics = new();
+    private readonly Kepler celestialMechanics = new();
 
     [Fact]
     public void KeplerEquation_ReturnsExpectedMeanAnomaly()
@@ -152,7 +152,7 @@ public class CelestialMechanicsTests
             initialStateVector.FromOrbitalElementsWithTimeOffset(
                 elements,
                 GravitationalParameter.EarthGravitationalParameter,
-                new Time(1800)
+                new Second(1800)
             );
 
         Assert.Equal(

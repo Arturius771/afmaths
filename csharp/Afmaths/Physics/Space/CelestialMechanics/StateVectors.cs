@@ -2,7 +2,7 @@ namespace Afmaths;
 
 public class OrbitalStateVector : StateVector
 {
-    private static readonly CelestialMechanics celestialMechanics = new();
+    private static readonly Kepler celestialMechanics = new();
 
     public OrbitalStateVector(Position position, Velocity velocity)
         : base(position, velocity)
@@ -102,7 +102,7 @@ public class OrbitalStateVector : StateVector
     public OrbitalStateVector FromOrbitalElementsWithTimeOffset(
         OrbitalElements elements,
         GravitationalParameter mu,
-        Time timeOffset
+        Second timeOffset
     )
     {
         return FromOrbitalElements(

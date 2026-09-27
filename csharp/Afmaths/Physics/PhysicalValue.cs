@@ -67,14 +67,6 @@ public class Mass(double value) : PhysicalValue<Mass>(value)
     protected override Mass Create(double value) => new(value);
 }
 
-/// <summary>
-/// Represents a time value in seconds.
-/// </summary>
-public class Time(double value) : PhysicalValue<Time>(value)
-{
-    public static readonly int SECONDS_PER_DAY = 86400;
-    protected override Time Create(double value) => new(value);
-}
 
 public class Rate(double value) : PhysicalValue<Rate>(value)
 {

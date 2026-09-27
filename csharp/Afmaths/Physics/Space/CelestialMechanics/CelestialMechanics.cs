@@ -2,8 +2,14 @@ namespace Afmaths;
 
 
 
-public class CelestialMechanics
+public class Kepler
 {
+    /// <summary>
+    /// Solves Kepler's equation for the mean anomaly given the eccentric anomaly and eccentricity.
+    /// </summary>
+    /// <param name="eccentric_anomaly">The eccentric anomaly of the orbiting body.</param>
+    /// <param name="eccentricity">The eccentricity of the orbit.</param>
+    /// <returns>The mean anomaly corresponding to the given eccentric anomaly and eccentricity.</returns>
     public MeanAnomaly KeplerEquation(EccentricAnomaly eccentric_anomaly, Eccentricity eccentricity)
     {
         // M = E - e * np.sin(E)

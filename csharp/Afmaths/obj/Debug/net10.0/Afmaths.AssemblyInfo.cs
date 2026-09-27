@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Afmaths")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+288761a5ab38d9a742ab205a7a5f27181c359da0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+76a781fc8628c34d2e8a728623b57b720de5c0f5")]
 [assembly: System.Reflection.AssemblyProductAttribute("Afmaths")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Afmaths")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

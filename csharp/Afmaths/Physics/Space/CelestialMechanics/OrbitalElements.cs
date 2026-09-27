@@ -36,7 +36,7 @@ public class MeanAnomaly(double value)
     : Anomaly<MeanAnomaly>(value)
 {
     public MeanAnomaly AtTime(
-        Time offset,
+        Second offset,
         MeanMotion n
     )
     {
@@ -50,11 +50,13 @@ public class MeanAnomaly(double value)
     )
     {
         return new Time(
-            p.Value
-            * new Ratio(
-                Value,
-                2 * Math.PI
-            ).Value
+            new Second(
+                p.Value
+                * new Ratio(
+                    Value,
+                    2 * Math.PI
+                ).Value
+            )
         );
     }
 
@@ -70,7 +72,7 @@ public class EccentricAnomaly(double value)
     : Anomaly<EccentricAnomaly>(value)
 {
     private readonly NumericalAnalysis numericalAnalysis = new();
-    private readonly CelestialMechanics celestialMechanics = new();
+    private readonly Kepler kepler = new();
 
     private EccentricAnomaly NewtonMethodIteration(
         EccentricAnomaly guess,
@@ -81,7 +83,7 @@ public class EccentricAnomaly(double value)
         return new EccentricAnomaly(
             numericalAnalysis.NewtonRaphson(
                 guess.Value,
-                celestialMechanics
+                kepler
                     .KeplerEquation(
                         guess,
                         eccentricity
@@ -202,7 +204,7 @@ public class TrueAnomaly(double value)
     public TrueAnomaly AtTime(
         Eccentricity eccentricity,
         MeanAnomaly meanAnomaly,
-        Time offset,
+        Second offset,
         MeanMotion n
     )
     {
@@ -295,7 +297,7 @@ public class SemiMajorAxis(double value)
         Eccentricity eccentricity
     )
     {
-        return new CelestialMechanics()
+        return new Kepler()
             .KeplerEquation(
                 target,
                 eccentricity
@@ -408,9 +410,9 @@ public class OrbitalPeriod(double value)
     /// Converts the orbital period to a time value.
     /// </summary>
     /// <returns>The time value corresponding to the orbital period</returns>
-    public Time ToTime()
+    public Second ToSecond()
     {
-        return new Time(Value);
+        return new Second(Value);
     }
 
 
