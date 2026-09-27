@@ -19,22 +19,38 @@ public class Time(double value) : PhysicalValue<Time>(value)
 
     public static readonly Minute MINUTES_PER_HOUR = new Minute(60);
 
+    public static readonly Second SECONDS_PER_YEAR = new Second(31536000);
+    /// <summary>
+    /// Converts a Year value to an approximately equivalent Time representation in seconds.
+    /// </summary>
+    /// <remarks>
+    /// This approximation assumes a non-leap year with 365 days.
+    /// </remarks>
+    public static readonly Second SECONDS_PER_MONTH = new Second(SECONDS_PER_YEAR.Value / 12);
+
     public Time(Second value) : this(value.Value)
     {
-
     }
     public Time(Minute value) : this(value.Value * SECONDS_PER_MINUTE.Value)
     {
-
     }
     public Time(Hour value) : this(value.Value * SECONDS_PER_HOUR.Value)
     {
-
     }
     public Time(Day value) : this(value.Value * SECONDS_PER_DAY.Value)
     {
-
     }
+    /// <summary>
+    /// Converts a Month value to an approximately equivalent Time representation in seconds.
+    /// </summary>
+    /// <param name="value"></param>
+    public Time(Month value) : this(value.Value * SECONDS_PER_MONTH.Value)
+    {
+    }
+    public Time(Year value) : this(value.Value * SECONDS_PER_YEAR.Value)
+    {
+    }
+
     protected override Time Create(double value) => new(value);
 
     public Minute AsMinutes => new Minute(Value / SECONDS_PER_MINUTE.Value);
@@ -64,27 +80,54 @@ public class Hour(double value) : Time(value)
     protected override Hour Create(double value) => new(value);
 }
 
-public class Day(double value) : Date(value)
+public abstract class CalendarTimeUnit<T>(double value) : PhysicalValue<T>(value)
+    where T : CalendarTimeUnit<T>
+{
+    public Time AsTime => CreateTime();
+
+    protected abstract Time CreateTime();
+}
+public class Day(double value) : CalendarTimeUnit<Day>(value)
 {
     protected override Day Create(double value) => new(value);
+
+    protected override Time CreateTime() => new Time(this);
 }
 
-public class Month(double value) : Date(value)
+public class Month(double value) : CalendarTimeUnit<Month>(value)
 {
     protected override Month Create(double value) => new(value);
+
+    protected override Time CreateTime() => new Time(this);
 }
 
-public class Year(double value) : Date(value)
+public class Year(double value) : CalendarTimeUnit<Year>(value)
 {
     protected override Year Create(double value) => new(value);
+
+    protected override Time CreateTime() => new Time(this);
 }
 
-public class Date(double value) : PhysicalValue<Date>(value)
+public class DateTime
 {
-    protected override Date Create(double value) => new(value);
+    public Year Year { get; }
+    public Month Month { get; }
+    public Day Day { get; }
+    public Hour Hour { get; }
+    public Minute Minute { get; }
+    public Second Second { get; }
+    public DateTime(Year year, Month month, Day day, Hour hour, Minute minute, Second second)
+    {
+        Year = year;
+        Month = month;
+        Day = day;
+        Hour = hour;
+        Minute = minute;
+        Second = second;
+    }
 }
 
-public class JulianDate(double value) : Date(value)
+public class JulianDate(double value) : Day(value)
 {
     protected override JulianDate Create(double value) => new(value);
 }
