@@ -382,12 +382,13 @@ def angular_momentum(state_vectors: StateVector) -> AngularMomentum:
     )
 
 
-def angular_momentum_magnitude(angular_momentum_vector: Vector3D[Scalar]) -> Scalar:
+def angular_momentum_magnitude(angular_momentum_vector: AngularMomentum) -> Scalar:
     # From MSE SFM Exercise 1
     return vector_magnitude_3d(angular_momentum_vector)
 
 
 def instantaneous_angular_velocity(state_vectors: StateVector) -> Scalar:
+    """Calculates the instantaneous angular velocity of an orbiting object from its state vectors."""
     # From MSE SFM Exercise 1
     h = angular_momentum_magnitude(angular_momentum(state_vectors))
     r = vector_magnitude_3d(vector3d_from_position(state_vectors.position))
@@ -398,6 +399,7 @@ def instantaneous_angular_velocity(state_vectors: StateVector) -> Scalar:
 def angular_momentum_magnitude_from_apsides(
     periapsis: Distance, apoapsis: Distance, mu: GravitationalParameter
 ) -> Scalar:
+    """Calculates the angular momentum magnitude from the periapsis and apoapsis distances and the gravitational parameter."""
     return multiply(square_root(DOUBLE(mu)))(
         square_root(divide_by(add(apoapsis)(periapsis))(multiply(apoapsis)(periapsis)))
     )

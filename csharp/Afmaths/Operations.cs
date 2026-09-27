@@ -58,3 +58,17 @@ public class Ratio
         this.Value = value1 / value2;
     }
 }
+
+class Operations
+{
+    public List<T> Interval<T>(double start, double end, int numberOfPoints)
+    {
+        var intervals = new List<T>();
+        var step = (end - start) / numberOfPoints;
+        for (int i = 0; i <= numberOfPoints; i++)
+        {
+            intervals.Add((T)(object)(start + i * step));
+        }
+        return intervals;
+    }
+}
