@@ -92,7 +92,7 @@ class PlotOptions:
     show_orbit_markers: bool | None = None
     dashboard_columns: int = 1
     output_path: Path | None = None
-    reference_frame: ReferenceFrame = "GCRF"
+    reference_frame: ReferenceFrame = "ICRF"
     central_body: HorizonsCommandTarget = HorizonsCommandTarget.EARTH
     horizons_bodies: list[HorizonsCommandTarget] | None = None
     include_default_system_bodies: bool = True
@@ -100,19 +100,14 @@ class PlotOptions:
     def __post_init__(self) -> None:
         if self.distance_scale is not None and self.distance_scale <= 0:
             raise ValueError("distance_scale must be greater than 0.")
-
         if self.plot_width is not None and self.plot_width <= 0:
             raise ValueError("plot_width must be greater than 0.")
-
         if self.plot_height is not None and self.plot_height <= 0:
             raise ValueError("plot_height must be greater than 0.")
-
         if self.slider_steps is not None and self.slider_steps < 2:
             raise ValueError("slider_steps must be at least 2.")
-
         if self.plot_points is not None and self.plot_points < 2:
             raise ValueError("plot_points must be at least 2.")
-
         if self.dashboard_columns < 1:
             raise ValueError("dashboard_columns must be at least 1.")
 
@@ -127,7 +122,6 @@ def parse_horizons_target(
     """Resolve a CLI target name without re-parsing an enum default."""
     if isinstance(value, HorizonsCommandTarget):
         return value
-
     try:
         return HorizonsCommandTarget[value.upper()]
     except KeyError as error:
@@ -140,14 +134,10 @@ STATIC_VISUALISATIONS: dict[str, Callable[[], go.Figure]] = {
     "newton_iteration": build_newton_iteration_figure,
     "velocity_time": build_velocity_time_figure,
 }
-
-
 ORBIT_VISUALISATIONS = {
     "ground_track",
     "current_ground_track",
 }
-
-
 CONFIGURABLE_VISUALISATIONS = {
     "hohmann_transfer_2d",
     "lagrange_points",
@@ -155,8 +145,6 @@ CONFIGURABLE_VISUALISATIONS = {
     "orbit_2d",
     "phase_orbit_2d",
 }
-
-
 ALIASES = {
     "controlroom": "control_room",
     "itrf": "orbit_3d",
@@ -210,7 +198,6 @@ def resolve_optional_orbits(
 ) -> list[Orbit]:
     """
     Resolve explicitly supplied orbit data.
-
     Unlike the main orbital visualisations, an orbit_2d invocation with no
     supplied orbit data should remain the default Earth-Moon system rather
     than implicitly adding the ISS.
@@ -218,10 +205,8 @@ def resolve_optional_orbits(
     has_explicit_orbit = (
         elements is not None or bool(norad_ids) or bool(horizons_targets)
     )
-
     if not has_explicit_orbit:
         return []
-
     return resolve_orbits(
         source=source,
         norad_ids=norad_ids,
@@ -238,15 +223,11 @@ def orbital_figure_builder(
 ) -> go.Figure:
     if not orbits:
         raise ValueError("At least one orbit is required.")
-
     selected_orbit = orbits[0]
-
     ground_track_points = (
         options.plot_points if options.plot_points is not None else GROUND_TRACK_POINTS
     )
-
     lines = options.lines if options.lines is not None else False
-
     if name == "ground_track":
         return visualisation_2d_ground_track(
             orbit=selected_orbit,
@@ -259,7 +240,6 @@ def orbital_figure_builder(
             number_of_points=ground_track_points,
             lines=lines,
         )
-
     if name == "current_ground_track":
         return visualisation_2d_ground_track_current_position(
             orbit=selected_orbit,
@@ -268,7 +248,6 @@ def orbital_figure_builder(
             number_of_points=ground_track_points,
             lines=lines,
         )
-
     raise ValueError(f"Unknown orbital visualisation: {name}")
 
 
@@ -289,7 +268,6 @@ def configurable_figure_builder(
                 options,
             )
         )
-
     if name == "orbit_2d":
         satellites = [
             satellite_orbiting_body(
@@ -298,7 +276,6 @@ def configurable_figure_builder(
             )
             for orbit in (orbits or [])
         ]
-
         return build_default_orbit_visualiser_2d_figure(
             satellites=satellites,
             settings=_plot_2d_settings(
@@ -307,13 +284,11 @@ def configurable_figure_builder(
             ),
             propagation_orbits=(total_orbits if total_orbits is not None else 1.0),
         )
-
     if name == "lagrange_points":
         if mass_1 is None or mass_2 is None or distance is None:
             raise ValueError(
                 "lagrange_points requires --mass-1, --mass-2, and --distance."
             )
-
         return build_lagrange_points_figure(
             mass_1=mass_1,
             mass_2=mass_2,
@@ -328,7 +303,6 @@ def configurable_figure_builder(
                 options,
             )
         )
-
     if name == "orbit_3d":
         default_bodies = (
             []
@@ -340,7 +314,7 @@ def configurable_figure_builder(
             )
         )
         return build_3d_orbit_system_figure(
-            central_body=options.central_body,
+            origin_body=options.central_body,
             horizons_bodies=(
                 options.horizons_bodies
                 if options.horizons_bodies is not None
@@ -354,7 +328,6 @@ def configurable_figure_builder(
                 orbit_points=options.plot_points,
             ),
         )
-
     raise ValueError(f"Unknown configurable visualisation: {name}")
 
 
@@ -374,9 +347,7 @@ def launch_visualisation(
     """Launch one named visualisation or the multi-plot control room."""
     requested_name = normalise_name(name)
     resolved_name = ALIASES.get(requested_name, requested_name)
-
     options = plot_options or PlotOptions()
-
     # Preserve the old specialised commands while routing all three through the
     # generic builder. The canonical orbit_3d command remains composable: it
     # combines its default system bodies with explicitly supplied satellites.
@@ -403,9 +374,8 @@ def launch_visualisation(
             options,
             central_body=HorizonsCommandTarget.EARTH,
             horizons_bodies=[],
-            reference_frame=("ITRF" if requested_name.startswith("itrf") else "GCRF"),
+            reference_frame=("ITRF" if requested_name.startswith("itrf") else "ICRF"),
         )
-
     requires_default_satellite = requested_name in {
         "satellite_earth",
         "satellite_earth_3d",
@@ -413,7 +383,6 @@ def launch_visualisation(
         "itrf_orbit_3d",
         "itrf_custom",
     }
-
     if (
         resolved_name
         in {
@@ -422,38 +391,30 @@ def launch_visualisation(
         }
         or requires_default_satellite
     ):
-
         if source is OrbitSource.TLE and not norad_ids:
             norad_ids = [ISS_NORAD_ID]
-
         orbits = resolve_orbits(
             source=source,
             norad_ids=norad_ids,
             horizons_targets=horizons_targets,
             elements=elements,
         )
-
         if not orbits:
             raise ValueError("At least one orbit is required.")
-
         orbit_count = (
             total_orbits if total_orbits is not None else default_orbit_count(orbits[0])
         )
-
         current_orbit_count = (
             total_current_orbits if total_current_orbits is not None else orbit_count
         )
-
         if orbit_count <= 0 or current_orbit_count <= 0:
             raise ValueError("Orbit counts must be greater than 0.")
-
         if resolved_name == "control_room":
             if options.reference_frame == "ITRF":
                 raise ValueError(
                     "The control room already includes an ITRF panel. "
                     "Choose ICRF or GCRF for its inertial panel."
                 )
-
             launch_control_room(
                 orbits=orbits,
                 total_orbits=orbit_count,
@@ -474,7 +435,6 @@ def launch_visualisation(
                 inertial_reference_frame=options.reference_frame,
             )
             return
-
         if requires_default_satellite:
             configurable_figure_builder(
                 "orbit_3d",
@@ -489,9 +449,7 @@ def launch_visualisation(
                 orbit_count,
                 options,
             ).show()
-
         return
-
     if resolved_name in CONFIGURABLE_VISUALISATIONS:
         resolved_orbits = (
             resolve_optional_orbits(
@@ -503,7 +461,6 @@ def launch_visualisation(
             if resolved_name in {"orbit_2d", "orbit_3d"}
             else []
         )
-
         configurable_figure_builder(
             resolved_name,
             options,
@@ -513,9 +470,7 @@ def launch_visualisation(
             mass_2=mass_2,
             distance=distance,
         ).show()
-
         return
-
     try:
         figure_builder = STATIC_VISUALISATIONS[resolved_name]
     except KeyError as error:
@@ -527,12 +482,10 @@ def launch_visualisation(
                 *STATIC_VISUALISATIONS,
             ]
         )
-
         raise ValueError(
             f"Unknown visualisation '{name}'. "
             f"Available names: {', '.join(available)}"
         ) from error
-
     figure_builder().show()
 
 
@@ -540,39 +493,32 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=("Launch an AFMaths Plotly visualisation by name.")
     )
-
     parser.add_argument(
         "name",
         help='Visualisation name, for example "ground track".',
     )
-
     lagrange_group = parser.add_argument_group("Lagrange point system")
-
     lagrange_group.add_argument(
         "--mass-1",
         type=float,
         help="Mass of the primary body in kilograms.",
     )
-
     lagrange_group.add_argument(
         "--mass-2",
         type=float,
         help="Mass of the secondary body in kilograms.",
     )
-
     lagrange_group.add_argument(
         "--distance",
         type=float,
         help="Distance between the two bodies in metres.",
     )
-
     parser.add_argument(
         "--reference-frame",
         choices=["ICRF", "GCRF", "ITRF"],
-        default="GCRF",
+        default="ICRFj",
         help="3D orbit reference frame.",
     )
-
     parser.add_argument(
         "--centre",
         type=parse_horizons_target,
@@ -580,7 +526,6 @@ def parse_args() -> argparse.Namespace:
         choices=[HorizonsCommandTarget.EARTH, HorizonsCommandTarget.SUN],
         help="Central body for orbit_3d: EARTH or SUN.",
     )
-
     parser.add_argument(
         "--body",
         dest="horizons_bodies",
@@ -591,7 +536,6 @@ def parse_args() -> argparse.Namespace:
             "MERCURY VENUS EARTH MARS. Omit to use the centre's default set."
         ),
     )
-
     parser.add_argument(
         "--system-bodies",
         action=argparse.BooleanOptionalAction,
@@ -601,14 +545,12 @@ def parse_args() -> argparse.Namespace:
             "Use --no-system-bodies for a satellite-only plot."
         ),
     )
-
     parser.add_argument(
         "--source",
         type=parse_orbit_source,
         default=OrbitSource.TLE,
         help="Orbital data source: tle, horizon, or elements.",
     )
-
     parser.add_argument(
         "--norad-id",
         dest="norad_ids",
@@ -616,7 +558,6 @@ def parse_args() -> argparse.Namespace:
         nargs="+",
         help="One or more NORAD IDs for --source tle.",
     )
-
     parser.add_argument(
         "--target",
         dest="horizons_targets",
@@ -626,7 +567,6 @@ def parse_args() -> argparse.Namespace:
             "for example MOON or MARS."
         ),
     )
-
     parser.add_argument(
         "--orbits",
         "--tle-orbits",
@@ -635,7 +575,6 @@ def parse_args() -> argparse.Namespace:
         default=None,
         help="Number of reference-body orbits to propagate.",
     )
-
     parser.add_argument(
         "--current-orbits",
         type=float,
@@ -645,126 +584,105 @@ def parse_args() -> argparse.Namespace:
             "Defaults to --orbits."
         ),
     )
-
     parser.add_argument(
         "--inclination",
         type=float,
         help="Orbital inclination in radians.",
     )
-
     parser.add_argument(
         "--right-ascension-of-ascending-node",
         type=float,
         help=("Right ascension of the ascending node in radians."),
     )
-
     parser.add_argument(
         "--argument-of-periapsis",
         type=float,
         help="Argument of periapsis in radians.",
     )
-
     parser.add_argument(
         "--semi-major-axis",
         type=float,
         help="Semi-major axis in metres.",
     )
-
     parser.add_argument(
         "--eccentricity",
         type=float,
         help="Orbital eccentricity (unitless).",
     )
-
     parser.add_argument(
         "--true-anomaly",
         type=float,
         help="True anomaly in radians.",
     )
-
     plot_group = parser.add_argument_group("plot settings")
-
     plot_group.add_argument(
         "--distance-scale",
         type=float,
         help=("Physical distance represented by one plot unit " "where supported."),
     )
-
     plot_group.add_argument(
         "--plot-width",
         type=int,
         help="2D plot width in pixels.",
     )
-
     plot_group.add_argument(
         "--plot-height",
         type=int,
         help="2D plot height in pixels.",
     )
-
     plot_group.add_argument(
         "--plot-min-x",
         type=float,
         help="2D plot minimum X value.",
     )
-
     plot_group.add_argument(
         "--plot-min-y",
         type=float,
         help="2D plot minimum Y value.",
     )
-
     plot_group.add_argument(
         "--plot-max-x",
         type=float,
         help="2D plot maximum X value.",
     )
-
     plot_group.add_argument(
         "--plot-max-y",
         type=float,
         help="2D plot maximum Y value.",
     )
-
     plot_group.add_argument(
         "--slider-steps",
         type=int,
         help=("Number of slider steps for interactive 2D plots."),
     )
-
     plot_group.add_argument(
         "--plot-points",
         type=int,
         help=("Sampling resolution for orbit/ground-track plots."),
     )
-
     plot_group.add_argument(
         "--lines",
         action=argparse.BooleanOptionalAction,
         default=None,
         help="Draw lines between ground-track samples.",
     )
-
     plot_group.add_argument(
         "--show-orbit-markers",
         action=argparse.BooleanOptionalAction,
         default=None,
         help=("Show per-orbit markers on the ground-track plot."),
     )
-
     plot_group.add_argument(
         "--dashboard-columns",
         type=int,
         default=1,
         help=("Number of columns in the control-room dashboard."),
     )
-
     plot_group.add_argument(
         "--output-path",
         type=Path,
         help=("Optional control-room dashboard HTML output path."),
     )
-
     return parser.parse_args()
 
 
@@ -834,11 +752,9 @@ def plot_options_from_args(
 
 def main() -> None:
     args = parse_args()
-
     elements = (
         custom_elements_from_args(args) if args.source is OrbitSource.ELEMENTS else None
     )
-
     launch_visualisation(
         name=args.name,
         source=args.source,

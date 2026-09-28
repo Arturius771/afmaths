@@ -29,7 +29,6 @@ from afmaths.visualisations.base import (
 from afmaths.visualisations.orbit_source import Orbit, orbit_at_current_epoch
 
 ReferenceFrame = Literal["ICRF", "GCRF", "ITRF"]
-
 EARTH_DISTANCE_SCALE = 1_000.0
 SOLAR_DISTANCE_SCALE = 1_000_000_000.0
 EARTH_BODY_RADIUS_SCALE = 1.0
@@ -63,7 +62,6 @@ def _add_textured_earth(
     palette = quantised.getpalette()
     if palette is None:
         raise ValueError(f"Could not create colour palette from {image_path}")
-
     colour_count = int(max(max(row) for row in surface_colour)) + 1
     colourscale = [
         [
@@ -112,7 +110,7 @@ def _add_textured_earth(
 
 
 @dataclass(frozen=True)
-class CentralBody3DConfig:
+class PlotOriginConfig:
     name: str
     target: HorizonsCommandTarget
     radius: Distance
@@ -122,11 +120,69 @@ class CentralBody3DConfig:
     opacity: float = 0.7
 
 
+@dataclass(frozen=True)
+class PlotCoordinateSystem:
+    """The coordinate-system properties the visualiser actually implements."""
+
+    name: ReferenceFrame
+    axes: str
+    is_inertial: bool
+
+
+ICRF_COORDINATE_SYSTEM = PlotCoordinateSystem(
+    name="ICRF",
+    axes="ICRF-aligned",
+    is_inertial=True,
+)
+ITRF_COORDINATE_SYSTEM = PlotCoordinateSystem(
+    name="ITRF",
+    axes="Earth-fixed ITRF",
+    is_inertial=False,
+)
+
+
+def _coordinate_system_for(
+    *,
+    reference_frame: ReferenceFrame,
+    origin: HorizonsCommandTarget,
+) -> PlotCoordinateSystem:
+    """Return the implemented coordinate system for a frame/origin combination.
+    The current inertial Horizons path uses ICRF-aligned axes. Translating its
+    origin to Earth or Sun does not turn it into GCRF; a GCRF transformation is
+    intentionally rejected until that transformation is implemented.
+    """
+    if reference_frame == "ICRF":
+        return ICRF_COORDINATE_SYSTEM
+    if reference_frame == "GCRF":
+        raise ValueError(
+            "GCRF is not implemented: the current inertial path uses "
+            "ICRF-aligned axes and does not apply an ICRF-to-GCRF "
+            "transformation. Use reference_frame='ICRF' with "
+            "origin_body=EARTH for an Earth-centred inertial plot."
+        )
+    if origin is not HorizonsCommandTarget.EARTH:
+        raise ValueError("ITRF is currently supported only for Earth-centred plots.")
+    return ITRF_COORDINATE_SYSTEM
+
+
+def _orbit_system_title(
+    *,
+    origin: PlotOriginConfig,
+    coordinate_system: PlotCoordinateSystem,
+) -> str:
+    motion = (
+        "inertial" if coordinate_system.is_inertial else "Earth-fixed (non-inertial)"
+    )
+    return (
+        f"Origin: {origin.name} centre | Axes: {coordinate_system.axes} | "
+        f"Motion: {motion}"
+    )
+
+
 SUN_RADIUS = Distance(Scalar(696_340.0 * 1_000.0))
 SUN_GRAVITATIONAL_PARAMETER = GravitationalParameter(Scalar(1.32712440018e20))
-
-CENTRAL_BODIES = {
-    HorizonsCommandTarget.EARTH: CentralBody3DConfig(
+PLOT_ORIGINS = {
+    HorizonsCommandTarget.EARTH: PlotOriginConfig(
         name="Earth",
         target=HorizonsCommandTarget.EARTH,
         radius=EARTH_RADIUS,
@@ -134,7 +190,7 @@ CENTRAL_BODIES = {
         radius_scale=EARTH_BODY_RADIUS_SCALE,
         distance_scale=EARTH_DISTANCE_SCALE,
     ),
-    HorizonsCommandTarget.SUN: CentralBody3DConfig(
+    HorizonsCommandTarget.SUN: PlotOriginConfig(
         name="Sun",
         target=HorizonsCommandTarget.SUN,
         radius=SUN_RADIUS,
@@ -144,7 +200,6 @@ CENTRAL_BODIES = {
         opacity=0.6,
     ),
 }
-
 BODY_RADII_METRES = {
     HorizonsCommandTarget.MOON: 1_737.4 * 1_000.0,
     HorizonsCommandTarget.MERCURY: 2_439.7 * 1_000.0,
@@ -156,11 +211,11 @@ BODY_RADII_METRES = {
     HorizonsCommandTarget.URANUS: 25_362.0 * 1_000.0,
     HorizonsCommandTarget.NEPTUNE: 24_622.0 * 1_000.0,
 }
-
 DEFAULT_SOLAR_SYSTEM_BODIES = [
     HorizonsCommandTarget.MERCURY,
     HorizonsCommandTarget.VENUS,
     HorizonsCommandTarget.EARTH,
+    HorizonsCommandTarget.MOON,
     HorizonsCommandTarget.MARS,
     HorizonsCommandTarget.JUPITER,
     HorizonsCommandTarget.SATURN,
@@ -180,7 +235,6 @@ def orbiting_body_from_horizons_target(
         raise ValueError(
             f"No display radius is configured for {target.name}."
         ) from error
-
     return BodyPlotConfig(
         name=target.name.title(),
         target_object=target,
@@ -219,49 +273,46 @@ def _itrf_positions(orbits: list[Orbit], track_for_orbits: float) -> list[list]:
 
 def build_3d_orbit_system_figure(
     *,
-    central_body: HorizonsCommandTarget = HorizonsCommandTarget.EARTH,
+    origin_body: HorizonsCommandTarget = HorizonsCommandTarget.EARTH,
     horizons_bodies: list[HorizonsCommandTarget] | None = None,
     satellite_orbits: list[Orbit] | None = None,
-    reference_frame: ReferenceFrame = "GCRF",
+    reference_frame: ReferenceFrame = "ICRF",
     distance_scale: float | None = None,
     body_radius_scale: float | None = None,
     orbit_points: int = ORBIT_POINTS,
     satellite_display_radius: Distance = SATELLITE_DISPLAY_RADIUS,
     track_for_orbits: float = 3.0,
 ) -> go.Figure:
-    """Build one 3D view for Horizons bodies and/or supplied satellite orbits.
-
-    ICRF and GCRF currently use the same inertial propagation/display path. ITRF
-    transforms satellite positions into Earth-fixed coordinates and is therefore
-    currently limited to Earth-centred satellite plots.
+    """Build a 3D plot with an explicit origin, axis system, and motion type.
+    ICRF uses ICRF-aligned axes and an inertial display path, translated to
+    the requested origin. ITRF uses Earth-fixed, non-inertial axes and is
+    limited to supplied Earth-satellite tracks. GCRF is rejected until an
+    ICRF-to-GCRF transformation is implemented.
     """
     if reference_frame not in {"ICRF", "GCRF", "ITRF"}:
         raise ValueError("reference_frame must be ICRF, GCRF, or ITRF.")
-
     try:
-        central = CENTRAL_BODIES[central_body]
+        central = PLOT_ORIGINS[origin_body]
     except KeyError as error:
         raise ValueError(
-            f"No central-body configuration for {central_body.name}."
+            f"{origin_body.name} is not a supported plot origin. Supported "
+            f"origins: {', '.join(target.name for target in PLOT_ORIGINS)}."
         ) from error
-
+    coordinate_system = _coordinate_system_for(
+        reference_frame=reference_frame,
+        origin=origin_body,
+    )
     selected_bodies = horizons_bodies or []
     current_satellites = [
         orbit_at_current_epoch(orbit) for orbit in satellite_orbits or []
     ]
-
-    if reference_frame == "ITRF":
-        if central_body is not HorizonsCommandTarget.EARTH:
-            raise ValueError(
-                "ITRF is currently supported only for Earth-centred plots."
-            )
+    if coordinate_system.name == "ITRF":
         if selected_bodies:
             raise ValueError(
                 "ITRF currently supports satellite tracks, not Horizons bodies."
             )
         if not current_satellites:
             raise ValueError("At least one satellite orbit is required for ITRF.")
-
         settings = OrbitPlotSettings(
             centre=central.target,
             gravitational_parameter=central.gravitational_parameter,
@@ -274,7 +325,8 @@ def build_3d_orbit_system_figure(
             settings=settings,
             itrf_positions=_itrf_positions(current_satellites, track_for_orbits),
             title=(
-                f"{current_satellites[0].name} ITRF orbit | "
+                f"{_orbit_system_title(origin=central, coordinate_system=coordinate_system)} | "
+                f"Target: {current_satellites[0].name} | "
                 f"Source: {current_satellites[0].source.value} | "
                 f"Orbits: {track_for_orbits}"
                 f"<br>{orbit_description_from_elements(current_satellites[0].elements)} @ Epoch"
@@ -290,9 +342,8 @@ def build_3d_orbit_system_figure(
             distance_scale=settings.distance_scale,
             body_radius_scale=body_radius_scale or central.radius_scale,
         )
-
-    # Horizons state vectors and the supplied orbital elements share this inertial
-    # path; the selected reference frame remains explicit in the title/API.
+    # Horizons state vectors and supplied orbital elements use the implemented
+    # ICRF-aligned inertial path, translated to the selected origin.
     settings = OrbitPlotSettings(
         centre=central.target,
         gravitational_parameter=central.gravitational_parameter,
@@ -305,7 +356,7 @@ def build_3d_orbit_system_figure(
     )
     radius_scale = body_radius_scale or (
         PLANET_RADIUS_SCALE
-        if central_body is HorizonsCommandTarget.SUN
+        if origin_body is HorizonsCommandTarget.SUN
         else central.radius_scale
     )
     bodies = [
@@ -315,18 +366,18 @@ def build_3d_orbit_system_figure(
     bodies.extend(
         _satellite_bodies(current_satellites, satellite_display_radius, radius_scale)
     )
-
     if not bodies:
         raise ValueError("Select at least one Horizons body or satellite orbit.")
-
-    title = f"{central.name}-centred {reference_frame} orbit system"
+    title = _orbit_system_title(
+        origin=central,
+        coordinate_system=coordinate_system,
+    )
     if current_satellites:
         title += (
-            f" | {current_satellites[0].name} "
+            f" | Target: {current_satellites[0].name} "
             f"({current_satellites[0].source.value})"
             f"<br>{orbit_description_from_elements(current_satellites[0].elements)}"
         )
-
     return build_3d_orbit_figure(
         settings=settings,
         title=title,
