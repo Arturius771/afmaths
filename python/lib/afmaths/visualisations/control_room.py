@@ -74,6 +74,8 @@ def build_control_room_figures(
     inertial_satellites = orbits if central_body is HorizonsCommandTarget.EARTH else []
 
     return [
+        # Control room figures start here
+        # 2D ground track of the selected orbit's current position
         visualisation_2d_ground_track_current_position(
             orbit=selected_orbit,
             ground_station=ground_station,
@@ -81,19 +83,22 @@ def build_control_room_figures(
             number_of_points=ground_track_points,
             lines=lines,
         ),
+        # 3D orbit system figure centered on the central body
         build_3d_orbit_system_figure(
-            central_body=central_body,
+            origin_body=central_body,
             horizons_bodies=inertial_bodies,
             satellite_orbits=inertial_satellites,
             reference_frame=inertial_reference_frame,
             **orbit_plot_kwargs,
         ),
+        # 3D orbit system figure in the Earth-centered ITRF frame
         build_3d_orbit_system_figure(
             satellite_orbits=orbits,
             reference_frame="ITRF",
             track_for_orbits=total_orbits,
             **orbit_plot_kwargs,
         ),
+        # 2D ground track of the selected orbit's full orbit
         visualisation_2d_ground_track(
             orbit=selected_orbit,
             orbit_count=total_orbits,
@@ -101,12 +106,15 @@ def build_control_room_figures(
             number_of_points=ground_track_points,
             lines=lines,
         ),
+        # Default 2D orbit visualiser figure
         build_default_orbit_visualiser_2d_figure(
             satellites=satellites,
             settings=orbit_2d_settings,
             propagation_orbits=total_orbits,
         ),
+        # Position vector figure for the selected orbit
         build_position_vector_figure(selected_orbit.elements, int(total_orbits)),
+        # Velocity vector figure for the selected orbit
         build_velocity_vector_figure(selected_orbit.elements, int(total_orbits)),
     ]
 

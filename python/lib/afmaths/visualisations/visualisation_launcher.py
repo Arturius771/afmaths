@@ -516,7 +516,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--reference-frame",
         choices=["ICRF", "GCRF", "ITRF"],
-        default="ICRFj",
+        default="ICRF",
         help="3D orbit reference frame.",
     )
     parser.add_argument(
