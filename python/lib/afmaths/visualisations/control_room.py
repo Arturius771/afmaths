@@ -13,7 +13,7 @@ from afmaths.visualisations.ground_track import (
     visualisation_2d_ground_track_current_position,
 )
 from afmaths.visualisations.helpers import defined_kwargs, with_plot_settings_overrides
-from afmaths.visualisations.orbit_source import Orbit
+from afmaths.visualisations.orbit_source import Orbit, orbit_elements
 from afmaths.visualisations.orbit_system_3d import (
     DEFAULT_SOLAR_SYSTEM_BODIES,
     build_3d_orbit_system_figure,
@@ -51,6 +51,7 @@ def build_control_room_figures(
         raise ValueError("At least one orbit is required.")
 
     selected_orbit = orbits[0]
+    selected_elements = orbit_elements(selected_orbit)
     ground_track_points = (
         plot_points if plot_points is not None else GROUND_TRACK_POINTS
     )
@@ -58,7 +59,7 @@ def build_control_room_figures(
         ORBIT_2D_PLOT_SETTINGS, distance_scale=distance_scale, orbit_points=plot_points
     )
     satellites = [
-        satellite_orbiting_body(name=orbit.name, elements=orbit.elements)
+        satellite_orbiting_body(name=orbit.name, elements=orbit_elements(orbit))
         for orbit in orbits
     ]
     orbit_plot_kwargs = defined_kwargs(
@@ -69,7 +70,7 @@ def build_control_room_figures(
         inertial_bodies = (
             DEFAULT_SOLAR_SYSTEM_BODIES
             if central_body is HorizonsCommandTarget.SUN
-            else [HorizonsCommandTarget.MOON]
+            else []
         )
     inertial_satellites = orbits if central_body is HorizonsCommandTarget.EARTH else []
 
@@ -113,9 +114,9 @@ def build_control_room_figures(
             propagation_orbits=total_orbits,
         ),
         # Position vector figure for the selected orbit
-        build_position_vector_figure(selected_orbit.elements, int(total_orbits)),
+        build_position_vector_figure(selected_elements, int(total_orbits)),
         # Velocity vector figure for the selected orbit
-        build_velocity_vector_figure(selected_orbit.elements, int(total_orbits)),
+        build_velocity_vector_figure(selected_elements, int(total_orbits)),
     ]
 
 
@@ -151,7 +152,7 @@ def launch_control_room(
     )
     return show_visualisation_dashboard(
         figures,
-        title=f"AFMaths Control Room - {orbits[0].name} ({orbits[0].source.value})",
+        title=f"AFMaths Control Room - {orbits[0].name}",
         columns=columns,
         output_path=output_path,
     )

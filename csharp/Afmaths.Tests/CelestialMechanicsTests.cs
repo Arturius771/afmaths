@@ -41,7 +41,7 @@ public class CelestialMechanicsTests
 
         Assert.Equal(
             expected,
-            ((Vector3D<double>)result).X,
+            result.X,
             6
         );
     }

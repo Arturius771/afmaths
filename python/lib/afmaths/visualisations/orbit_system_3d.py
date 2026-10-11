@@ -26,7 +26,11 @@ from afmaths.visualisations.base import (
     build_3d_itrf_orbit_figure,
     build_3d_orbit_figure,
 )
-from afmaths.visualisations.orbit_source import Orbit, orbit_at_current_epoch
+from afmaths.visualisations.orbit_source import (
+    Orbit,
+    orbit_at_current_epoch,
+    orbit_elements,
+)
 
 ReferenceFrame = Literal["ICRF", "GCRF", "ITRF"]
 EARTH_DISTANCE_SCALE = 1_000.0
@@ -249,7 +253,7 @@ def _satellite_bodies(
     return [
         BodyPlotConfig(
             name=orbit.name,
-            target_object=orbit.elements,
+            target_object=orbit_elements(orbit),
             radius=radius,
             radius_scale=radius_scale,
         )
@@ -260,11 +264,10 @@ def _satellite_bodies(
 def _itrf_positions(orbits: list[Orbit], track_for_orbits: float) -> list[list]:
     positions = []
     for orbit in orbits:
-        track_for_seconds = (
-            orbital_period(orbit.elements.semi_major_axis) * track_for_orbits
-        )
+        elements = orbit_elements(orbit)
+        track_for_seconds = orbital_period(elements.semi_major_axis) * track_for_orbits
         gcrf_positions = [
-            position_vector_at_time(orbit.elements, Second(Scalar(second)), EARTH_MU)
+            position_vector_at_time(elements, Second(Scalar(second)), EARTH_MU)
             for second in range(0, int(track_for_seconds), 60)
         ]
         positions.append(itrf_positions_from_gcrf_position(gcrf_positions, orbit.epoch))
@@ -327,9 +330,8 @@ def build_3d_orbit_system_figure(
             title=(
                 f"{_orbit_system_title(origin=central, coordinate_system=coordinate_system)} | "
                 f"Target: {current_satellites[0].name} | "
-                f"Source: {current_satellites[0].source.value} | "
                 f"Orbits: {track_for_orbits}"
-                f"<br>{orbit_description_from_elements(current_satellites[0].elements)} @ Epoch"
+                f"<br>{orbit_description_from_elements(orbit_elements(current_satellites[0]))} @ Epoch"
             ),
             central_body_name=central.name,
             central_body_radius=central.radius,
@@ -374,9 +376,8 @@ def build_3d_orbit_system_figure(
     )
     if current_satellites:
         title += (
-            f" | Target: {current_satellites[0].name} "
-            f"({current_satellites[0].source.value})"
-            f"<br>{orbit_description_from_elements(current_satellites[0].elements)}"
+            f" | Target: {current_satellites[0].name}"
+            f"<br>{orbit_description_from_elements(orbit_elements(current_satellites[0]))}"
         )
     return build_3d_orbit_figure(
         settings=settings,

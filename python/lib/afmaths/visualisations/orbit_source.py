@@ -41,13 +41,21 @@ class OrbitSource(StrEnum):
     ELEMENTS = "elements"
 
 
+OrbitDescription = OrbitalElements | str
+
+
 @dataclass(frozen=True)
 class Orbit:
     name: str
-    elements: OrbitalElements
     epoch: Epoch
-    source: OrbitSource
-    tle: str | None = None
+    description: OrbitDescription
+
+
+def orbit_elements(orbit: Orbit) -> OrbitalElements:
+    if isinstance(orbit.description, OrbitalElements):
+        return orbit.description
+
+    return orbital_elements_from_tle(orbit.description)
 
 
 def parse_orbit_source(value: str) -> OrbitSource:
@@ -91,10 +99,8 @@ def parse_horizons_target(value: str) -> HorizonsCommandTarget:
 def orbit_from_tle(tle: str) -> Orbit:
     return Orbit(
         name=f"{parse_norad_id(tle)}",
-        elements=orbital_elements_from_tle(tle),
         epoch=Epoch(parse_julian_date(tle)),
-        source=OrbitSource.TLE,
-        tle=tle,
+        description=tle,
     )
 
 
@@ -118,12 +124,11 @@ def orbit_from_horizons(
 
     return Orbit(
         name=target.name.title().replace("_", " "),
-        elements=orbital_elements_from_state_vectors(
+        epoch=Epoch(julian_date_now()),
+        description=orbital_elements_from_state_vectors(
             state_vectors[0],
             mu=gravitational_parameter,
         ),
-        epoch=Epoch(julian_date_now()),
-        source=OrbitSource.HORIZONS,
     )
 
 
@@ -134,9 +139,8 @@ def orbit_from_elements(
 ) -> Orbit:
     return Orbit(
         name=name,
-        elements=elements,
         epoch=epoch or Epoch(julian_date_now()),
-        source=OrbitSource.ELEMENTS,
+        description=elements,
     )
 
 
@@ -146,15 +150,15 @@ def orbit_at_current_epoch(
 ) -> Orbit:
     return replace(
         orbit,
-        elements=orbital_elements_from_state_vectors(
+        epoch=Epoch(julian_date_now()),
+        description=orbital_elements_from_state_vectors(
             state_vector_at_time(
-                orbit.elements,
+                orbit_elements(orbit),
                 seconds_from_julian_date_delta(julian_date_delta(orbit.epoch)),
                 gravitational_parameter,
             ),
             mu=gravitational_parameter,
         ),
-        epoch=Epoch(julian_date_now()),
     )
 
 
@@ -164,7 +168,7 @@ def default_orbit_count(orbit: Orbit) -> int:
         min(
             round(
                 orbits_per_day(
-                    orbital_period(orbit.elements.semi_major_axis),
+                    orbital_period(orbit_elements(orbit).semi_major_axis),
                 )
             ),
             100,

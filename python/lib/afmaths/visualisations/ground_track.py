@@ -52,6 +52,7 @@ from afmaths.visualisations.helpers import (
 from afmaths.visualisations.orbit_source import (
     Orbit,
     orbit_at_current_epoch,
+    orbit_elements,
 )
 
 EARTH_IMAGE_PATH = Path(__file__).with_name("Earth-hires.jpg")
@@ -75,8 +76,9 @@ def visualisation_2d_ground_track(
     number_of_points: int = GROUND_TRACK_POINTS,
 ) -> go.Figure:
     _validate_ground_track_settings(orbit_count, number_of_points)
+    elements = orbit_elements(orbit)
     coordinates = geographic_coordinates_for_orbit(
-        orbit.elements,
+        elements,
         orbit.epoch,
         orbit_count,
         number_of_points,
@@ -102,8 +104,8 @@ def visualisation_2d_ground_track(
         .update_layout(
             title=(
                 f"{orbit.name} ground track | "
-                f"Source: {orbit.source.value} | Orbits: {orbit_count}"
-                f"<br>{orbit_description_from_elements(orbit.elements)} @ Epoch"
+                f"Orbits: {orbit_count}"
+                f"<br>{orbit_description_from_elements(elements)} @ Epoch"
             ),
             xaxis_title="Longitude [deg]",
             yaxis_title="Latitude [deg]",
@@ -113,9 +115,9 @@ def visualisation_2d_ground_track(
     plot_nodes: list[PlotNode] = []
 
     if show_orbit_markers:
-        period = orbital_period(orbit.elements.semi_major_axis)
+        period = orbital_period(elements.semi_major_axis)
         marker_coordinates = earth_start_of_orbit_coordinates(
-            orbit.elements,
+            elements,
             orbit.epoch,
             int(orbit_count),
         )
@@ -180,29 +182,30 @@ def visualisation_2d_ground_track_current_position(
 ) -> go.Figure:
     _validate_ground_track_settings(orbit_count, number_of_points)
     current_orbit = orbit_at_current_epoch(orbit)
+    elements = orbit_elements(current_orbit)
 
     coordinates = geographic_coordinates_for_orbit(
-        current_orbit.elements,
+        elements,
         current_orbit.epoch,
         orbit_count,
         number_of_points,
     )
 
     current_state = state_vector_at_time(
-        current_orbit.elements,
+        elements,
         Second(Scalar(0)),
         EARTH_MU,
     )
 
     perigee = perigee_coordinates(
         current_orbit.epoch,
-        current_orbit.elements,
+        elements,
         EARTH_MU,
     )
 
     apogee = apogee_coordinates(
         current_orbit.epoch,
-        current_orbit.elements,
+        elements,
         EARTH_MU,
     )
 
@@ -227,7 +230,7 @@ def visualisation_2d_ground_track_current_position(
                 y=Scalar(ground_station.coordinates.longitude),
             )
         ),
-        current_orbit.elements,
+        elements,
         current_orbit.epoch,
         tolerance=Degrees(Scalar(1)),
         max_orbit_iterations=1000,
@@ -254,9 +257,8 @@ def visualisation_2d_ground_track_current_position(
                 .update_layout(
                     title=(
                         f"{current_orbit.name} current ground track | "
-                        f"Source: {current_orbit.source.value} | "
                         f"Orbits: {orbit_count}"
-                        f"<br>{orbit_description_from_elements(current_orbit.elements)}"
+                        f"<br>{orbit_description_from_elements(elements)}"
                     ),
                     xaxis_title="Longitude [deg]",
                     yaxis_title="Latitude [deg]",
@@ -314,11 +316,11 @@ def visualisation_2d_ground_track_current_position(
                             f"v={vis_viva(
                                 EARTH_MU,
                                 current_radius,
-                                current_orbit.elements.semi_major_axis,
+                                elements.semi_major_axis,
                             ):.2f}m/s "
                             f"r={current_radius:.2f}m "
-                            f"t={time_since_periapsis_from_true_anomaly(current_orbit.elements.semi_major_axis, EARTH_MU, current_orbit.elements.true_anomaly, current_orbit.elements.eccentricity):.2f}s "
-                            f"θ={current_orbit.elements.true_anomaly:.2f}"
+                            f"t={time_since_periapsis_from_true_anomaly(elements.semi_major_axis, EARTH_MU, elements.true_anomaly, elements.eccentricity):.2f}s "
+                            f"θ={elements.true_anomaly:.2f}"
                         ),
                         size=20,
                         symbol="diamond",

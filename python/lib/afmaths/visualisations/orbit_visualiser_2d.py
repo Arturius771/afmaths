@@ -780,11 +780,12 @@ def build_default_orbit_visualiser_2d_figure(
     settings: PlotOrbital2DSettings | None = None,
     propagation_orbits: float = 1.0,
 ) -> go.Figure:
-    satellite_bodies = satellites or []
+    satellite_bodies = satellites or [
+        moon_orbiting_body(),
+    ]
 
     # TODO: Add default celestial bodies like the Moon here.
     bodies = [
-        moon_orbiting_body(),
         *satellite_bodies,
     ]
 

@@ -53,6 +53,7 @@ from afmaths.visualisations.orbit_source import (
     Orbit,
     OrbitSource,
     default_orbit_count,
+    orbit_elements,
     parse_orbit_source,
     resolve_orbits,
 )
@@ -272,7 +273,7 @@ def configurable_figure_builder(
         satellites = [
             satellite_orbiting_body(
                 name=orbit.name,
-                elements=orbit.elements,
+                elements=orbit_elements(orbit),
             )
             for orbit in (orbits or [])
         ]
