@@ -1,13 +1,205 @@
 from __future__ import annotations
 
+import base64
+import mimetypes
+from dataclasses import replace
 from pathlib import Path
 
 import plotly.graph_objects as go
 from astronomy_types import (
     Coordinate2D,
-    Degrees,
+    Distance,
+    Epoch,
+    GravitationalParameter,
+    OrbitalElements,
     Scalar,
     Second,
+)
+
+from afmaths.constants import EARTH_MU
+from afmaths.geometry.geometry import circle_bounding_box
+from afmaths.physics.space.astronomy.time_functions import (
+    julian_date_delta,
+    julian_date_now,
+    seconds_from_julian_date_delta,
+)
+from afmaths.physics.space.celestial_mechanics.celestial_mechanics import EARTH_MU
+from afmaths.physics.space.celestial_mechanics.orbital_elements import (
+    orbital_elements_from_state_vectors,
+)
+from afmaths.physics.space.celestial_mechanics.state_vector import state_vector_at_time
+from afmaths.physics.space.celestial_mechanics.time import orbital_period
+from afmaths.physics.space.engineering.two_line_elements import (
+    orbital_elements_from_tle,
+)
+from afmaths.visualisations.visualisation_types import (
+    Orbit,
+    PlotNode,
+)
+
+
+def orbit_elements(orbit: Orbit) -> OrbitalElements:
+    if isinstance(orbit.description, OrbitalElements):
+        return orbit.description
+
+    return orbital_elements_from_tle(orbit.description)
+
+
+def orbit_at_current_epoch(
+    orbit: Orbit,
+    gravitational_parameter: GravitationalParameter = EARTH_MU,
+) -> Orbit:
+    return replace(
+        orbit,
+        epoch=Epoch(julian_date_now()),
+        description=orbital_elements_from_state_vectors(
+            state_vector_at_time(
+                orbit_elements(orbit),
+                seconds_from_julian_date_delta(julian_date_delta(orbit.epoch)),
+                gravitational_parameter,
+            ),
+            mu=gravitational_parameter,
+        ),
+    )
+
+
+EARTH_IMAGE_PATH = Path(__file__).with_name("Earth-hires.jpg")
+
+
+def image_file_to_data_uri(image_path: str | Path) -> str:
+    image_path = Path(image_path).expanduser().resolve()
+
+    if not image_path.exists():
+        raise FileNotFoundError(f"Background image not found: {image_path}")
+
+    mime_type, _ = mimetypes.guess_type(image_path)
+
+    if mime_type is None:
+        mime_type = "image/png"
+
+    encoded = base64.b64encode(image_path.read_bytes()).decode("utf-8")
+
+    return f"data:{mime_type};base64,{encoded}"
+
+
+def with_data_background_image(
+    fig: go.Figure | None = None,
+    image_source: str | Path = EARTH_IMAGE_PATH,
+    x_min: float = -180,
+    x_max: float = 180,
+    y_min: float = -90,
+    y_max: float = 90,
+    opacity: float = 0.8,
+    set_axis_ranges: bool = True,
+    lock_aspect_ratio: bool = False,
+) -> go.Figure:
+    """
+    Add a background image in data coordinates.
+
+    The image pans and zooms with the axes because it uses x/y references.
+    """
+    if fig is None:
+        fig = go.Figure()
+
+    if image_source is None:
+        return fig
+
+    source = str(image_source)
+
+    if not source.startswith(("http://", "https://", "data:")):
+        source = image_file_to_data_uri(image_source)
+
+    fig.add_layout_image(
+        {
+            "source": source,
+            "xref": "x",
+            "yref": "y",
+            "x": x_min,
+            "y": y_max,
+            "sizex": x_max - x_min,
+            "sizey": y_max - y_min,
+            "xanchor": "left",
+            "yanchor": "top",
+            "sizing": "stretch",
+            "opacity": opacity,
+            "layer": "below",
+        }
+    )
+
+    if set_axis_ranges:
+        fig.update_xaxes(range=[x_min, x_max])
+        fig.update_yaxes(range=[y_min, y_max])
+
+    if lock_aspect_ratio:
+        fig.update_yaxes(
+            scaleanchor="x",
+            scaleratio=1,
+        )
+
+    fig.update_layout(
+        plot_bgcolor="rgba(0,0,0,0)",
+        paper_bgcolor="rgba(0,0,0,0)",
+    )
+
+    return fig
+
+
+def figure_circle(
+    figure: go.Figure,
+    coordinates: Coordinate2D,
+    radius: Distance,
+    fill_colour: str | None = "blue",
+    line_colour: str = "blue",
+) -> go.Figure:
+    bounding_box = circle_bounding_box(coordinates, radius)
+
+    return figure.add_shape(
+        type="circle",
+        x0=bounding_box[0].x,
+        y0=bounding_box[0].y,
+        x1=bounding_box[1].x,
+        y1=bounding_box[1].y,
+        fillcolor=fill_colour,
+        line_color=line_colour,
+    )
+
+
+def add_plot_node(fig: go.Figure, node: PlotNode) -> go.Figure:
+    text = node.text or node.name
+
+    fig.add_trace(
+        go.Scatter(
+            x=[node.coordinate.x],
+            y=[node.coordinate.y],
+            mode="markers+text" if not node.marker_only else "markers",
+            name=node.name,
+            text=[text],
+            textposition="top center",
+            marker={
+                "size": node.size,
+                "color": node.colour,
+                "symbol": node.symbol,
+                "line": {"color": node.colour, "width": 2},
+            },
+            hovertext=[text],
+            hoverinfo="text",
+        )
+    )
+
+    return fig
+
+
+def add_plot_nodes(fig: go.Figure, nodes: list[PlotNode]) -> go.Figure:
+    for node in nodes:
+        fig = add_plot_node(fig, node)
+
+    return fig
+
+
+from pathlib import Path
+
+from astronomy_types import (
+    Degrees,
 )
 
 from afmaths.afmath_types import GroundStation
@@ -21,9 +213,7 @@ from afmaths.physics.space.celestial_mechanics.celestial_mechanics import (
     orbital_radius_from_position_vector,
     vis_viva,
 )
-from afmaths.physics.space.celestial_mechanics.state_vector import state_vector_at_time
 from afmaths.physics.space.celestial_mechanics.time import (
-    orbital_period,
     time_since_periapsis_from_true_anomaly,
 )
 from afmaths.physics.space.engineering.astrodynamics.ground_track import (
@@ -42,17 +232,6 @@ from afmaths.physics.space.transformations import (
 )
 from afmaths.physics.space.type_conversion_helpers import (
     geographic_coordinates_from_coordinate2d,
-)
-from afmaths.visualisations.helpers import (
-    PlotNode,
-    add_plot_nodes,
-    figure_circle,
-    with_data_background_image,
-)
-from afmaths.visualisations.orbit_source import (
-    Orbit,
-    orbit_at_current_epoch,
-    orbit_elements,
 )
 
 EARTH_IMAGE_PATH = Path(__file__).with_name("Earth-hires.jpg")

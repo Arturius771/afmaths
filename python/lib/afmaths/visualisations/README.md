@@ -26,7 +26,7 @@ python lib/afmaths/visualisations/visualisation_launcher.py orbit-3d --centre SU
 
 ## Orbit data sources
 
-Orbit-based visualisations use a common orbit model and can be populated from one of three sources:
+The launcher resolves orbit inputs from one of three sources and passes the resolved data to each self-contained plot:
 
 - `tle` — fetches TLE data from Space-Track using one or more NORAD IDs.
 
@@ -609,3 +609,102 @@ python lib/afmaths/visualisations/visualisation_launcher.py control_room \
 | `two_body_2d`          | `two_body`                                |
 
 | `velocity_time`        | —                                         |
+
+
+## Architecture: PRY (Prefer Repetition Yourself)
+
+- `visualisation_launcher.py` is the only visualisation module that imports other visualisation modules. It owns command-line arguments, orbit source resolution, control-room composition, and dashboard HTML output.
+- Plot modules only import the AFMaths/astronomy domain library, Plotly, and Python/third-party dependencies needed for their own display. They do not import `base.py`, `helpers.py`, or one another.
+- Plot-specific geometrical conversions, display scales, and Plotly traces remain next to the plot they belong to. Some repeated plotting logic is intentional, allowing a wholly different system (such as Kerbal) to be added without changing a shared graphical base layer.
+- To add a new visualisation, create a standalone file with a `build_*_figure(...) -> go.Figure` entry point and register it in the launcher.
+- `base.py`, `helpers.py`, `orbit_source.py`, `dashboard.py`, and `control_room.py` have been removed as standalone modules. The launcher retains their orchestration responsibilities.
+
+## Shared types
+
+`visualisation_types.py` is the single source of truth for cross-visualisation
+configuration and data types (e.g. `PlotOrbital2DSettings`, `PlotNode`,
+`PlotPerifocalOrbitLine`, `Orbit`, and 3D plot settings). Import those types
+from this module. Plotting functions and calculations remain in their own
+visualisation modules; no generic plotting helper layer is required.
+
+
+## Arbitrary 3D origin spheres
+
+The Python API accepts a `PlotOriginConfig` in place of a Horizons target. Set
+`target=None` for a sphere with no Horizons ephemeris, and supply its physical
+radius, gravitational parameter, and plotting scale.
+
+```python
+from astronomy_types import Distance, GravitationalParameter, Scalar
+from afmaths.visualisations.visualisation_types import PlotOriginConfig
+from afmaths.visualisations.orbit_system_3d import build_3d_orbit_system_figure
+
+figure = build_3d_orbit_system_figure(
+    origin_body=PlotOriginConfig(
+        name="Kerbin",
+        target=None,
+        radius=Distance(Scalar(600_000)),
+        gravitational_parameter=GravitationalParameter(Scalar(3.5316e12)),
+        radius_scale=1.0,
+        distance_scale=100_000.0,
+    ),
+)
+figure.show()
+```
+
+A custom sphere can also be used with supplied `satellite_orbits` (orbital
+elements), propagated using the custom gravitational parameter. Horizons bodies
+require a Horizons-backed origin, and ITRF is currently Earth-only. The launcher
+CLI continues to resolve named Horizons targets; custom spheres use the Python API.
+
+## Kerbin orbit (3D)
+
+The launcher includes a Kerbin preset, with a 600,000 m radius and
+`mu = 3.5316e12 m³/s²`. This does not query Horizons or Space-Track.
+Pass orbital elements in metres/radians (semi-major axis is measured from
+Kerbin's centre, **not altitude**):
+
+```bash
+python -m afmaths.visualisations.visualisation_launcher kerbin \
+  --source elements \
+  --inclination 0.900590 \
+  --right-ascension-of-ascending-node 0.523599 \
+  --argument-of-periapsis 0.785398 \
+  --semi-major-axis 700000 \
+  --eccentricity 0.001 \
+  --true-anomaly 0 \
+  --orbits 1
+```
+
+An optional `kerbin.jpg` equirectangular texture may be placed beside
+`orbit_system_3d.py`. Without it, the visualisation shows an untextured sphere.
+Use `python -m` from a project environment where `afmaths` is importable;
+physical paths like `lib/afmaths/...` depend on the repository layout.
+`--reference-frame ITRF` is Earth-specific and is not valid for Kerbin.
+
+## Kerbin control room
+
+`kerbin` and `kerbin_control_room` open a six-panel dashboard (3D orbit,
+Kerbin-fixed ground track, ground-track epoch position, equatorial orbit
+projection, position components and velocity components). `kerbin_3d` remains
+3D-only.
+
+```bash
+python -m afmaths.visualisations.visualisation_launcher kerbin \
+  --source elements --inclination 0.900590 \
+  --right-ascension-of-ascending-node 0.523599 \
+  --argument-of-periapsis 0.785398 --semi-major-axis 700000 \
+  --eccentricity 0.001 --true-anomaly 0 \
+  --orbits 1 --current-orbits 1
+```
+
+The ground track uses stock KSP 1 Kerbin's sidereal rotation period
+(21,549.425 s) and µ=3.5316e12 m³/s². The prime meridian is assumed to align
+with the inertial +X direction at the supplied epoch. This is a relative
+Kerbin-fixed track, not an absolute KSP save-file longitude; synchronising to
+a game's longitude requires supplying its UT/initial body orientation. The
+red marker identifies the position at the supplied orbital-elements epoch,
+not necessarily the wall-clock current spacecraft location.
+
+Satellite 3D sphere radius defaults to 1% of the central body's radius. A
+custom `satellite_display_radius` still overrides it in Python.

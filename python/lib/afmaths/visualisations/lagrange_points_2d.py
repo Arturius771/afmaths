@@ -3,6 +3,17 @@ from __future__ import annotations
 import plotly.graph_objects as go
 from astronomy_types import Coordinate2D, Distance
 
+
+def translate_coordinate(
+    origin: Coordinate2D,
+    coordinate: Coordinate2D,
+) -> Coordinate2D:
+    return Coordinate2D(
+        origin.x + coordinate.x,
+        origin.y + coordinate.y,
+    )
+
+
 from afmaths.afmath_types import Mass
 from afmaths.operation import negate
 from afmaths.physics.space.celestial_mechanics.gravitation import (
@@ -10,7 +21,6 @@ from afmaths.physics.space.celestial_mechanics.gravitation import (
     lagrange_points,
     mass_parameter,
 )
-from afmaths.visualisations.base import translate_coordinate
 
 
 def build_lagrange_points_figure(

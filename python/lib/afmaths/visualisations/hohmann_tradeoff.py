@@ -19,6 +19,7 @@ from plotly.subplots import make_subplots
 
 from afmaths.constants import EARTH_MU, EARTH_RADIUS
 from afmaths.physics.space.celestial_mechanics.celestial_mechanics import (
+    EARTH_MU,
     orbit_altitude,
     orbit_radius,
     periapsis_radius,

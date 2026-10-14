@@ -1,19 +1,534 @@
 from __future__ import annotations
 
 import math
-from dataclasses import dataclass
-from itertools import cycle
+from dataclasses import replace
 
 import plotly.graph_objects as go
 from astronomy_types import (
+    Anomaly,
     Coordinate2D,
-    Coordinate3D,
     Distance,
+    EccentricAnomaly,
     OrbitalElements,
+    PositionVector,
     Radians,
     Scalar,
     Second,
     SemiMajorAxis,
+    TrueAnomaly,
+    Vector2D,
+    Vector3D,
+    Velocity,
+    VelocityVector,
+)
+
+from afmaths.geometry.geometry import circle_bounding_box, semi_minor_axis
+from afmaths.geometry.transformations import translate_ellipse
+from afmaths.physics.space.celestial_mechanics.nodes import (
+    perifocal_position_at_ascending_node,
+    perifocal_position_at_descending_node,
+)
+from afmaths.physics.space.celestial_mechanics.orbital_elements import (
+    apoapsis_true_anomaly,
+    periapsis_true_anomaly,
+)
+from afmaths.physics.space.celestial_mechanics.state_vector import (
+    perifocal_position_vector,
+)
+from afmaths.physics.space.celestial_mechanics.time import orbital_period
+from afmaths.physics.space.type_conversion_helpers import make_eccentric_anomaly
+from afmaths.visualisations.visualisation_types import (
+    OrbitingBody2D,
+    PlotNode,
+    PlotOrbital2DSettings,
+    PlotPerifocalOrbitLine,
+)
+
+
+def plot_min(settings: PlotOrbital2DSettings) -> Vector2D:
+    return Vector2D(x=settings.plot_min_x, y=settings.plot_min_y)
+
+
+def plot_max(settings: PlotOrbital2DSettings) -> Vector2D:
+    return Vector2D(x=settings.plot_max_x, y=settings.plot_max_y)
+
+
+def figure_circle(
+    figure: go.Figure,
+    coordinates: Coordinate2D,
+    radius: Distance,
+    fill_colour: str | None = "blue",
+    line_colour: str = "blue",
+) -> go.Figure:
+    bounding_box = circle_bounding_box(coordinates, radius)
+
+    return figure.add_shape(
+        type="circle",
+        x0=bounding_box[0].x,
+        y0=bounding_box[0].y,
+        x1=bounding_box[1].x,
+        y1=bounding_box[1].y,
+        fillcolor=fill_colour,
+        line_color=line_colour,
+    )
+
+
+def rotate_relative_coordinate(
+    coordinate: Coordinate2D,
+    angle: float,
+) -> Coordinate2D:
+    return Coordinate2D(
+        coordinate.x * math.cos(angle) - coordinate.y * math.sin(angle),
+        coordinate.x * math.sin(angle) + coordinate.y * math.cos(angle),
+    )
+
+
+def primary_focus_local_coordinate_for_elements(
+    elements: OrbitalElements,
+) -> Coordinate2D:
+    return Coordinate2D(
+        Scalar(elements.semi_major_axis * elements.eccentricity),
+        Scalar(0),
+    )
+
+
+def translate_coordinate(
+    origin: Coordinate2D,
+    coordinate: Coordinate2D,
+) -> Coordinate2D:
+    return Coordinate2D(
+        origin.x + coordinate.x,
+        origin.y + coordinate.y,
+    )
+
+
+def local_to_plot_coordinate_for_elements(
+    primary_focus_plot_coordinate: Coordinate2D,
+    elements: OrbitalElements,
+    local_coordinate: Coordinate2D,
+) -> Coordinate2D:
+    primary_focus = primary_focus_local_coordinate_for_elements(elements)
+
+    local_relative_to_primary_focus = Coordinate2D(
+        local_coordinate.x - primary_focus.x,
+        local_coordinate.y - primary_focus.y,
+    )
+
+    return translate_coordinate(
+        primary_focus_plot_coordinate,
+        rotate_relative_coordinate(
+            local_relative_to_primary_focus,
+            elements.argument_of_periapsis,
+        ),
+    )
+
+
+def coordinates_for_elements(
+    primary_focus_plot_coordinate: Coordinate2D,
+    elements: OrbitalElements,
+    E: EccentricAnomaly,
+) -> Coordinate2D:
+    local_coordinate = translate_ellipse(
+        Coordinate2D(Scalar(0), Scalar(0)),
+        elements.semi_major_axis,
+        semi_minor_axis(elements.semi_major_axis, elements.eccentricity),
+        E,
+    )
+
+    return local_to_plot_coordinate_for_elements(
+        primary_focus_plot_coordinate,
+        elements,
+        local_coordinate,
+    )
+
+
+def secondary_focus_local_coordinate_for_elements(
+    elements: OrbitalElements,
+) -> Coordinate2D:
+    return Coordinate2D(
+        Scalar(-elements.semi_major_axis * elements.eccentricity),
+        Scalar(0),
+    )
+
+
+def secondary_focus_coordinates_for_elements(
+    primary_focus_plot_coordinate: Coordinate2D,
+    elements: OrbitalElements,
+) -> Coordinate2D:
+    return local_to_plot_coordinate_for_elements(
+        primary_focus_plot_coordinate,
+        elements,
+        secondary_focus_local_coordinate_for_elements(elements),
+    )
+
+
+def figure_orbit_line(
+    figure: go.Figure,
+    coordinates: list[Coordinate2D],
+    name: str = "orbit",
+    colour: str = "grey",
+) -> go.Figure:
+    return figure.add_trace(
+        go.Scatter(
+            x=[coordinate.x for coordinate in coordinates],
+            y=[coordinate.y for coordinate in coordinates],
+            mode="lines",
+            name=name,
+            line={"color": colour},
+            showlegend=False,
+        )
+    )
+
+
+def add_perifocal_orbit_line(
+    fig: go.Figure,
+    primary_focus_plot_coordinate: Coordinate2D,
+    orbit_line: PlotPerifocalOrbitLine,
+    steps: int = 200,
+) -> go.Figure:
+    if steps < 2:
+        raise ValueError("steps must be at least 2")
+
+    angles = [
+        orbit_line.start_eccentric_anomaly
+        + (orbit_line.end_eccentric_anomaly - orbit_line.start_eccentric_anomaly)
+        * i
+        / (steps - 1)
+        for i in range(steps)
+    ]
+
+    coordinates = [
+        coordinates_for_elements(
+            primary_focus_plot_coordinate,
+            orbit_line.orbital_elements,
+            EccentricAnomaly(Anomaly(Radians(Scalar(angle)))),
+        )
+        for angle in angles
+    ]
+
+    figure_orbit_line(
+        fig,
+        coordinates,
+        orbit_line.name,
+        orbit_line.colour,
+    )
+
+    if orbit_line.show_secondary_focus:
+        figure_circle(
+            fig,
+            secondary_focus_coordinates_for_elements(
+                primary_focus_plot_coordinate,
+                orbit_line.orbital_elements,
+            ),
+            Distance(Scalar(0.1)),
+            "red",
+            "red",
+        )
+
+    return fig
+
+
+def central_body_radius_plot(
+    central_body_radius: float,
+    distance_scale: float,
+) -> Distance:
+    return Distance(Scalar(central_body_radius / distance_scale))
+
+
+def add_plot_centre(
+    figure: go.Figure,
+    coordinates: Coordinate2D,
+    radius: Distance = Distance(Scalar(1)),
+    fill_colour: str = "red",
+    line_colour: str = "red",
+) -> go.Figure:
+    return figure_circle(
+        figure,
+        coordinates,
+        radius,
+        fill_colour,
+        line_colour,
+    )
+
+
+def add_plot_node(fig: go.Figure, node: PlotNode) -> go.Figure:
+    text = node.text or node.name
+
+    fig.add_trace(
+        go.Scatter(
+            x=[node.coordinate.x],
+            y=[node.coordinate.y],
+            mode="markers+text" if not node.marker_only else "markers",
+            name=node.name,
+            text=[text],
+            textposition="top center",
+            marker={
+                "size": node.size,
+                "color": node.colour,
+                "symbol": node.symbol,
+                "line": {"color": node.colour, "width": 2},
+            },
+            hovertext=[text],
+            hoverinfo="text",
+        )
+    )
+
+    return fig
+
+
+def add_plot_nodes(fig: go.Figure, nodes: list[PlotNode]) -> go.Figure:
+    for node in nodes:
+        fig = add_plot_node(fig, node)
+
+    return fig
+
+
+def scale_distance_to_distance(
+    distance: Distance,
+    distance_scale: float,
+) -> Distance:
+    """Both distance and scale must be in the same unit."""
+    return Distance(Scalar(distance * distance_scale))
+
+
+def plot_origin() -> Coordinate2D:
+    return Coordinate2D(Scalar(0), Scalar(0))
+
+
+def figure_planetary_body(
+    figure: go.Figure,
+    coordinates: Coordinate2D,
+    radius: Distance,
+    text: str = "Planet",
+    text_colour: str = "Black",
+    fill_colour: str = "blue",
+    line_colour: str = "blue",
+    moveable: bool = False,
+) -> go.Figure:
+    if moveable:
+        return figure.add_trace(
+            go.Scatter(
+                x=[coordinates.x],
+                y=[coordinates.y],
+                mode="markers+text",
+                text=[text],
+                textposition="top center",
+                marker={
+                    "size": radius + 5,
+                    "color": fill_colour,
+                    "line": {"color": line_colour, "width": 2},
+                },
+                hovertext=[text],
+                hoverinfo="text",
+            )
+        )
+
+    return figure_circle(
+        figure,
+        coordinates,
+        radius,
+        fill_colour,
+        line_colour,
+    ).add_annotation(
+        x=coordinates.x,
+        y=coordinates.y - radius - 1,
+        text=text,
+        showarrow=False,
+        font={"color": text_colour},
+    )
+
+
+def figure_layout(
+    figure: go.Figure,
+    width_px: float,
+    height_px: float,
+    plot_start: Vector2D,
+    plot_end: Vector2D,
+    title: str,
+    zeroline: bool = False,
+) -> go.Figure:
+    return (
+        figure.update_layout(width=width_px, height=height_px, title=title)
+        .update_xaxes(range=[plot_start.x, plot_end.x], zeroline=zeroline)
+        .update_yaxes(
+            range=[plot_start.y, plot_end.y],
+            scaleanchor="x",
+            scaleratio=1,
+        )
+    )
+
+
+def figure_slider(figure: go.Figure, slider_steps: list[dict]) -> go.Figure:
+    return figure.update_layout(sliders=[{"steps": slider_steps}])
+
+
+def direction_vector_length(settings: PlotOrbital2DSettings) -> float:
+    p_min = plot_min(settings)
+    p_max = plot_max(settings)
+
+    plot_range_x = p_max.x - p_min.x
+    plot_range_y = p_max.y - p_min.y
+
+    return min(plot_range_x, plot_range_y) * 0.06
+
+
+def vector_line(
+    start: Coordinate2D,
+    direction: Vector3D,
+    settings: PlotOrbital2DSettings,
+) -> tuple[list[float], list[float]]:
+    length = direction_vector_length(settings)
+
+    return (
+        [start.x, start.x + direction.x * length],
+        [start.y, start.y + direction.y * length],
+    )
+
+
+def distance_to_scale_distance(
+    distance: Distance,
+    distance_scale: float,
+) -> Distance:
+    """Both distance and scale must be in the same unit."""
+    return Distance(Scalar(distance / distance_scale))
+
+
+def elements_scaled_to_plot(
+    elements: OrbitalElements,
+    scale: float,
+) -> OrbitalElements:
+    return replace(
+        elements,
+        semi_major_axis=SemiMajorAxis(
+            distance_to_scale_distance(elements.semi_major_axis, scale)
+        ),
+    )
+
+
+def scale_orbital_elements_for_plot(
+    orbital_elements: OrbitalElements,
+    distance_scale: Distance,
+) -> OrbitalElements:
+    return elements_scaled_to_plot(orbital_elements, float(distance_scale))
+
+
+def position_to_plot_coordinate(
+    primary_focus_plot_coordinate: Coordinate2D,
+    elements: OrbitalElements,
+    position: PositionVector,
+) -> Coordinate2D:
+    return translate_coordinate(
+        primary_focus_plot_coordinate,
+        rotate_relative_coordinate(
+            Coordinate2D(Scalar(position.x), Scalar(position.y)),
+            elements.argument_of_periapsis,
+        ),
+    )
+
+
+def plot_coordinate_for_true_anomaly(
+    primary_focus_plot_coordinate: Coordinate2D,
+    elements: OrbitalElements,
+    true_anomaly_value: TrueAnomaly,
+) -> Coordinate2D:
+    return position_to_plot_coordinate(
+        primary_focus_plot_coordinate,
+        elements,
+        perifocal_position_vector(replace(elements, true_anomaly=true_anomaly_value)),
+    )
+
+
+def periapsis_plot_coordinate(
+    primary_focus_plot_coordinate: Coordinate2D,
+    elements: OrbitalElements,
+) -> Coordinate2D:
+    return plot_coordinate_for_true_anomaly(
+        primary_focus_plot_coordinate,
+        elements,
+        periapsis_true_anomaly(),
+    )
+
+
+def tangent_vector_for_plot(
+    primary_focus_plot_coordinate: Coordinate2D,
+    plot_elements: OrbitalElements,
+    E: EccentricAnomaly,
+) -> VelocityVector:
+    delta = 0.001
+
+    current = coordinates_for_elements(
+        primary_focus_plot_coordinate,
+        plot_elements,
+        E,
+    )
+
+    next_point = coordinates_for_elements(
+        primary_focus_plot_coordinate,
+        plot_elements,
+        make_eccentric_anomaly(float(E) + delta),
+    )
+
+    return VelocityVector(
+        Velocity(Scalar(next_point.x - current.x)),
+        Velocity(Scalar(next_point.y - current.y)),
+        Velocity(Scalar(0)),
+    )
+
+
+def ascending_node_plot_coordinate(
+    primary_focus_plot_coordinate: Coordinate2D,
+    elements: OrbitalElements,
+) -> Coordinate2D:
+    return position_to_plot_coordinate(
+        primary_focus_plot_coordinate,
+        elements,
+        perifocal_position_at_ascending_node(elements),
+    )
+
+
+def descending_node_plot_coordinate(
+    primary_focus_plot_coordinate: Coordinate2D,
+    elements: OrbitalElements,
+) -> Coordinate2D:
+    return position_to_plot_coordinate(
+        primary_focus_plot_coordinate,
+        elements,
+        perifocal_position_at_descending_node(elements),
+    )
+
+
+def apoapsis_plot_coordinate(
+    primary_focus_plot_coordinate: Coordinate2D,
+    elements: OrbitalElements,
+) -> Coordinate2D:
+    return plot_coordinate_for_true_anomaly(
+        primary_focus_plot_coordinate,
+        elements,
+        apoapsis_true_anomaly(),
+    )
+
+
+def secondary_focus_plot_coordinate(
+    primary_focus_plot_coordinate: Coordinate2D,
+    elements: OrbitalElements,
+) -> Coordinate2D:
+    distance_between_foci = 2 * elements.semi_major_axis * elements.eccentricity
+
+    return translate_coordinate(
+        primary_focus_plot_coordinate,
+        rotate_relative_coordinate(
+            Coordinate2D(Scalar(-distance_between_foci), Scalar(0)),
+            elements.argument_of_periapsis,
+        ),
+    )
+
+
+from itertools import cycle
+
+from astronomy_types import (
+    Coordinate3D,
+    Distance,
+    Scalar,
     StateVector,
 )
 
@@ -31,7 +546,6 @@ from afmaths.physics.space.celestial_mechanics.orbital_elements import (
     eccentric_anomaly_at_time,
     true_anomaly_from_eccentric_anomaly,
 )
-from afmaths.physics.space.celestial_mechanics.time import orbital_period
 from afmaths.physics.space.engineering.astrodynamics.orbital_directions import (
     anti_normal,
     anti_radial,
@@ -39,33 +553,6 @@ from afmaths.physics.space.engineering.astrodynamics.orbital_directions import (
     prograde,
     radial,
     retrograde,
-)
-from afmaths.visualisations.base import (
-    apoapsis_plot_coordinate,
-    ascending_node_plot_coordinate,
-    coordinates_for_elements,
-    descending_node_plot_coordinate,
-    periapsis_plot_coordinate,
-    scale_orbital_elements_for_plot,
-    secondary_focus_plot_coordinate,
-    tangent_vector_for_plot,
-)
-from afmaths.visualisations.helpers import (
-    PlotNode,
-    PlotOrbital2DSettings,
-    PlotPerifocalOrbitLine,
-    add_perifocal_orbit_line,
-    add_plot_centre,
-    add_plot_nodes,
-    central_body_radius_plot,
-    figure_layout,
-    figure_planetary_body,
-    figure_slider,
-    plot_max,
-    plot_min,
-    plot_origin,
-    scale_distance_to_distance,
-    vector_line,
 )
 
 EARTH_RADIUS_M = 6_371.0 * 1000
@@ -94,16 +581,6 @@ SATELLITE_COLOURS = (
     "#FF97FF",
     "#FECB52",
 )
-
-
-@dataclass(frozen=True)
-class OrbitingBody2D:
-    name: str
-    radius_m: float
-    mass_kg: float
-    elements: OrbitalElements
-    is_satellite: bool = False
-    colour: str | None = None
 
 
 def satellite_orbiting_body(

@@ -2,37 +2,397 @@ from __future__ import annotations
 
 import datetime
 import math
-from dataclasses import dataclass
+from dataclasses import replace
 from pathlib import Path
-from typing import Literal, cast
 
 import plotly.graph_objects as go
-from astronomy_types import Distance, GravitationalParameter, Scalar, Second
-from PIL import Image
+from astronomy_types import (
+    Distance,
+    Epoch,
+    GravitationalParameter,
+    OrbitalElements,
+    PositionVector,
+    Scalar,
+    Second,
+    Vector3D,
+)
+from plotly.basedatatypes import BaseTraceType
 
 from afmaths.constants import EARTH_MU, EARTH_RADIUS, TWO_PI
+from afmaths.operation import interval_points
+from afmaths.physics.space.astronomy.time_functions import (
+    julian_date_delta,
+    julian_date_now,
+    seconds_from_julian_date_delta,
+)
+from afmaths.physics.space.celestial_mechanics.celestial_mechanics import EARTH_MU
+from afmaths.physics.space.celestial_mechanics.orbital_elements import (
+    orbital_elements_from_state_vectors,
+)
+from afmaths.physics.space.celestial_mechanics.state_vector import state_vector_at_time
+from afmaths.physics.space.celestial_mechanics.time import orbital_period
+from afmaths.physics.space.celestial_mechanics.utils import generate_all_orbit_positions
+from afmaths.physics.space.engineering.two_line_elements import (
+    orbital_elements_from_tle,
+)
+from afmaths.physics.space.external.horizons_api import (
+    HorizonsCommandTarget,
+    get_object_state_vectors_from_horizon,
+)
+from afmaths.physics.space.type_conversion_helpers import (
+    fulldate_from_python_datetime,
+    make_vector3d,
+)
+from afmaths.visualisations.visualisation_types import (
+    BodyPlotConfig,
+    Orbit,
+    OrbitPlotSettings,
+    PlotCoordinateSystem,
+    PlotOriginConfig,
+    ReferenceFrame,
+)
+
+
+def orbit_elements(orbit: Orbit) -> OrbitalElements:
+    if isinstance(orbit.description, OrbitalElements):
+        return orbit.description
+
+    return orbital_elements_from_tle(orbit.description)
+
+
+def orbit_at_current_epoch(
+    orbit: Orbit,
+    gravitational_parameter: GravitationalParameter = EARTH_MU,
+) -> Orbit:
+    return replace(
+        orbit,
+        epoch=Epoch(julian_date_now()),
+        description=orbital_elements_from_state_vectors(
+            state_vector_at_time(
+                orbit_elements(orbit),
+                seconds_from_julian_date_delta(julian_date_delta(orbit.epoch)),
+                gravitational_parameter,
+            ),
+            mu=gravitational_parameter,
+        ),
+    )
+
+
+def make_3d_orbit_figure(
+    traces: list,
+    title: str,
+    distance_scale: float,
+) -> go.Figure:
+    fig = go.Figure(data=traces)
+
+    fig.update_layout(
+        title=title,
+        scene={
+            "xaxis_title": f"X ({distance_scale:,} m units)",
+            "yaxis_title": f"Y ({distance_scale:,} m units)",
+            "zaxis_title": f"Z ({distance_scale:,} m units)",
+            "aspectmode": "data",
+        },
+    )
+
+    return fig
+
+
+def plot_sphere_surface(
+    radius: Distance,
+    centre: PositionVector | None = None,
+    resolution: int = 50,
+) -> Vector3D:
+    u = interval_points(0, TWO_PI, resolution)
+    v = interval_points(0, math.pi, resolution)
+
+    centre_x = 0 if centre is None else centre.x
+    centre_y = 0 if centre is None else centre.y
+    centre_z = 0 if centre is None else centre.z
+
+    sphere_x = [
+        [centre_x + radius * math.cos(u_i) * math.sin(v_j) for v_j in v] for u_i in u
+    ]
+
+    sphere_y = [
+        [centre_y + radius * math.sin(u_i) * math.sin(v_j) for v_j in v] for u_i in u
+    ]
+
+    sphere_z = [[centre_z + radius * math.cos(v_j) for v_j in v] for _ in u]
+
+    return make_vector3d(sphere_x, sphere_y, sphere_z)
+
+
+def scaled_radius(
+    radius: Distance,
+    radius_scale: float,
+    distance_scale: float,
+) -> Distance:
+    return Distance(Scalar((radius * radius_scale) / distance_scale))
+
+
+def add_body_surface(
+    name: str,
+    radius: Distance,
+    radius_scale: float,
+    distance_scale: float,
+    position: PositionVector | None = None,
+    opacity: float = 0.9,
+) -> go.Surface:
+    surface = plot_sphere_surface(
+        scaled_radius(radius, radius_scale, distance_scale),
+        position,
+    )
+
+    return go.Surface(
+        x=surface.x,
+        y=surface.y,
+        z=surface.z,
+        name=name,
+        opacity=opacity,
+        showscale=False,
+    )
+
+
+def distance_to_scale_distance(
+    distance: Distance,
+    distance_scale: float,
+) -> Distance:
+    """Both distance and scale must be in the same unit."""
+    return Distance(Scalar(distance / distance_scale))
+
+
+def scale_position(position: PositionVector, distance_scale: float) -> Vector3D:
+    return make_vector3d(
+        distance_to_scale_distance(Distance(position.x), distance_scale),
+        distance_to_scale_distance(Distance(position.y), distance_scale),
+        distance_to_scale_distance(Distance(position.z), distance_scale),
+    )
+
+
+def add_itrf_orbit_trace(
+    name: str,
+    itrf_positions: list[PositionVector],
+    distance_scale: float,
+) -> go.Scatter3d:
+    x = []
+    y = []
+    z = []
+
+    for position in itrf_positions:
+        scaled = scale_position(position, distance_scale)
+        x.append(scaled.x)
+        y.append(scaled.y)
+        z.append(scaled.z)
+
+    return go.Scatter3d(
+        x=x,
+        y=y,
+        z=z,
+        mode="lines",
+        name=name,
+    )
+
+
+def build_3d_itrf_orbit_figure(
+    settings: OrbitPlotSettings,
+    itrf_positions: list[list[PositionVector]],
+    title: str = "ITRS orbit view",
+    central_body_name: str = "Earth",
+    central_body_radius: Distance = EARTH_RADIUS,
+    central_body_radius_scale: float = 5.0,
+    orbit_name: list[str] | None = None,
+    central_body_opacity: float = 0.7,
+) -> go.Figure:
+    orbit_names = orbit_name or ["orbit"] * len(itrf_positions)
+    if len(orbit_names) != len(itrf_positions):
+        raise ValueError("orbit_name must contain one name per ITRF position set.")
+
+    traces: list[BaseTraceType] = [
+        add_body_surface(
+            central_body_name,
+            central_body_radius,
+            central_body_radius_scale,
+            settings.distance_scale,
+            opacity=central_body_opacity,
+        ),
+    ]
+
+    for index, positions in enumerate(itrf_positions):
+        traces.append(
+            add_itrf_orbit_trace(
+                f"SAT: {orbit_names[index]} ITRS track",
+                positions,
+                settings.distance_scale,
+            )
+        )
+
+    return make_3d_orbit_figure(
+        traces,
+        title,
+        settings.distance_scale,
+    )
+
+
+def add_orbit_line_trace(
+    name: str,
+    orbital_elements: OrbitalElements,
+    distance_scale: float,
+    orbit_points: int,
+    gravitational_parameter: GravitationalParameter = EARTH_MU,
+) -> go.Scatter3d:
+    x = []
+    y = []
+    z = []
+
+    for position in generate_all_orbit_positions(
+        orbital_elements,
+        orbit_points,
+        gravitational_parameter,
+    ):
+        scaled = scale_position(position, distance_scale)
+
+        x.append(scaled.x)
+        y.append(scaled.y)
+        z.append(scaled.z)
+
+    return go.Scatter3d(
+        x=x,
+        y=y,
+        z=z,
+        mode="lines",
+        name=f"{name} orbit",
+    )
+
+
+def add_orbiting_body_to_traces(
+    traces: list,
+    body: BodyPlotConfig,
+    settings: OrbitPlotSettings,
+    opacity: float = 0.9,
+) -> None:
+
+    if isinstance(body.target_object, HorizonsCommandTarget):
+
+        if settings.centre is None:
+            raise ValueError("Horizons bodies require a Horizons-backed origin.")
+        horizon_state_vectors = get_object_state_vectors_from_horizon(
+            target=HorizonsCommandTarget(body.target_object),
+            centre=settings.centre,
+            start_time=fulldate_from_python_datetime(settings.start_time),
+            stop_time=fulldate_from_python_datetime(settings.stop_time),
+        )
+
+        if len(horizon_state_vectors) < 1:
+            raise ValueError(f"No Horizons state vectors returned for {body.name}")
+
+        orbital_elements = orbital_elements_from_state_vectors(
+            horizon_state_vectors[0],
+            mu=settings.gravitational_parameter,
+        )
+    elif isinstance(body.target_object, OrbitalElements):
+        orbital_elements = body.target_object
+    else:
+        print(body.target_object)
+        raise TypeError("Orbital elements ain't right")
+
+    model_current_state = state_vector_at_time(
+        orbital_elements,
+        Second(Scalar(0)),
+        settings.gravitational_parameter,
+    )
+
+    traces.append(
+        add_orbit_line_trace(
+            body.name,
+            orbital_elements,
+            settings.distance_scale,
+            settings.orbit_points,
+            settings.gravitational_parameter,
+        )
+    )
+
+    traces.append(
+        add_body_surface(
+            body.name,
+            body.radius,
+            body.radius_scale,
+            settings.distance_scale,
+            position=scale_position(
+                model_current_state.position,
+                settings.distance_scale,
+            ),
+            opacity=opacity,
+        )
+    )
+
+    if not settings.add_prediction_to_orbit:
+        return
+
+    model_prediction_state = state_vector_at_time(
+        orbital_elements,
+        settings.time_offset_seconds,
+        settings.gravitational_parameter,
+    )
+
+    traces.append(
+        add_body_surface(
+            body.name + " prediction",
+            body.radius,
+            body.radius_scale,
+            settings.distance_scale,
+            position=scale_position(
+                model_prediction_state.position,
+                settings.distance_scale,
+            ),
+            opacity=opacity,
+        )
+    )
+
+
+def build_3d_orbit_figure(
+    settings: OrbitPlotSettings,
+    title: str,
+    central_body_name: str,
+    central_body_radius: Distance,
+    central_body_radius_scale: float,
+    orbiting_bodies: list[BodyPlotConfig],
+    central_body_opacity: float = 0.7,
+) -> go.Figure:
+
+    traces = [
+        add_body_surface(
+            central_body_name,
+            central_body_radius,
+            central_body_radius_scale,
+            settings.distance_scale,
+            opacity=central_body_opacity,
+        )
+    ]
+
+    for body in orbiting_bodies:
+        add_orbiting_body_to_traces(traces, body, settings)
+
+    return make_3d_orbit_figure(
+        traces,
+        title,
+        settings.distance_scale,
+    )
+
+
+from typing import cast
+
+from PIL import Image
+
+from afmaths.constants import EARTH_MU, EARTH_RADIUS
 from afmaths.physics.space.celestial_mechanics.state_vector import (
     position_vector_at_time,
 )
-from afmaths.physics.space.celestial_mechanics.time import orbital_period
 from afmaths.physics.space.engineering.astrodynamics.utils import (
     orbit_description_from_elements,
 )
-from afmaths.physics.space.external.horizons_api import HorizonsCommandTarget
 from afmaths.physics.space.transformations import itrf_positions_from_gcrf_position
-from afmaths.visualisations.base import (
-    BodyPlotConfig,
-    OrbitPlotSettings,
-    build_3d_itrf_orbit_figure,
-    build_3d_orbit_figure,
-)
-from afmaths.visualisations.orbit_source import (
-    Orbit,
-    orbit_at_current_epoch,
-    orbit_elements,
-)
 
-ReferenceFrame = Literal["ICRF", "GCRF", "ITRF"]
 EARTH_DISTANCE_SCALE = 1_000.0
 SOLAR_DISTANCE_SCALE = 1_000_000_000.0
 EARTH_BODY_RADIUS_SCALE = 1.0
@@ -43,16 +403,18 @@ SATELLITE_DISPLAY_RADIUS = Distance(Scalar(200_000.0))
 EARTH_IMAGE_PATH = Path(__file__).with_name("Earth-hires.jpg")
 
 
-def _add_textured_earth(
+def _add_textured_body(
     figure: go.Figure,
     *,
+    name: str,
+    radius: Distance,
     distance_scale: float,
     body_radius_scale: float,
-    image_path: Path = EARTH_IMAGE_PATH,
+    image_path: Path,
 ) -> go.Figure:
-    """Replace the generic Earth surface with the existing Earth texture."""
+    """Replace the named sphere with an equirectangular texture."""
     figure.data = tuple(
-        trace for trace in figure.data if getattr(trace, "name", None) != "Earth"
+        trace for trace in figure.data if getattr(trace, "name", None) != name
     )
     image = (
         Image.open(image_path)
@@ -74,16 +436,16 @@ def _add_textured_earth(
         ]
         for index in range(colour_count)
     ]
-    earth_radius = float(EARTH_RADIUS) * body_radius_scale / distance_scale
+    body_radius = float(radius) * body_radius_scale / distance_scale
     longitudes = [-math.pi + TWO_PI * index / 359 for index in range(360)]
     latitudes = [math.pi / 2 - math.pi * index / 180 for index in range(181)]
     x, y, z = [], [], []
     for latitude in latitudes:
         x_row, y_row, z_row = [], [], []
         for longitude in longitudes:
-            x_row.append(earth_radius * math.cos(latitude) * math.cos(longitude))
-            y_row.append(earth_radius * math.cos(latitude) * math.sin(longitude))
-            z_row.append(earth_radius * math.sin(latitude))
+            x_row.append(body_radius * math.cos(latitude) * math.cos(longitude))
+            y_row.append(body_radius * math.cos(latitude) * math.sin(longitude))
+            z_row.append(body_radius * math.sin(latitude))
         x.append(x_row)
         y.append(y_row)
         z.append(z_row)
@@ -97,7 +459,7 @@ def _add_textured_earth(
             cmin=0,
             cmax=max(colour_count - 1, 1),
             showscale=False,
-            name="Earth",
+            name=name,
             showlegend=False,
             hoverinfo="skip",
             lighting={
@@ -111,26 +473,6 @@ def _add_textured_earth(
         )
     )
     return figure
-
-
-@dataclass(frozen=True)
-class PlotOriginConfig:
-    name: str
-    target: HorizonsCommandTarget
-    radius: Distance
-    gravitational_parameter: GravitationalParameter
-    radius_scale: float
-    distance_scale: float
-    opacity: float = 0.7
-
-
-@dataclass(frozen=True)
-class PlotCoordinateSystem:
-    """The coordinate-system properties the visualiser actually implements."""
-
-    name: ReferenceFrame
-    axes: str
-    is_inertial: bool
 
 
 ICRF_COORDINATE_SYSTEM = PlotCoordinateSystem(
@@ -148,7 +490,7 @@ ITRF_COORDINATE_SYSTEM = PlotCoordinateSystem(
 def _coordinate_system_for(
     *,
     reference_frame: ReferenceFrame,
-    origin: HorizonsCommandTarget,
+    origin: HorizonsCommandTarget | None,
 ) -> PlotCoordinateSystem:
     """Return the implemented coordinate system for a frame/origin combination.
     The current inertial Horizons path uses ICRF-aligned axes. Translating its
@@ -276,14 +618,14 @@ def _itrf_positions(orbits: list[Orbit], track_for_orbits: float) -> list[list]:
 
 def build_3d_orbit_system_figure(
     *,
-    origin_body: HorizonsCommandTarget = HorizonsCommandTarget.EARTH,
+    origin_body: HorizonsCommandTarget | PlotOriginConfig = HorizonsCommandTarget.EARTH,
     horizons_bodies: list[HorizonsCommandTarget] | None = None,
     satellite_orbits: list[Orbit] | None = None,
     reference_frame: ReferenceFrame = "ICRF",
     distance_scale: float | None = None,
     body_radius_scale: float | None = None,
     orbit_points: int = ORBIT_POINTS,
-    satellite_display_radius: Distance = SATELLITE_DISPLAY_RADIUS,
+    satellite_display_radius: Distance | None = None,
     track_for_orbits: float = 3.0,
 ) -> go.Figure:
     """Build a 3D plot with an explicit origin, axis system, and motion type.
@@ -294,20 +636,34 @@ def build_3d_orbit_system_figure(
     """
     if reference_frame not in {"ICRF", "GCRF", "ITRF"}:
         raise ValueError("reference_frame must be ICRF, GCRF, or ITRF.")
-    try:
-        central = PLOT_ORIGINS[origin_body]
-    except KeyError as error:
-        raise ValueError(
-            f"{origin_body.name} is not a supported plot origin. Supported "
-            f"origins: {', '.join(target.name for target in PLOT_ORIGINS)}."
-        ) from error
+    if isinstance(origin_body, PlotOriginConfig):
+        central = origin_body
+    else:
+        try:
+            central = PLOT_ORIGINS[origin_body]
+        except KeyError as error:
+            raise ValueError(
+                f"{origin_body.name} is not a supported plot origin. Supported "
+                f"origins: {', '.join(target.name for target in PLOT_ORIGINS)}."
+            ) from error
     coordinate_system = _coordinate_system_for(
         reference_frame=reference_frame,
-        origin=origin_body,
+        origin=central.target,
     )
     selected_bodies = horizons_bodies or []
+    if central.target is None and selected_bodies:
+        raise ValueError(
+            "Horizons bodies require an origin with a Horizons target; "
+            "a custom sphere has no Horizons ephemeris reference."
+        )
+    # Custom simulation epochs (e.g. KSP UT) are not wall-clock Julian dates.
     current_satellites = [
-        orbit_at_current_epoch(orbit) for orbit in satellite_orbits or []
+        (
+            orbit_at_current_epoch(orbit, central.gravitational_parameter)
+            if central.target is not None
+            else orbit
+        )
+        for orbit in satellite_orbits or []
     ]
     if coordinate_system.name == "ITRF":
         if selected_bodies:
@@ -339,10 +695,13 @@ def build_3d_orbit_system_figure(
             orbit_name=[orbit.name for orbit in current_satellites],
             central_body_opacity=central.opacity,
         )
-        return _add_textured_earth(
+        return _add_textured_body(
             figure,
+            name=central.name,
+            radius=central.radius,
             distance_scale=settings.distance_scale,
             body_radius_scale=body_radius_scale or central.radius_scale,
+            image_path=central.texture_path or EARTH_IMAGE_PATH,
         )
     # Horizons state vectors and supplied orbital elements use the implemented
     # ICRF-aligned inertial path, translated to the selected origin.
@@ -366,10 +725,13 @@ def build_3d_orbit_system_figure(
         for target in selected_bodies
     ]
     bodies.extend(
-        _satellite_bodies(current_satellites, satellite_display_radius, radius_scale)
+        _satellite_bodies(
+            current_satellites,
+            satellite_display_radius or Distance(Scalar(float(central.radius) * 0.01)),
+            radius_scale,
+        )
     )
-    if not bodies:
-        raise ValueError("Select at least one Horizons body or satellite orbit.")
+    # A standalone sphere is also a useful visualisation.
     title = _orbit_system_title(
         origin=central,
         coordinate_system=coordinate_system,
@@ -379,7 +741,7 @@ def build_3d_orbit_system_figure(
             f" | Target: {current_satellites[0].name}"
             f"<br>{orbit_description_from_elements(orbit_elements(current_satellites[0]))}"
         )
-    return build_3d_orbit_figure(
+    figure = build_3d_orbit_figure(
         settings=settings,
         title=title,
         central_body_name=central.name,
@@ -388,3 +750,13 @@ def build_3d_orbit_system_figure(
         central_body_opacity=central.opacity,
         orbiting_bodies=bodies,
     )
+    if central.texture_path is not None and central.texture_path.is_file():
+        return _add_textured_body(
+            figure,
+            name=central.name,
+            radius=central.radius,
+            distance_scale=settings.distance_scale,
+            body_radius_scale=body_radius_scale or central.radius_scale,
+            image_path=central.texture_path,
+        )
+    return figure

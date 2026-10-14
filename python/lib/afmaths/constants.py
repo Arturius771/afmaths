@@ -1,4 +1,5 @@
 import math
+from pathlib import Path
 
 from astronomy_types import (
     Acceleration,
@@ -137,3 +138,7 @@ ARIANE_6_FM1_UPPER = 60235
 TERRA_SAR = 31698
 JAMES_WEBB = 50463
 HUBBLE = 20580
+
+# region Visualisation
+EARTH_IMAGE_PATH = Path(__file__).with_name("Earth-hires.jpg")
+KERBIN_IMAGE_PATH = Path(__file__).with_name("kerbin.jpg")

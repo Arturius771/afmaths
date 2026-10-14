@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 import argparse
-from collections.abc import Callable
-from dataclasses import dataclass, replace
+import datetime
+from dataclasses import replace
 from pathlib import Path
 
 import plotly.graph_objects as go
@@ -10,15 +10,239 @@ from astronomy_types import (
     Anomaly,
     ArgumentOfPeriapsis,
     Distance,
-    Eccentricity,
-    Inclination,
+    Epoch,
+    GravitationalParameter,
     OrbitalElements,
     Radians,
-    Ratio,
-    RightAscension,
     Scalar,
     SemiMajorAxis,
     TrueAnomaly,
+)
+
+from afmaths.constants import EARTH_MU
+from afmaths.physics.space.astronomy.time_functions import julian_date_now
+from afmaths.physics.space.celestial_mechanics.celestial_mechanics import EARTH_MU
+from afmaths.physics.space.celestial_mechanics.orbital_elements import (
+    orbital_elements_from_state_vectors,
+)
+from afmaths.physics.space.celestial_mechanics.time import orbital_period
+from afmaths.physics.space.engineering.astrodynamics.ground_track import orbits_per_day
+from afmaths.physics.space.engineering.two_line_elements import (
+    orbital_elements_from_tle,
+    parse_julian_date,
+    parse_norad_id,
+)
+from afmaths.physics.space.external.horizons_api import (
+    HorizonsCommandTarget,
+    get_object_state_vectors_from_horizon,
+)
+from afmaths.physics.space.external.space_track_api import (
+    get_tle_from_norad_id,
+    refresh_tle_cache,
+)
+from afmaths.physics.space.type_conversion_helpers import fulldate_from_python_datetime
+from afmaths.visualisations.visualisation_types import (
+    Orbit,
+    OrbitSource,
+    PlotOptions,
+    PlotOrbital2DSettings,
+    PlotOriginConfig,
+)
+
+
+def parse_orbit_source(value: str) -> OrbitSource:
+    normalised = value.strip().lower().replace("-", "_")
+
+    aliases = {
+        "tle": OrbitSource.TLE,
+        "horizon": OrbitSource.HORIZONS,
+        "horizons": OrbitSource.HORIZONS,
+        "element": OrbitSource.ELEMENTS,
+        "elements": OrbitSource.ELEMENTS,
+        "custom": OrbitSource.ELEMENTS,
+        "orbital_elements": OrbitSource.ELEMENTS,
+    }
+
+    try:
+        return aliases[normalised]
+    except KeyError as error:
+        available = "tle, horizon, elements"
+        raise argparse.ArgumentTypeError(
+            f"Unknown orbit source '{value}'. Expected one of: {available}."
+        ) from error
+
+
+def orbit_from_tle(tle: str) -> Orbit:
+    return Orbit(
+        name=f"{parse_norad_id(tle)}",
+        epoch=Epoch(parse_julian_date(tle)),
+        description=tle,
+    )
+
+
+def orbit_from_elements(
+    elements: OrbitalElements,
+    name: str = "Custom orbit",
+    epoch: Epoch | None = None,
+) -> Orbit:
+    return Orbit(
+        name=name,
+        epoch=epoch or Epoch(julian_date_now()),
+        description=elements,
+    )
+
+
+def orbit_from_horizons(
+    target: HorizonsCommandTarget,
+    centre: HorizonsCommandTarget = HorizonsCommandTarget.EARTH,
+    gravitational_parameter: GravitationalParameter = EARTH_MU,
+) -> Orbit:
+    start_time = datetime.datetime.now()
+    stop_time = start_time + datetime.timedelta(minutes=1)
+
+    state_vectors = get_object_state_vectors_from_horizon(
+        target=target,
+        centre=centre,
+        start_time=fulldate_from_python_datetime(start_time),
+        stop_time=fulldate_from_python_datetime(stop_time),
+    )
+
+    if not state_vectors:
+        raise ValueError(f"No Horizons state vectors returned for {target.name}.")
+
+    return Orbit(
+        name=target.name.title().replace("_", " "),
+        epoch=Epoch(julian_date_now()),
+        description=orbital_elements_from_state_vectors(
+            state_vectors[0],
+            mu=gravitational_parameter,
+        ),
+    )
+
+
+def parse_horizons_target(value: str) -> HorizonsCommandTarget:
+    normalised = value.strip().lower().replace("-", "_").replace(" ", "_")
+
+    for target in HorizonsCommandTarget:
+        if target.name.lower() == normalised:
+            return target
+
+        if str(target.value).lower() == normalised:
+            return target
+
+    available = ", ".join(target.name.lower() for target in HorizonsCommandTarget)
+    raise ValueError(
+        f"Unknown Horizons target '{value}'. Available targets: {available}"
+    )
+
+
+def resolve_orbits(
+    source: OrbitSource,
+    norad_ids: list[int] | None = None,
+    horizons_targets: list[str] | None = None,
+    elements: OrbitalElements | None = None,
+    centre: HorizonsCommandTarget = HorizonsCommandTarget.EARTH,
+    gravitational_parameter: GravitationalParameter = EARTH_MU,
+) -> list[Orbit]:
+    match source:
+        case OrbitSource.TLE:
+            if not norad_ids:
+                raise ValueError("--norad-id is required for --source tle.")
+
+            refresh_tle_cache()
+
+            return [
+                orbit_from_tle(get_tle_from_norad_id(norad_id))
+                for norad_id in norad_ids
+            ]
+
+        case OrbitSource.HORIZONS:
+            if not horizons_targets:
+                raise ValueError("--target is required for --source horizon.")
+
+            return [
+                orbit_from_horizons(
+                    parse_horizons_target(target),
+                    centre=centre,
+                    gravitational_parameter=gravitational_parameter,
+                )
+                for target in horizons_targets
+            ]
+
+        case OrbitSource.ELEMENTS:
+            if elements is None:
+                raise ValueError("Orbital elements are required for --source elements.")
+
+            return [orbit_from_elements(elements)]
+
+    raise ValueError(f"Unsupported orbit source: {source}")
+
+
+def orbit_elements(orbit: Orbit) -> OrbitalElements:
+    if isinstance(orbit.description, OrbitalElements):
+        return orbit.description
+
+    return orbital_elements_from_tle(orbit.description)
+
+
+def default_orbit_count(orbit: Orbit) -> int:
+    return max(
+        1,
+        min(
+            round(
+                orbits_per_day(
+                    orbital_period(orbit_elements(orbit).semi_major_axis),
+                )
+            ),
+            100,
+        ),
+    )
+
+
+def with_plot_settings_overrides(
+    settings: PlotOrbital2DSettings,
+    *,
+    distance_scale: float | None = None,
+    plot_width: int | None = None,
+    plot_height: int | None = None,
+    plot_min_x: float | None = None,
+    plot_min_y: float | None = None,
+    plot_max_x: float | None = None,
+    plot_max_y: float | None = None,
+    slider_steps: int | None = None,
+    orbit_points: int | None = None,
+) -> PlotOrbital2DSettings:
+    """Apply only explicitly supplied command-line plot overrides."""
+    overrides = {
+        name: value
+        for name, value in {
+            "distance_scale": distance_scale,
+            "plot_width": plot_width,
+            "plot_height": plot_height,
+            "plot_min_x": plot_min_x,
+            "plot_min_y": plot_min_y,
+            "plot_max_x": plot_max_x,
+            "plot_max_y": plot_max_y,
+            "slider_steps": slider_steps,
+            "orbit_points": orbit_points,
+        }.items()
+        if value is not None
+    }
+    return replace(settings, **overrides)
+
+
+def defined_kwargs(**kwargs):
+    """Return only explicitly supplied keyword arguments."""
+    return {name: value for name, value in kwargs.items() if value is not None}
+
+
+from collections.abc import Callable
+
+from astronomy_types import (
+    Eccentricity,
+    Inclination,
+    Ratio,
+    RightAscension,
 )
 
 from afmaths.afmath_types import Mass
@@ -29,16 +253,10 @@ from afmaths.constants import (
 )
 from afmaths.physics.space.external.horizons_api import HorizonsCommandTarget
 from afmaths.visualisations.collision_detection import build_collision_detection_figure
-from afmaths.visualisations.control_room import launch_control_room
 from afmaths.visualisations.ground_track import (
     GROUND_TRACK_POINTS,
     visualisation_2d_ground_track,
     visualisation_2d_ground_track_current_position,
-)
-from afmaths.visualisations.helpers import (
-    PlotOrbital2DSettings,
-    defined_kwargs,
-    with_plot_settings_overrides,
 )
 from afmaths.visualisations.hohmann_tradeoff import build_hohmann_tradeoff_figure
 from afmaths.visualisations.hohmann_transfer_perifocal_2d import (
@@ -47,19 +265,11 @@ from afmaths.visualisations.hohmann_transfer_perifocal_2d import (
 from afmaths.visualisations.hohmann_transfer_perifocal_2d import (
     build_default_hohmann_transfer_2d_perifocal_figure,
 )
+from afmaths.visualisations.kerbin_plots import build_kerbin_orbit_plots
 from afmaths.visualisations.lagrange_points_2d import build_lagrange_points_figure
 from afmaths.visualisations.newton_iteration import build_newton_iteration_figure
-from afmaths.visualisations.orbit_source import (
-    Orbit,
-    OrbitSource,
-    default_orbit_count,
-    orbit_elements,
-    parse_orbit_source,
-    resolve_orbits,
-)
 from afmaths.visualisations.orbit_system_3d import (
     DEFAULT_SOLAR_SYSTEM_BODIES,
-    ReferenceFrame,
     build_3d_orbit_system_figure,
 )
 from afmaths.visualisations.orbit_visualiser_2d import (
@@ -76,41 +286,6 @@ from afmaths.visualisations.phase_orbit_2d import (
     build_default_phase_orbit_2d_perifocal_figure,
 )
 from afmaths.visualisations.velocity_time import build_velocity_time_figure
-
-
-@dataclass(frozen=True)
-class PlotOptions:
-    distance_scale: float | None = None
-    plot_width: int | None = None
-    plot_height: int | None = None
-    plot_min_x: float | None = None
-    plot_min_y: float | None = None
-    plot_max_x: float | None = None
-    plot_max_y: float | None = None
-    slider_steps: int | None = None
-    plot_points: int | None = None
-    lines: bool | None = None
-    show_orbit_markers: bool | None = None
-    dashboard_columns: int = 1
-    output_path: Path | None = None
-    reference_frame: ReferenceFrame = "ICRF"
-    central_body: HorizonsCommandTarget = HorizonsCommandTarget.EARTH
-    horizons_bodies: list[HorizonsCommandTarget] | None = None
-    include_default_system_bodies: bool = True
-
-    def __post_init__(self) -> None:
-        if self.distance_scale is not None and self.distance_scale <= 0:
-            raise ValueError("distance_scale must be greater than 0.")
-        if self.plot_width is not None and self.plot_width <= 0:
-            raise ValueError("plot_width must be greater than 0.")
-        if self.plot_height is not None and self.plot_height <= 0:
-            raise ValueError("plot_height must be greater than 0.")
-        if self.slider_steps is not None and self.slider_steps < 2:
-            raise ValueError("slider_steps must be at least 2.")
-        if self.plot_points is not None and self.plot_points < 2:
-            raise ValueError("plot_points must be at least 2.")
-        if self.dashboard_columns < 1:
-            raise ValueError("dashboard_columns must be at least 1.")
 
 
 def normalise_name(name: str) -> str:
@@ -147,6 +322,9 @@ CONFIGURABLE_VISUALISATIONS = {
     "phase_orbit_2d",
 }
 ALIASES = {
+    "kerbin": "kerbin_control_room",
+    "kerbin_control_room": "kerbin_control_room",
+    "kerbin_3d": "orbit_3d",
     "controlroom": "control_room",
     "itrf": "orbit_3d",
     "satellite_earth": "orbit_3d",
@@ -311,7 +489,11 @@ def configurable_figure_builder(
             else (
                 DEFAULT_SOLAR_SYSTEM_BODIES
                 if options.central_body is HorizonsCommandTarget.SUN
-                else [HorizonsCommandTarget.MOON]
+                else (
+                    []
+                    if isinstance(options.central_body, PlotOriginConfig)
+                    else [HorizonsCommandTarget.MOON]
+                )
             )
         )
         return build_3d_orbit_system_figure(
@@ -364,6 +546,31 @@ def launch_visualisation(
             central_body=HorizonsCommandTarget.EARTH,
             horizons_bodies=(options.horizons_bodies or [HorizonsCommandTarget.MOON]),
         )
+    elif requested_name in {"kerbin", "kerbin_3d", "kerbin_control_room"}:
+        if source is not OrbitSource.ELEMENTS:
+            raise ValueError(
+                "Kerbin requires --source elements; TLE and Horizons data are Earth/Solar-System sources."
+            )
+        if elements is None:
+            raise ValueError("Kerbin requires supplied orbital elements.")
+        if options.reference_frame != "ICRF":
+            raise ValueError(
+                "Kerbin supports only the inertial ICRF-aligned plot, not Earth-fixed ITRF/GCRF."
+            )
+        options = replace(
+            options,
+            central_body=PlotOriginConfig(
+                name="Kerbin",
+                target=None,
+                radius=Distance(Scalar(600_000)),
+                gravitational_parameter=GravitationalParameter(Scalar(3.5316e12)),
+                radius_scale=1.0,
+                distance_scale=100_000.0,
+                texture_path=Path(__file__).resolve().parent / "kerbin.jpg",
+            ),
+            horizons_bodies=[],
+            include_default_system_bodies=False,
+        )
     elif requested_name in {
         "satellite_earth",
         "satellite_earth_3d",
@@ -378,6 +585,9 @@ def launch_visualisation(
             reference_frame=("ITRF" if requested_name.startswith("itrf") else "ICRF"),
         )
     requires_default_satellite = requested_name in {
+        "kerbin",
+        "kerbin_3d",
+        "kerbin_control_room",
         "satellite_earth",
         "satellite_earth_3d",
         "itrf",
@@ -410,6 +620,28 @@ def launch_visualisation(
         )
         if orbit_count <= 0 or current_orbit_count <= 0:
             raise ValueError("Orbit counts must be greater than 0.")
+        if resolved_name == "kerbin_control_room":
+            if not isinstance(options.central_body, PlotOriginConfig):
+                raise ValueError("Kerbin control room requires a custom Kerbin origin.")
+            plots = [
+                configurable_figure_builder(
+                    "orbit_3d", options, orbits=orbits, total_orbits=orbit_count
+                ),
+                *build_kerbin_orbit_plots(
+                    orbit_elements(orbits[0]),
+                    orbit_count=orbit_count,
+                    current_orbit_count=current_orbit_count,
+                    points=options.plot_points or 1000,
+                    show_lines=options.lines if options.lines is not None else True,
+                ),
+            ]
+            show_visualisation_dashboard(
+                plots,
+                title=f"Kerbin Control Room — {orbits[0].name}",
+                columns=options.dashboard_columns,
+                output_path=options.output_path,
+            )
+            return
         if resolved_name == "control_room":
             if options.reference_frame == "ITRF":
                 raise ValueError(
@@ -770,6 +1002,274 @@ def main() -> None:
         distance=(
             Distance(Scalar(args.distance)) if args.distance is not None else None
         ),
+    )
+
+
+import tempfile
+import webbrowser
+from collections.abc import Sequence
+from html import escape
+from typing import Literal
+
+import plotly.io as pio
+
+from afmaths.afmath_types import GroundStation
+from afmaths.physics.space.external.horizons_api import HorizonsCommandTarget
+from afmaths.visualisations.state_vectors import (
+    build_position_vector_figure,
+    build_velocity_vector_figure,
+)
+
+
+def write_visualisation_dashboard(
+    figures: Sequence[go.Figure],
+    title: str = "AFMaths Visualisations",
+    columns: int = 1,
+    output_path: Path | None = None,
+) -> Path:
+    """Write independent Plotly figures into one responsive HTML dashboard."""
+    if not figures:
+        raise ValueError("At least one figure is required.")
+    if columns < 1:
+        raise ValueError("columns must be at least 1.")
+
+    if output_path is None:
+        with tempfile.NamedTemporaryFile(
+            prefix="afmaths-visualisations-",
+            suffix=".html",
+            delete=False,
+        ) as temporary_file:
+            output_path = Path(temporary_file.name)
+    else:
+        output_path = output_path.expanduser()
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+
+    panels: list[str] = []
+
+    for index, figure in enumerate(figures):
+        dashboard_figure = go.Figure(figure)
+
+        dashboard_figure.update_layout(
+            width=None,
+            height=None,
+            autosize=True,
+        )
+
+        panels.append(
+            '<section class="plot-panel">'
+            + pio.to_html(
+                dashboard_figure,
+                full_html=False,
+                include_plotlyjs=index == 0,
+                config={
+                    "responsive": True,
+                    "displaylogo": False,
+                },
+                default_width="100%",
+                default_height="100%",
+            )
+            + "</section>"
+        )
+
+    document = f"""<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{escape(title)}</title>
+  <style>
+    * {{ box-sizing: border-box; }}
+    html, body {{ margin: 0; min-height: 100%; }}
+    body {{
+      padding: 16px;
+      background: #eef1f5;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }}
+    h1 {{ margin: 0 0 16px; font-size: 24px; }}
+    .dashboard {{
+      display: grid;
+      grid-template-columns: repeat({columns}, minmax(0, 1fr));
+      gap: 16px;
+    }}
+    .plot-panel {{
+      min-width: 0;
+      height: min(800px, 85vh);
+      overflow: hidden;
+      background: white;
+      border: 1px solid #d8dde5;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }}
+    .plot-panel > div,
+    .plot-panel .plotly-graph-div {{
+      width: 100% !important;
+      height: 100% !important;
+    }}
+    @media (max-width: 1100px) {{
+      .dashboard {{ grid-template-columns: 1fr; }}
+      .plot-panel {{ height: 600px; }}
+    }}
+  </style>
+</head>
+<body>
+  <h1>{escape(title)}</h1>
+  <main class="dashboard">{''.join(panels)}</main>
+  <script>
+    const resizePlots = () => document
+      .querySelectorAll('.plotly-graph-div')
+      .forEach(plot => Plotly.Plots.resize(plot));
+    window.addEventListener('load', resizePlots);
+    window.addEventListener('resize', resizePlots);
+  </script>
+</body>
+</html>
+"""
+
+    output_path.write_text(document, encoding="utf-8")
+    return output_path
+
+
+def show_visualisation_dashboard(
+    figures: Sequence[go.Figure],
+    title: str = "AFMaths Visualisations",
+    columns: int = 1,
+    output_path: Path | None = None,
+) -> Path:
+    """Write a dashboard and open it in the default browser."""
+    dashboard_path = write_visualisation_dashboard(
+        figures=figures,
+        title=title,
+        columns=columns,
+        output_path=output_path,
+    )
+    webbrowser.open(dashboard_path.resolve().as_uri())
+    return dashboard_path
+
+
+def build_control_room_figures(
+    orbits: list[Orbit],
+    total_orbits: float,
+    total_current_orbits: float,
+    ground_station: GroundStation = KILCUMMIN_GROUND_STATION,
+    *,
+    distance_scale: float | None = None,
+    plot_points: int | None = None,
+    lines: bool = False,
+    show_orbit_markers: bool = True,
+    central_body: HorizonsCommandTarget = HorizonsCommandTarget.EARTH,
+    horizons_bodies: list[HorizonsCommandTarget] | None = None,
+    include_default_system_bodies: bool = True,
+    inertial_reference_frame: Literal["ICRF", "GCRF"] = "GCRF",
+) -> list:
+    """Build the independent figures used by the control-room dashboard."""
+    if not orbits:
+        raise ValueError("At least one orbit is required.")
+
+    selected_orbit = orbits[0]
+    selected_elements = orbit_elements(selected_orbit)
+    ground_track_points = (
+        plot_points if plot_points is not None else GROUND_TRACK_POINTS
+    )
+    orbit_2d_settings = with_plot_settings_overrides(
+        ORBIT_2D_PLOT_SETTINGS, distance_scale=distance_scale, orbit_points=plot_points
+    )
+    satellites = [
+        satellite_orbiting_body(name=orbit.name, elements=orbit_elements(orbit))
+        for orbit in orbits
+    ]
+    orbit_plot_kwargs = defined_kwargs(
+        distance_scale=distance_scale, orbit_points=plot_points
+    )
+    inertial_bodies = horizons_bodies
+    if inertial_bodies is None and include_default_system_bodies:
+        inertial_bodies = (
+            DEFAULT_SOLAR_SYSTEM_BODIES
+            if central_body is HorizonsCommandTarget.SUN
+            else []
+        )
+    inertial_satellites = orbits if central_body is HorizonsCommandTarget.EARTH else []
+
+    return [
+        # Control room figures start here
+        # 2D ground track of the selected orbit's current position
+        visualisation_2d_ground_track_current_position(
+            orbit=selected_orbit,
+            ground_station=ground_station,
+            orbit_count=total_current_orbits,
+            number_of_points=ground_track_points,
+            lines=lines,
+        ),
+        # 3D orbit system figure centered on the central body
+        build_3d_orbit_system_figure(
+            origin_body=central_body,
+            horizons_bodies=inertial_bodies,
+            satellite_orbits=inertial_satellites,
+            reference_frame=inertial_reference_frame,
+            **orbit_plot_kwargs,
+        ),
+        # 3D orbit system figure in the Earth-centered ITRF frame
+        build_3d_orbit_system_figure(
+            satellite_orbits=orbits,
+            reference_frame="ITRF",
+            track_for_orbits=total_orbits,
+            **orbit_plot_kwargs,
+        ),
+        # 2D ground track of the selected orbit's full orbit
+        visualisation_2d_ground_track(
+            orbit=selected_orbit,
+            orbit_count=total_orbits,
+            show_orbit_markers=show_orbit_markers,
+            number_of_points=ground_track_points,
+            lines=lines,
+        ),
+        # Default 2D orbit visualiser figure
+        build_default_orbit_visualiser_2d_figure(
+            satellites=satellites,
+            settings=orbit_2d_settings,
+            propagation_orbits=total_orbits,
+        ),
+        # Position vector figure for the selected orbit
+        build_position_vector_figure(selected_elements, int(total_orbits)),
+        # Velocity vector figure for the selected orbit
+        build_velocity_vector_figure(selected_elements, int(total_orbits)),
+    ]
+
+
+def launch_control_room(
+    orbits: list[Orbit],
+    total_orbits: float,
+    total_current_orbits: float,
+    output_path: Path | None = None,
+    *,
+    columns: int = 1,
+    distance_scale: float | None = None,
+    plot_points: int | None = None,
+    lines: bool = False,
+    show_orbit_markers: bool = True,
+    central_body: HorizonsCommandTarget = HorizonsCommandTarget.EARTH,
+    horizons_bodies: list[HorizonsCommandTarget] | None = None,
+    include_default_system_bodies: bool = True,
+    inertial_reference_frame: Literal["ICRF", "GCRF"] = "GCRF",
+) -> Path:
+    """Open the control-room figures in one browser dashboard."""
+    figures = build_control_room_figures(
+        orbits=orbits,
+        total_orbits=total_orbits,
+        total_current_orbits=total_current_orbits,
+        distance_scale=distance_scale,
+        plot_points=plot_points,
+        lines=lines,
+        show_orbit_markers=show_orbit_markers,
+        central_body=central_body,
+        horizons_bodies=horizons_bodies,
+        include_default_system_bodies=include_default_system_bodies,
+        inertial_reference_frame=inertial_reference_frame,
+    )
+    return show_visualisation_dashboard(
+        figures,
+        title=f"AFMaths Control Room - {orbits[0].name}",
+        columns=columns,
+        output_path=output_path,
     )
 
 
