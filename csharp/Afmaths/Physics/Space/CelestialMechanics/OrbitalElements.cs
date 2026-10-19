@@ -169,6 +169,10 @@ public class MeanMotion(double value)
     protected override MeanMotion Create(double value) => new(value);
 }
 
+/// <summary>
+/// Represents the true anomaly of an orbit, which defines the position of the orbiting body along its orbit.
+/// </summary>
+/// <param name="value">The value of the true anomaly in radians.</param>
 public class TrueAnomaly(double value)
     : Anomaly<TrueAnomaly>(value)
 {
@@ -243,6 +247,10 @@ public class TrueAnomaly(double value)
     protected override TrueAnomaly Create(double value) => new(value);
 }
 
+/// <summary>
+/// Represents the eccentricity of an orbit, which defines the shape of the orbit.
+/// </summary>
+/// <param name="value">The value of the eccentricity (dimensionless, should be between 0 and 1 for elliptical orbits).</param>
 public class Eccentricity(double value)
     : OrbitalElement<Eccentricity>(value)
 {

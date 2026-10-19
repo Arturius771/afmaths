@@ -1,7 +1,9 @@
 namespace Afmaths;
 
 
-
+/// <summary>
+/// Provides methods for solving Kepler's equation and calculating orbital parameters such as velocity and distance.
+/// </summary>
 public class Kepler
 {
     /// <summary>

@@ -19,7 +19,6 @@ from plotly.subplots import make_subplots
 
 from afmaths.constants import EARTH_MU, EARTH_RADIUS
 from afmaths.physics.space.celestial_mechanics.celestial_mechanics import (
-    EARTH_MU,
     orbit_altitude,
     orbit_radius,
     periapsis_radius,
@@ -165,7 +164,7 @@ def build_hohmann_tradeoff_figure() -> go.Figure:
             y=[peak_delta_v],
             mode="markers",
             name=f"Worst circular orbit: {peak_radius:.0f} m",
-            marker=dict(size=10),
+            marker={"size": 10},
             customdata=[
                 [
                     peak_radius,
@@ -191,7 +190,7 @@ def build_hohmann_tradeoff_figure() -> go.Figure:
             y=[best_tradeoff_delta_v],
             mode="markers",
             name=f"Best time/Δv tradeoff: {best_tradeoff_radius:.0f} m",
-            marker=dict(size=12, symbol="diamond"),
+            marker={"size": 12, "symbol": "diamond"},
             customdata=[
                 [
                     best_tradeoff_radius,

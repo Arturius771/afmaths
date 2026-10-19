@@ -1,6 +1,9 @@
 namespace Afmaths;
 
 
+/// <summary>
+/// Represents a position vector in 3D space.
+/// </summary>
 public class Position : Vector3D<double>
 {
     EuclidianDistance euclidianDistance = new();
@@ -27,6 +30,10 @@ public class Position : Vector3D<double>
     }
 }
 
+/// <summary>
+/// Represents a distance value, typically used for the distance between two positions.
+/// </summary>
+/// <param name="value">The value of the distance.</param>
 public class Distance(double value) : PhysicalValue<Distance>(value)
 {
 

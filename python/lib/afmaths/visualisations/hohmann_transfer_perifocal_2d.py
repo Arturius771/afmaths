@@ -25,7 +25,6 @@ from afmaths.constants import EARTH_MU, EARTH_RADIUS, TWO_PI
 from afmaths.geometry.geometry import circle_bounding_box, semi_minor_axis
 from afmaths.geometry.transformations import translate_ellipse
 from afmaths.physics.space.celestial_mechanics.celestial_mechanics import (
-    EARTH_MU,
     periapsis_radius,
 )
 from afmaths.physics.space.type_conversion_helpers import make_eccentric_anomaly

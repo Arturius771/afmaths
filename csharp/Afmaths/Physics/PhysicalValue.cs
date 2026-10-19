@@ -68,11 +68,19 @@ public class Mass(double value) : PhysicalValue<Mass>(value)
 }
 
 
+/// <summary>
+/// Represents a rate value, typically used for angular rates.
+/// </summary>
+/// <param name="value">The value of the rate.</param>
 public class Rate(double value) : PhysicalValue<Rate>(value)
 {
     protected override Rate Create(double value) => new(value);
 }
 
+/// <summary>
+/// Represents the angular momentum vector of a physical object.
+/// </summary>
+/// <param name="value">The value of the angular momentum vector.</param>
 public class AngularMomentum(Vector3D<double> value) : Vector3D<double>(value.X, value.Y, value.Z)
 {
 }

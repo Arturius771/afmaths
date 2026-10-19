@@ -2,6 +2,11 @@ using System.Numerics;
 
 namespace Afmaths;
 
+/// <summary>
+/// Represents a scalar value.
+/// </summary>
+/// <typeparam name="T">The numeric type of the scalar value.</typeparam>
+/// <param name="value">The value of the scalar.</param>
 public class Scalar<T>(T value) : PhysicalValue<Scalar<T>>(Convert.ToDouble(value))
 {
     protected override Scalar<T> Create(double value) => new((T)Convert.ChangeType(value, typeof(T)));
@@ -14,6 +19,11 @@ public abstract class Vector<T>
     public abstract double VectorMagnitude();
 }
 
+/// <summary>
+/// Represents a 1-dimensional vector.
+/// </summary>
+/// <typeparam name="T">The numeric type of the vector component.</typeparam>
+/// <param name="x">The X component of the vector.</param>
 public class Vector1D<T>(T x) : Vector<T>
     where T : INumber<T>
 {
@@ -25,6 +35,12 @@ public class Vector1D<T>(T x) : Vector<T>
     }
 }
 
+/// <summary>
+/// Represents a 2-dimensional vector.
+/// </summary>
+/// <typeparam name="T">The numeric type of the vector components.</typeparam>
+/// <param name="x">The X component of the vector.</param>
+/// <param name="y">The Y component of the vector.</param>
 public class Vector2D<T>(T x, T y) : Vector<T>
     where T : INumber<T>
 {
@@ -37,6 +53,13 @@ public class Vector2D<T>(T x, T y) : Vector<T>
     }
 }
 
+/// <summary>
+/// Represents a 3-dimensional vector.
+/// </summary>
+/// <typeparam name="T">The numeric type of the vector components.</typeparam>
+/// <param name="x">The X component of the vector.</param>
+/// <param name="y">The Y component of the vector.</param>
+/// <param name="z">The Z component of the vector.</param>
 public class Vector3D<T>(T x, T y, T z) : Vector<T>
     where T : INumber<T>
 {

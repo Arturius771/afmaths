@@ -9,6 +9,11 @@ public class GravitationalConstant
         Value = 6.67430e-11;
     }
 }
+
+/// <summary>
+/// Represents the standard gravitational parameter (μ) of a celestial body, which is the product of the gravitational constant and the mass of the body.
+/// </summary>
+/// <param name="value">The value of the standard gravitational parameter (μ) in m^3/s^2.</param>
 public class GravitationalParameter(double value) : PhysicalValue<GravitationalParameter>(value)
 {
 

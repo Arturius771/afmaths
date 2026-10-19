@@ -12,15 +12,15 @@ import math
 from pathlib import Path
 
 import plotly.graph_objects as go
-from astronomy_types import GravitationalParameter, OrbitalElements, Scalar, Second
+from astronomy_types import OrbitalElements, Scalar, Second
 
+from afmaths.constants import KERBIN_MU
 from afmaths.physics.space.celestial_mechanics.state_vector import state_vector_at_time
 
 KERBIN_IMAGE_PATH = Path(__file__).resolve().parent / "kerbin.jpg"
 
 KERBIN_ROTATION_PERIOD_SECONDS = 21_549.425  # KSP 1 stock Kerbin sidereal rotation
 KERBIN_RADIUS_METRES = 600_000.0
-KERBIN_MU = GravitationalParameter(Scalar(3.5316e12))
 
 
 def build_kerbin_orbit_plots(

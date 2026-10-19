@@ -1,5 +1,8 @@
 namespace Afmaths;
 
+/// <summary>
+/// Represents the state vector of an orbiting body, including its position and velocity in space.
+/// </summary>
 public class OrbitalStateVector : StateVector
 {
     private static readonly Kepler celestialMechanics = new();
@@ -9,6 +12,9 @@ public class OrbitalStateVector : StateVector
     {
     }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="OrbitalStateVector"/> class with default position and velocity values.
+    /// </summary>
     public OrbitalStateVector()
     : base(
         new Position(0, 0, 0),
@@ -31,6 +37,12 @@ public class OrbitalStateVector : StateVector
         );
     }
 
+    /// <summary>
+    /// Computes the perifocal velocity of the orbiting body for a circular orbit.
+    /// </summary>
+    /// <param name="elements">The orbital elements defining the circular orbit.</param>
+    /// <param name="gravitationalParameter">The gravitational parameter of the central body.</param>
+    /// <returns>The perifocal velocity of the orbiting body for the given circular orbit.</returns>
     public Velocity PerifocalVelocityCircular(
         OrbitalElements elements,
         GravitationalParameter gravitationalParameter
@@ -47,6 +59,12 @@ public class OrbitalStateVector : StateVector
         );
     }
 
+    /// <summary>
+    /// Computes the perifocal velocity of the orbiting body for an elliptical orbit.
+    /// </summary>
+    /// <param name="elements">The orbital elements defining the orbit.</param>
+    /// <param name="gravitationalParameter">The gravitational parameter of the central body.</param>
+    /// <returns>The perifocal velocity of the orbiting body for the given elliptical orbit.</returns>
     public Velocity PerifocalVelocityEllipse(
         OrbitalElements elements,
         GravitationalParameter gravitationalParameter
