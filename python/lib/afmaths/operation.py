@@ -291,3 +291,24 @@ def newtons_raphson_method(
     correction = divide_by(derivative_value)(auxiliary_function)
 
     return subtract(correction)(current_estimate)
+
+
+def unique_groups(n: int, group_size: int) -> int:
+    """Calculates the number of unique groups of a given size that can be formed from n elements.
+
+    This is also known as the binomial coefficient, often denoted as C(n, k) or "n choose k".
+
+    Formula: C(n, k) = n! / (k! * (n - k)!)
+
+    https://www.youtube.com/watch?v=twDvxNooI_4"""
+    if group_size <= 0:
+        raise ValueError("Group size must be positive")
+    if n < 0:
+        raise ValueError("Number of elements must be non-negative")
+
+    if group_size > n:
+        return 0
+
+    return divide_by(
+        multiply(factorial(group_size))(factorial(subtract(group_size)(n)))
+    )(factorial(n))

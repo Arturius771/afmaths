@@ -19,6 +19,7 @@ from afmaths.operation import (
     square_root,
     subtract,
     termial,
+    unique_groups,
 )
 
 
@@ -126,6 +127,11 @@ class OperatioTestMethods(unittest.TestCase):
 
     def test_power_rule_string(self):
         self.assertEqual(power_rule_string(55, 5), "f'(55^{5}) = 5 * 55^{4}")
+
+    def test_unique_groups(self):
+        result = unique_groups(21, 3)
+
+        self.assertEqual(result, 1330)
 
 
 if __name__ == "__main__":
